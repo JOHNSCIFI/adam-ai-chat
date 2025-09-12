@@ -74,10 +74,10 @@ export default function Chat() {
 
       // Send message to n8n webhook and get AI response
       console.log('Trigger: Send Message to AI');
-      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/adamGPT');
+      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/message');
       console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
       
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/adamGPT', {
+      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/message', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -147,8 +147,8 @@ export default function Chat() {
           <div className="w-20 h-20 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-6">
             <span className="text-3xl text-sidebar-primary-foreground font-bold">A</span>
           </div>
-          <h2 className="text-3xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
-          <p className="text-xl text-muted-foreground mb-8">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
+          <p className="text-base text-muted-foreground mb-6">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
             <div className="bg-card border rounded-2xl p-6 text-center">
               <div className="text-2xl mb-3">💬</div>
@@ -181,8 +181,8 @@ export default function Chat() {
               <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <span className="text-2xl text-sidebar-primary-foreground font-bold">A</span>
               </div>
-              <h3 className="text-2xl font-semibold mb-3 text-foreground">How can I help you today?</h3>
-              <p className="text-muted-foreground text-lg">Start a conversation with adamGPT to get assistance with your questions</p>
+              <h3 className="text-xl font-semibold mb-3 text-foreground">How can I help you today?</h3>
+              <p className="text-muted-foreground text-base">Start a conversation with adamGPT to get assistance with your questions</p>
             </div>
           </div>
         ) : (
