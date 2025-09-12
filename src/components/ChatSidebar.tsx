@@ -11,6 +11,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarSeparator,
+  SidebarTrigger,
   useSidebar
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
@@ -247,13 +248,16 @@ export function ChatSidebar() {
     <>
       <Sidebar className="border-r border-sidebar-border">
         <SidebarHeader className="p-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 bg-sidebar-primary rounded-sm flex items-center justify-center">
-              <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 bg-sidebar-primary rounded-sm flex items-center justify-center">
+                <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
+              </div>
+              {!collapsed && (
+                <h1 className="text-lg font-semibold text-sidebar-foreground">adamGPT</h1>
+              )}
             </div>
-            {!collapsed && (
-              <h1 className="text-lg font-semibold text-sidebar-foreground">adamGPT</h1>
-            )}
+            <SidebarTrigger className="hover:bg-sidebar-accent rounded-md" />
           </div>
         </SidebarHeader>
 

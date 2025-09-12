@@ -13,10 +13,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <ChatSidebar />
         
         <div className="flex-1 flex flex-col bg-background">
-          <header className="h-14 flex items-center border-b border-border/50 px-6 bg-background/80 backdrop-blur-sm">
-            <SidebarTrigger className="hover:bg-sidebar-accent rounded-md" />
-          </header>
-          
           <main className="flex-1 overflow-hidden">
             {children}
           </main>
