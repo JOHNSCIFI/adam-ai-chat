@@ -40,67 +40,67 @@ export default function Index() {
     <div className="h-screen flex items-center justify-center bg-background p-6 overflow-hidden">
       <div className="text-center max-w-4xl">
         {/* Main Logo and Title */}
-        <div className="mb-8">
-          <div className="w-24 h-24 bg-gradient-to-br from-sidebar-primary via-sidebar-primary to-sidebar-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
-            <span className="text-4xl text-sidebar-primary-foreground font-bold">A</span>
+        <div className="mb-4">
+          <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary via-sidebar-primary to-sidebar-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg">
+            <span className="text-2xl text-sidebar-primary-foreground font-bold">A</span>
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Welcome to adamGPT
           </h1>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg text-muted-foreground mb-4 max-w-2xl mx-auto leading-relaxed">
             Your intelligent AI assistant ready to help with any questions, creative projects, or problem-solving tasks
           </p>
         </div>
 
         {/* CTA Button */}
-        <div className="mb-12">
+        <div className="mb-6">
           <Button 
             onClick={handleNewChat}
-            size="lg" 
-            className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground px-8 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+            size="default" 
+            className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground px-6 py-3 rounded-xl text-base font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
           >
-            <MessageSquare className="w-6 h-6 mr-3" />
+            <MessageSquare className="w-5 h-5 mr-2" />
             Start New Chat
           </Button>
         </div>
 
         {/* Feature Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
-          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
-            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-              <Sparkles className="w-8 h-8 text-white" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto mb-6">
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-4 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-foreground">Intelligent Conversations</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Engage in natural, context-aware conversations that understand your needs and provide thoughtful responses
+            <h3 className="text-lg font-semibold mb-2 text-foreground">Intelligent Conversations</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Engage in natural, context-aware conversations that understand your needs
             </p>
           </div>
 
-          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-              <Zap className="w-8 h-8 text-white" />
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-4 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+              <Zap className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-foreground">Lightning Fast</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Get instant responses powered by advanced AI technology, optimized for speed and accuracy
+            <h3 className="text-lg font-semibold mb-2 text-foreground">Lightning Fast</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Get instant responses powered by advanced AI technology
             </p>
           </div>
 
-          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
-            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-              <Shield className="w-8 h-8 text-white" />
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-2xl p-4 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform duration-300">
+              <Shield className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-xl font-semibold mb-3 text-foreground">Secure & Private</h3>
-            <p className="text-muted-foreground leading-relaxed">
-              Your conversations are encrypted and stored securely with full respect for your privacy and data protection
+            <h3 className="text-lg font-semibold mb-2 text-foreground">Secure & Private</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your conversations are encrypted and stored securely
             </p>
           </div>
         </div>
 
         {/* Sample Prompts */}
-        <div className="mt-12">
-          <h3 className="text-2xl font-semibold mb-6 text-foreground">Try asking me about...</h3>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+        <div>
+          <h3 className="text-xl font-semibold mb-4 text-foreground">Try asking me about...</h3>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-4xl mx-auto">
             {[
               "Creative writing help",
               "Code optimization",
@@ -111,9 +111,9 @@ export default function Index() {
                 key={index}
                 variant="outline"
                 onClick={handleNewChat}
-                className="h-auto p-4 text-left border-2 hover:border-sidebar-primary hover:bg-sidebar-primary/5 transition-colors rounded-xl"
+                className="h-auto p-3 text-left border-2 hover:border-sidebar-primary hover:bg-sidebar-primary/5 transition-colors rounded-lg"
               >
-                <div className="text-sm font-medium text-foreground">{prompt}</div>
+                <div className="text-xs font-medium text-foreground">{prompt}</div>
               </Button>
             ))}
           </div>
