@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Copy, ThumbsUp, ThumbsDown, RotateCcw, MoreHorizontal } from 'lucide-react';
+import { Send, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -272,58 +272,30 @@ export default function Chat() {
                 onMouseLeave={() => setHoveredMessage(null)}
               >
                 <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                    <div className={`${
-                      message.role === 'user' 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
-                        : 'bg-transparent text-foreground'
-                    } px-3 py-2 relative`}>
-                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                        {message.content}
-                      </p>
-                    </div>
-                    
-                    {/* Action buttons for assistant messages */}
-                    {message.role === 'assistant' && hoveredMessage === message.id && (
-                      <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className={`flex ${message.role === 'user' ? 'flex-col items-end' : 'items-start'} max-w-[75%]`}>
+                    <div className={`flex items-start gap-2 ${message.role === 'assistant' ? 'w-full' : ''}`}>
+                      <div className={`${
+                        message.role === 'user' 
+                          ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
+                          : 'bg-transparent text-foreground'
+                      } px-3 py-2 relative`}>
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                          {message.content}
+                        </p>
+                      </div>
+                      
+                      {/* Copy button for assistant messages */}
+                      {message.role === 'assistant' && hoveredMessage === message.id && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => copyToClipboard(message.content)}
-                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                          className="h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1"
                         >
-                          <Copy className="h-4 w-4" />
+                          <Copy className="h-3 w-3" />
                         </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
-                        >
-                          <ThumbsUp className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
-                        >
-                          <ThumbsDown className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
-                        >
-                          <RotateCcw className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
