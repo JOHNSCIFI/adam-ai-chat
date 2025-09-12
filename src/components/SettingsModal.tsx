@@ -70,18 +70,36 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     if (!user) return;
     
     try {
-      const { error } = await supabase.auth.admin.deleteUser(user.id);
-      if (error) throw error;
+      // Get the current session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session found');
+      }
+
+      // Call the edge function to delete the account
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to delete account');
+      }
       
       toast({
         title: "Account deleted",
         description: "Your account has been permanently deleted.",
       });
+      
+      // Sign out and close modal
+      await supabase.auth.signOut();
       onOpenChange(false);
     } catch (error: any) {
+      console.error('Delete account error:', error);
       toast({
         title: "Error deleting account",
-        description: error.message,
+        description: error.message || "Unable to delete account. Please try again.",
         variant: "destructive",
       });
     }
