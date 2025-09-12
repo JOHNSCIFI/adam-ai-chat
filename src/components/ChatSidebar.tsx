@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Sidebar, 
@@ -31,10 +31,7 @@ import {
   Edit3,
   Trash2,
   Check,
-  X,
-  ChevronLeft,
-  ChevronRight,
-  Crown
+  X
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -55,52 +52,18 @@ export function ChatSidebar() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
   const [chatsPanelCollapsed, setChatsPanelCollapsed] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(260);
-  const [isResizing, setIsResizing] = useState(false);
-  const sidebarRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const { state, toggleSidebar } = useSidebar();
+  const { state } = useSidebar();
 
   const collapsed = state === 'collapsed';
-  const minWidth = 240;
-  const maxWidth = 400;
 
   useEffect(() => {
     if (user) {
       fetchChats();
     }
   }, [user]);
-
-  // Handle resizing
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isResizing) return;
-      const newWidth = e.clientX;
-      if (newWidth >= minWidth && newWidth <= maxWidth) {
-        setSidebarWidth(newWidth);
-      }
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(false);
-    };
-
-    if (isResizing) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = 'col-resize';
-      document.body.style.userSelect = 'none';
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.cursor = '';
-      document.body.style.userSelect = '';
-    };
-  }, [isResizing, minWidth, maxWidth]);
 
   // Set up real-time subscription for chats
   useEffect(() => {
@@ -270,11 +233,6 @@ export function ChatSidebar() {
       ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
       : "hover:bg-sidebar-accent/50";
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    e.preventDefault();
-    setIsResizing(true);
-  };
-
   const getUserInitials = () => {
     const email = user?.email || '';
     return email.slice(0, 2).toUpperCase();
@@ -287,303 +245,210 @@ export function ChatSidebar() {
 
   return (
     <>
-      <div className="relative">
-        <Sidebar 
-          ref={sidebarRef}
-          className="border-r-0 bg-sidebar-background"
-          style={{ 
-            width: collapsed ? '64px' : `${sidebarWidth}px`,
-            transition: collapsed ? 'width 0.2s ease-in-out' : 'none'
-          }}
-        >
-          {/* ChatGPT Header */}
-          <SidebarHeader className="p-4 border-b border-white/5">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center">
-                  <MessageSquare className="w-4 h-4 text-primary-foreground" />
-                </div>
-                {!collapsed && (
-                  <h1 className="text-lg font-semibold text-foreground">ChatGPT</h1>
-                )}
-              </div>
-              {!collapsed && (
+      <Sidebar className="border-r border-sidebar-border">
+        <SidebarHeader className="p-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-sidebar-primary rounded-sm flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
+            </div>
+            {!collapsed && (
+              <h1 className="text-lg font-semibold text-sidebar-foreground">adamGPT</h1>
+            )}
+          </div>
+        </SidebarHeader>
+
+        <SidebarContent className="px-2">
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <Button 
+                    onClick={handleNewChat}
+                    className="w-full justify-start bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
+                    size={collapsed ? "sm" : "default"}
+                  >
+                    <Plus className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-2"} />
+                    {!collapsed && "Create New Chat"}
+                  </Button>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarSeparator />
+
+          {!collapsed && (
+            <SidebarGroup>
+              <div className="flex items-center justify-between px-2 py-1">
+                <span className="text-xs font-medium text-sidebar-muted-foreground uppercase tracking-wider">
+                  Recent Chats
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={toggleSidebar}
-                  className="h-8 w-8 p-0 hover:bg-white/10 text-muted-foreground hover:text-foreground"
+                  onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
+                  className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground"
                 >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
-          </SidebarHeader>
-
-          <SidebarContent className="px-3 py-4">
-            {/* Main Controls */}
-            <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu className="space-y-2">
-                  {/* New Chat */}
-                  <SidebarMenuItem>
-                    <Button 
-                      onClick={handleNewChat}
-                      className="w-full justify-start bg-transparent border border-white/10 hover:bg-white/5 text-foreground hover:text-foreground h-10"
-                      size="default"
-                    >
-                      <Plus className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-3"} />
-                      {!collapsed && "New chat"}
-                    </Button>
-                  </SidebarMenuItem>
-                  
-                  {/* Search */}
-                  {!collapsed && (
-                    <SidebarMenuItem>
-                      <Button 
-                        variant="ghost"
-                        className="w-full justify-start h-10 text-muted-foreground hover:text-foreground hover:bg-white/5"
-                      >
-                        <Search className="h-4 w-4 mr-3" />
-                        Search
-                      </Button>
-                    </SidebarMenuItem>
-                  )}
-                  
-                  {/* Library */}
-                  {!collapsed && (
-                    <SidebarMenuItem>
-                      <Button 
-                        variant="ghost"
-                        className="w-full justify-start h-10 text-muted-foreground hover:text-foreground hover:bg-white/5"
-                      >
-                        <Library className="h-4 w-4 mr-3" />
-                        Library
-                      </Button>
-                    </SidebarMenuItem>
-                  )}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-
-            {/* Divider */}
-            <div className="my-4 border-t border-white/5" />
-
-            {/* Recent Chats */}
-            {!collapsed && (
-              <SidebarGroup>
-                <div className="flex items-center justify-between px-3 py-1 mb-2">
-                  <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Recent
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
-                    className="h-6 w-6 p-0 hover:bg-white/10 text-muted-foreground hover:text-foreground"
-                  >
-                    <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
-                  </Button>
-                </div>
-                
-                <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[60vh] opacity-100 overflow-y-auto'}`}>
-                  <SidebarGroupContent>
-                    <SidebarMenu className="space-y-1">
-                      {chats.map((chat) => (
-                        <SidebarMenuItem key={chat.id}>
-                          <div 
-                            className="group relative"
-                            onMouseEnter={() => setHoveredChatId(chat.id)}
-                            onMouseLeave={() => setHoveredChatId(null)}
-                          >
-                            {editingChatId === chat.id ? (
-                              <div className="flex items-center gap-2 px-3 py-2 text-sm">
-                                <MessageSquare className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                                <Input
-                                  value={editTitle}
-                                  onChange={(e) => setEditTitle(e.target.value)}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleRenameChat(chat.id, editTitle);
-                                    } else if (e.key === 'Escape') {
-                                      cancelEditing();
-                                    }
-                                  }}
-                                  onBlur={() => handleRenameChat(chat.id, editTitle)}
-                                  className="h-7 text-sm bg-white/5 border-white/10 text-foreground"
-                                  autoFocus
-                                />
-                                <div className="flex gap-1 flex-shrink-0">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 hover:bg-white/10"
-                                    onClick={() => handleRenameChat(chat.id, editTitle)}
-                                  >
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0 hover:bg-white/10"
-                                    onClick={cancelEditing}
-                                  >
-                                    <X className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="flex items-center">
-                                <SidebarMenuButton asChild className="flex-1 pr-0 h-10 rounded-lg">
-                                  <NavLink 
-                                    to={`/chat/${chat.id}`} 
-                                    className={({ isActive }) =>
-                                      isActive 
-                                        ? "bg-white/10 text-foreground font-medium rounded-lg" 
-                                        : "hover:bg-white/5 text-muted-foreground hover:text-foreground rounded-lg"
-                                    }
-                                  >
-                                    <MessageSquare className="h-4 w-4" />
-                                    <span className="truncate text-sm">{chat.title}</span>
-                                  </NavLink>
-                                </SidebarMenuButton>
-                                
-                                {hoveredChatId === chat.id && (
-                                  <div className="flex gap-1 pr-2 flex-shrink-0">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 hover:bg-white/10 opacity-70 hover:opacity-100"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        startEditing(chat.id, chat.title);
-                                      }}
-                                    >
-                                      <Edit3 className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        e.stopPropagation();
-                                        handleDeleteChat(chat.id);
-                                      }}
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </SidebarMenuItem>
-                      ))}
-                    </SidebarMenu>
-                  </SidebarGroupContent>
-                </div>
-              </SidebarGroup>
-            )}
-          </SidebarContent>
-
-          {/* Bottom Section */}
-          <SidebarFooter className="p-3 border-t border-white/5 mt-auto">
-            {/* Secondary Controls */}
-            {!collapsed && (
-              <div className="space-y-1 mb-3">
-                <Button 
-                  variant="ghost"
-                  className="w-full justify-start h-10 text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  onClick={() => setSettingsOpen(true)}
-                >
-                  <Settings className="h-4 w-4 mr-3" />
-                  Settings
-                </Button>
-                <Button 
-                  variant="ghost"
-                  className="w-full justify-start h-10 text-muted-foreground hover:text-foreground hover:bg-white/5"
-                  asChild
-                >
-                  <NavLink to="/help">
-                    <HelpCircle className="h-4 w-4 mr-3" />
-                    Help & FAQ
-                  </NavLink>
+                  <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
                 </Button>
               </div>
-            )}
+              
+              <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[600px] opacity-100'}`}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {chats.map((chat) => (
+                      <SidebarMenuItem key={chat.id}>
+                        <div 
+                          className="group relative"
+                          onMouseEnter={() => setHoveredChatId(chat.id)}
+                          onMouseLeave={() => setHoveredChatId(null)}
+                        >
+                          {editingChatId === chat.id ? (
+                            <div className="flex items-center gap-1 px-2 py-1.5 text-sm">
+                              <MessageSquare className="h-4 w-4 text-sidebar-foreground/60 flex-shrink-0" />
+                              <Input
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleRenameChat(chat.id, editTitle);
+                                  } else if (e.key === 'Escape') {
+                                    cancelEditing();
+                                  }
+                                }}
+                                onBlur={() => handleRenameChat(chat.id, editTitle)}
+                                className="h-6 text-xs bg-sidebar-accent border-sidebar-border"
+                                autoFocus
+                              />
+                              <div className="flex gap-1 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  onClick={() => handleRenameChat(chat.id, editTitle)}
+                                >
+                                  <Check className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  onClick={cancelEditing}
+                                >
+                                  <X className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <SidebarMenuButton asChild className="flex-1 pr-0">
+                                <NavLink 
+                                  to={`/chat/${chat.id}`} 
+                                  className={({ isActive }) =>
+                                    isActive 
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
+                                      : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
+                                  }
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                  <span className="truncate">{chat.title}</span>
+                                </NavLink>
+                              </SidebarMenuButton>
+                              
+                              {hoveredChatId === chat.id && (
+                                <div className="flex gap-1 pr-2 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 hover:bg-sidebar-accent opacity-70 hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      startEditing(chat.id, chat.title);
+                                    }}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDeleteChat(chat.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </div>
+            </SidebarGroup>
+          )}
+        </SidebarContent>
 
-            {/* Profile Section */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-start p-3 h-auto hover:bg-white/5 rounded-lg"
-                >
-                  <div className="flex items-center gap-3 w-full">
-                    <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-primary-foreground text-sm font-medium">
-                      {getUserInitials()}
-                    </div>
-                    {!collapsed && (
-                      <div className="flex-1 text-left">
-                        <p className="text-sm font-medium text-foreground">{getUserDisplayName()}</p>
-                        <p className="text-xs text-muted-foreground">Free plan</p>
-                      </div>
-                    )}
-                    {!collapsed && <ChevronUp className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent 
-                side="top" 
-                align="start" 
-                className="w-64 mb-2 bg-popover border-white/10"
+        <SidebarFooter className="p-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
               >
-                {/* Upgrade Button */}
-                <div className="p-2 mb-2">
-                  <Button className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-medium rounded-lg h-10 shadow-lg">
-                    <Crown className="mr-2 h-4 w-4" />
-                    Upgrade to Pro
-                  </Button>
+                <div className="flex items-center gap-3 w-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-xs bg-sidebar-primary text-sidebar-primary-foreground">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!collapsed && (
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-sidebar-foreground">{getUserDisplayName()}</p>
+                      <p className="text-xs text-sidebar-foreground/60">Free</p>
+                    </div>
+                  )}
+                  {!collapsed && <ChevronUp className="h-4 w-4 text-sidebar-foreground/60" />}
                 </div>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem asChild>
-                  <NavLink to="/profile" className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    My account
-                  </NavLink>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </SidebarFooter>
-        </Sidebar>
-
-        {/* Resize Handle */}
-        {!collapsed && (
-          <div
-            className="absolute top-0 right-0 w-1 h-full cursor-col-resize bg-transparent hover:bg-primary/20 transition-colors z-10"
-            onMouseDown={handleMouseDown}
-          />
-        )}
-
-        {/* Collapsed Toggle */}
-        {collapsed && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleSidebar}
-            className="absolute top-4 right-2 h-8 w-8 p-0 hover:bg-white/10 text-muted-foreground hover:text-foreground z-10"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        )}
-      </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-64 mb-2"
+            >
+              <DropdownMenuItem asChild>
+                <NavLink to="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink to="/help" className="cursor-pointer">
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Help
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarFooter>
+      </Sidebar>
 
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
     </>
