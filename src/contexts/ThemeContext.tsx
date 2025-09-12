@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 
 type Theme = 'light' | 'dark' | 'system';
 type AccentColor = 'blue' | 'purple' | 'green' | 'orange' | 'red';
@@ -26,7 +25,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('system');
   const [accentColor, setAccentColor] = useState<AccentColor>('blue');
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
-  const { toast } = useToast();
 
   useEffect(() => {
     // Load saved preferences
@@ -65,18 +63,10 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);
-    toast({
-      title: "Theme updated",
-      description: `Switched to ${newTheme} theme`,
-    });
   };
 
   const handleSetAccentColor = (color: AccentColor) => {
     setAccentColor(color);
-    toast({
-      title: "Accent color updated",
-      description: `Switched to ${color} accent color`,
-    });
   };
 
   return (

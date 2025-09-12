@@ -21,9 +21,9 @@ const queryClient = new QueryClient();
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <ThemeProvider>
-          <TooltipProvider>
+      <TooltipProvider>
+        <AuthProvider>
+          <ThemeProvider>
             <Router>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -67,9 +67,9 @@ function App() {
             </Router>
             <Toaster />
             <Sonner />
-          </TooltipProvider>
-        </ThemeProvider>
-      </AuthProvider>
+          </ThemeProvider>
+        </AuthProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

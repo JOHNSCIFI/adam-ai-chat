@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from '@/hooks/use-toast';
 import { 
   Settings, 
   Bell, 
@@ -49,6 +50,23 @@ const accentColors = [
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [activeTab, setActiveTab] = React.useState('general');
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
+  const { toast } = useToast();
+
+  const handleSetTheme = (newTheme: typeof theme) => {
+    setTheme(newTheme);
+    toast({
+      title: "Theme updated",
+      description: `Switched to ${newTheme} theme`,
+    });
+  };
+
+  const handleSetAccentColor = (color: typeof accentColor) => {
+    setAccentColor(color);
+    toast({
+      title: "Accent color updated", 
+      description: `Switched to ${color} accent color`,
+    });
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -106,7 +124,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                                   key={option.value}
                                   variant={theme === option.value ? "default" : "outline"}
                                   size="sm"
-                                  onClick={() => setTheme(option.value)}
+                                  onClick={() => handleSetTheme(option.value)}
                                   className="h-9 px-3"
                                 >
                                   <Icon className="h-4 w-4 mr-2" />
@@ -134,7 +152,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                                   key={color.value}
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => setAccentColor(color.value)}
+                                  onClick={() => handleSetAccentColor(color.value)}
                                   className="h-9 px-3 relative"
                                   style={{
                                     backgroundColor: accentColor === color.value ? color.color : 'transparent',
