@@ -315,8 +315,8 @@ export function ChatSidebar() {
                                 to={`/chat/${chat.id}`} 
                                 className={({ isActive }) =>
                                   isActive 
-                                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm" 
-                                    : "hover:bg-sidebar-accent/50"
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
+                                    : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
                                 }
                               >
                                 <MessageSquare className="h-4 w-4" />

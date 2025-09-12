@@ -248,28 +248,28 @@ export default function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div key={message.id} className="group mb-8">
-                <div className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={message.id} className="mb-6">
+                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end pl-12' : 'justify-start pr-12'}`}>
                   {message.role === 'assistant' && (
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-bold">A</span>
                       </div>
                     </div>
                   )}
                   
                   {/* Message content */}
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%] ${message.role === 'user' ? 'ml-16' : 'mr-16'}`}>
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[65%]`}>
                     <div className={`${
                       message.role === 'user' 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-[24px] rounded-br-[8px] shadow-lg' 
-                        : 'bg-card text-card-foreground rounded-[24px] rounded-bl-[8px] border border-border shadow-sm hover:shadow-md transition-shadow'
-                    } px-5 py-3.5 max-w-full relative group/message`}>
-                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed font-medium">
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
+                        : 'bg-card text-card-foreground rounded-2xl rounded-bl-md border border-border shadow-sm'
+                    } px-4 py-2.5 relative`}>
+                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.content}
                       </p>
                     </div>
-                    <div className={`flex items-center gap-2 mt-2 px-2 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                    <div className={`mt-1 px-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
                       <span className="text-xs text-muted-foreground">
                         {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
@@ -278,7 +278,7 @@ export default function Chat() {
 
                   {message.role === 'user' && (
                     <div className="flex-shrink-0">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary via-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-medium">
                           {user?.email?.slice(0, 1).toUpperCase()}
                         </span>
@@ -291,17 +291,17 @@ export default function Chat() {
           )}
           
           {loading && (
-            <div className="group mb-8">
-              <div className="flex gap-4 justify-start">
+            <div className="mb-6">
+              <div className="flex gap-3 justify-start pr-12">
                 {/* AI Avatar */}
                 <div className="flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                     <span className="text-xs font-bold">A</span>
                   </div>
                 </div>
                 
                 {/* Typing indicator */}
-                <div className="bg-card text-card-foreground rounded-[24px] rounded-bl-[8px] px-5 py-3.5 border border-border shadow-sm mr-16 max-w-[75%]">
+                <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md px-4 py-2.5 border border-border shadow-sm max-w-[65%]">
                   <div className="flex items-center space-x-1.5">
                     <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
