@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Copy } from 'lucide-react';
+import { Send, Copy, Plus, Paperclip } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,9 +22,11 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
@@ -217,6 +220,22 @@ export default function Chat() {
     }
   };
 
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+    setIsPopoverOpen(false);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      // Handle file upload logic here
+      toast({
+        title: "Files selected",
+        description: `${files.length} file(s) selected for upload`,
+      });
+    }
+  };
+
   if (!chatId) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
@@ -272,30 +291,30 @@ export default function Chat() {
                 onMouseLeave={() => setHoveredMessage(null)}
               >
                 <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex ${message.role === 'user' ? 'flex-col items-end' : 'items-start'} max-w-[75%]`}>
-                    <div className={`flex items-start gap-2 ${message.role === 'assistant' ? 'w-full' : ''}`}>
-                      <div className={`${
-                        message.role === 'user' 
-                          ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
-                          : 'bg-transparent text-foreground'
-                      } px-3 py-2 relative`}>
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                          {message.content}
-                        </p>
-                      </div>
-                      
-                      {/* Copy button for assistant messages */}
-                      {message.role === 'assistant' && hoveredMessage === message.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => copyToClipboard(message.content)}
-                          className="h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 mt-1"
-                        >
-                          <Copy className="h-3 w-3" />
-                        </Button>
-                      )}
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%] relative`}>
+                    <div className={`${
+                      message.role === 'user' 
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
+                        : 'bg-transparent text-foreground'
+                    } px-3 py-2`}>
+                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                        {message.content}
+                      </p>
                     </div>
+                    
+                    {/* Copy button positioned below message */}
+                    {hoveredMessage === message.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(message.content)}
+                        className={`h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity mt-1 ${
+                          message.role === 'user' ? 'self-end' : 'self-start'
+                        }`}
+                      >
+                        <Copy className="h-3 w-3" />
+                      </Button>
+                    )}
                   </div>
                 </div>
               </div>
@@ -328,6 +347,29 @@ export default function Chat() {
         <div className="w-full px-6 py-3">
           <form onSubmit={sendMessage} className="relative">
             <div className="relative flex items-center gap-3 bg-muted/30 border border-input rounded-xl px-4 py-2 focus-within:border-sidebar-primary/30 transition-all duration-200">
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-muted rounded-lg flex-shrink-0"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2" align="start">
+                  <Button
+                    variant="ghost"
+                    onClick={handleFileUpload}
+                    className="w-full justify-start gap-2 h-10 px-3"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Add photos & files
+                  </Button>
+                </PopoverContent>
+              </Popover>
+              
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
@@ -354,6 +396,17 @@ export default function Chat() {
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json"
+            />
+            
             <p className="text-xs text-muted-foreground text-center mt-2">
               adamGPT can make mistakes. Consider checking important information.
             </p>
