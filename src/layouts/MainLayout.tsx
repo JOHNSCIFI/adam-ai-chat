@@ -13,6 +13,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
         <ChatSidebar />
         
         <div className="flex-1 flex flex-col bg-background">
+          {/* Global trigger that is ALWAYS visible */}
+          <header className="h-12 flex items-center border-b border-border bg-background">
+            <SidebarTrigger className="ml-2" />
+          </header>
+          
           <main className="flex-1 overflow-hidden">
             {children}
           </main>
