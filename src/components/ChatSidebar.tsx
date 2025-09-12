@@ -64,6 +64,64 @@ export function ChatSidebar() {
     }
   }, [user]);
 
+  // Set up real-time subscription for chats
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('user-chats')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chats',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Trigger: New Chat Created');
+          setChats(current => [payload.new as Chat, ...current]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chats',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Trigger: Chat Renamed');
+          setChats(current => 
+            current.map(chat => 
+              chat.id === payload.new.id ? payload.new as Chat : chat
+            )
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'chats',
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('Trigger: Chat Deleted');
+          setChats(current => 
+            current.filter(chat => chat.id !== payload.old.id)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   const fetchChats = async () => {
     const { data, error } = await supabase
       .from('chats')
@@ -256,7 +314,7 @@ export function ChatSidebar() {
                                 to={`/chat/${chat.id}`} 
                                 className={({ isActive }) =>
                                   isActive 
-                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+                                    ? "bg-sidebar-primary text-sidebar-primary-foreground font-medium shadow-sm" 
                                     : "hover:bg-sidebar-accent/50"
                                 }
                               >

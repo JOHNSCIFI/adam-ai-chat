@@ -34,6 +34,38 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
+  // Set up real-time subscription for messages
+  useEffect(() => {
+    if (!chatId || !user) return;
+
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        },
+        (payload) => {
+          console.log('Trigger: New Message Received');
+          setMessages(current => {
+            const exists = current.find(m => m.id === payload.new.id);
+            if (!exists) {
+              return [...current, payload.new as Message];
+            }
+            return current;
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [chatId, user]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
