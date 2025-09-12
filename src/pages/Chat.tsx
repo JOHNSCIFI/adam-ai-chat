@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Copy, Plus, Paperclip, X, FileText, Image as ImageIcon, Check } from 'lucide-react';
+import { Send, Copy, Plus, Paperclip, X, FileText, Image as ImageIcon, Check, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -264,26 +264,26 @@ export default function Chat() {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
         <div className="text-center max-w-2xl px-6">
-          <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-6">
-            <span className="text-2xl text-sidebar-primary-foreground font-bold">A</span>
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <MessageSquare className="text-2xl text-primary-foreground h-8 w-8" />
           </div>
-          <h2 className="text-xl font-bold mb-3 text-foreground">Welcome to adamGPT</h2>
-          <p className="text-sm text-muted-foreground mb-6">Your intelligent AI assistant ready to help with any questions or tasks</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
-            <div className="bg-card border rounded-xl p-4 text-center">
-              <div className="text-lg mb-2">💬</div>
-              <h3 className="font-medium text-sm mb-1">Natural Conversations</h3>
-              <p className="text-xs text-muted-foreground">Chat naturally and get helpful responses</p>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
+          <p className="text-muted-foreground mb-8 text-base">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
+              <div className="text-2xl mb-3">💬</div>
+              <h3 className="font-semibold text-base mb-2">Natural Conversations</h3>
+              <p className="text-sm text-muted-foreground">Chat naturally and get helpful responses</p>
             </div>
-            <div className="bg-card border rounded-xl p-4 text-center">
-              <div className="text-lg mb-2">⚡</div>
-              <h3 className="font-medium text-sm mb-1">Fast & Accurate</h3>
-              <p className="text-xs text-muted-foreground">Get quick and reliable answers</p>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
+              <div className="text-2xl mb-3">⚡</div>
+              <h3 className="font-semibold text-base mb-2">Fast & Accurate</h3>
+              <p className="text-sm text-muted-foreground">Get quick and reliable answers</p>
             </div>
-            <div className="bg-card border rounded-xl p-4 text-center">
-              <div className="text-lg mb-2">🔒</div>
-              <h3 className="font-medium text-sm mb-1">Secure & Private</h3>
-              <p className="text-xs text-muted-foreground">Your conversations are protected</p>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
+              <div className="text-2xl mb-3">🔒</div>
+              <h3 className="font-semibold text-base mb-2">Secure & Private</h3>
+              <p className="text-sm text-muted-foreground">Your conversations are protected</p>
             </div>
           </div>
         </div>
@@ -293,140 +293,131 @@ export default function Chat() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-2 py-6">
-        <div className="w-full space-y-4">
+      {/* Messages area - max width centered like ChatGPT */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto w-full px-6 py-6">
           {messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[400px]">
+            <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
-                <div className="w-12 h-12 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <span className="text-lg text-sidebar-primary-foreground font-bold">A</span>
+                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h3 className="text-lg font-medium mb-2 text-foreground">How can I help you today?</h3>
+                <h3 className="text-xl font-medium mb-2 text-foreground">How can I help you today?</h3>
                 <p className="text-muted-foreground text-sm">Start a conversation with adamGPT</p>
               </div>
             </div>
           ) : (
-            messages.map((message) => (
-              <div 
-                key={message.id} 
-                className="mb-6 group"
-                onMouseEnter={() => setHoveredMessage(message.id)}
-                onMouseLeave={() => setHoveredMessage(null)}
-              >
-                <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%] relative`}>
-                    <div className={`${
-                      message.role === 'user' 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
-                        : 'bg-transparent text-foreground'
-                    } px-3 py-2`}>
-                      
-                      {/* File attachments */}
-                      {message.attachments && message.attachments.length > 0 && (
-                        <div className="mb-3 space-y-2">
-                          {message.attachments.map((file, index) => (
-                            <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
-                              message.role === 'user' 
-                                ? 'bg-white/10 border-white/20' 
-                                : 'bg-muted border-border'
-                            }`}>
-                              {isImageFile(file.type) && file.url ? (
-                                <img 
-                                  src={file.url} 
-                                  alt={file.name} 
-                                  className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                                />
-                              ) : (
-                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                  message.role === 'user' 
-                                    ? 'bg-white/20' 
-                                    : 'bg-muted-foreground/10'
-                                }`}>
-                                  {getFileIcon(file.type)}
+            <div className="space-y-6">
+              {messages.map((message) => (
+                <div 
+                  key={message.id} 
+                  className="group"
+                  onMouseEnter={() => setHoveredMessage(message.id)}
+                  onMouseLeave={() => setHoveredMessage(null)}
+                >
+                  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[85%] relative`}>
+                      <div className={`${
+                        message.role === 'user' 
+                          ? 'chat-user-bg text-foreground rounded-2xl rounded-br-md' 
+                          : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
+                      } px-4 py-3 shadow-sm`}>
+                        
+                        {/* File attachments */}
+                        {message.attachments && message.attachments.length > 0 && (
+                          <div className="mb-3 space-y-2">
+                            {message.attachments.map((file, index) => (
+                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
+                                message.role === 'user' 
+                                  ? 'bg-black/10 border-white/20' 
+                                  : 'bg-accent border-border'
+                              }`}>
+                                {isImageFile(file.type) && file.url ? (
+                                  <img 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                    message.role === 'user' 
+                                      ? 'bg-white/20' 
+                                      : 'bg-muted'
+                                  }`}>
+                                    {getFileIcon(file.type)}
+                                  </div>
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatFileSize(file.size)}
+                                  </p>
                                 </div>
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm font-medium truncate ${
-                                  message.role === 'user' 
-                                    ? 'text-sidebar-primary-foreground' 
-                                    : 'text-foreground'
-                                }`}>
-                                  {file.name}
-                                </p>
-                                <p className={`text-xs ${
-                                  message.role === 'user' 
-                                    ? 'text-sidebar-primary-foreground/70' 
-                                    : 'text-muted-foreground'
-                                }`}>
-                                  {formatFileSize(file.size)}
-                                </p>
                               </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                      
-                      {message.content && (
-                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                          {message.content}
-                        </p>
-                      )}
-                    </div>
-                    
-                    {/* Copy button positioned below message */}
-                    {hoveredMessage === message.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => copyToClipboard(message.content, message.id)}
-                        className={`h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 mt-1 ${
-                          message.role === 'user' ? 'self-end' : 'self-start'
-                        }`}
-                      >
-                        {copiedMessageId === message.id ? (
-                          <Check className="h-3 w-3 animate-scale-in" />
-                        ) : (
-                          <Copy className="h-3 w-3" />
+                            ))}
+                          </div>
                         )}
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
-          
-          {loading && (
-            <div className="mb-6">
-              <div className="flex justify-start">
-                <div className="flex flex-col items-start max-w-[75%]">
-                  {/* Typing indicator */}
-                  <div className="bg-transparent text-foreground px-3 py-2">
-                    <div className="flex items-center space-x-1.5">
-                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
-                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                        
+                        {message.content && (
+                          <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                            {message.content}
+                          </p>
+                        )}
+                      </div>
+                      
+                      {/* Copy button positioned below message - ChatGPT style */}
+                      {hoveredMessage === message.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(message.content, message.id)}
+                          className={`h-8 w-8 p-0 chat-hover rounded-md opacity-0 group-hover:opacity-100 transition-all duration-150 mt-2 ${
+                            message.role === 'user' ? 'self-end' : 'self-start'
+                          }`}
+                        >
+                          {copiedMessageId === message.id ? (
+                            <Check className="h-4 w-4 text-primary animate-scale-in" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
-              </div>
+              ))}
+              
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="flex flex-col items-start max-w-[85%]">
+                    <div className="chat-ai-bg text-foreground rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
           )}
-          
-          <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input area */}
-      <div className="border-t bg-background">
-        <div className="w-full px-6 py-3">
+      {/* Input area - ChatGPT style */}
+      <div className="border-t border-border bg-background">
+        <div className="max-w-4xl mx-auto w-full px-6 py-4">
           <form onSubmit={sendMessage} className="relative">
             {/* File previews */}
             {selectedFiles.length > 0 && (
-              <div className="mb-3 p-3 bg-muted/30 border border-input rounded-xl space-y-2 animate-fade-in">
+              <div className="mb-3 p-3 bg-accent/30 border border-border rounded-xl space-y-2 animate-fade-in">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 bg-background/50 rounded-lg group hover:bg-background/70 transition-colors duration-200">
+                  <div key={index} className="flex items-center gap-3 p-2 bg-background/50 rounded-lg group hover:bg-background/80 transition-colors duration-150">
                     {isImageFile(file.type) ? (
                       <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
                         <img 
@@ -453,7 +444,7 @@ export default function Chat() {
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(index)}
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-destructive/20 hover:text-destructive"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-destructive/20 hover:text-destructive"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -462,23 +453,24 @@ export default function Chat() {
               </div>
             )}
             
-            <div className="relative flex items-center gap-3 bg-muted/30 border border-input rounded-xl px-4 py-2 focus-within:border-sidebar-primary/30 transition-all duration-200">
+            {/* ChatGPT-style input field */}
+            <div className="relative flex items-center chat-input-bg border border-border rounded-full px-4 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all duration-200 shadow-sm">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted rounded-lg flex-shrink-0 transition-colors duration-200"
+                    className="h-8 w-8 p-0 hover:bg-accent rounded-lg flex-shrink-0 transition-colors duration-150 mr-3"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 animate-scale-in" align="start">
+                <PopoverContent className="w-48 p-2 animate-scale-in border-border" align="start">
                   <Button
                     variant="ghost"
                     onClick={handleFileUpload}
-                    className="w-full justify-start gap-2 h-10 px-3 hover:bg-muted transition-colors duration-200"
+                    className="w-full justify-start gap-3 h-10 px-3 hover:bg-accent transition-colors duration-150 text-sm"
                   >
                     <Paperclip className="h-4 w-4" />
                     Add photos & files
@@ -491,7 +483,7 @@ export default function Chat() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message adamGPT..."
                 disabled={loading}
-                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-8"
+                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm resize-none min-h-0 h-auto"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -499,14 +491,15 @@ export default function Chat() {
                   }
                 }}
               />
+              
               <Button 
                 type="submit" 
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                 size="sm"
-                className={`rounded-lg h-8 w-8 p-0 transition-all duration-200 ${
+                className={`rounded-full h-8 w-8 p-0 ml-3 transition-all duration-150 ${
                   (input.trim() || selectedFiles.length > 0) && !loading 
-                    ? 'bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground hover:scale-105' 
-                    : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 shadow-sm' 
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
               >
                 <Send className="h-4 w-4" />
@@ -523,7 +516,7 @@ export default function Chat() {
               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json"
             />
             
-            <p className="text-xs text-muted-foreground text-center mt-2">
+            <p className="text-xs text-muted-foreground text-center mt-3">
               adamGPT can make mistakes. Consider checking important information.
             </p>
           </form>
