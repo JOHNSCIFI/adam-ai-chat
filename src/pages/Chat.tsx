@@ -73,6 +73,7 @@ export default function Chat() {
       if (userError) throw userError;
 
       // Send message to n8n webhook and get AI response
+      console.log('Trigger: Send Message to AI');
       console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/adamGPT');
       console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
       
@@ -187,43 +188,42 @@ export default function Chat() {
         ) : (
           messages.map((message) => (
             <div key={message.id} className="group">
-              <div className={`flex gap-4 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                {/* Avatar */}
-                <div className="flex-shrink-0">
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === 'user' 
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground' 
-                      : 'bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground'
-                  }`}>
-                    {message.role === 'user' ? (
-                      <span className="text-sm font-semibold">
-                        {user?.email?.slice(0, 1).toUpperCase()}
-                      </span>
-                    ) : (
+              <div className={`flex gap-4 max-w-4xl mx-auto ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                {message.role === 'assistant' && (
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
                       <span className="text-sm font-bold">A</span>
-                    )}
+                    </div>
                   </div>
-                </div>
+                )}
                 
                 {/* Message content */}
-                <div className="flex-1 min-w-0">
-                  <div className={`text-sm font-medium mb-2 ${
+                <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                  <div className={`text-xs font-medium mb-1 text-muted-foreground ${
                     message.role === 'user' ? 'text-right' : 'text-left'
                   }`}>
-                    <span className="text-foreground">
-                      {message.role === 'user' ? 'You' : 'adamGPT'}
-                    </span>
+                    {message.role === 'user' ? 'You' : 'adamGPT'}
                   </div>
                   <div className={`prose prose-sm max-w-none ${
                     message.role === 'user' 
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-tr-md px-4 py-3 ml-auto max-w-[85%] w-fit' 
-                      : 'text-foreground'
+                      ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-tr-md px-4 py-3' 
+                      : 'bg-muted/50 text-foreground rounded-2xl rounded-tl-md px-4 py-3'
                   }`}>
                     <p className="whitespace-pre-wrap break-words m-0 leading-relaxed">
                       {message.content}
                     </p>
                   </div>
                 </div>
+
+                {message.role === 'user' && (
+                  <div className="flex-shrink-0">
+                    <div className="w-8 h-8 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
+                      <span className="text-sm font-semibold">
+                        {user?.email?.slice(0, 1).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           ))

@@ -82,6 +82,7 @@ export function ChatSidebar() {
   const handleNewChat = async () => {
     if (!user) return;
 
+    console.log('Trigger: Create New Chat');
     const { data, error } = await supabase
       .from('chats')
       .insert([{ user_id: user.id, title: 'New Chat' }])
@@ -104,6 +105,7 @@ export function ChatSidebar() {
   const handleRenameChat = async (chatId: string, newTitle: string) => {
     if (!newTitle.trim()) return;
 
+    console.log('Trigger: Rename Chat Name');
     const { error } = await supabase
       .from('chats')
       .update({ title: newTitle.trim() })
@@ -122,6 +124,7 @@ export function ChatSidebar() {
   };
 
   const handleDeleteChat = async (chatId: string) => {
+    console.log('Trigger: Delete Chat');
     const { error } = await supabase
       .from('chats')
       .delete()
@@ -190,38 +193,8 @@ export function ChatSidebar() {
                     size={collapsed ? "sm" : "default"}
                   >
                     <Plus className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-2"} />
-                    {!collapsed && "New chat"}
+                    {!collapsed && "Create New Chat"}
                   </Button>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild
-                    size={collapsed ? "sm" : "default"}
-                  >
-                    <button className="text-sidebar-foreground hover:bg-sidebar-accent">
-                      <Search className="h-4 w-4" />
-                      {!collapsed && <span>Search chats</span>}
-                    </button>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-                
-                <SidebarMenuItem>
-                  <SidebarMenuButton 
-                    asChild
-                    size={collapsed ? "sm" : "default"}
-                  >
-                    <button className="text-sidebar-foreground hover:bg-sidebar-accent">
-                      <Library className="h-4 w-4" />
-                      {!collapsed && <span>Library</span>}
-                    </button>
-                  </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
