@@ -1,8 +1,10 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
 
 interface AuthContextType {
-  user: any | null;
-  session: any | null;
+  user: User | null;
+  session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
@@ -12,30 +14,67 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<any | null>(null);
-  const [session, setSession] = useState<any | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  console.log('AuthProvider rendering - simplified version');
+  console.log('AuthProvider rendering with Supabase');
 
-  // Remove Supabase temporarily to test
   useEffect(() => {
-    console.log('AuthProvider useEffect running - simplified');
-    setLoading(false);
+    console.log('AuthProvider useEffect running with Supabase');
+    
+    // Set up auth state listener
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        console.log('Auth state changed:', event, session?.user?.email);
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('Initial session:', session?.user?.email);
+      setSession(session);
+      setUser(session?.user ?? null);
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    console.log('SignUp called:', email);
-    return { error: null };
+    console.log('Attempting to sign up:', email);
+    const redirectUrl = `${window.location.origin}/`;
+    
+    const { error, data } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: displayName ? { display_name: displayName } : {}
+      }
+    });
+    
+    console.log('Signup result:', { error, user: data.user?.email });
+    return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('SignIn called:', email);
-    return { error: null };
+    console.log('Attempting to sign in:', email);
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+    
+    console.log('Signin result:', { error, user: data.user?.email });
+    return { error };
   };
 
   const signOut = async () => {
-    console.log('SignOut called');
+    console.log('Signing out');
+    await supabase.auth.signOut();
   };
 
   const value = {
