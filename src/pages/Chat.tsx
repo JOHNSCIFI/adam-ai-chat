@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Copy, Plus, Paperclip } from 'lucide-react';
+import { Send, Copy, Plus, Paperclip, X, FileText, Image as ImageIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,6 +14,15 @@ interface Message {
   role: 'user' | 'assistant';
   created_at: string;
   chat_id: string;
+  attachments?: FileAttachment[];
+}
+
+interface FileAttachment {
+  id: string;
+  name: string;
+  size: number;
+  type: string;
+  url: string;
 }
 
 export default function Chat() {
@@ -23,6 +32,8 @@ export default function Chat() {
   const [loading, setLoading] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -90,11 +101,13 @@ export default function Chat() {
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || !chatId || !user || loading) return;
+    if ((!input.trim() && selectedFiles.length === 0) || !chatId || !user || loading) return;
 
     setLoading(true);
     const userMessage = input.trim();
+    const files = [...selectedFiles];
     setInput('');
+    setSelectedFiles([]);
 
     try {
       // Add user message to database
@@ -204,19 +217,13 @@ export default function Chat() {
     }
   };
 
-  const copyToClipboard = async (text: string) => {
+  const copyToClipboard = async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text);
-      toast({
-        title: "Copied to clipboard",
-        description: "Message copied successfully",
-      });
+      setCopiedMessageId(messageId);
+      setTimeout(() => setCopiedMessageId(null), 2000);
     } catch (error) {
-      toast({
-        title: "Copy failed",
-        description: "Unable to copy message",
-        variant: "destructive",
-      });
+      // Silently handle error
     }
   };
 
@@ -228,13 +235,30 @@ export default function Chat() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      // Handle file upload logic here
-      toast({
-        title: "Files selected",
-        description: `${files.length} file(s) selected for upload`,
-      });
+      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      // Reset the input
+      event.target.value = '';
     }
   };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  };
+
+  const getFileIcon = (type: string) => {
+    if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    return <FileText className="h-4 w-4" />;
+  };
+
+  const isImageFile = (type: string) => type.startsWith('image/');
 
   if (!chatId) {
     return (
@@ -297,9 +321,57 @@ export default function Chat() {
                         ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
                         : 'bg-transparent text-foreground'
                     } px-3 py-2`}>
-                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
-                        {message.content}
-                      </p>
+                      
+                      {/* File attachments */}
+                      {message.attachments && message.attachments.length > 0 && (
+                        <div className="mb-3 space-y-2">
+                          {message.attachments.map((file, index) => (
+                            <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
+                              message.role === 'user' 
+                                ? 'bg-white/10 border-white/20' 
+                                : 'bg-muted border-border'
+                            }`}>
+                              {isImageFile(file.type) && file.url ? (
+                                <img 
+                                  src={file.url} 
+                                  alt={file.name} 
+                                  className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                />
+                              ) : (
+                                <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                  message.role === 'user' 
+                                    ? 'bg-white/20' 
+                                    : 'bg-muted-foreground/10'
+                                }`}>
+                                  {getFileIcon(file.type)}
+                                </div>
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm font-medium truncate ${
+                                  message.role === 'user' 
+                                    ? 'text-sidebar-primary-foreground' 
+                                    : 'text-foreground'
+                                }`}>
+                                  {file.name}
+                                </p>
+                                <p className={`text-xs ${
+                                  message.role === 'user' 
+                                    ? 'text-sidebar-primary-foreground/70' 
+                                    : 'text-muted-foreground'
+                                }`}>
+                                  {formatFileSize(file.size)}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {message.content && (
+                        <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                          {message.content}
+                        </p>
+                      )}
                     </div>
                     
                     {/* Copy button positioned below message */}
@@ -307,12 +379,16 @@ export default function Chat() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => copyToClipboard(message.content)}
-                        className={`h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-opacity mt-1 ${
+                        onClick={() => copyToClipboard(message.content, message.id)}
+                        className={`h-6 w-6 p-0 hover:bg-muted rounded-md opacity-0 group-hover:opacity-100 transition-all duration-200 mt-1 ${
                           message.role === 'user' ? 'self-end' : 'self-start'
                         }`}
                       >
-                        <Copy className="h-3 w-3" />
+                        {copiedMessageId === message.id ? (
+                          <Check className="h-3 w-3 animate-scale-in" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
                       </Button>
                     )}
                   </div>
@@ -346,6 +422,46 @@ export default function Chat() {
       <div className="border-t bg-background">
         <div className="w-full px-6 py-3">
           <form onSubmit={sendMessage} className="relative">
+            {/* File previews */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-3 p-3 bg-muted/30 border border-input rounded-xl space-y-2 animate-fade-in">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-3 p-2 bg-background/50 rounded-lg group hover:bg-background/70 transition-colors duration-200">
+                    {isImageFile(file.type) ? (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt={file.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeFile(index)}
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200 hover:bg-destructive/20 hover:text-destructive"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
             <div className="relative flex items-center gap-3 bg-muted/30 border border-input rounded-xl px-4 py-2 focus-within:border-sidebar-primary/30 transition-all duration-200">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
@@ -353,16 +469,16 @@ export default function Chat() {
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-muted rounded-lg flex-shrink-0"
+                    className="h-8 w-8 p-0 hover:bg-muted rounded-lg flex-shrink-0 transition-colors duration-200"
                   >
                     <Plus className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-48 p-2" align="start">
+                <PopoverContent className="w-48 p-2 animate-scale-in" align="start">
                   <Button
                     variant="ghost"
                     onClick={handleFileUpload}
-                    className="w-full justify-start gap-2 h-10 px-3"
+                    className="w-full justify-start gap-2 h-10 px-3 hover:bg-muted transition-colors duration-200"
                   >
                     <Paperclip className="h-4 w-4" />
                     Add photos & files
@@ -385,11 +501,11 @@ export default function Chat() {
               />
               <Button 
                 type="submit" 
-                disabled={!input.trim() || loading}
+                disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                 size="sm"
-                className={`rounded-lg h-8 w-8 p-0 transition-all ${
-                  input.trim() && !loading 
-                    ? 'bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground' 
+                className={`rounded-lg h-8 w-8 p-0 transition-all duration-200 ${
+                  (input.trim() || selectedFiles.length > 0) && !loading 
+                    ? 'bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground hover:scale-105' 
                     : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
                 }`}
               >
