@@ -346,7 +346,7 @@ export function ChatSidebar() {
                           ) : (
                             <div className="flex items-center">
                               <SidebarMenuButton asChild className="flex-1 pr-0">
-                                <NavLink 
+                                  <NavLink 
                                   to={`/chat/${chat.id}`} 
                                   className={({ isActive }) =>
                                     isActive 
@@ -354,7 +354,6 @@ export function ChatSidebar() {
                                       : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
                                   }
                                 >
-                                  <MessageSquare className="h-4 w-4" />
                                   <span className="truncate">{chat.title}</span>
                                 </NavLink>
                               </SidebarMenuButton>
