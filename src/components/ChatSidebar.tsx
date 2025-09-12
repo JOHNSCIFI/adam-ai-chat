@@ -1,22 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, MessageSquare, Settings, HelpCircle, LogOut, User } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import {
-  Sidebar,
-  SidebarContent,
+import { 
+  Sidebar, 
+  SidebarContent, 
+  SidebarHeader, 
+  SidebarMenu, 
+  SidebarMenuItem, 
+  SidebarMenuButton,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  useSidebar,
+  SidebarSeparator,
+  useSidebar
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { 
+  Plus, 
+  MessageSquare, 
+  Search, 
+  Library, 
+  Star, 
+  Users, 
+  FolderOpen,
+  Settings,
+  HelpCircle,
+  LogOut,
+  User,
+  ChevronUp
+} from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import SettingsModal from '@/components/SettingsModal';
 
 interface Chat {
   id: string;
@@ -26,9 +42,11 @@ interface Chat {
 
 export function ChatSidebar() {
   const [chats, setChats] = useState<Chat[]>([]);
-  const { user, signOut } = useAuth();
-  const { state } = useSidebar();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { user } = useAuth();
   const navigate = useNavigate();
+  const { state } = useSidebar();
+
   const collapsed = state === 'collapsed';
 
   useEffect(() => {
@@ -38,136 +56,200 @@ export function ChatSidebar() {
   }, [user]);
 
   const fetchChats = async () => {
-    if (!user) return;
-    
     const { data, error } = await supabase
       .from('chats')
-      .select('*')
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
-    
-    if (!error && data) {
-      setChats(data);
+      .select('id, title, created_at')
+      .eq('user_id', user?.id)
+      .order('created_at', { ascending: false })
+      .limit(20);
+
+    if (error) {
+      console.error('Error fetching chats:', error);
+    } else {
+      setChats(data || []);
     }
   };
 
   const handleNewChat = async () => {
     if (!user) return;
-    
+
     const { data, error } = await supabase
       .from('chats')
       .insert([{ user_id: user.id, title: 'New Chat' }])
       .select()
       .single();
-    
-    if (!error && data) {
+
+    if (error) {
+      console.error('Error creating chat:', error);
+    } else {
       navigate(`/chat/${data.id}`);
       fetchChats();
     }
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    await supabase.auth.signOut();
     navigate('/auth');
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground" : "hover:bg-sidebar-accent/50";
+    isActive 
+      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+      : "hover:bg-sidebar-accent/50";
+
+  const getUserInitials = () => {
+    const email = user?.email || '';
+    return email.slice(0, 2).toUpperCase();
+  };
+
+  const getUserDisplayName = () => {
+    const email = user?.email || '';
+    return email.split('@')[0];
+  };
 
   return (
-    <Sidebar className={collapsed ? "w-14" : "w-64"}>
-      <SidebarHeader className="p-4">
-        {!collapsed && (
+    <>
+      <Sidebar className="border-r border-sidebar-border">
+        <SidebarHeader className="p-4">
           <div className="flex items-center gap-2">
-            <MessageSquare className="h-6 w-6" />
-            <span className="font-bold text-lg">adamGPT</span>
+            <div className="w-6 h-6 bg-sidebar-primary rounded-sm flex items-center justify-center">
+              <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
+            </div>
+            {!collapsed && (
+              <h1 className="text-lg font-semibold text-sidebar-foreground">adamGPT</h1>
+            )}
           </div>
-        )}
-      </SidebarHeader>
+        </SidebarHeader>
 
-      <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <SidebarMenuButton asChild>
-                  <Button
-                    onClick={handleNewChat}
-                    className="w-full justify-start gap-2"
-                    variant="ghost"
-                  >
-                    <Plus className="h-4 w-4" />
-                    {!collapsed && <span>New Chat</span>}
-                  </Button>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-
-        {chats.length > 0 && (
+        <SidebarContent className="px-2">
           <SidebarGroup>
-            <SidebarGroupLabel>Recent Chats</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {chats.map((chat) => (
-                  <SidebarMenuItem key={chat.id}>
-                    <SidebarMenuButton asChild>
-                      <NavLink to={`/chat/${chat.id}`} className={getNavCls}>
-                        <MessageSquare className="h-4 w-4" />
-                        {!collapsed && (
-                          <span className="truncate">{chat.title}</span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                <SidebarMenuItem>
+                  <Button 
+                    onClick={handleNewChat}
+                    className="w-full justify-start bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
+                    size={collapsed ? "sm" : "default"}
+                  >
+                    <Plus className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-2"} />
+                    {!collapsed && "New chat"}
+                  </Button>
+                </SidebarMenuItem>
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-        )}
-      </SidebarContent>
 
-      <SidebarFooter className="p-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink to="/profile" className={getNavCls}>
-                <User className="h-4 w-4" />
-                {!collapsed && <span>Profile</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink to="/settings" className={getNavCls}>
-                <Settings className="h-4 w-4" />
-                {!collapsed && <span>Settings</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink to="/help" className={getNavCls}>
-                <HelpCircle className="h-4 w-4" />
-                {!collapsed && <span>Help</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <Button
-                onClick={handleSignOut}
-                className="w-full justify-start gap-2"
-                variant="ghost"
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild
+                    size={collapsed ? "sm" : "default"}
+                  >
+                    <button className="text-sidebar-foreground hover:bg-sidebar-accent">
+                      <Search className="h-4 w-4" />
+                      {!collapsed && <span>Search chats</span>}
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                
+                <SidebarMenuItem>
+                  <SidebarMenuButton 
+                    asChild
+                    size={collapsed ? "sm" : "default"}
+                  >
+                    <button className="text-sidebar-foreground hover:bg-sidebar-accent">
+                      <Library className="h-4 w-4" />
+                      {!collapsed && <span>Library</span>}
+                    </button>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+
+          <SidebarSeparator />
+
+          {!collapsed && chats.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {chats.map((chat) => (
+                    <SidebarMenuItem key={chat.id}>
+                      <SidebarMenuButton asChild>
+                        <NavLink 
+                          to={`/chat/${chat.id}`} 
+                          className={getNavCls}
+                        >
+                          <MessageSquare className="h-4 w-4" />
+                          <span className="truncate">{chat.title}</span>
+                        </NavLink>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+        </SidebarContent>
+
+        <SidebarFooter className="p-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
               >
-                <LogOut className="h-4 w-4" />
-                {!collapsed && <span>Logout</span>}
+                <div className="flex items-center gap-3 w-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-xs bg-sidebar-primary text-sidebar-primary-foreground">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  {!collapsed && (
+                    <div className="flex-1 text-left">
+                      <p className="text-sm font-medium text-sidebar-foreground">{getUserDisplayName()}</p>
+                      <p className="text-xs text-sidebar-foreground/60">Free</p>
+                    </div>
+                  )}
+                  {!collapsed && <ChevronUp className="h-4 w-4 text-sidebar-foreground/60" />}
+                </div>
               </Button>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
-    </Sidebar>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent 
+              side="top" 
+              align="start" 
+              className="w-64 mb-2"
+            >
+              <DropdownMenuItem asChild>
+                <NavLink to="/profile" className="cursor-pointer">
+                  <User className="mr-2 h-4 w-4" />
+                  Profile
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+                <Settings className="mr-2 h-4 w-4" />
+                Settings
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <NavLink to="/help" className="cursor-pointer">
+                  <HelpCircle className="mr-2 h-4 w-4" />
+                  Help
+                </NavLink>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={handleSignOut}>
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarFooter>
+      </Sidebar>
+
+      <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
+    </>
   );
 }
