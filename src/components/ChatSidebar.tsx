@@ -150,8 +150,9 @@ export function ChatSidebar() {
     if (error) {
       console.error('Error creating chat:', error);
     } else {
+      // Navigate immediately to the new chat
       navigate(`/chat/${data.id}`);
-      fetchChats();
+      // The real-time subscription will handle updating the sidebar
     }
   };
 

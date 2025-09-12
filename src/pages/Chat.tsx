@@ -104,53 +104,69 @@ export default function Chat() {
 
       if (userError) throw userError;
 
-      // Send message to n8n webhook and get AI response
+      // Send message to n8n webhook with retry logic
       console.log('Trigger: Send Message to AI');
       console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/message');
       console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
       
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          message: userMessage,
-          chat_id: chatId,
-          user_id: user.id
-        }),
-      });
+      let assistantResponse = '';
+      let retryCount = 0;
+      const maxRetries = 3;
+      
+      while (retryCount < maxRetries) {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+          
+          const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/message', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: userMessage,
+              chat_id: chatId,
+              user_id: user.id
+            }),
+            signal: controller.signal
+          });
 
-      console.log('Webhook response status:', webhookResponse.status);
-      console.log('Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
+          clearTimeout(timeoutId);
+          console.log('Webhook response status:', webhookResponse.status);
 
-      if (!webhookResponse.ok) {
-        const errorText = await webhookResponse.text();
-        console.error('Webhook error response:', errorText);
-        throw new Error(`Webhook failed with status ${webhookResponse.status}: ${errorText}`);
-      }
+          if (!webhookResponse.ok) {
+            const errorText = await webhookResponse.text();
+            console.error('Webhook error response:', errorText);
+            throw new Error(`Webhook failed with status ${webhookResponse.status}`);
+          }
 
-      let responseData;
-      try {
-        responseData = await webhookResponse.json();
-        console.log('Webhook response data:', responseData);
-      } catch (jsonError) {
-        console.error('Failed to parse webhook JSON response:', jsonError);
-        throw new Error('Invalid JSON response from webhook');
-      }
+          const responseData = await webhookResponse.json();
+          console.log('Webhook response data:', responseData);
 
-      // Handle different response formats from n8n webhook
-      let assistantResponse;
-      if (Array.isArray(responseData)) {
-        // Handle array format: [{"output": "response"}]
-        assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message;
-      } else {
-        // Handle object format: {"output": "response"} or {"value": "response"}
-        assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response;
+          // Handle different response formats from n8n webhook
+          if (Array.isArray(responseData)) {
+            assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message || '';
+          } else {
+            assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
+          }
+          
+          if (assistantResponse) {
+            break; // Success, exit retry loop
+          }
+          
+        } catch (webhookError: any) {
+          console.error(`Webhook attempt ${retryCount + 1} failed:`, webhookError);
+          retryCount++;
+          
+          if (retryCount < maxRetries) {
+            // Wait before retry (exponential backoff)
+            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
+          }
+        }
       }
       
       if (!assistantResponse) {
-        assistantResponse = "I apologize, but I couldn't process your request at the moment. Please try again.";
+        assistantResponse = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
       }
       
       // Add assistant response to database
@@ -172,11 +188,11 @@ export default function Chat() {
           .eq('id', chatId);
       }
 
-      fetchMessages();
     } catch (error: any) {
+      console.error('Send message error:', error);
       toast({
         title: "Error sending message",
-        description: error.message,
+        description: "Unable to send message. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -232,32 +248,35 @@ export default function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div key={message.id} className="group">
-                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+              <div key={message.id} className="group mb-6">
+                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end ml-12' : 'justify-start mr-12'}`}>
                   {message.role === 'assistant' && (
                     <div className="flex-shrink-0 mt-1">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-bold">A</span>
                       </div>
                     </div>
                   )}
                   
                   {/* Message content */}
-                  <div className={`flex flex-col max-w-[85%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end max-w-[80%]' : 'items-start max-w-[80%]'}`}>
                     <div className={`${
                       message.role === 'user' 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md' 
-                        : 'bg-muted/30 text-foreground rounded-2xl rounded-bl-md'
-                    } px-4 py-2.5 max-w-full`}>
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-3xl rounded-br-lg shadow-sm' 
+                        : 'bg-muted/50 text-foreground rounded-3xl rounded-bl-lg border border-border/50'
+                    } px-5 py-3 max-w-full`}>
                       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.content}
                       </p>
                     </div>
+                    <span className="text-xs text-muted-foreground mt-1 px-2">
+                      {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
 
                   {message.role === 'user' && (
                     <div className="flex-shrink-0 mt-1">
-                      <div className="w-7 h-7 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
+                      <div className="w-8 h-8 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-medium">
                           {user?.email?.slice(0, 1).toUpperCase()}
                         </span>
@@ -270,21 +289,21 @@ export default function Chat() {
           )}
           
           {loading && (
-            <div className="group">
-              <div className="flex gap-3">
+            <div className="group mb-6">
+              <div className="flex gap-3 justify-start mr-12">
                 {/* AI Avatar */}
                 <div className="flex-shrink-0 mt-1">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                     <span className="text-xs font-bold">A</span>
                   </div>
                 </div>
                 
                 {/* Typing indicator */}
-                <div className="bg-muted/30 text-foreground rounded-2xl rounded-bl-md px-4 py-2.5">
+                <div className="bg-muted/50 text-foreground rounded-3xl rounded-bl-lg px-5 py-3 border border-border/50">
                   <div className="flex items-center space-x-1">
-                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce"></div>
-                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                   </div>
                 </div>
               </div>
