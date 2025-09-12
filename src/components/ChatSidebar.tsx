@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   Sidebar, 
   SidebarContent, 
@@ -14,6 +14,7 @@ import {
   useSidebar
 } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { 
   Plus, 
   MessageSquare, 
@@ -26,7 +27,11 @@ import {
   HelpCircle,
   LogOut,
   User,
-  ChevronUp
+  ChevronUp,
+  Edit3,
+  Trash2,
+  Check,
+  X
 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -43,8 +48,12 @@ interface Chat {
 export function ChatSidebar() {
   const [chats, setChats] = useState<Chat[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
   const { user } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { state } = useSidebar();
 
   const collapsed = state === 'collapsed';
@@ -90,6 +99,55 @@ export function ChatSidebar() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     navigate('/auth');
+  };
+
+  const handleRenameChat = async (chatId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+
+    const { error } = await supabase
+      .from('chats')
+      .update({ title: newTitle.trim() })
+      .eq('id', chatId)
+      .eq('user_id', user?.id);
+
+    if (error) {
+      console.error('Error renaming chat:', error);
+    } else {
+      setChats(chats.map(chat => 
+        chat.id === chatId ? { ...chat, title: newTitle.trim() } : chat
+      ));
+      setEditingChatId(null);
+      setEditTitle('');
+    }
+  };
+
+  const handleDeleteChat = async (chatId: string) => {
+    const { error } = await supabase
+      .from('chats')
+      .delete()
+      .eq('id', chatId)
+      .eq('user_id', user?.id);
+
+    if (error) {
+      console.error('Error deleting chat:', error);
+    } else {
+      setChats(chats.filter(chat => chat.id !== chatId));
+      
+      // If we're currently viewing the deleted chat, navigate to home
+      if (location.pathname === `/chat/${chatId}`) {
+        navigate('/');
+      }
+    }
+  };
+
+  const startEditing = (chatId: string, currentTitle: string) => {
+    setEditingChatId(chatId);
+    setEditTitle(currentTitle);
+  };
+
+  const cancelEditing = () => {
+    setEditingChatId(null);
+    setEditTitle('');
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
@@ -177,15 +235,94 @@ export function ChatSidebar() {
                 <SidebarMenu>
                   {chats.map((chat) => (
                     <SidebarMenuItem key={chat.id}>
-                      <SidebarMenuButton asChild>
-                        <NavLink 
-                          to={`/chat/${chat.id}`} 
-                          className={getNavCls}
-                        >
-                          <MessageSquare className="h-4 w-4" />
-                          <span className="truncate">{chat.title}</span>
-                        </NavLink>
-                      </SidebarMenuButton>
+                      <div 
+                        className="group relative"
+                        onMouseEnter={() => setHoveredChatId(chat.id)}
+                        onMouseLeave={() => setHoveredChatId(null)}
+                      >
+                        {editingChatId === chat.id ? (
+                          <div className="flex items-center gap-1 px-2 py-1.5 text-sm">
+                            <MessageSquare className="h-4 w-4 text-sidebar-foreground/60 flex-shrink-0" />
+                            <Input
+                              value={editTitle}
+                              onChange={(e) => setEditTitle(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  handleRenameChat(chat.id, editTitle);
+                                } else if (e.key === 'Escape') {
+                                  cancelEditing();
+                                }
+                              }}
+                              onBlur={() => handleRenameChat(chat.id, editTitle)}
+                              className="h-6 text-xs bg-sidebar-accent border-sidebar-border"
+                              autoFocus
+                            />
+                            <div className="flex gap-1 flex-shrink-0">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                onClick={() => handleRenameChat(chat.id, editTitle)}
+                              >
+                                <Check className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                onClick={cancelEditing}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex items-center">
+                            <SidebarMenuButton asChild className="flex-1 pr-0">
+                              <NavLink 
+                                to={`/chat/${chat.id}`} 
+                                className={({ isActive }) =>
+                                  isActive 
+                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" 
+                                    : "hover:bg-sidebar-accent/50"
+                                }
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                                <span className="truncate">{chat.title}</span>
+                              </NavLink>
+                            </SidebarMenuButton>
+                            
+                            {hoveredChatId === chat.id && (
+                              <div className="flex gap-1 pr-2 flex-shrink-0">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent opacity-70 hover:opacity-100"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    startEditing(chat.id, chat.title);
+                                  }}
+                                >
+                                  <Edit3 className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    handleDeleteChat(chat.id);
+                                  }}
+                                >
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </SidebarMenuItem>
                   ))}
                 </SidebarMenu>
