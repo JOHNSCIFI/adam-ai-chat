@@ -8,6 +8,7 @@ interface AuthContextType {
   loading: boolean;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
 }
 
@@ -94,6 +95,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const signInWithGoogle = async () => {
+    console.log('Attempting to sign in with Google');
+    const redirectUrl = window.location.origin.includes('localhost') 
+      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
+      : `${window.location.origin}/`;
+    
+    console.log('Google OAuth redirect URL:', redirectUrl);
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectUrl
+      }
+    });
+    
+    console.log('Google signin result:', { error });
+    return { error };
+  };
+
   const signOut = async () => {
     console.log('Signing out');
     await supabase.auth.signOut();
@@ -105,6 +125,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut
   };
 
