@@ -23,30 +23,52 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     console.log('AuthProvider useEffect running with Supabase');
     
+    // Handle auth callback from email verification
+    const handleAuthCallback = async () => {
+      const { data, error } = await supabase.auth.getSession();
+      if (error) {
+        console.error('Error getting session:', error);
+      } else {
+        console.log('Session from callback:', data.session?.user?.email);
+        setSession(data.session);
+        setUser(data.session?.user ?? null);
+      }
+      setLoading(false);
+    };
+    
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         console.log('Auth state changed:', event, session?.user?.email);
-        setSession(session);
-        setUser(session?.user ?? null);
+        
+        // Handle email confirmation
+        if (event === 'SIGNED_IN' && session) {
+          console.log('User signed in successfully');
+          setSession(session);
+          setUser(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          console.log('User signed out');
+          setSession(null);
+          setUser(null);
+        }
         setLoading(false);
       }
     );
 
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('Initial session:', session?.user?.email);
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    // Initial session check and auth callback handling
+    handleAuthCallback();
 
     return () => subscription.unsubscribe();
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
     console.log('Attempting to sign up:', email);
-    const redirectUrl = `${window.location.origin}/`;
+    // Use the actual Lovable project URL instead of localhost
+    const redirectUrl = window.location.origin.includes('localhost') 
+      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
+      : `${window.location.origin}/`;
+    
+    console.log('Redirect URL:', redirectUrl);
     
     const { error, data } = await supabase.auth.signUp({
       email,
