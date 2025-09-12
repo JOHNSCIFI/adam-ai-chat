@@ -424,12 +424,6 @@ export function ChatSidebar() {
               align="start" 
               className="w-64 mb-2"
             >
-              <DropdownMenuItem asChild>
-                <NavLink to="/profile" className="cursor-pointer">
-                  <User className="mr-2 h-4 w-4" />
-                  Profile
-                </NavLink>
-              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
