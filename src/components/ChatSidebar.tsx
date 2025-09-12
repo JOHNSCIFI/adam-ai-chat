@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Plus, MessageSquare, Settings, HelpCircle, LogOut, User } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
