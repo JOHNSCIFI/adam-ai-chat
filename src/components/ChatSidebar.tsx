@@ -51,6 +51,7 @@ export function ChatSidebar() {
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [chatsPanelCollapsed, setChatsPanelCollapsed] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -80,7 +81,14 @@ export function ChatSidebar() {
         },
         (payload) => {
           console.log('Trigger: New Chat Created');
-          setChats(current => [payload.new as Chat, ...current]);
+          const newChat = payload.new as Chat;
+          setChats(current => {
+            // Check if chat already exists to prevent duplicates
+            if (current.find(chat => chat.id === newChat.id)) {
+              return current;
+            }
+            return [newChat, ...current];
+          });
         }
       )
       .on(
@@ -150,9 +158,17 @@ export function ChatSidebar() {
     if (error) {
       console.error('Error creating chat:', error);
     } else {
-      // Navigate immediately to the new chat
+      // Immediately add to local state for instant UI update
+      setChats(current => {
+        // Check if already exists to prevent duplicates
+        if (current.find(chat => chat.id === data.id)) {
+          return current;
+        }
+        return [data, ...current];
+      });
+      
+      // Navigate to the new chat
       navigate(`/chat/${data.id}`);
-      // The real-time subscription will handle updating the sidebar
     }
   };
 
@@ -261,104 +277,120 @@ export function ChatSidebar() {
 
           <SidebarSeparator />
 
-          {!collapsed && chats.length > 0 && (
+          {!collapsed && (
             <SidebarGroup>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {chats.map((chat) => (
-                    <SidebarMenuItem key={chat.id}>
-                      <div 
-                        className="group relative"
-                        onMouseEnter={() => setHoveredChatId(chat.id)}
-                        onMouseLeave={() => setHoveredChatId(null)}
-                      >
-                        {editingChatId === chat.id ? (
-                          <div className="flex items-center gap-1 px-2 py-1.5 text-sm">
-                            <MessageSquare className="h-4 w-4 text-sidebar-foreground/60 flex-shrink-0" />
-                            <Input
-                              value={editTitle}
-                              onChange={(e) => setEditTitle(e.target.value)}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleRenameChat(chat.id, editTitle);
-                                } else if (e.key === 'Escape') {
-                                  cancelEditing();
-                                }
-                              }}
-                              onBlur={() => handleRenameChat(chat.id, editTitle)}
-                              className="h-6 text-xs bg-sidebar-accent border-sidebar-border"
-                              autoFocus
-                            />
-                            <div className="flex gap-1 flex-shrink-0">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 hover:bg-sidebar-accent"
-                                onClick={() => handleRenameChat(chat.id, editTitle)}
-                              >
-                                <Check className="h-3 w-3" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 hover:bg-sidebar-accent"
-                                onClick={cancelEditing}
-                              >
-                                <X className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="flex items-center">
-                            <SidebarMenuButton asChild className="flex-1 pr-0">
-                              <NavLink 
-                                to={`/chat/${chat.id}`} 
-                                className={({ isActive }) =>
-                                  isActive 
-                                    ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
-                                    : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
-                                }
-                              >
-                                <MessageSquare className="h-4 w-4" />
-                                <span className="truncate">{chat.title}</span>
-                              </NavLink>
-                            </SidebarMenuButton>
-                            
-                            {hoveredChatId === chat.id && (
-                              <div className="flex gap-1 pr-2 flex-shrink-0">
+              <div className="flex items-center justify-between px-2 py-1">
+                <span className="text-xs font-medium text-sidebar-muted-foreground uppercase tracking-wider">
+                  Recent Chats
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
+                  className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground"
+                >
+                  <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
+                </Button>
+              </div>
+              
+              <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[600px] opacity-100'}`}>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {chats.map((chat) => (
+                      <SidebarMenuItem key={chat.id}>
+                        <div 
+                          className="group relative"
+                          onMouseEnter={() => setHoveredChatId(chat.id)}
+                          onMouseLeave={() => setHoveredChatId(null)}
+                        >
+                          {editingChatId === chat.id ? (
+                            <div className="flex items-center gap-1 px-2 py-1.5 text-sm">
+                              <MessageSquare className="h-4 w-4 text-sidebar-foreground/60 flex-shrink-0" />
+                              <Input
+                                value={editTitle}
+                                onChange={(e) => setEditTitle(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    handleRenameChat(chat.id, editTitle);
+                                  } else if (e.key === 'Escape') {
+                                    cancelEditing();
+                                  }
+                                }}
+                                onBlur={() => handleRenameChat(chat.id, editTitle)}
+                                className="h-6 text-xs bg-sidebar-accent border-sidebar-border"
+                                autoFocus
+                              />
+                              <div className="flex gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent opacity-70 hover:opacity-100"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    startEditing(chat.id, chat.title);
-                                  }}
+                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  onClick={() => handleRenameChat(chat.id, editTitle)}
                                 >
-                                  <Edit3 className="h-3 w-3" />
+                                  <Check className="h-3 w-3" />
                                 </Button>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDeleteChat(chat.id);
-                                  }}
+                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  onClick={cancelEditing}
                                 >
-                                  <Trash2 className="h-3 w-3" />
+                                  <X className="h-3 w-3" />
                                 </Button>
                               </div>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
+                            </div>
+                          ) : (
+                            <div className="flex items-center">
+                              <SidebarMenuButton asChild className="flex-1 pr-0">
+                                <NavLink 
+                                  to={`/chat/${chat.id}`} 
+                                  className={({ isActive }) =>
+                                    isActive 
+                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
+                                      : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
+                                  }
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                  <span className="truncate">{chat.title}</span>
+                                </NavLink>
+                              </SidebarMenuButton>
+                              
+                              {hoveredChatId === chat.id && (
+                                <div className="flex gap-1 pr-2 flex-shrink-0">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 hover:bg-sidebar-accent opacity-70 hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      startEditing(chat.id, chat.title);
+                                    }}
+                                  >
+                                    <Edit3 className="h-3 w-3" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDeleteChat(chat.id);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </SidebarMenuItem>
+                    ))}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </div>
             </SidebarGroup>
           )}
         </SidebarContent>
