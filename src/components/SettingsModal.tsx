@@ -42,7 +42,7 @@ const themeOptions = [
 ];
 
 const accentColors = [
-  { value: 'blue' as const, label: 'Blue', color: 'hsl(213, 94%, 68%)' },
+  { value: 'blue' as const, label: 'Blue', color: 'hsl(221, 83%, 53%)' },
   { value: 'purple' as const, label: 'Purple', color: 'hsl(262, 83%, 58%)' },
   { value: 'green' as const, label: 'Green', color: 'hsl(142, 76%, 36%)' },
   { value: 'orange' as const, label: 'Orange', color: 'hsl(25, 95%, 53%)' },
