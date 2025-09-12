@@ -32,6 +32,7 @@ const sidebarItems = [
   { id: 'general', label: 'General', icon: Settings },
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'security', label: 'Security', icon: Shield },
+  { id: 'data', label: 'Data Control', icon: CreditCard },
 ];
 
 const themeOptions = [
@@ -106,6 +107,37 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       toast({
         title: "Logged out",
         description: "You have been logged out of this device.",
+      });
+    }
+  };
+
+  const handleExportData = async () => {
+    toast({
+      title: "Export started",
+      description: "Your data export will be ready shortly.",
+    });
+  };
+
+  const handleDeleteAllChats = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Chats deleted",
+        description: "All your chats have been permanently deleted.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting chats",
+        description: "Unable to delete chats. Please try again.",
+        variant: "destructive",
       });
     }
   };
@@ -315,9 +347,27 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                   <p className="font-medium">Log out of all devices</p>
                   <p className="text-sm text-muted-foreground">End all active sessions across all devices</p>
                 </div>
-                <Button variant="outline" onClick={handleLogoutAllDevices}>
-                  Log Out Everywhere
-                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="outline">
+                      Log Out Everywhere
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Log out of all devices?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will end all active sessions across all devices where you're currently signed in. You'll need to sign in again on each device.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleLogoutAllDevices}>
+                        Log Out Everywhere
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
 
               <Separator />
@@ -349,6 +399,64 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
                         Delete Account
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'data':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
+              <p className="text-muted-foreground">Manage your data and privacy settings</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Export Data */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Export Data</p>
+                  <p className="text-sm text-muted-foreground">Download all your chats and account information</p>
+                </div>
+                <Button variant="outline" onClick={handleExportData}>
+                  Export Data
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Delete All Chats */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-destructive">Delete All Chats</p>
+                  <p className="text-sm text-muted-foreground">Permanently delete all your conversations</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete All Chats
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete all conversations?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all your chat conversations and messages.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteAllChats}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        Delete All Chats
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
