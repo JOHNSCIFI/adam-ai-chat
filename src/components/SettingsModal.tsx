@@ -365,17 +365,17 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[80vh] p-0 gap-0" aria-describedby="settings-description">
+      <DialogContent className="max-w-4xl w-full h-[600px] max-h-[80vh] p-0 gap-0 fixed-size" aria-describedby="settings-description">
         <div className="flex h-full">
           {/* Left Sidebar */}
-          <div className="w-64 bg-muted/20 border-r">
-            <div className="p-6">
-              <DialogHeader className="pb-6">
+          <div className="w-64 bg-muted/20 border-r flex-shrink-0">
+            <div className="p-6 h-full flex flex-col">
+              <DialogHeader className="pb-6 flex-shrink-0">
                 <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
                 <p id="settings-description" className="sr-only">Customize your adamGPT experience</p>
               </DialogHeader>
               
-              <nav className="space-y-1">
+              <nav className="space-y-1 flex-1">
                 {sidebarItems.map((item) => {
                   const Icon = item.icon;
                   return (
@@ -398,7 +398,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
+          <div className="flex-1 p-6 overflow-y-auto min-h-0">
             {renderContent()}
           </div>
         </div>
