@@ -3,20 +3,20 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { 
   Settings, 
-  Bell, 
   User, 
-  Palette,
-  Database,
-  Shield,
   CreditCard,
   Monitor,
   Sun,
   Moon,
-  Check
+  Trash2,
+  ChevronDown
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -26,10 +26,6 @@ interface SettingsModalProps {
 
 const sidebarItems = [
   { id: 'general', label: 'General', icon: Settings },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'personalization', label: 'Personalization', icon: Palette },
-  { id: 'data', label: 'Data controls', icon: Database },
-  { id: 'security', label: 'Security', icon: Shield },
   { id: 'account', label: 'Account', icon: CreditCard },
 ];
 
@@ -51,6 +47,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const [activeTab, setActiveTab] = React.useState('general');
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
   const { toast } = useToast();
+  const { user } = useAuth();
 
   const handleSetTheme = (newTheme: typeof theme) => {
     setTheme(newTheme);
@@ -68,135 +65,146 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     });
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    const confirmed = window.confirm(
+      'Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your chats and data.'
+    );
+    
+    if (confirmed) {
+      try {
+        const { error } = await supabase.auth.admin.deleteUser(user.id);
+        if (error) throw error;
+        
+        toast({
+          title: "Account deleted",
+          description: "Your account has been permanently deleted.",
+        });
+        onOpenChange(false);
+      } catch (error: any) {
+        toast({
+          title: "Error deleting account",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[600px] p-0 gap-0" aria-describedby="settings-description">
-        <div className="flex h-full">
-          {/* Sidebar */}
-          <div className="w-80 bg-muted/30 border-r border-border p-4">
-            <DialogHeader className="pb-4">
-              <DialogTitle>Settings</DialogTitle>
-              <p id="settings-description" className="sr-only">Customize your adamGPT experience with theme and accent color options</p>
-            </DialogHeader>
-            
-            <div className="space-y-1">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <Button
-                    key={item.id}
-                    variant={activeTab === item.id ? "secondary" : "ghost"}
-                    className="w-full justify-start h-10"
-                    onClick={() => setActiveTab(item.id)}
-                  >
-                    <Icon className="mr-3 h-4 w-4" />
-                    {item.label}
-                  </Button>
-                );
-              })}
+      <DialogContent className="max-w-2xl max-h-[80vh] p-0 gap-0" aria-describedby="settings-description">
+        <div className="p-6">
+          <DialogHeader className="pb-6">
+            <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
+            <p id="settings-description" className="sr-only">Customize your adamGPT experience</p>
+          </DialogHeader>
+          
+          <div className="space-y-6">
+            {/* General Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-medium">General</h3>
+              </div>
+              
+              <Card>
+                <CardContent className="p-4 space-y-4">
+                  {/* Theme Dropdown */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Theme</p>
+                      <p className="text-sm text-muted-foreground">Choose your interface theme</p>
+                    </div>
+                    <Select value={theme} onValueChange={handleSetTheme}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        {themeOptions.map((option) => {
+                          const Icon = option.icon;
+                          return (
+                            <SelectItem key={option.value} value={option.value}>
+                              <div className="flex items-center gap-2">
+                                <Icon className="h-4 w-4" />
+                                {option.label}
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <Separator />
+
+                  {/* Accent Color Dropdown */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Accent Color</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred accent color</p>
+                    </div>
+                    <Select value={accentColor} onValueChange={handleSetAccentColor}>
+                      <SelectTrigger className="w-32">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background border shadow-md z-50">
+                        {accentColors.map((color) => (
+                          <SelectItem key={color.value} value={color.value}>
+                            <div className="flex items-center gap-2">
+                              <div 
+                                className="w-3 h-3 rounded-full" 
+                                style={{ backgroundColor: color.color }}
+                              />
+                              {color.label}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto">
-            {activeTab === 'general' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-semibold mb-4">General</h2>
-                </div>
-
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="space-y-6">
-                      {/* Theme Selection */}
-                      <div>
-                        <div className="flex items-center justify-between mb-4">
-                          <div>
-                            <h3 className="text-sm font-medium">Theme</h3>
-                            <p className="text-xs text-muted-foreground mt-1">
-                              Choose your interface theme
-                            </p>
-                          </div>
-                          <div className="flex gap-2">
-                            {themeOptions.map((option) => {
-                              const Icon = option.icon;
-                              return (
-                                <Button
-                                  key={option.value}
-                                  variant={theme === option.value ? "default" : "outline"}
-                                  size="sm"
-                                  onClick={() => handleSetTheme(option.value)}
-                                  className="h-9 px-3"
-                                >
-                                  <Icon className="h-4 w-4 mr-2" />
-                                  {option.label}
-                                </Button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                        
-                        <Separator />
-                        
-                        {/* Accent Color Selection */}
-                        <div className="mt-6">
-                          <div className="flex items-center justify-between mb-4">
-                            <div>
-                              <h3 className="text-sm font-medium">Accent color</h3>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                Choose your preferred accent color
-                              </p>
-                            </div>
-                            <div className="flex gap-2">
-                              {accentColors.map((color) => (
-                                <Button
-                                  key={color.value}
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleSetAccentColor(color.value)}
-                                  className="h-9 px-3 relative"
-                                  style={{
-                                    backgroundColor: accentColor === color.value ? color.color : 'transparent',
-                                    borderColor: color.color,
-                                    color: accentColor === color.value ? 'white' : 'inherit'
-                                  }}
-                                >
-                                  <div 
-                                    className="w-3 h-3 rounded-full mr-2" 
-                                    style={{ backgroundColor: color.color }}
-                                  />
-                                  {color.label}
-                                  {accentColor === color.value && (
-                                    <Check className="h-3 w-3 ml-2" />
-                                  )}
-                                </Button>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+            {/* Account Section */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-2">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <h3 className="text-lg font-medium">Account</h3>
               </div>
-            )}
-
-            {activeTab !== 'general' && (
-              <div className="space-y-6">
-                <div>
-                  <h2 className="text-lg font-semibold mb-4 capitalize">{activeTab}</h2>
-                </div>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8">
-                      <p className="text-muted-foreground">
-                        {activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} settings coming soon...
-                      </p>
+              
+              <Card>
+                <CardContent className="p-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Email</p>
+                      <p className="text-sm text-muted-foreground">{user?.email}</p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
+                  </div>
+
+                  <Separator />
+
+                  {/* Delete Account */}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium text-destructive">Delete Account</p>
+                      <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+                    </div>
+                    <Button 
+                      variant="destructive" 
+                      size="sm"
+                      onClick={handleDeleteAccount}
+                      className="ml-4"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
         </div>
       </DialogContent>

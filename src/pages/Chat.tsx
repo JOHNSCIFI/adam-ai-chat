@@ -73,6 +73,9 @@ export default function Chat() {
       if (userError) throw userError;
 
       // Send message to n8n webhook and get AI response
+      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/adamGPT');
+      console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
+      
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/adamGPT', {
         method: 'POST',
         headers: {
@@ -85,12 +88,25 @@ export default function Chat() {
         }),
       });
 
+      console.log('Webhook response status:', webhookResponse.status);
+      console.log('Webhook response headers:', Object.fromEntries(webhookResponse.headers.entries()));
+
       if (!webhookResponse.ok) {
-        throw new Error('Failed to get AI response');
+        const errorText = await webhookResponse.text();
+        console.error('Webhook error response:', errorText);
+        throw new Error(`Webhook failed with status ${webhookResponse.status}: ${errorText}`);
       }
 
-      const responseData = await webhookResponse.json();
-      const assistantResponse = responseData.response || "I apologize, but I couldn't process your request at the moment. Please try again.";
+      let responseData;
+      try {
+        responseData = await webhookResponse.json();
+        console.log('Webhook response data:', responseData);
+      } catch (jsonError) {
+        console.error('Failed to parse webhook JSON response:', jsonError);
+        throw new Error('Invalid JSON response from webhook');
+      }
+
+      const assistantResponse = responseData.response || responseData.message || "I apologize, but I couldn't process your request at the moment. Please try again.";
       
       // Add assistant response to database
       const { error: assistantError } = await supabase
