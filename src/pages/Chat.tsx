@@ -106,7 +106,7 @@ export default function Chat() {
 
       // Send message to n8n webhook with retry logic
       console.log('Trigger: Send Message to AI');
-      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook-test/message');
+      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook/message');
       console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
       
       let assistantResponse = '';
@@ -118,7 +118,7 @@ export default function Chat() {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
           
-          const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook-test/message', {
+          const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -248,35 +248,37 @@ export default function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div key={message.id} className="group mb-6">
-                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end ml-12' : 'justify-start mr-12'}`}>
+              <div key={message.id} className="group mb-8">
+                <div className={`flex gap-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {message.role === 'assistant' && (
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
                         <span className="text-xs font-bold">A</span>
                       </div>
                     </div>
                   )}
                   
                   {/* Message content */}
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end max-w-[80%]' : 'items-start max-w-[80%]'}`}>
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%] ${message.role === 'user' ? 'ml-16' : 'mr-16'}`}>
                     <div className={`${
                       message.role === 'user' 
-                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-3xl rounded-br-lg shadow-sm' 
-                        : 'bg-muted/50 text-foreground rounded-3xl rounded-bl-lg border border-border/50'
-                    } px-5 py-3 max-w-full`}>
-                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-[24px] rounded-br-[8px] shadow-lg' 
+                        : 'bg-card text-card-foreground rounded-[24px] rounded-bl-[8px] border border-border shadow-sm hover:shadow-md transition-shadow'
+                    } px-5 py-3.5 max-w-full relative group/message`}>
+                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed font-medium">
                         {message.content}
                       </p>
                     </div>
-                    <span className="text-xs text-muted-foreground mt-1 px-2">
-                      {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <div className={`flex items-center gap-2 mt-2 px-2 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                    </div>
                   </div>
 
                   {message.role === 'user' && (
-                    <div className="flex-shrink-0 mt-1">
-                      <div className="w-8 h-8 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                    <div className="flex-shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary via-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
                         <span className="text-xs font-medium">
                           {user?.email?.slice(0, 1).toUpperCase()}
                         </span>
@@ -289,21 +291,21 @@ export default function Chat() {
           )}
           
           {loading && (
-            <div className="group mb-6">
-              <div className="flex gap-3 justify-start mr-12">
+            <div className="group mb-8">
+              <div className="flex gap-4 justify-start">
                 {/* AI Avatar */}
-                <div className="flex-shrink-0 mt-1">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-md ring-2 ring-sidebar-primary/20">
                     <span className="text-xs font-bold">A</span>
                   </div>
                 </div>
                 
                 {/* Typing indicator */}
-                <div className="bg-muted/50 text-foreground rounded-3xl rounded-bl-lg px-5 py-3 border border-border/50">
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-sidebar-primary/60 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                <div className="bg-card text-card-foreground rounded-[24px] rounded-bl-[8px] px-5 py-3.5 border border-border shadow-sm mr-16 max-w-[75%]">
+                  <div className="flex items-center space-x-1.5">
+                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
+                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                   </div>
                 </div>
               </div>
