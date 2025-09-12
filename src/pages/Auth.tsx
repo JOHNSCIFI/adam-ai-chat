@@ -18,12 +18,15 @@ export default function Auth() {
   const { user, signIn, signUp } = useAuth();
   const { toast } = useToast();
 
+  console.log('Auth component rendering, user:', user);
+
   if (user) {
     return <Navigate to="/" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('Form submitted');
     setLoading(true);
 
     try {
@@ -57,6 +60,7 @@ export default function Auth() {
         }
       }
     } catch (error) {
+      console.error('Auth error:', error);
       toast({
         title: "An error occurred",
         description: "Please try again later.",
