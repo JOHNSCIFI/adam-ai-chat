@@ -258,8 +258,7 @@ export default function Chat() {
                     </div>
                   )}
                   
-                  {/* Message content */}
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
                     <div className={`${
                       message.role === 'user' 
                         ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
@@ -268,11 +267,6 @@ export default function Chat() {
                       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.content}
                       </p>
-                    </div>
-                    <div className={`mt-1 px-1 ${message.role === 'user' ? 'text-right' : 'text-left'}`}>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
                     </div>
                   </div>
 
@@ -318,15 +312,15 @@ export default function Chat() {
 
       {/* Input area */}
       <div className="border-t bg-background">
-        <div className="max-w-3xl mx-auto p-4">
+        <div className="w-full px-6 py-3">
           <form onSubmit={sendMessage} className="relative">
-            <div className="relative flex items-center gap-2 bg-muted/30 border border-input rounded-2xl px-4 py-3 focus-within:border-sidebar-primary/30 transition-all duration-200">
+            <div className="relative flex items-center gap-3 bg-muted/30 border border-input rounded-xl px-4 py-2 focus-within:border-sidebar-primary/30 transition-all duration-200">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message adamGPT..."
                 disabled={loading}
-                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm min-h-[20px]"
+                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm h-8"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -338,13 +332,13 @@ export default function Chat() {
                 type="submit" 
                 disabled={!input.trim() || loading}
                 size="sm"
-                className={`rounded-lg h-7 w-7 p-0 transition-all ${
+                className={`rounded-lg h-8 w-8 p-0 transition-all ${
                   input.trim() && !loading 
                     ? 'bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground' 
                     : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
                 }`}
               >
-                <Send className="h-3.5 w-3.5" />
+                <Send className="h-4 w-4" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-2">
