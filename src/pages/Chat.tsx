@@ -139,7 +139,19 @@ export default function Chat() {
         throw new Error('Invalid JSON response from webhook');
       }
 
-      const assistantResponse = responseData.response || responseData.message || "I apologize, but I couldn't process your request at the moment. Please try again.";
+      // Handle different response formats from n8n webhook
+      let assistantResponse;
+      if (Array.isArray(responseData)) {
+        // Handle array format: [{"output": "response"}]
+        assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message;
+      } else {
+        // Handle object format: {"output": "response"} or {"value": "response"}
+        assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response;
+      }
+      
+      if (!assistantResponse) {
+        assistantResponse = "I apologize, but I couldn't process your request at the moment. Please try again.";
+      }
       
       // Add assistant response to database
       const { error: assistantError } = await supabase
@@ -176,26 +188,26 @@ export default function Chat() {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
         <div className="text-center max-w-2xl px-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <span className="text-3xl text-sidebar-primary-foreground font-bold">A</span>
+          <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-2xl text-sidebar-primary-foreground font-bold">A</span>
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
-          <p className="text-base text-muted-foreground mb-6">Your intelligent AI assistant ready to help with any questions or tasks</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-            <div className="bg-card border rounded-2xl p-6 text-center">
-              <div className="text-2xl mb-3">💬</div>
-              <h3 className="font-semibold mb-2">Natural Conversations</h3>
-              <p className="text-sm text-muted-foreground">Chat naturally and get helpful responses</p>
+          <h2 className="text-xl font-bold mb-3 text-foreground">Welcome to adamGPT</h2>
+          <p className="text-sm text-muted-foreground mb-6">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+            <div className="bg-card border rounded-xl p-4 text-center">
+              <div className="text-lg mb-2">💬</div>
+              <h3 className="font-medium text-sm mb-1">Natural Conversations</h3>
+              <p className="text-xs text-muted-foreground">Chat naturally and get helpful responses</p>
             </div>
-            <div className="bg-card border rounded-2xl p-6 text-center">
-              <div className="text-2xl mb-3">⚡</div>
-              <h3 className="font-semibold mb-2">Fast & Accurate</h3>
-              <p className="text-sm text-muted-foreground">Get quick and reliable answers</p>
+            <div className="bg-card border rounded-xl p-4 text-center">
+              <div className="text-lg mb-2">⚡</div>
+              <h3 className="font-medium text-sm mb-1">Fast & Accurate</h3>
+              <p className="text-xs text-muted-foreground">Get quick and reliable answers</p>
             </div>
-            <div className="bg-card border rounded-2xl p-6 text-center">
-              <div className="text-2xl mb-3">🔒</div>
-              <h3 className="font-semibold mb-2">Secure & Private</h3>
-              <p className="text-sm text-muted-foreground">Your conversations are protected</p>
+            <div className="bg-card border rounded-xl p-4 text-center">
+              <div className="text-lg mb-2">🔒</div>
+              <h3 className="font-medium text-sm mb-1">Secure & Private</h3>
+              <p className="text-xs text-muted-foreground">Your conversations are protected</p>
             </div>
           </div>
         </div>
@@ -206,101 +218,94 @@ export default function Chat() {
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        {messages.length === 0 ? (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center max-w-md">
-              <div className="w-16 h-16 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl text-sidebar-primary-foreground font-bold">A</span>
+      <div className="flex-1 overflow-y-auto px-4 py-6">
+        <div className="max-w-3xl mx-auto space-y-4">
+          {messages.length === 0 ? (
+            <div className="flex items-center justify-center h-full min-h-[400px]">
+              <div className="text-center max-w-md">
+                <div className="w-12 h-12 bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <span className="text-lg text-sidebar-primary-foreground font-bold">A</span>
+                </div>
+                <h3 className="text-lg font-medium mb-2 text-foreground">How can I help you today?</h3>
+                <p className="text-muted-foreground text-sm">Start a conversation with adamGPT</p>
               </div>
-              <h3 className="text-xl font-semibold mb-3 text-foreground">How can I help you today?</h3>
-              <p className="text-muted-foreground text-base">Start a conversation with adamGPT to get assistance with your questions</p>
             </div>
-          </div>
-        ) : (
-          messages.map((message) => (
-            <div key={message.id} className="group">
-              <div className={`flex gap-4 max-w-4xl mx-auto ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                {message.role === 'assistant' && (
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
-                      <span className="text-sm font-bold">A</span>
+          ) : (
+            messages.map((message) => (
+              <div key={message.id} className="group">
+                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {message.role === 'assistant' && (
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
+                        <span className="text-xs font-bold">A</span>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Message content */}
+                  <div className={`flex flex-col max-w-[85%] ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                    <div className={`${
+                      message.role === 'user' 
+                        ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md' 
+                        : 'bg-muted/30 text-foreground rounded-2xl rounded-bl-md'
+                    } px-4 py-2.5 max-w-full`}>
+                      <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
+                        {message.content}
+                      </p>
                     </div>
                   </div>
-                )}
-                
-                {/* Message content */}
-                <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
-                  <div className={`text-xs font-medium mb-1 text-muted-foreground ${
-                    message.role === 'user' ? 'text-right' : 'text-left'
-                  }`}>
-                    {message.role === 'user' ? 'You' : 'adamGPT'}
-                  </div>
-                  <div className={`prose prose-sm max-w-none ${
-                    message.role === 'user' 
-                      ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-tr-md px-4 py-3' 
-                      : 'bg-muted/50 text-foreground rounded-2xl rounded-tl-md px-4 py-3'
-                  }`}>
-                    <p className="whitespace-pre-wrap break-words m-0 leading-relaxed">
-                      {message.content}
-                    </p>
-                  </div>
-                </div>
 
-                {message.role === 'user' && (
-                  <div className="flex-shrink-0">
-                    <div className="w-8 h-8 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
-                      <span className="text-sm font-semibold">
-                        {user?.email?.slice(0, 1).toUpperCase()}
-                      </span>
+                  {message.role === 'user' && (
+                    <div className="flex-shrink-0 mt-1">
+                      <div className="w-7 h-7 rounded-full bg-sidebar-primary text-sidebar-primary-foreground flex items-center justify-center">
+                        <span className="text-xs font-medium">
+                          {user?.email?.slice(0, 1).toUpperCase()}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))
-        )}
-        
-        {loading && (
-          <div className="group">
-            <div className="flex gap-4">
-              {/* AI Avatar */}
-              <div className="flex-shrink-0">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
-                  <span className="text-sm font-bold">A</span>
+                  )}
                 </div>
               </div>
-              
-              {/* Typing indicator */}
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium mb-2 text-foreground">adamGPT</div>
-                <div className="flex items-center space-x-2 text-muted-foreground">
-                  <div className="flex space-x-1">
-                    <div className="w-2 h-2 bg-sidebar-primary rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                    <div className="w-2 h-2 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+            ))
+          )}
+          
+          {loading && (
+            <div className="group">
+              <div className="flex gap-3">
+                {/* AI Avatar */}
+                <div className="flex-shrink-0 mt-1">
+                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/80 text-sidebar-primary-foreground flex items-center justify-center">
+                    <span className="text-xs font-bold">A</span>
                   </div>
-                  <span className="text-sm">Thinking...</span>
+                </div>
+                
+                {/* Typing indicator */}
+                <div className="bg-muted/30 text-foreground rounded-2xl rounded-bl-md px-4 py-2.5">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce"></div>
+                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                    <div className="w-1.5 h-1.5 bg-sidebar-primary rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
-        
-        <div ref={messagesEndRef} />
+          )}
+          
+          <div ref={messagesEndRef} />
+        </div>
       </div>
 
       {/* Input area */}
-      <div className="border-t bg-background/80 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto p-4">
+      <div className="border-t bg-background">
+        <div className="max-w-3xl mx-auto p-4">
           <form onSubmit={sendMessage} className="relative">
-            <div className="relative flex items-end gap-2 bg-muted/50 border border-border/50 rounded-2xl p-3 focus-within:border-sidebar-primary/50 transition-colors">
+            <div className="relative flex items-center gap-2 bg-muted/30 border border-input rounded-2xl px-4 py-3 focus-within:border-sidebar-primary/30 transition-all duration-200">
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Message adamGPT..."
                 disabled={loading}
-                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-[24px] max-h-32"
+                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm min-h-[20px]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -312,13 +317,13 @@ export default function Chat() {
                 type="submit" 
                 disabled={!input.trim() || loading}
                 size="sm"
-                className={`rounded-xl h-8 w-8 p-0 transition-all ${
+                className={`rounded-lg h-7 w-7 p-0 transition-all ${
                   input.trim() && !loading 
                     ? 'bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground' 
-                    : 'bg-muted-foreground/20 text-muted-foreground cursor-not-allowed'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed hover:bg-muted'
                 }`}
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-3.5 w-3.5" />
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center mt-2">
