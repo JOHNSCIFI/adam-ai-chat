@@ -82,31 +82,50 @@ All colors MUST be HSL.
     --chat-hover: 225 6% 18%; /* #2A2B32 - Hover states */
   }
 
-  /* Accent color variants */
+  /* Accent color variants - comprehensive theming */
   .accent-blue {
+    --primary: 213 94% 68%;
+    --primary-foreground: 0 0% 100%;
     --sidebar-primary: 213 94% 68%;
     --accent: 213 94% 68%;
+    --ring: 213 94% 68%;
+    --sidebar-ring: 213 94% 68%;
   }
 
   .accent-purple {
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
     --sidebar-primary: 262 83% 58%;
     --accent: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --sidebar-ring: 262 83% 58%;
   }
 
   .accent-green {
-    --sidebar-primary: 160 84% 35%; /* #10A37F - ChatGPT brand green */
-    --primary: 160 84% 35%;
+    --primary: 160 84% 35%; /* #10A37F - ChatGPT brand green */
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 160 84% 35%;
     --accent: 160 84% 35%;
+    --ring: 160 84% 35%;
+    --sidebar-ring: 160 84% 35%;
   }
 
   .accent-orange {
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
     --sidebar-primary: 25 95% 53%;
     --accent: 25 95% 53%;
+    --ring: 25 95% 53%;
+    --sidebar-ring: 25 95% 53%;
   }
 
   .accent-red {
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 0% 100%;
     --sidebar-primary: 0 84% 60%;
     --accent: 0 84% 60%;
+    --ring: 0 84% 60%;
+    --sidebar-ring: 0 84% 60%;
   }
 }
 

@@ -367,14 +367,14 @@ export default function Chat() {
                         )}
                       </div>
                       
-                      {/* Copy button positioned below message - ChatGPT style */}
+                      {/* Copy button positioned absolutely to prevent layout shifts */}
                       {hoveredMessage === message.id && (
                         <Button
                           variant="ghost"
                           size="sm"
                           onClick={() => copyToClipboard(message.content, message.id)}
-                          className={`h-8 w-8 p-0 chat-hover rounded-md opacity-0 group-hover:opacity-100 transition-all duration-150 mt-2 ${
-                            message.role === 'user' ? 'self-end' : 'self-start'
+                          className={`absolute -bottom-8 h-8 w-8 p-0 chat-hover rounded-md opacity-0 group-hover:opacity-100 transition-all duration-150 ${
+                            message.role === 'user' ? 'right-0' : 'left-0'
                           }`}
                         >
                           {copiedMessageId === message.id ? (
