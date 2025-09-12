@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send } from 'lucide-react';
+import { Send, Copy, ThumbsUp, ThumbsDown, RotateCcw, MoreHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -20,6 +20,7 @@ export default function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -200,6 +201,22 @@ export default function Chat() {
     }
   };
 
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      toast({
+        title: "Copied to clipboard",
+        description: "Message copied successfully",
+      });
+    } catch (error) {
+      toast({
+        title: "Copy failed",
+        description: "Unable to copy message",
+        variant: "destructive",
+      });
+    }
+  };
+
   if (!chatId) {
     return (
       <div className="flex-1 flex items-center justify-center bg-background">
@@ -248,58 +265,82 @@ export default function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div key={message.id} className="mb-4">
-                <div className={`flex gap-2 ${message.role === 'user' ? 'justify-end ml-16' : 'justify-start mr-16'}`}>
-                  {message.role === 'assistant' && (
-                    <div className="flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
-                        <span className="text-xs font-bold">A</span>
-                      </div>
-                    </div>
-                  )}
-                  
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
+              <div 
+                key={message.id} 
+                className="mb-6 group"
+                onMouseEnter={() => setHoveredMessage(message.id)}
+                onMouseLeave={() => setHoveredMessage(null)}
+              >
+                <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
                     <div className={`${
                       message.role === 'user' 
                         ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
-                        : 'bg-card text-card-foreground rounded-2xl rounded-bl-md border border-border shadow-sm'
+                        : 'bg-transparent text-foreground'
                     } px-3 py-2 relative`}>
                       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.content}
                       </p>
                     </div>
-                  </div>
-
-                  {message.role === 'user' && (
-                    <div className="flex-shrink-0">
-                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
-                        <span className="text-xs font-medium">
-                          {user?.email?.slice(0, 1).toUpperCase()}
-                        </span>
+                    
+                    {/* Action buttons for assistant messages */}
+                    {message.role === 'assistant' && hoveredMessage === message.id && (
+                      <div className="flex items-center gap-1 mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(message.content)}
+                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                        >
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                        >
+                          <ThumbsUp className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                        >
+                          <ThumbsDown className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                        >
+                          <RotateCcw className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 hover:bg-muted rounded-lg"
+                        >
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             ))
           )}
           
           {loading && (
-            <div className="mb-4">
-              <div className="flex gap-2 justify-start mr-16">
-                {/* AI Avatar */}
-                <div className="flex-shrink-0">
-                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
-                    <span className="text-xs font-bold">A</span>
-                  </div>
-                </div>
-                
-                {/* Typing indicator */}
-                <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md px-3 py-2 border border-border shadow-sm max-w-[75%]">
-                  <div className="flex items-center space-x-1.5">
-                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
-                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                    <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+            <div className="mb-6">
+              <div className="flex justify-start">
+                <div className="flex flex-col items-start max-w-[75%]">
+                  {/* Typing indicator */}
+                  <div className="bg-transparent text-foreground px-3 py-2">
+                    <div className="flex items-center space-x-1.5">
+                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
+                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                      <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                    </div>
                   </div>
                 </div>
               </div>
