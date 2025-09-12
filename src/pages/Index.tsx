@@ -1,70 +1,122 @@
 import React from 'react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { MessageSquare, Plus, Send, Mic } from 'lucide-react';
+import { MessageSquare, Sparkles, Shield, Zap } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
-  const [input, setInput] = React.useState('');
+  const { user, loading } = useAuth();
+  const navigate = useNavigate();
 
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim()) return;
-    
-    // For now, just clear the input
-    // In a real implementation, this would create a new chat
-    setInput('');
+  if (loading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 border-4 border-sidebar-primary border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-muted-foreground">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  const handleNewChat = async () => {
+    const { data, error } = await supabase
+      .from('chats')
+      .insert([{ user_id: user.id, title: 'New Chat' }])
+      .select()
+      .single();
+
+    if (!error && data) {
+      navigate(`/chat/${data.id}`);
+    }
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Main chat area */}
-      <div className="flex-1 flex items-center justify-center p-6">
-        <div className="max-w-2xl w-full text-center space-y-8">
-          {/* Welcome message */}
-          <div className="space-y-4">
-            <div className="w-16 h-16 bg-sidebar-primary rounded-full flex items-center justify-center mx-auto">
-              <MessageSquare className="w-8 h-8 text-sidebar-primary-foreground" />
+    <div className="flex-1 flex items-center justify-center bg-background p-6">
+      <div className="text-center max-w-4xl">
+        {/* Main Logo and Title */}
+        <div className="mb-8">
+          <div className="w-24 h-24 bg-gradient-to-br from-sidebar-primary via-sidebar-primary to-sidebar-primary/80 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <span className="text-4xl text-sidebar-primary-foreground font-bold">A</span>
+          </div>
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            Welcome to adamGPT
+          </h1>
+          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
+            Your intelligent AI assistant ready to help with any questions, creative projects, or problem-solving tasks
+          </p>
+        </div>
+
+        {/* CTA Button */}
+        <div className="mb-12">
+          <Button 
+            onClick={handleNewChat}
+            size="lg" 
+            className="bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground px-8 py-6 rounded-2xl text-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          >
+            <MessageSquare className="w-6 h-6 mr-3" />
+            Start New Chat
+          </Button>
+        </div>
+
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <h1 className="text-4xl font-semibold text-foreground">
-              What's on your mind today?
-            </h1>
-            <p className="text-lg text-muted-foreground">
-              Start a conversation with adamGPT
+            <h3 className="text-xl font-semibold mb-3 text-foreground">Intelligent Conversations</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Engage in natural, context-aware conversations that understand your needs and provide thoughtful responses
             </p>
           </div>
 
-          {/* Input area */}
-          <Card className="border-input shadow-sm">
-            <CardContent className="p-4">
-              <form onSubmit={handleSendMessage} className="flex gap-3 items-center">
-                <div className="flex-1 relative">
-                  <Input
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    placeholder="Ask anything..."
-                    className="pr-12 border-0 focus-visible:ring-0 text-base"
-                  />
-                  <Button
-                    type="submit"
-                    size="sm"
-                    disabled={!input.trim()}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 bg-sidebar-primary hover:bg-sidebar-primary/90"
-                  >
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-10 w-10 p-0"
-                >
-                  <Mic className="h-4 w-4" />
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Zap className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-foreground">Lightning Fast</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Get instant responses powered by advanced AI technology, optimized for speed and accuracy
+            </p>
+          </div>
+
+          <div className="bg-card/50 backdrop-blur-sm border border-border/50 rounded-3xl p-8 text-center hover:bg-card/80 transition-all duration-300 group">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+              <Shield className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-semibold mb-3 text-foreground">Secure & Private</h3>
+            <p className="text-muted-foreground leading-relaxed">
+              Your conversations are encrypted and stored securely with full respect for your privacy and data protection
+            </p>
+          </div>
+        </div>
+
+        {/* Sample Prompts */}
+        <div className="mt-12">
+          <h3 className="text-2xl font-semibold mb-6 text-foreground">Try asking me about...</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+            {[
+              "Creative writing help",
+              "Code optimization",
+              "Business strategy", 
+              "Learning new skills"
+            ].map((prompt, index) => (
+              <Button
+                key={index}
+                variant="outline"
+                onClick={handleNewChat}
+                className="h-auto p-4 text-left border-2 hover:border-sidebar-primary hover:bg-sidebar-primary/5 transition-colors rounded-xl"
+              >
+                <div className="text-sm font-medium text-foreground">{prompt}</div>
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
     </div>

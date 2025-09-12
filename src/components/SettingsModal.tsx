@@ -70,12 +70,13 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[600px] p-0 gap-0">
+      <DialogContent className="max-w-4xl h-[600px] p-0 gap-0" aria-describedby="settings-description">
         <div className="flex h-full">
           {/* Sidebar */}
           <div className="w-80 bg-muted/30 border-r border-border p-4">
             <DialogHeader className="pb-4">
               <DialogTitle>Settings</DialogTitle>
+              <p id="settings-description" className="sr-only">Customize your adamGPT experience with theme and accent color options</p>
             </DialogHeader>
             
             <div className="space-y-1">
