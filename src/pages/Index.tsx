@@ -37,7 +37,7 @@ export default function Index() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center bg-background p-6">
+    <div className="h-screen flex items-center justify-center bg-background p-6 overflow-hidden">
       <div className="text-center max-w-4xl">
         {/* Main Logo and Title */}
         <div className="mb-8">
