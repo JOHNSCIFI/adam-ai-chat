@@ -234,8 +234,8 @@ export default function Chat() {
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
       {/* Messages area */}
-      <div className="flex-1 overflow-y-auto px-4 py-6">
-        <div className="max-w-3xl mx-auto space-y-4">
+      <div className="flex-1 overflow-y-auto px-2 py-6">
+        <div className="w-full space-y-4">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[400px]">
               <div className="text-center max-w-md">
@@ -248,23 +248,23 @@ export default function Chat() {
             </div>
           ) : (
             messages.map((message) => (
-              <div key={message.id} className="mb-6">
-                <div className={`flex gap-3 ${message.role === 'user' ? 'justify-end pl-12' : 'justify-start pr-12'}`}>
+              <div key={message.id} className="mb-4">
+                <div className={`flex gap-2 ${message.role === 'user' ? 'justify-end ml-16' : 'justify-start mr-16'}`}>
                   {message.role === 'assistant' && (
                     <div className="flex-shrink-0">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-bold">A</span>
                       </div>
                     </div>
                   )}
                   
                   {/* Message content */}
-                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[65%]`}>
+                  <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[75%]`}>
                     <div className={`${
                       message.role === 'user' 
                         ? 'bg-sidebar-primary text-sidebar-primary-foreground rounded-2xl rounded-br-md shadow-sm' 
                         : 'bg-card text-card-foreground rounded-2xl rounded-bl-md border border-border shadow-sm'
-                    } px-4 py-2.5 relative`}>
+                    } px-3 py-2 relative`}>
                       <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
                         {message.content}
                       </p>
@@ -278,7 +278,7 @@ export default function Chat() {
 
                   {message.role === 'user' && (
                     <div className="flex-shrink-0">
-                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                      <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                         <span className="text-xs font-medium">
                           {user?.email?.slice(0, 1).toUpperCase()}
                         </span>
@@ -291,17 +291,17 @@ export default function Chat() {
           )}
           
           {loading && (
-            <div className="mb-6">
-              <div className="flex gap-3 justify-start pr-12">
+            <div className="mb-4">
+              <div className="flex gap-2 justify-start mr-16">
                 {/* AI Avatar */}
                 <div className="flex-shrink-0">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
+                  <div className="w-6 h-6 rounded-full bg-gradient-to-br from-sidebar-primary to-sidebar-primary/90 text-sidebar-primary-foreground flex items-center justify-center shadow-sm">
                     <span className="text-xs font-bold">A</span>
                   </div>
                 </div>
                 
                 {/* Typing indicator */}
-                <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md px-4 py-2.5 border border-border shadow-sm max-w-[65%]">
+                <div className="bg-card text-card-foreground rounded-2xl rounded-bl-md px-3 py-2 border border-border shadow-sm max-w-[75%]">
                   <div className="flex items-center space-x-1.5">
                     <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce"></div>
                     <div className="w-2 h-2 bg-sidebar-primary/70 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
