@@ -153,12 +153,12 @@ All colors MUST be HSL.
   }
   
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.2);
+    background: rgba(255, 255, 255, 0.2);
     border-radius: 2px;
   }
   
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.4);
+    background: rgba(255, 255, 255, 0.3);
   }
   
   /* Focus visible improvements */
