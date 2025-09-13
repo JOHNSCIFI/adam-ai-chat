@@ -493,7 +493,7 @@ export default function Chat() {
 
       {/* Input area - responsive design */}
       <div className="border-t border-border bg-background/95 backdrop-blur-sm p-safe">
-        <div className="max-w-4xl mx-auto w-full p-4 sm:p-6">
+        <div className="max-w-4xl mx-auto w-full p-2 sm:p-3">
           <form onSubmit={sendMessage} className="space-y-4">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
@@ -517,7 +517,7 @@ export default function Chat() {
             )}
             
             {/* Message input container with ChatGPT styling */}
-            <div className="flex items-end gap-2 sm:gap-3 p-3 rounded-2xl border border-border bg-muted/50 shadow-sm focus-within:shadow-md transition-all duration-200">
+            <div className="flex items-end gap-2 p-2 rounded-xl border border-border bg-muted/50 shadow-sm focus-within:shadow-md transition-all duration-200">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button

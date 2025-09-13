@@ -3,7 +3,6 @@ import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   MessageSquare, 
   Plus, 
-  Search, 
   Settings,
   HelpCircle,
   LogOut,
@@ -13,9 +12,8 @@ import {
   Check,
   X,
   Menu,
-  Archive,
-  Clock,
-  Filter
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,17 +33,17 @@ interface Chat {
 
 interface ResponsiveSidebarProps {
   className?: string;
+  isCollapsed?: boolean;
+  onToggleCollapse?: () => void;
 }
 
-export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
+export function ResponsiveSidebar({ className, isCollapsed = false, onToggleCollapse }: ResponsiveSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hoveredChatId, setHoveredChatId] = useState<string | null>(null);
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
-  const [searchQuery, setSearchQuery] = useState('');
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showArchived, setShowArchived] = useState(false);
   
   const { user } = useAuth();
   const { isMobile, isTablet } = useResponsive();
@@ -54,25 +52,6 @@ export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
 
   const isMobileOrTablet = isMobile || isTablet;
 
-  // Filter chats based on search query
-  const filteredChats = chats.filter(chat =>
-    chat.title.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  // Separate recent and older chats
-  const recentChats = filteredChats.filter(chat => {
-    const chatDate = new Date(chat.created_at);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return chatDate >= weekAgo;
-  });
-
-  const olderChats = filteredChats.filter(chat => {
-    const chatDate = new Date(chat.created_at);
-    const weekAgo = new Date();
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    return chatDate < weekAgo;
-  });
 
   useEffect(() => {
     if (user) {
@@ -257,29 +236,24 @@ export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
     return date.toLocaleDateString();
   };
 
-  const renderChatList = (chatList: Chat[], title: string, icon: React.ReactNode) => (
-    <div className="mb-6">
-      <div className="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-        {icon}
-        <span>{title}</span>
-        <span className="text-xs">({chatList.length})</span>
-      </div>
-      <div className="space-y-1">
-        {chatList.length === 0 ? (
-          <div className="px-3 py-4 text-center">
-            <p className="text-xs text-muted-foreground">No {title.toLowerCase()} yet</p>
-          </div>
-        ) : (
-          chatList.map((chat) => (
-            <div 
-              key={chat.id}
-              className="group relative mx-2"
-              onMouseEnter={() => setHoveredChatId(chat.id)}
-              onMouseLeave={() => setHoveredChatId(null)}
-            >
-              {editingChatId === chat.id ? (
-                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/50">
-                  <MessageSquare className="h-3 w-3 text-foreground/60 flex-shrink-0" />
+  const renderChatList = (chatList: Chat[]) => (
+    <div className="space-y-1">
+      {chatList.length === 0 ? (
+        <div className="px-3 py-4 text-center">
+          <p className="text-xs text-muted-foreground">No chats yet</p>
+        </div>
+      ) : (
+        chatList.map((chat) => (
+          <div 
+            key={chat.id}
+            className="group relative mx-2"
+            onMouseEnter={() => setHoveredChatId(chat.id)}
+            onMouseLeave={() => setHoveredChatId(null)}
+          >
+            {editingChatId === chat.id ? (
+              <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/50">
+                {!isCollapsed && <MessageSquare className="h-3 w-3 text-foreground/60 flex-shrink-0" />}
+                {!isCollapsed && (
                   <Input
                     value={editTitle}
                     onChange={(e) => setEditTitle(e.target.value)}
@@ -294,153 +268,167 @@ export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
                     className="h-6 text-xs bg-background border-border flex-1 min-h-[32px]"
                     autoFocus
                   />
-                  <div className="flex gap-1 flex-shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-md min-h-[32px] min-w-[32px]"
-                      onClick={() => handleRenameChat(chat.id, editTitle)}
-                    >
-                      <Check className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 hover:bg-muted rounded-md min-h-[32px] min-w-[32px]"
-                      onClick={cancelEditing}
-                    >
-                      <X className="h-3 w-3" />
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center group">
-                  <NavLink 
-                    to={`/chat/${chat.id}`} 
-                    onClick={() => isMobileOrTablet && setIsDrawerOpen(false)}
-                    className={({ isActive }) =>
-                      `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 flex-1 min-h-[44px] ${
-                        isActive 
-                          ? "bg-primary/10 text-primary font-medium border border-primary/20" 
-                          : "hover:bg-accent/50 text-foreground"
-                      }`
-                    }
+                )}
+                <div className="flex gap-1 flex-shrink-0">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-primary hover:text-primary-foreground rounded-md min-h-[32px] min-w-[32px]"
+                    onClick={() => handleRenameChat(chat.id, editTitle)}
                   >
-                    <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-6 w-6 p-0 hover:bg-muted rounded-md min-h-[32px] min-w-[32px]"
+                    onClick={cancelEditing}
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center group">
+                <NavLink 
+                  to={`/chat/${chat.id}`} 
+                  onClick={() => isMobileOrTablet && setIsDrawerOpen(false)}
+                  className={({ isActive }) =>
+                    `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 flex-1 min-h-[44px] ${
+                      isActive 
+                        ? "bg-primary/10 text-primary font-medium border border-primary/20" 
+                        : "hover:bg-accent/50 text-foreground"
+                    }`
+                  }
+                  title={isCollapsed ? chat.title : undefined}
+                >
+                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                  {!isCollapsed && (
                     <div className="flex-1 min-w-0">
                       <p className="text-sm truncate">{chat.title}</p>
                       <p className="text-xs text-muted-foreground">{formatChatDate(chat.created_at)}</p>
                     </div>
-                  </NavLink>
-                  
-                  {!isMobileOrTablet && hoveredChatId === chat.id && (
-                    <div className="absolute right-2 flex gap-1 bg-background/80 backdrop-blur-sm rounded-md p-1 shadow-sm">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-accent rounded-sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          startEditing(chat.id, chat.title);
-                        }}
-                      >
-                        <Edit3 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-sm"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          handleDeleteChat(chat.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
                   )}
-                </div>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+                </NavLink>
+                
+                {!isMobileOrTablet && !isCollapsed && hoveredChatId === chat.id && (
+                  <div className="absolute right-2 flex gap-1 bg-background/80 backdrop-blur-sm rounded-md p-1 shadow-sm">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 hover:bg-accent rounded-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        startEditing(chat.id, chat.title);
+                      }}
+                    >
+                      <Edit3 className="h-3 w-3" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-sm"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        handleDeleteChat(chat.id);
+                      }}
+                    >
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ))
+      )}
     </div>
   );
 
   const sidebarContent = (
-    <div className="flex flex-col h-full bg-sidebar-background">
+    <div className="flex flex-col h-screen bg-sidebar-background">
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="flex items-center gap-3 mb-4">
+      <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-b border-sidebar-border`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center mb-2' : 'gap-3 mb-4'}`}>
           <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-sm">
             <MessageSquare className="w-4 h-4 text-primary-foreground" />
           </div>
-          <div>
-            <h1 className="text-lg font-bold text-sidebar-foreground">adamGPT</h1>
-            <p className="text-xs text-sidebar-muted-foreground">AI Assistant</p>
-          </div>
+          {!isCollapsed && (
+            <div>
+              <h1 className="text-lg font-bold text-sidebar-foreground">adamGPT</h1>
+              <p className="text-xs text-sidebar-muted-foreground">AI Assistant</p>
+            </div>
+          )}
         </div>
+        
+        {/* Collapse/Expand Button */}
+        {!isMobileOrTablet && onToggleCollapse && (
+          <div className={`${isCollapsed ? 'mb-2' : 'mb-4'} flex justify-${isCollapsed ? 'center' : 'end'}`}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleCollapse}
+              className="h-8 w-8 p-0 hover:bg-accent"
+            >
+              {isCollapsed ? (
+                <ChevronRight className="h-4 w-4" />
+              ) : (
+                <ChevronLeft className="h-4 w-4" />
+              )}
+            </Button>
+          </div>
+        )}
         
         {/* New Chat Button */}
         <Button 
           onClick={handleNewChat}
-          className="w-full justify-start bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md min-h-[44px]"
+          className={`${isCollapsed ? 'w-8 h-8 p-0' : 'w-full justify-start'} bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md min-h-[44px]`}
           size="default"
+          title={isCollapsed ? "New Chat" : undefined}
         >
           <Plus className="h-4 w-4 mr-2" />
-          <span>New Chat</span>
+          {!isCollapsed && <span>New Chat</span>}
         </Button>
-      </div>
-
-      {/* Search */}
-      <div className="p-4 border-b border-sidebar-border">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Search conversations..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10 bg-sidebar-accent border-sidebar-border min-h-[40px]"
-          />
-        </div>
       </div>
 
       {/* Chat Lists */}
       <div className="flex-1 overflow-y-auto p-2">
-        {searchQuery ? (
-          renderChatList(filteredChats, 'Search Results', <Search className="h-3 w-3" />)
-        ) : (
-          <>
-            {renderChatList(recentChats, 'Recent', <Clock className="h-3 w-3" />)}
-            {olderChats.length > 0 && renderChatList(olderChats, 'Previous', <Archive className="h-3 w-3" />)}
-          </>
-        )}
+        {renderChatList(chats)}
       </div>
 
       {/* Footer */}
-      <div className="p-3 border-t border-sidebar-border">
+      <div className={`${isCollapsed ? 'p-2' : 'p-3'} border-t border-sidebar-border`}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className="w-full justify-start p-3 h-auto hover:bg-sidebar-accent rounded-lg transition-colors min-h-[52px]"
+              className={`${isCollapsed ? 'w-8 h-8 p-0' : 'w-full justify-start p-3 h-auto'} hover:bg-sidebar-accent rounded-lg transition-colors min-h-[52px]`}
+              title={isCollapsed ? getUserDisplayName() : undefined}
             >
-              <div className="flex items-center gap-3 w-full">
-                <Avatar className="h-8 w-8 border-2 border-primary/20">
+              {isCollapsed ? (
+                <Avatar className="h-6 w-6 border-2 border-primary/20">
                   <AvatarImage src="" />
                   <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 text-left">
-                  <p className="text-sm font-semibold text-sidebar-foreground">{getUserDisplayName()}</p>
-                  <p className="text-xs text-sidebar-muted-foreground">Free Plan</p>
+              ) : (
+                <div className="flex items-center gap-3 w-full">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                    <AvatarImage src="" />
+                    <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 text-left">
+                    <p className="text-sm font-semibold text-sidebar-foreground">{getUserDisplayName()}</p>
+                    <p className="text-xs text-sidebar-muted-foreground">Free Plan</p>
+                  </div>
+                  <ChevronUp className="h-4 w-4 text-sidebar-muted-foreground transition-transform group-hover:text-sidebar-foreground" />
                 </div>
-                <ChevronUp className="h-4 w-4 text-sidebar-muted-foreground transition-transform group-hover:text-sidebar-foreground" />
-              </div>
+              )}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
@@ -492,7 +480,7 @@ export function ResponsiveSidebar({ className }: ResponsiveSidebarProps) {
 
   return (
     <>
-      <div className={`w-80 h-full border-r border-sidebar-border bg-sidebar-background ${className}`}>
+      <div className={`${isCollapsed ? 'w-16' : 'w-80'} h-screen border-r border-sidebar-border bg-sidebar-background transition-all duration-300 ${className}`}>
         {sidebarContent}
       </div>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />
