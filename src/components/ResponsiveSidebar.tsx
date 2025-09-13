@@ -434,7 +434,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
           <DropdownMenuContent 
             side="bottom" 
             align="start" 
-            className="w-72 mt-2 bg-gradient-to-br from-popover via-popover to-popover/95 border border-border/50 shadow-2xl backdrop-blur-sm z-50 animate-in slide-in-from-top-2 duration-300"
+            className="w-72 mt-2 bg-gradient-to-br from-popover via-popover to-popover/95 border border-border/50 shadow-2xl backdrop-blur-sm z-50"
             sideOffset={8}
           >
             <div className="p-2">
