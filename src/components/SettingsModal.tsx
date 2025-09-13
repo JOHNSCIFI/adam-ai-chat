@@ -126,7 +126,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
       {/* Accent Color Setting */}
       <div className="space-y-3">
-        <label className="text-sm font-medium text-[hsl(var(--text))]">Accent color</label>
+        <label className="block text-sm font-medium text-[hsl(var(--text))] mb-2">Accent color</label>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
@@ -205,23 +205,26 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'security':
         return (
           <div className="space-y-6">
-            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+            <div className="border border-blue-200 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 dark:border-blue-800/30">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Login methods</h3>
-                  <p className="text-sm text-[hsl(var(--muted))]">Manage your authentication methods</p>
+                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">Login methods</h3>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">Manage your authentication methods</p>
                 </div>
-                <div className="text-sm text-[hsl(var(--muted))]">
-                  {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
+                  </span>
                 </div>
               </div>
             </div>
             
-            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+            <div className="border border-red-200 rounded-lg p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20 dark:border-red-800/30">
               <div className="flex items-center justify-between">
                 <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Log out all devices</h3>
-                  <p className="text-sm text-[hsl(var(--muted))]">Sign out from all devices and sessions</p>
+                  <h3 className="text-sm font-medium text-red-900 dark:text-red-100">Log out all devices</h3>
+                  <p className="text-sm text-red-700 dark:text-red-300">Sign out from all devices and sessions</p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>

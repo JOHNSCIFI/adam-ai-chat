@@ -372,7 +372,7 @@ export default function Chat() {
           <div className="w-16 h-16 bg-[#10a37f] rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
             <MessageSquare className="text-2xl text-white h-8 w-8" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Welcome to ChatGPT</h2>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Welcome to AdamGPT</h2>
           <p className="text-gray-400 mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in">
@@ -404,7 +404,7 @@ export default function Chat() {
       } transition-all duration-300`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-[hsl(var(--text))]">ChatGPT</h1>
+            <h1 className="text-lg font-semibold text-[hsl(var(--text))]">AdamGPT</h1>
             <ChevronDown className="h-4 w-4 text-[hsl(var(--muted))]" />
           </div>
         </div>
@@ -420,7 +420,7 @@ export default function Chat() {
                   <MessageSquare className="h-6 w-6 text-white" />
                 </div>
                 <h3 className="text-xl font-medium mb-2 text-[hsl(var(--text))]">How can I help you today?</h3>
-                <p className="text-[hsl(var(--muted))] text-sm">Start a conversation with ChatGPT</p>
+                <p className="text-[hsl(var(--muted))] text-sm">Start a conversation with AdamGPT</p>
               </div>
             </div>
           ) : (
@@ -437,24 +437,24 @@ export default function Chat() {
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
                   <div className="max-w-3xl mx-auto px-6 py-8">
-                    <div className="flex gap-6">
+                    <div className={`flex gap-6 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
                       {/* Avatar */}
                       <div className="flex-shrink-0">
                         <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${
                           message.role === 'user' 
                             ? 'bg-[hsl(var(--accent))] text-white' 
-                            : 'bg-[hsl(var(--accent))] text-white'
+                            : 'bg-green-600 text-white'
                         }`}>
                           {message.role === 'user' ? (
                             <User className="h-4 w-4" />
                           ) : (
-                            <div className="text-xs font-bold">GP</div>
+                            <div className="text-xs font-bold">A</div>
                           )}
                         </div>
                       </div>
                       
                       {/* Message Content */}
-                      <div className="flex-1 min-w-0 relative">
+                      <div className={`flex-1 min-w-0 relative ${message.role === 'user' ? 'text-right' : ''}`}>
                         {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-4 space-y-2">
@@ -487,41 +487,51 @@ export default function Chat() {
                         )}
                         
                         {/* Message Text */}
-                        <div className="prose prose-sm max-w-none text-[hsl(var(--text))] leading-relaxed">
-                          <ReactMarkdown 
-                            remarkPlugins={[remarkGfm]}
-                            components={{
-                              p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-[hsl(var(--text))]">{children}</p>,
-                              code: ({ className, children, ...props }: any) => {
-                                const inline = 'inline' in props ? props.inline : false;
-                                const match = /language-(\w+)/.exec(className || '');
-                                return !inline ? (
-                                  <pre className="code-block">
-                                    <code className={className} {...props}>
+                        <div className={`prose prose-sm max-w-none leading-relaxed ${
+                          message.role === 'user' 
+                            ? 'bg-[hsl(var(--accent))] text-white rounded-2xl px-4 py-3 inline-block max-w-lg ml-auto' 
+                            : 'text-[hsl(var(--text))]'
+                        }`}>
+                          {message.role === 'user' ? (
+                            <div className="whitespace-pre-wrap break-words text-white">
+                              {message.content}
+                            </div>
+                          ) : (
+                            <ReactMarkdown 
+                              remarkPlugins={[remarkGfm]}
+                              components={{
+                                p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-[hsl(var(--text))]">{children}</p>,
+                                code: ({ className, children, ...props }: any) => {
+                                  const inline = 'inline' in props ? props.inline : false;
+                                  const match = /language-(\w+)/.exec(className || '');
+                                  return !inline ? (
+                                    <pre className="code-block">
+                                      <code className={className} {...props}>
+                                        {children}
+                                      </code>
+                                    </pre>
+                                  ) : (
+                                    <code className="bg-[hsl(var(--muted))]/20 px-1.5 py-0.5 rounded text-sm text-[hsl(var(--text))]" {...props}>
                                       {children}
                                     </code>
-                                  </pre>
-                                ) : (
-                                  <code className="bg-[hsl(var(--muted))]/20 px-1.5 py-0.5 rounded text-sm text-[hsl(var(--text))]" {...props}>
+                                  );
+                                },
+                                ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ul>,
+                                ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ol>,
+                                li: ({ children }) => <li className="leading-relaxed text-[hsl(var(--text))]">{children}</li>,
+                                h1: ({ children }) => <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-[hsl(var(--text))]">{children}</h1>,
+                                h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 mt-5 first:mt-0 text-[hsl(var(--text))]">{children}</h2>,
+                                h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-[hsl(var(--text))]">{children}</h3>,
+                                blockquote: ({ children }) => (
+                                  <blockquote className="border-l-4 border-[hsl(var(--accent))] pl-4 italic my-4 text-[hsl(var(--text))]">
                                     {children}
-                                  </code>
-                                );
-                              },
-                              ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ul>,
-                              ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ol>,
-                              li: ({ children }) => <li className="leading-relaxed text-[hsl(var(--text))]">{children}</li>,
-                              h1: ({ children }) => <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-[hsl(var(--text))]">{children}</h1>,
-                              h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 mt-5 first:mt-0 text-[hsl(var(--text))]">{children}</h2>,
-                              h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-[hsl(var(--text))]">{children}</h3>,
-                              blockquote: ({ children }) => (
-                                <blockquote className="border-l-4 border-[hsl(var(--accent))] pl-4 italic my-4 text-[hsl(var(--text))]">
-                                  {children}
-                                </blockquote>
-                              ),
-                            }}
-                          >
-                            {message.content}
-                          </ReactMarkdown>
+                                  </blockquote>
+                                ),
+                              }}
+                            >
+                              {message.content}
+                            </ReactMarkdown>
+                          )}
                         </div>
                         
                         {/* Copy button - positioned like ChatGPT */}
@@ -648,7 +658,7 @@ export default function Chat() {
           
           {/* Disclaimer */}
           <p className="text-xs text-gray-400 text-center mt-3">
-            ChatGPT can make mistakes. Check important info.
+            AdamGPT can make mistakes. Check important info.
           </p>
         </div>
 
