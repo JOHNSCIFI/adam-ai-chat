@@ -168,41 +168,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-
-      {/* Language Setting */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-[hsl(var(--text))]">Language</label>
-        <Select defaultValue="en">
-          <SelectTrigger className="w-48 h-10 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] rounded-md">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md z-50">
-            <SelectItem value="en" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">English</SelectItem>
-            <SelectItem value="es" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Español</SelectItem>
-            <SelectItem value="fr" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Français</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Spoken Language */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-[hsl(var(--text))]">Spoken language</label>
-        <p className="text-sm text-[hsl(var(--muted))] leading-relaxed">
-          For best results, select the language you mainly speak. If it's not available, 
-          it may still be supported via auto-detection.
-        </p>
-      </div>
-
-      {/* Voice */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-[hsl(var(--text))]">Voice</label>
-        <div className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-[hsl(var(--accent))] rounded-full flex items-center justify-center">
-            <div className="w-3 h-3 bg-white rounded-full"></div>
-          </div>
-          <span className="text-sm text-[hsl(var(--text))]">Play</span>
-        </div>
-      </div>
     </div>
   );
 
@@ -218,92 +183,122 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         return <div className="text-[hsl(var(--muted))] text-sm">Connected apps settings coming soon...</div>;
       case 'data':
         return (
-          <div className="space-y-4">
-            <Button
-              onClick={handleExportData}
-              variant="outline"
-              className="flex items-center gap-2 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
-            >
-              <Download className="h-4 w-4" />
-              Export data
-            </Button>
+          <div className="space-y-6">
+            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Export data</h3>
+                  <p className="text-sm text-[hsl(var(--muted))]">Download your chat history and data</p>
+                </div>
+                <Button
+                  onClick={handleExportData}
+                  variant="outline"
+                  className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-4 py-2"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Export
+                </Button>
+              </div>
+            </div>
           </div>
         );
       case 'security':
         return (
           <div className="space-y-6">
-            <div>
-              <h3 className="text-sm font-medium text-[hsl(var(--text))] mb-2">Login methods</h3>
-              <p className="text-sm text-[hsl(var(--muted))]">
-                {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
-              </p>
+            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Login methods</h3>
+                  <p className="text-sm text-[hsl(var(--muted))]">Manage your authentication methods</p>
+                </div>
+                <div className="text-sm text-[hsl(var(--muted))]">
+                  {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
+                </div>
+              </div>
             </div>
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
-                >
-                  <LogOut className="h-4 w-4" />
-                  Log out all devices
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-[hsl(var(--text))]">Log out all devices?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-[hsl(var(--muted))]">
-                    This will sign you out from all devices and sessions. You'll need to sign in again.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleLogoutAllDevices} 
-                    className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
-                  >
-                    Log out all
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            
+            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Log out all devices</h3>
+                  <p className="text-sm text-[hsl(var(--muted))]">Sign out from all devices and sessions</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-4 py-2"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Log out all
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-[hsl(var(--text))]">Log out all devices?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-[hsl(var(--muted))]">
+                        This will sign you out from all devices and sessions. You'll need to sign in again.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleLogoutAllDevices} 
+                        className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                      >
+                        Log out all
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
           </div>
         );
       case 'account':
         return (
-          <div className="space-y-4">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 border-[hsl(var(--danger))] text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/10 rounded-md"
-                >
-                  <Trash2 className="h-4 w-4" />
-                  Delete account
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
-                <AlertDialogHeader>
-                  <AlertDialogTitle className="text-[hsl(var(--text))]">Delete your account?</AlertDialogTitle>
-                  <AlertDialogDescription className="text-[hsl(var(--muted))]">
-                    This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
-                    Cancel
-                  </AlertDialogCancel>
-                  <AlertDialogAction 
-                    onClick={handleDeleteAccount} 
-                    disabled={isDeleting}
-                    className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
-                  >
-                    {isDeleting ? 'Deleting...' : 'Delete account'}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+          <div className="space-y-6">
+            <div className="border border-[hsl(var(--danger))]/20 rounded-lg p-4 bg-[hsl(var(--danger))]/5">
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Delete account</h3>
+                  <p className="text-sm text-[hsl(var(--muted))]">Permanently delete your account and all data</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="border-[hsl(var(--danger))] text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/10 rounded-md px-4 py-2"
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete account
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                    <AlertDialogHeader>
+                      <AlertDialogTitle className="text-[hsl(var(--text))]">Delete your account?</AlertDialogTitle>
+                      <AlertDialogDescription className="text-[hsl(var(--muted))]">
+                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
+                        Cancel
+                      </AlertDialogCancel>
+                      <AlertDialogAction 
+                        onClick={handleDeleteAccount} 
+                        disabled={isDeleting}
+                        className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                      >
+                        {isDeleting ? 'Deleting...' : 'Delete account'}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </div>
           </div>
         );
       default:

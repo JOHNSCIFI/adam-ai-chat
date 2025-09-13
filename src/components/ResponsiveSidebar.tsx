@@ -266,7 +266,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
         <Button
           onClick={createNewChat}
           variant="ghost"
-          className="w-full justify-start h-[42px] text-sm text-[hsl(var(--text))] hover:bg-sidebar-hover border border-[hsl(var(--border))] rounded-md transition-all duration-fast hover:scale-[0.995]"
+          className="w-full justify-start h-[44px] text-sm text-[hsl(var(--text))] hover:bg-sidebar-hover border border-[hsl(var(--border))] rounded-lg transition-all duration-fast hover:scale-[0.998] font-medium"
         >
           <Plus className="h-4 w-4" />
           {(!isCollapsed || isMobileOrTablet) && <span className="ml-xs">New chat</span>}

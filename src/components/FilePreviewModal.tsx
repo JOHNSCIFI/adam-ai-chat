@@ -46,47 +46,38 @@ export function FilePreviewModal({ open, onOpenChange, file }: FilePreviewModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0 bg-background/95 backdrop-blur-sm border-2 border-border/20 shadow-2xl">
-        <DialogHeader className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-background to-background/95">
+      <DialogContent className="max-w-6xl max-h-[95vh] overflow-hidden p-0 bg-[hsl(var(--surface))] border border-[hsl(var(--border))] shadow-modal rounded-lg">
+        <DialogHeader className="px-6 py-4 border-b border-[hsl(var(--border))] bg-[hsl(var(--surface))]">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <div className="p-2 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10">
-                {getFileIcon()}
-              </div>
-              <div>
-                <DialogTitle className="text-xl font-bold text-foreground">{file.name}</DialogTitle>
-                <p className="text-sm text-muted-foreground font-medium">{formatFileSize(file.size)}</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
               <Button 
                 variant="outline" 
                 size="sm" 
                 onClick={handleDownload}
-                className="hover:bg-primary hover:text-primary-foreground transition-all duration-200 hover:scale-105 shadow-sm"
+                className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] transition-all duration-fast"
               >
                 <Download className="h-4 w-4 mr-2" />
                 Download
               </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => onOpenChange(false)}
-                className="hover:bg-destructive hover:text-destructive-foreground rounded-full transition-all duration-200 hover:scale-105"
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => onOpenChange(false)}
+              className="text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
+            >
+              <X className="h-5 w-5" />
+            </Button>
           </div>
         </DialogHeader>
         
-        <div className="flex-1 overflow-auto p-8 bg-gradient-to-br from-background via-background to-background/95">
+        <div className="flex-1 overflow-auto p-6 bg-[hsl(var(--surface))] min-h-[60vh]">
           {isImage && (
             <div className="flex justify-center items-center min-h-[60vh]">
               <img 
                 src={file.url} 
-                alt={file.name} 
-                className="max-w-full max-h-[75vh] object-contain rounded-2xl shadow-2xl border border-border/20"
+                alt=""
+                className="max-w-full max-h-[75vh] object-contain rounded-lg shadow-card"
               />
             </div>
           )}
@@ -96,7 +87,7 @@ export function FilePreviewModal({ open, onOpenChange, file }: FilePreviewModalP
               <video 
                 src={file.url} 
                 controls 
-                className="max-w-full max-h-[75vh] rounded-2xl shadow-2xl border border-border/20"
+                className="max-w-full max-h-[75vh] rounded-lg shadow-card"
               >
                 Your browser does not support the video tag.
               </video>
@@ -105,13 +96,13 @@ export function FilePreviewModal({ open, onOpenChange, file }: FilePreviewModalP
           
           {isAudio && (
             <div className="flex flex-col items-center gap-8 min-h-[60vh] justify-center">
-              <div className="w-40 h-40 bg-gradient-to-br from-primary/30 via-primary/20 to-primary/10 rounded-full flex items-center justify-center shadow-2xl border border-primary/20">
-                <Music className="h-20 w-20 text-primary/80" />
+              <div className="w-32 h-32 bg-[hsl(var(--accent))]/20 rounded-full flex items-center justify-center shadow-card border border-[hsl(var(--border))]">
+                <Music className="h-16 w-16 text-[hsl(var(--accent))]" />
               </div>
               <audio 
                 src={file.url} 
                 controls 
-                className="w-full max-w-lg shadow-lg rounded-xl"
+                className="w-full max-w-lg shadow-card rounded-md"
               >
                 Your browser does not support the audio tag.
               </audio>
@@ -120,12 +111,12 @@ export function FilePreviewModal({ open, onOpenChange, file }: FilePreviewModalP
           
           {isPDF && (
             <div className="flex flex-col items-center gap-6 min-h-[60vh] justify-center">
-              <div className="w-40 h-40 bg-gradient-to-br from-red-500/30 via-red-500/20 to-red-500/10 rounded-2xl flex items-center justify-center shadow-2xl border border-red-500/20">
-                <FileText className="h-20 w-20 text-red-500/80" />
+              <div className="w-32 h-32 bg-[hsl(var(--danger))]/20 rounded-lg flex items-center justify-center shadow-card border border-[hsl(var(--border))]">
+                <FileText className="h-16 w-16 text-[hsl(var(--danger))]" />
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">PDF Preview</h3>
-                <p className="text-muted-foreground max-w-md">
+                <h3 className="text-lg font-semibold mb-2 text-[hsl(var(--text))]">PDF Preview</h3>
+                <p className="text-[hsl(var(--muted))] max-w-md">
                   PDF files cannot be previewed here. Click the download button above to view the file.
                 </p>
               </div>
@@ -134,12 +125,12 @@ export function FilePreviewModal({ open, onOpenChange, file }: FilePreviewModalP
           
           {!isImage && !isVideo && !isAudio && !isPDF && (
             <div className="flex flex-col items-center gap-6 min-h-[60vh] justify-center">
-              <div className="w-40 h-40 bg-gradient-to-br from-muted via-muted/70 to-muted/50 rounded-2xl flex items-center justify-center shadow-2xl border border-border/20">
-                <FileText className="h-20 w-20 text-muted-foreground/80" />
+              <div className="w-32 h-32 bg-[hsl(var(--muted))]/20 rounded-lg flex items-center justify-center shadow-card border border-[hsl(var(--border))]">
+                <FileText className="h-16 w-16 text-[hsl(var(--muted))]" />
               </div>
               <div className="text-center">
-                <h3 className="text-lg font-semibold mb-2">File Preview</h3>
-                <p className="text-muted-foreground max-w-md">
+                <h3 className="text-lg font-semibold mb-2 text-[hsl(var(--text))]">File Preview</h3>
+                <p className="text-[hsl(var(--muted))] max-w-md">
                   This file type cannot be previewed. Click the download button above to view the file.
                 </p>
               </div>
