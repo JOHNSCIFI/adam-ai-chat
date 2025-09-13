@@ -288,11 +288,11 @@
   }
   
   .message-actions {
-    @apply opacity-0 translate-x-[6px] transition-all duration-[var(--duration-fast)] flex items-center gap-[var(--space-xs)];
+    @apply opacity-0 translate-x-[6px] transition-all duration-fast flex items-center gap-xs;
   }
   
   .message-action-btn {
-    @apply w-[18px] h-[18px] text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] transition-colors duration-[var(--duration-fast)] cursor-pointer;
+    @apply w-[18px] h-[18px] text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] transition-colors duration-fast cursor-pointer;
   }
 }
 
