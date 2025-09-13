@@ -43,6 +43,7 @@ export type Database = {
           chat_id: string
           content: string
           created_at: string
+          file_attachments: Json | null
           id: string
           role: string
         }
@@ -50,6 +51,7 @@ export type Database = {
           chat_id: string
           content: string
           created_at?: string
+          file_attachments?: Json | null
           id?: string
           role: string
         }
@@ -57,6 +59,7 @@ export type Database = {
           chat_id?: string
           content?: string
           created_at?: string
+          file_attachments?: Json | null
           id?: string
           role?: string
         }
@@ -78,6 +81,7 @@ export type Database = {
           display_name: string | null
           email: string | null
           id: string
+          signup_method: string | null
           theme: string | null
           updated_at: string
           user_id: string
@@ -89,6 +93,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          signup_method?: string | null
           theme?: string | null
           updated_at?: string
           user_id: string
@@ -100,6 +105,7 @@ export type Database = {
           display_name?: string | null
           email?: string | null
           id?: string
+          signup_method?: string | null
           theme?: string | null
           updated_at?: string
           user_id?: string

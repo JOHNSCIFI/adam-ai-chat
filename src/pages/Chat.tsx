@@ -110,13 +110,48 @@ export default function Chat() {
     setSelectedFiles([]);
 
     try {
-      // Add user message to database
+      // Upload files to Supabase storage if any
+      let fileAttachments: FileAttachment[] = [];
+      
+      if (files.length > 0) {
+        for (const file of files) {
+          const fileName = `${user.id}/${Date.now()}-${file.name}`;
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('chat-files')
+            .upload(fileName, file);
+            
+          if (uploadError) {
+            console.error('File upload error:', uploadError);
+            toast({
+              title: "File upload failed",
+              description: `Failed to upload ${file.name}`,
+              variant: "destructive",
+            });
+            continue;
+          }
+          
+          // Get public URL for the file
+          const { data: publicUrlData } = supabase.storage
+            .from('chat-files')
+            .getPublicUrl(fileName);
+            
+          fileAttachments.push({
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: publicUrlData.publicUrl
+          });
+        }
+      }
+
+      // Add user message to database with file attachments
       const { error: userError } = await supabase
         .from('messages')
         .insert([{
           chat_id: chatId,
           content: userMessage,
-          role: 'user'
+          role: 'user',
+          file_attachments: fileAttachments
         }]);
 
       if (userError) throw userError;
@@ -235,7 +270,54 @@ export default function Chat() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      const validFiles: File[] = [];
+      let hasInvalidFiles = false;
+      
+      // File size limits (in bytes)
+      const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
+      const MAX_DOCUMENT_SIZE = 25 * 1024 * 1024; // 25MB
+      const MAX_AUDIO_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
+      const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB per message
+      
+      for (const file of Array.from(files)) {
+        let maxSize = MAX_DOCUMENT_SIZE;
+        
+        if (file.type.startsWith('image/')) {
+          maxSize = MAX_IMAGE_SIZE;
+        } else if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
+          maxSize = MAX_AUDIO_VIDEO_SIZE;
+        }
+        
+        if (file.size > maxSize) {
+          hasInvalidFiles = true;
+          toast({
+            title: "File too large",
+            description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${file.type.split('/')[0]} files.`,
+            variant: "destructive",
+          });
+          continue;
+        }
+        
+        validFiles.push(file);
+      }
+      
+      // Check total size
+      const currentTotalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+      const newTotalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
+      
+      if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
+        toast({
+          title: "Total file size too large",
+          description: `Combined file size cannot exceed ${formatFileSize(MAX_TOTAL_SIZE)} per message.`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      if (validFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...validFiles]);
+      }
+      
       // Reset the input
       event.target.value = '';
     }
@@ -324,9 +406,9 @@ export default function Chat() {
                       } px-4 py-3 shadow-sm`}>
                         
                         {/* File attachments */}
-                        {message.attachments && message.attachments.length > 0 && (
+                        {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-3 space-y-2">
-                            {message.attachments.map((file, index) => (
+                            {message.file_attachments.map((file, index) => (
                               <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
                                 message.role === 'user' 
                                   ? 'bg-black/10 border-white/20' 

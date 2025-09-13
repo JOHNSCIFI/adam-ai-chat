@@ -6,10 +6,12 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  userProfile: any;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  resetPassword: (email: string) => Promise<{ error: any }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
 
   console.log('AuthProvider rendering with Supabase');
 
@@ -47,10 +50,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('User signed in successfully');
           setSession(session);
           setUser(session.user);
+          
+          // Fetch user profile after signin
+          setTimeout(async () => {
+            const { data: profile } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('user_id', session.user.id)
+              .single();
+            setUserProfile(profile);
+          }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
           setSession(null);
           setUser(null);
+          setUserProfile(null);
         }
         setLoading(false);
       }
@@ -76,7 +90,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       password,
       options: {
         emailRedirectTo: redirectUrl,
-        data: displayName ? { display_name: displayName } : {}
+        data: displayName ? { 
+          display_name: displayName,
+          signup_method: 'email'
+        } : {
+          signup_method: 'email'
+        }
       }
     });
     
@@ -106,11 +125,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: redirectUrl
+        redirectTo: redirectUrl,
+        queryParams: {
+          signup_method: 'google'
+        }
       }
     });
     
     console.log('Google signin result:', { error });
+    return { error };
+  };
+
+  const resetPassword = async (email: string) => {
+    const redirectUrl = window.location.origin.includes('localhost') 
+      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
+      : `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${redirectUrl}auth?mode=recovery`
+    });
+    
     return { error };
   };
 
@@ -123,10 +157,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    userProfile,
     signUp,
     signIn,
     signInWithGoogle,
-    signOut
+    signOut,
+    resetPassword
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
