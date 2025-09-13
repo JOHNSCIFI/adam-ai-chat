@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,17 +7,20 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Mail, ArrowLeft, Chrome, Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowLeft, Chrome, Eye, EyeOff, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function AuthPage() {
-  const [mode, setMode] = useState<'login' | 'signup' | 'forgot'>('login');
+  const [searchParams] = useSearchParams();
+  const [mode, setMode] = useState<'login' | 'signup' | 'forgot' | 'reset'>('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [availableAuthMethods, setAvailableAuthMethods] = useState<{
     email: boolean;
     google: boolean;
@@ -27,8 +30,13 @@ export default function AuthPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Check if this is a password recovery callback
+    const recoveryMode = searchParams.get('mode');
+    if (recoveryMode === 'recovery') {
+      setMode('reset');
+    }
     checkAuthMethods();
-  }, [email]);
+  }, [email, searchParams]);
 
   const checkAuthMethods = async () => {
     if (!email || mode !== 'login') {
@@ -70,7 +78,35 @@ export default function AuthPage() {
     setLoading(true);
 
     try {
-      if (mode === 'forgot') {
+      if (mode === 'reset') {
+        if (password !== confirmPassword) {
+          toast({
+            title: "Passwords don't match",
+            description: "Please make sure both passwords are the same.",
+            variant: "destructive",
+          });
+          setLoading(false);
+          return;
+        }
+
+        const { error } = await supabase.auth.updateUser({
+          password: password
+        });
+
+        if (error) {
+          toast({
+            title: "Password update failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Password updated successfully!",
+            description: "You can now log in with your new password.",
+          });
+          setMode('login');
+        }
+      } else if (mode === 'forgot') {
         const { error } = await resetPassword(email);
         if (error) {
           toast({
@@ -154,6 +190,7 @@ export default function AuthPage() {
       case 'login': return 'Welcome Back';
       case 'signup': return 'Create Account';
       case 'forgot': return 'Reset Password';
+      case 'reset': return 'Set New Password';
       default: return 'adamGPT';
     }
   };
@@ -163,89 +200,128 @@ export default function AuthPage() {
       case 'login': return 'Sign in to continue your conversation';
       case 'signup': return 'Join thousands of users already using adamGPT';
       case 'forgot': return 'Enter your email to reset your password';
+      case 'reset': return 'Enter your new password below';
       default: return '';
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-accent/5 p-4">
-      <Card className="w-full max-w-md shadow-xl border-border/50 backdrop-blur-sm">
-        <CardHeader className="text-center space-y-3 pb-8">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary/80 rounded-2xl flex items-center justify-center mx-auto mb-2 shadow-lg">
-            <span className="text-2xl font-bold text-primary-foreground">A</span>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm bg-card/95">
+        <CardHeader className="text-center space-y-4 pb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary via-primary/90 to-primary/70 rounded-3xl flex items-center justify-center mx-auto mb-2 shadow-2xl ring-1 ring-primary/20">
+            {mode === 'reset' ? (
+              <Shield className="w-8 h-8 text-primary-foreground" />
+            ) : (
+              <span className="text-3xl font-bold text-primary-foreground">A</span>
+            )}
           </div>
-          <CardTitle className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             {getTitle()}
           </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
+          <CardDescription className="text-base text-muted-foreground leading-relaxed">
             {getDescription()}
           </CardDescription>
         </CardHeader>
         
-        <CardContent className="space-y-6">
-          {mode === 'forgot' && (
+        <CardContent className="space-y-6 p-8">
+          {(mode === 'forgot' || mode === 'reset') && (
             <Button
               variant="ghost"
               onClick={() => setMode('login')}
-              className="w-full mb-4 text-muted-foreground hover:text-foreground"
+              className="w-full mb-4 text-muted-foreground hover:text-foreground transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to login
             </Button>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {mode === 'signup' && (
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-sm font-medium">Display Name</Label>
+                <Label htmlFor="displayName" className="text-sm font-semibold text-foreground/90">Display Name</Label>
                 <Input
                   id="displayName"
                   type="text"
                   placeholder="Enter your display name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="h-12 px-4 rounded-xl border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="h-14 px-4 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                 />
               </div>
             )}
             
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="h-12 px-4 rounded-xl border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </div>
+            {mode !== 'reset' && (
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground/90">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="h-14 px-4 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
+                />
+              </div>
+            )}
             
             {mode !== 'forgot' && (
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground/90">
+                  {mode === 'reset' ? 'New Password' : 'Password'}
+                </Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
+                    placeholder={mode === 'reset' ? "Enter your new password" : "Enter your password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 px-4 pr-12 rounded-xl border-border/50 focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all"
+                    className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 p-0 hover:bg-accent/50"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-5 w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {mode === 'reset' && (
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground/90">Confirm New Password</Label>
+                <div className="relative">
+                  <Input
+                    id="confirmPassword"
+                    type={showConfirmPassword ? "text" : "password"}
+                    placeholder="Confirm your new password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required
+                    className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
+                  >
+                    {showConfirmPassword ? (
+                      <EyeOff className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-5 w-5 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -258,7 +334,7 @@ export default function AuthPage() {
                   type="button"
                   variant="ghost"
                   onClick={() => setMode('forgot')}
-                  className="text-sm text-muted-foreground hover:text-primary p-0 h-auto font-normal"
+                  className="text-sm text-muted-foreground hover:text-primary p-0 h-auto font-normal transition-colors"
                 >
                   Forgot your password?
                 </Button>
@@ -268,24 +344,30 @@ export default function AuthPage() {
             {((mode === 'login' && availableAuthMethods.email) || mode !== 'login') && (
               <Button 
                 type="submit" 
-                className="w-full h-12 rounded-xl bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02]" 
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 text-primary-foreground font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]" 
                 disabled={loading}
               >
-                {loading ? 'Please wait...' : (
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                    Please wait...
+                  </div>
+                ) : (
                   mode === 'login' ? 'Sign In' : 
                   mode === 'signup' ? 'Create Account' : 
+                  mode === 'reset' ? 'Update Password' :
                   'Send Reset Link'
                 )}
               </Button>
             )}
           </form>
           
-          {mode !== 'forgot' && (
+          {mode !== 'forgot' && mode !== 'reset' && (
             <>
               {((mode === 'login' && availableAuthMethods.email) || mode === 'signup') && (
-                <div className="relative">
-                  <Separator className="bg-border/50" />
-                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-background px-3 text-xs text-muted-foreground">
+                <div className="relative my-8">
+                  <Separator className="bg-border/30" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     or continue with
                   </span>
                 </div>
@@ -294,18 +376,24 @@ export default function AuthPage() {
               {((mode === 'login' && availableAuthMethods.google) || mode === 'signup') && (
                 <Button 
                   variant="outline" 
-                  className="w-full h-12 rounded-xl border-border/50 hover:bg-accent/50 transition-all duration-200 hover:scale-[1.01] shadow-sm" 
+                  className="w-full h-14 rounded-2xl border-border/30 hover:bg-accent/30 hover:border-primary/20 transition-all duration-200 hover:scale-[1.01] shadow-md font-medium" 
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading || loading}
                 >
-                  <Chrome className="w-5 h-5 mr-3" />
-                  {googleLoading ? 'Connecting...' : 'Continue with Google'}
+                  <Chrome className="w-5 h-5 mr-3 text-primary" />
+                  {googleLoading ? (
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
+                      Connecting...
+                    </div>
+                  ) : 'Continue with Google'}
                 </Button>
               )}
               
               {mode === 'login' && !availableAuthMethods.email && (
-                <div className="text-center p-4 bg-accent/10 rounded-xl border border-border/30">
-                  <p className="text-sm text-muted-foreground mb-2">
+                <div className="text-center p-6 bg-accent/5 rounded-2xl border border-border/20 backdrop-blur-sm">
+                  <Chrome className="w-8 h-8 mx-auto mb-3 text-primary" />
+                  <p className="text-sm font-medium text-foreground/90 mb-2">
                     This account was created with Google
                   </p>
                   <p className="text-xs text-muted-foreground">
@@ -314,13 +402,13 @@ export default function AuthPage() {
                 </div>
               )}
               
-              <Separator className="bg-border/30" />
+              <Separator className="bg-border/20 my-6" />
               
               <div className="text-center">
                 <Button
                   variant="ghost"
                   onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                  className="text-sm text-muted-foreground hover:text-primary font-normal"
+                  className="text-sm text-muted-foreground hover:text-primary font-medium transition-colors"
                 >
                   {mode === 'login' 
                     ? "Don't have an account? Create one" 
