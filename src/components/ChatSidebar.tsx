@@ -33,7 +33,7 @@ import {
   Library,
   Bot,
   Folder,
-  PenTool
+  MessageCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -143,8 +143,10 @@ export function ChatSidebar() {
 
     if (!error) {
       setChats(prev => prev.filter(chat => chat.id !== chatId));
-      // Create a new chat after deletion
-      handleNewChat();
+      // Navigate to home if we're currently viewing the deleted chat
+      if (window.location.pathname.includes(chatId)) {
+        navigate('/');
+      }
     }
   };
 
@@ -170,6 +172,46 @@ export function ChatSidebar() {
     }
   };
 
+  // Function to clean up empty chats
+  const cleanupEmptyChats = async () => {
+    if (!user) return;
+
+    // Get all chats for the user
+    const { data: userChats } = await supabase
+      .from('chats')
+      .select('id')
+      .eq('user_id', user.id);
+
+    if (userChats) {
+      for (const chat of userChats) {
+        // Check if chat has any messages
+        const { data: messages } = await supabase
+          .from('messages')
+          .select('id')
+          .eq('chat_id', chat.id)
+          .limit(1);
+
+        // If no messages, delete the chat
+        if (messages && messages.length === 0) {
+          await supabase
+            .from('chats')
+            .delete()
+            .eq('id', chat.id);
+        }
+      }
+      
+      // Refresh the chats list
+      fetchChats();
+    }
+  };
+
+  // Clean up empty chats on component mount
+  useEffect(() => {
+    if (user) {
+      cleanupEmptyChats();
+    }
+  }, [user]);
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -193,7 +235,7 @@ export function ChatSidebar() {
               className="w-full justify-start bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal"
               size="sm"
             >
-              <PenTool className="h-4 w-4 mr-2" />
+              <MessageCircle className="h-4 w-4 mr-2" />
               {!collapsed && <span>New chat</span>}
             </Button>
           </div>
@@ -211,7 +253,11 @@ export function ChatSidebar() {
                 <SidebarMenu>
                   {chats.map((chat) => (
                     <SidebarMenuItem key={chat.id}>
-                      <div className="group relative">
+                      <div 
+                        className="group relative"
+                        onMouseEnter={() => {}}
+                        onMouseLeave={() => {}}
+                      >
                         <NavLink
                           to={`/chat/${chat.id}`}
                           onClick={() => handleChatSwitch(chat.id)}
@@ -234,22 +280,24 @@ export function ChatSidebar() {
                                   handleRenameChat(chat.id, editingTitle);
                                 }
                               }}
-                              className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground"
+                              className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-2"
                               autoFocus
                             />
                           ) : (
-                            <span className="flex-1 truncate">{chat.title}</span>
+                            <span className="flex-1 truncate px-3 py-2">{chat.title}</span>
                           )}
                         </NavLink>
                         
-                        {/* Edit/Delete buttons on hover - hide delete when editing */}
+                        {/* Edit/Delete buttons - only show on hover for this specific chat */}
                         {editingChatId !== chat.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-sidebar rounded px-1">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 hover:bg-sidebar-accent"
-                              onClick={() => {
+                              className="h-7 w-7 p-0 hover:bg-sidebar-accent"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
                                 setEditingChatId(chat.id);
                                 setEditingTitle(chat.title);
                               }}
@@ -259,8 +307,12 @@ export function ChatSidebar() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 hover:bg-sidebar-accent text-destructive"
-                              onClick={() => handleDeleteChat(chat.id)}
+                              className="h-7 w-7 p-0 hover:bg-sidebar-accent text-destructive"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteChat(chat.id);
+                              }}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
