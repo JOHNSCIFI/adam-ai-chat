@@ -480,7 +480,10 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
 
   return (
     <>
-      <div className={`${isCollapsed ? 'w-16' : 'w-80'} h-screen border-r border-sidebar-border bg-sidebar-background transition-all duration-300 ${className}`}>
+      <div 
+        className={`${isCollapsed ? 'w-16' : 'w-80'} h-screen border-r border-sidebar-border bg-sidebar-background transition-all duration-300 ${className}`}
+        style={{ '--sidebar-width': isCollapsed ? '64px' : '320px' } as React.CSSProperties}
+      >
         {sidebarContent}
       </div>
       <SettingsModal open={settingsOpen} onOpenChange={setSettingsOpen} />

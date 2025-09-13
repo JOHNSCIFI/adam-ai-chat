@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Send, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { FilePreviewModal } from '@/components/FilePreviewModal';
 import { useToast } from '@/hooks/use-toast';
+import { useResponsive } from '@/hooks/use-responsive';
+import { useSidebar } from '@/contexts/SidebarContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -31,6 +33,10 @@ export default function Chat() {
   const { chatId } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { isMobile, isTablet } = useResponsive();
+  const { isCollapsed } = useSidebar();
+  
+  const isMobileOrTablet = isMobile || isTablet;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -415,44 +421,51 @@ export default function Chat() {
                         {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-3 space-y-2">
                             {message.file_attachments.map((file, index) => (
-                              <div 
-                                key={index} 
-                                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer hover:scale-105 ${
-                                  message.role === 'user' 
-                                    ? 'bg-black/10 border-white/20 hover:bg-black/20' 
-                                    : 'bg-accent border-border hover:bg-accent/70'
-                                }`}
-                                onClick={() => setPreviewFile({
-                                  name: file.name,
-                                  type: file.type,
-                                  url: file.url,
-                                  size: file.size
-                                })}
-                              >
-                                {isImageFile(file.type) && file.url ? (
-                                  <img 
-                                    src={file.url} 
-                                    alt={file.name} 
-                                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0 shadow-sm"
-                                  />
-                                ) : (
-                                  <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                              isImageFile(file.type) && file.url ? (
+                                <img 
+                                  key={index}
+                                  src={file.url} 
+                                  alt={file.name} 
+                                  className="max-w-xs max-h-48 object-cover rounded-xl shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 border border-border/20"
+                                  onClick={() => setPreviewFile({
+                                    name: file.name,
+                                    type: file.type,
+                                    url: file.url,
+                                    size: file.size
+                                  })}
+                                />
+                              ) : (
+                                <div 
+                                  key={index}
+                                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer hover:scale-105 ${
+                                    message.role === 'user' 
+                                      ? 'bg-black/10 border-white/20 hover:bg-black/20' 
+                                      : 'bg-accent border-border hover:bg-accent/70'
+                                  }`}
+                                  onClick={() => setPreviewFile({
+                                    name: file.name,
+                                    type: file.type,
+                                    url: file.url,
+                                    size: file.size
+                                  })}
+                                >
+                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                     message.role === 'user' 
                                       ? 'bg-white/20' 
                                       : 'bg-muted'
                                   }`}>
                                     {getFileIcon(file.type)}
                                   </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate text-foreground">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFileSize(file.size)} • Click to preview
-                                  </p>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium truncate text-foreground">
+                                      {file.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {formatFileSize(file.size)} • Click to preview
+                                    </p>
+                                  </div>
                                 </div>
-                              </div>
+                              )
                             ))}
                           </div>
                         )}
@@ -508,8 +521,10 @@ export default function Chat() {
       </div>
 
       {/* Fixed Input area at bottom */}
-      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/95 backdrop-blur-sm z-10">
-        <div className="max-w-4xl mx-auto w-full p-3">
+      <div className={`fixed bottom-0 right-0 border-t border-border bg-background/95 backdrop-blur-sm z-10 ${
+        isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
+      } transition-all duration-300`}>
+        <div className="w-full p-3">
           <form onSubmit={sendMessage} className="space-y-3">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
