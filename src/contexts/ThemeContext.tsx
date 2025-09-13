@@ -27,7 +27,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark'); // Default to dark for ChatGPT style
   const [accentColor, setAccentColor] = useState<AccentColor>('green'); // Default to green for ChatGPT brand
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
-  const [isInitialized, setIsInitialized] = useState(false);
   const { user } = useAuth();
 
   useEffect(() => {
@@ -50,7 +49,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (savedTheme) setTheme(savedTheme);
         if (savedAccent) setAccentColor(savedAccent);
       }
-      setIsInitialized(true);
     };
 
     loadUserPreferences();
@@ -77,25 +75,23 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.remove('accent-blue', 'accent-purple', 'accent-green', 'accent-orange', 'accent-red');
     root.classList.add(`accent-${accentColor}`);
 
-    // Save preferences only after initialization
-    if (isInitialized) {
-      const savePreferences = async () => {
-        if (user) {
-          // Save to Supabase for authenticated users
-          await supabase
-            .from('profiles')
-            .update({ theme, accent_color: accentColor })
-            .eq('user_id', user.id);
-        } else {
-          // Fallback to localStorage for non-authenticated users
-          localStorage.setItem('adamgpt-theme', theme);
-          localStorage.setItem('adamgpt-accent', accentColor);
-        }
-      };
+    // Save preferences
+    const savePreferences = async () => {
+      if (user) {
+        // Save to Supabase for authenticated users
+        await supabase
+          .from('profiles')
+          .update({ theme, accent_color: accentColor })
+          .eq('user_id', user.id);
+      } else {
+        // Fallback to localStorage for non-authenticated users
+        localStorage.setItem('adamgpt-theme', theme);
+        localStorage.setItem('adamgpt-accent', accentColor);
+      }
+    };
 
-      savePreferences();
-    }
-  }, [theme, accentColor, user, isInitialized]);
+    savePreferences();
+  }, [theme, accentColor, user]);
 
   const handleSetTheme = (newTheme: Theme) => {
     setTheme(newTheme);

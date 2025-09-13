@@ -2,128 +2,133 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Complete Design System - Single Source of Truth */
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+Add touch-friendly mobile styles.
+*/
 
 @layer base {
   :root {
-    /* Color tokens — Light */
-    --bg: 216 25% 96%; /* #F3F4F6 */
-    --surface: 0 0% 100%; /* #FFFFFF */
-    --muted: 210 14% 42%; /* #6B7280 */
-    --text: 210 40% 10%; /* #0F172A */
-    --border: 210 22% 89%; /* #E5E7EB */
-    --accent: 160 84% 35%; /* #10B981 */
-    --accent-strong: 158 64% 20%; /* #059669 */
-    --danger: 0 84% 60%; /* #EF4444 */
-    --shadow: 215 25% 8%; /* rgba(2,6,23,0.08) */
-    
-    /* Sidebar specific */
-    --sidebar-bg: 217 33% 97%; /* #FBFCFD */
-    --sidebar-hover: 213 27% 97%; /* #F5F7FA */
-    --sidebar-selected: 155 29% 95%; /* #EFF6F2 */
-    
-    /* Legacy shadcn compatibility */
-    --background: var(--bg);
-    --foreground: var(--text);
-    --card: var(--surface);
-    --card-foreground: var(--text);
-    --popover: var(--surface);
-    --popover-foreground: var(--text);
-    --primary: var(--accent);
-    --primary-foreground: 0 0% 100%;
-    --secondary: 210 22% 89%;
-    --secondary-foreground: var(--text);
-    --muted-foreground: var(--muted);
-    --accent-foreground: var(--text);
-    --destructive: var(--danger);
-    --destructive-foreground: 0 0% 98%;
-    --input: var(--surface);
-    --ring: var(--accent);
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
     --radius: 0.5rem;
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-muted-foreground: 240 3.8% 46.1%;
+
+    /* ChatGPT-style accent colors */
+    --accent-blue: 213 94% 68%;
+    --accent-purple: 262 83% 58%;
+    --accent-green: 142 76% 36%;
+    --accent-orange: 25 95% 53%;
+    --accent-red: 0 84% 60%;
   }
 
   .dark {
-    /* Color tokens — Dark */
-    --bg: 216 33% 7%; /* #0B1220 */
-    --surface: 215 25% 10%; /* #0F1724 */
-    --muted: 210 11% 67%; /* #9CA3AF */
-    --text: 210 40% 93%; /* #E6EEF6 */
-    --border: 210 11% 16%; /* #1F2937 */
-    --accent: 158 64% 52%; /* #34D399 */
-    --accent-strong: 160 84% 35%; /* #10B981 */
-    --danger: 0 76% 70%; /* #F87171 */
-    --shadow: 215 25% 8%; /* rgba(2,6,23,0.6) */
-    
-    /* Sidebar specific */
-    --sidebar-bg: var(--surface);
-    --sidebar-hover: 0 0% 100%; /* rgba(255,255,255,0.03) */
-    --sidebar-selected: 0 0% 100%; /* rgba(255,255,255,0.02) */
-    
-    /* Legacy shadcn compatibility */
-    --background: var(--bg);
-    --foreground: var(--text);
-    --card: var(--surface);
-    --card-foreground: var(--text);
-    --popover: var(--surface);
-    --popover-foreground: var(--text);
-    --primary: var(--accent);
+    /* ChatGPT Dark Theme Colors */
+    --background: 230 7% 13%; /* #202123 - Chat area background */
+    --foreground: 0 0% 93%; /* #ECECEC - Primary text */
+    --card: 225 9% 31%; /* #444654 - AI message background */
+    --card-foreground: 0 0% 93%; /* #ECECEC */
+    --popover: 225 7% 25%; /* #343541 */
+    --popover-foreground: 0 0% 93%;
+    --primary: 160 84% 35%; /* #10A37F - Brand green */
     --primary-foreground: 0 0% 100%;
-    --secondary: var(--surface);
-    --secondary-foreground: var(--text);
-    --muted-foreground: var(--muted);
-    --accent-foreground: var(--text);
-    --destructive: var(--danger);
+    --secondary: 225 7% 25%; /* #343541 - User message background */
+    --secondary-foreground: 0 0% 93%;
+    --muted: 225 10% 29%; /* #40414F - Input background */
+    --muted-foreground: 220 9% 65%; /* #9CA3AF - Secondary text */
+    --accent: 225 6% 18%; /* #2A2B32 - Hover states */
+    --accent-foreground: 0 0% 93%;
+    --destructive: 0 84% 60%; /* #EF4444 */
     --destructive-foreground: 0 0% 98%;
-    --input: var(--surface);
-    --ring: var(--accent);
+    --border: 225 6% 18%; /* #2A2B32 */
+    --input: 225 10% 29%; /* #40414F */
+    --ring: 160 84% 35%; /* #10A37F */
+    --sidebar-background: 240 9% 13%; /* #1E1F23 - Side panel background */
+    --sidebar-foreground: 0 0% 93%;
+    --sidebar-primary: 160 84% 35%; /* #10A37F - Brand green */
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 225 6% 18%; /* #2A2B32 */
+    --sidebar-accent-foreground: 0 0% 93%;
+    --sidebar-border: 225 6% 18%;
+    --sidebar-ring: 160 84% 35%;
+    --sidebar-muted-foreground: 220 9% 65%;
+    
+    /* ChatGPT specific backgrounds */
+    --chat-user-bg: 225 7% 25%; /* #343541 - User message */
+    --chat-ai-bg: 225 9% 31%; /* #444654 - AI message */
+    --chat-input-bg: 225 10% 29%; /* #40414F - Input field */
+    --chat-hover: 225 6% 18%; /* #2A2B32 - Hover states */
   }
 
-  /* Typography & sizes */
-  :root {
-    /* Font sizes */
-    --fs-xs: 12px;
-    --fs-sm: 13px;
-    --fs-base: 14px;
-    --fs-md: 15px;
-    --fs-lg: 18px;
-    --fs-xl: 20px;
-    
-    /* Line heights */
-    --lh-tight: 1.2;
-    --lh-normal: 1.4;
-    --lh-relaxed: 1.6;
-    
-    /* Spacing tokens */
-    --space-xxs: 4px;
-    --space-xs: 8px;
-    --space-sm: 12px;
-    --space-md: 16px;
-    --space-lg: 24px;
-    --space-xl: 32px;
-    
-    /* Radius tokens */
-    --r-sm: 6px;
-    --r-md: 8px;
-    --r-lg: 12px;
-    --r-pill: 9999px;
-    
-    /* Shadow tokens */
-    --shadow-card: 0 6px 18px hsl(var(--shadow) / 0.08);
-    --shadow-modal: 0 20px 40px hsl(var(--shadow) / 0.6);
-    
-    /* Motion tokens */
-    --duration-fast: 120ms;
-    --duration-normal: 200ms;
-    --duration-slow: 320ms;
-    
-    --ease-pop: cubic-bezier(0.2, 1, 0.35, 1);
-    --ease-smooth: cubic-bezier(0.22, 0.94, 0.36, 1);
-    --ease-linear: linear;
+  /* Accent color variants - comprehensive theming */
+  .accent-blue {
+    --primary: 213 94% 68%;
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 213 94% 68%;
+    --accent: 213 94% 68%;
+    --ring: 213 94% 68%;
+    --sidebar-ring: 213 94% 68%;
   }
 
-  .dark {
-    --shadow-card: 0 6px 18px hsl(var(--shadow) / 0.6);
-    --shadow-modal: 0 20px 40px hsl(var(--shadow) / 0.8);
+  .accent-purple {
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 262 83% 58%;
+    --accent: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --sidebar-ring: 262 83% 58%;
+  }
+
+  .accent-green {
+    --primary: 160 84% 35%; /* #10A37F - ChatGPT brand green */
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 160 84% 35%;
+    --accent: 160 84% 35%;
+    --ring: 160 84% 35%;
+    --sidebar-ring: 160 84% 35%;
+  }
+
+  .accent-orange {
+    --primary: 25 95% 53%;
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 25 95% 53%;
+    --accent: 25 95% 53%;
+    --ring: 25 95% 53%;
+    --sidebar-ring: 25 95% 53%;
+  }
+
+  .accent-red {
+    --primary: 0 84% 60%;
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 0 84% 60%;
+    --accent: 0 84% 60%;
+    --ring: 0 84% 60%;
+    --sidebar-ring: 0 84% 60%;
   }
 }
 
@@ -133,236 +138,82 @@
   }
 
   body {
-    background: hsl(var(--bg));
-    color: hsl(var(--text));
-    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-    font-size: var(--fs-base);
-    line-height: var(--lh-normal);
-    letter-spacing: -0.01em;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
   
   /* Smooth scrolling */
   html {
     scroll-behavior: smooth;
   }
-}
-
-@layer utilities {
-  /* Message styling utilities */
-  .message-user {
-    background: hsl(var(--accent));
-    color: white;
-    border-radius: var(--r-lg);
-    padding: var(--space-sm) var(--space-md);
-    max-width: 680px;
-    margin-left: auto;
+  
+  /* ChatGPT utility classes */
+  .chat-user-bg {
+    background: hsl(var(--chat-user-bg, var(--secondary)));
   }
   
-  .message-assistant {
-    background: hsl(var(--surface));
-    color: hsl(var(--text));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--r-lg);
-    padding: var(--space-sm) var(--space-md);
-    max-width: 680px;
-    margin-right: auto;
-    box-shadow: var(--shadow-card);
+  .chat-ai-bg {
+    background: hsl(var(--chat-ai-bg, var(--card)));
   }
   
-  /* Sidebar utilities */
-  .sidebar-item {
-    height: 56px;
-    padding: 0 var(--space-sm);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    border-radius: var(--r-md);
-    transition: all 120ms cubic-bezier(0.22, 0.94, 0.36, 1);
-    cursor: pointer;
+  .chat-input-bg {
+    background: hsl(var(--chat-input-bg, var(--muted)));
   }
   
-  .sidebar-item:hover {
-    background: hsl(var(--sidebar-hover));
-    transform: translateX(6px);
+  .chat-hover {
+    background: hsl(var(--chat-hover, var(--accent)));
   }
   
-  .sidebar-item.selected {
-    background: hsl(var(--sidebar-selected));
-    border-left: 4px solid hsl(var(--accent));
-  }
-  
-  /* Animation utilities */
-  .animate-message-in {
-    animation: messageIn 200ms cubic-bezier(0.22, 0.94, 0.36, 1);
-  }
-  
-  .animate-fade-in {
-    animation: fadeIn 120ms cubic-bezier(0.22, 0.94, 0.36, 1);
-  }
-  
-  .animate-scale-in {
-    animation: scaleIn 200ms cubic-bezier(0.2, 1, 0.35, 1);
-  }
-  
-  /* Focus ring utility */
-  .focus-ring {
-    outline: none;
-  }
-  
-  .focus-ring:focus-visible {
-    outline: none;
-    box-shadow: 0 0 0 4px hsl(var(--accent) / 0.2);
-  }
-  
-  /* Composer styling */
-  .composer {
-    min-height: 52px;
-    max-height: 200px;
-    background: hsl(var(--surface));
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--r-md);
-    padding: var(--space-sm);
-    box-shadow: var(--shadow-card);
-  }
-  
-  .composer:focus-within {
-    box-shadow: 0 0 0 4px hsl(var(--accent) / 0.2);
-  }
-  
-  /* Code block styling */
-  .code-block {
-    background: #0d1117;
-    border: 1px solid hsl(var(--border));
-    border-radius: var(--r-md);
-    padding: var(--space-md);
-    overflow-x: auto;
-    margin: var(--space-md) 0;
-    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  }
-  
-  .dark .code-block {
-    background: #071226;
-  }
-  
-  /* Button enhancements */
-  .btn-primary {
-    background: hsl(var(--accent));
-    color: white;
-    border-radius: var(--r-md);
-    padding: var(--space-sm) var(--space-md);
-    transition: all 120ms ease-out;
-  }
-  
-  .btn-primary:hover {
-    background: hsl(var(--accent-strong));
-  }
-  
-  .btn-primary:active {
-    transform: scale(0.98);
-  }
-  
-  /* Custom scrollbar */
-  .scrollbar-thin::-webkit-scrollbar {
+  /* Custom scrollbar - ChatGPT style */
+  ::-webkit-scrollbar {
     width: 4px;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-track {
+  ::-webkit-scrollbar-track {
     background: transparent;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted) / 0.2);
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
     border-radius: 2px;
   }
   
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted) / 0.4);
-  }
-}
-
-@layer components {
-  /* Message actions on hover */
-  .message-group:hover .message-actions {
-    opacity: 1;
-    transform: translateX(0);
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
   }
   
-  .message-actions {
-    opacity: 0;
-    transform: translateX(6px);
-    transition: all 120ms cubic-bezier(0.22, 0.94, 0.36, 1);
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
+  /* Focus visible improvements */
+  .focus-visible\:outline-none:focus-visible {
+    outline: 2px solid hsl(var(--sidebar-primary));
+    outline-offset: 2px;
   }
-  
-  .message-action-btn {
-    width: 18px;
-    height: 18px;
-    color: hsl(var(--muted));
-    cursor: pointer;
-    transition: color 120ms ease-out;
-  }
-  
-  .message-action-btn:hover {
-    color: hsl(var(--text));
-  }
-}
 
-/* Keyframes for animations */
-@keyframes messageIn {
-  0% {
-    opacity: 0;
-    transform: translateY(6px);
+  /* Touch-friendly mobile styles */
+  @media (hover: none) and (pointer: coarse) {
+    /* Increase tap targets on mobile */
+    button, a {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improve input accessibility on mobile */
+    input, textarea {
+      font-size: 16px; /* Prevents zoom on iOS */
+    }
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-@keyframes fadeIn {
-  0% {
-    opacity: 0;
+  /* Safe area for mobile devices with notches */
+  .p-safe {
+    padding-left: max(1rem, env(safe-area-inset-left));
+    padding-right: max(1rem, env(safe-area-inset-right));
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  100% {
-    opacity: 1;
-  }
-}
 
-@keyframes scaleIn {
-  0% {
-    opacity: 0;
-    transform: scale(0.98);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-/* Typography scale classes */
-.text-xs { font-size: var(--fs-xs); }
-.text-sm { font-size: var(--fs-sm); }
-.text-base { font-size: var(--fs-base); }
-.text-md { font-size: var(--fs-md); }
-.text-lg { font-size: var(--fs-lg); }
-.text-xl { font-size: var(--fs-xl); }
-
-.leading-tight { line-height: var(--lh-tight); }
-.leading-normal { line-height: var(--lh-normal); }
-.leading-relaxed { line-height: var(--lh-relaxed); }
-
-/* Responsive helpers */
-@media (hover: none) and (pointer: coarse) {
-  button, a {
-    min-height: 44px;
-    min-width: 44px;
-  }
-  
-  input, textarea {
-    font-size: 16px;
+  /* Smooth transitions for responsive changes */
+  * {
+    transition-property: transform, opacity, background-color, border-color, color, fill, stroke;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
 }

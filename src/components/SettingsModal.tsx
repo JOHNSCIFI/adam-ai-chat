@@ -1,257 +1,556 @@
-import React, { useState } from 'react';
-import { X, Settings, Bell, User, Plug, Shield, UserCheck, Download, LogOut, Trash2, Check, ChevronDown } from 'lucide-react';
+import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { 
+  Settings, 
+  User, 
+  CreditCard,
+  Monitor,
+  Sun,
+  Moon,
+  Trash2,
+  ChevronDown,
+  Mail,
+  Shield,
+  Check
+} from 'lucide-react';
 
 interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
-const settingsCategories = [
+const sidebarItems = [
   { id: 'general', label: 'General', icon: Settings },
-  { id: 'notifications', label: 'Notifications', icon: Bell },
-  { id: 'personalization', label: 'Personalization', icon: User },
-  { id: 'apps', label: 'Connected apps', icon: Plug },
-  { id: 'data', label: 'Data controls', icon: Shield },
+  { id: 'profile', label: 'Profile', icon: User },
   { id: 'security', label: 'Security', icon: Shield },
-  { id: 'account', label: 'Account', icon: UserCheck },
+  { id: 'data', label: 'Data Control', icon: CreditCard },
+];
+
+const themeOptions = [
+  { value: 'light' as const, label: 'Light', icon: Sun },
+  { value: 'dark' as const, label: 'Dark', icon: Moon },
+  { value: 'system' as const, label: 'System', icon: Monitor },
 ];
 
 const accentColors = [
-  { id: 'green', label: 'Default', color: '#10B981' },
-  { id: 'blue', label: 'Blue', color: '#3B82F6' },
-  { id: 'purple', label: 'Purple', color: '#8B5CF6' },
-  { id: 'yellow', label: 'Yellow', color: '#F59E0B' },
-  { id: 'pink', label: 'Pink', color: '#EC4899' },
-  { id: 'orange', label: 'Orange', color: '#F97316' },
+  { value: 'blue' as const, label: 'Blue', color: 'hsl(221, 83%, 53%)' },
+  { value: 'purple' as const, label: 'Purple', color: 'hsl(262, 83%, 58%)' },
+  { value: 'green' as const, label: 'Green', color: 'hsl(142, 76%, 36%)' },
+  { value: 'orange' as const, label: 'Orange', color: 'hsl(25, 95%, 53%)' },
+  { value: 'red' as const, label: 'Red', color: 'hsl(0, 84%, 60%)' },
 ];
 
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
-  const [activeCategory, setActiveCategory] = useState('general');
-  const { theme, setTheme, accentColor, setAccentColor } = useTheme();
-  const { user, signOut } = useAuth();
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [activeTab, setActiveTab] = React.useState('general');
+  const { theme, accentColor, setTheme, setAccentColor } = useTheme();
+  const { toast } = useToast();
+  const { user, signOut, userProfile } = useAuth();
 
-  const handleExportData = async () => {
-    try {
-      if (!user) return;
-      
-      const { data: chats } = await supabase
-        .from('chats')
-        .select('*, messages(*)')
-        .eq('user_id', user.id);
-      
-      const exportData = {
-        chats,
-        exportDate: new Date().toISOString(),
-        userId: user.id
-      };
-      
-      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `chatgpt-data-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      toast.success('Data exported successfully');
-    } catch (error) {
-      toast.error('Failed to export data');
-    }
+  const handleSetTheme = (newTheme: typeof theme) => {
+    setTheme(newTheme);
+    toast({
+      title: "Theme updated",
+      description: `Switched to ${newTheme} theme`,
+    });
   };
 
-  const handleDeleteAccount = async () => {
+  const handleSetAccentColor = (color: typeof accentColor) => {
+    setAccentColor(color);
+    toast({
+      title: "Accent color updated", 
+      description: `Switched to ${color} accent color`,
+    });
+  };
+
+  const handleLogoutThisDevice = async () => {
     try {
-      setIsDeleting(true);
-      
-      const response = await fetch('https://lciaiunzacgvvbvcshdh.supabase.co/functions/v1/delete-account', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete account');
-      }
-
-      toast.success('Account deleted successfully');
+      await signOut();
       onOpenChange(false);
-    } catch (error) {
-      console.error('Error deleting account:', error);
-      toast.error('Failed to delete account');
-    } finally {
-      setIsDeleting(false);
+      toast({
+        title: "Logged out",
+        description: "You have been logged out of this device.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to log out. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
   const handleLogoutAllDevices = async () => {
     try {
-      await supabase.auth.signOut({ scope: 'global' });
-      toast.success('Logged out from all devices');
+      // This will invalidate all sessions globally
+      const { error } = await supabase.auth.signOut({ scope: 'global' });
+      if (error) throw error;
+      
+      await signOut();
       onOpenChange(false);
-    } catch (error) {
-      toast.error('Failed to logout from all devices');
+      toast({
+        title: "Logged out everywhere",
+        description: "You have been logged out of all devices.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to log out from all devices. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
-  const renderGeneralSettings = () => (
-    <div className="space-y-8">
-      {/* Theme Setting */}
-      <div className="space-y-3">
-        <label className="text-sm font-medium text-[hsl(var(--text))]">Theme</label>
-        <Select value={theme} onValueChange={setTheme}>
-          <SelectTrigger className="w-48 h-10 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] rounded-md">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md z-50">
-            <SelectItem value="light" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Light</SelectItem>
-            <SelectItem value="dark" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Dark</SelectItem>
-            <SelectItem value="system" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">System</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+  const [isExporting, setIsExporting] = React.useState(false);
 
-      {/* Accent Color Setting */}
-      <div className="space-y-3">
-        <label className="block text-sm font-medium text-[hsl(var(--text))] mb-2">Accent color</label>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              className="w-48 h-10 justify-between bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-3"
-            >
-              <div className="flex items-center gap-2">
-                <div 
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: accentColors.find(c => c.id === accentColor)?.color }}
-                />
-                <span className="text-sm">{accentColors.find(c => c.id === accentColor)?.label}</span>
-              </div>
-              <ChevronDown className="w-4 h-4 opacity-50" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent 
-            className="w-48 bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md shadow-modal z-50 p-1"
-            align="start"
-          >
-            {accentColors.map((color) => (
-              <DropdownMenuItem
-                key={color.id}
-                onClick={() => setAccentColor(color.id as any)}
-                className="flex items-center justify-between px-3 py-2.5 text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] cursor-pointer rounded-sm"
-              >
-                <div className="flex items-center gap-2.5">
-                  <div 
-                    className="w-3 h-3 rounded-full"
-                    style={{ backgroundColor: color.color }}
-                  />
-                  <span className="text-sm">{color.label}</span>
+  const handleExportData = async () => {
+    if (!user) return;
+    
+    setIsExporting(true);
+    toast({
+      title: "Export started",
+      description: "Your data export has started. Please wait…",
+    });
+
+    try {
+      // Fetch all chats and messages
+      const { data: chats, error: chatsError } = await supabase
+        .from('chats')
+        .select(`
+          *,
+          messages (*)
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      if (chatsError) throw chatsError;
+
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+
+      if (profileError) throw profileError;
+
+      // Create ZIP file
+      const JSZip = (await import('jszip')).default;
+      const zip = new JSZip();
+
+      // 1. conversations.json
+      const conversationsJson = {
+        exportDate: new Date().toISOString(),
+        totalChats: chats?.length || 0,
+        conversations: chats?.map(chat => ({
+          id: chat.id,
+          title: chat.title,
+          createdAt: chat.created_at,
+          updatedAt: chat.updated_at,
+          messages: chat.messages.map((msg: any) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.content,
+            createdAt: msg.created_at,
+            fileAttachments: msg.file_attachments
+          }))
+        })) || []
+      };
+      zip.file('conversations.json', JSON.stringify(conversationsJson, null, 2));
+
+      // 2. conversations.html
+      const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Export - ${profile?.display_name || 'User'}</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; margin: 0; padding: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .header { border-bottom: 2px solid #eee; padding-bottom: 20px; margin-bottom: 30px; }
+        .chat { margin-bottom: 40px; border: 1px solid #eee; border-radius: 8px; padding: 20px; }
+        .chat-title { font-size: 1.2em; font-weight: bold; color: #333; margin-bottom: 10px; }
+        .chat-meta { color: #666; font-size: 0.9em; margin-bottom: 20px; }
+        .message { margin: 15px 0; padding: 12px; border-radius: 8px; }
+        .user-message { background: #007bff; color: white; margin-left: 20px; }
+        .assistant-message { background: #f8f9fa; border: 1px solid #dee2e6; margin-right: 20px; }
+        .message-role { font-weight: bold; margin-bottom: 5px; text-transform: capitalize; }
+        .message-content { white-space: pre-wrap; }
+        .timestamp { font-size: 0.8em; opacity: 0.7; margin-top: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Chat Export</h1>
+            <p><strong>User:</strong> ${profile?.display_name || 'Unknown'} (${profile?.email || 'No email'})</p>
+            <p><strong>Export Date:</strong> ${new Date().toLocaleString()}</p>
+            <p><strong>Total Conversations:</strong> ${chats?.length || 0}</p>
+        </div>
+        
+        ${chats?.map(chat => `
+            <div class="chat">
+                <div class="chat-title">${chat.title}</div>
+                <div class="chat-meta">
+                    Created: ${new Date(chat.created_at).toLocaleString()} | 
+                    Messages: ${chat.messages.length}
                 </div>
-                {accentColor === color.id && (
-                  <Check className="w-4 h-4 text-[hsl(var(--accent))]" />
-                )}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
+                ${chat.messages.map((msg: any) => `
+                    <div class="message ${msg.role}-message">
+                        <div class="message-role">${msg.role}</div>
+                        <div class="message-content">${msg.content}</div>
+                        <div class="timestamp">${new Date(msg.created_at).toLocaleString()}</div>
+                    </div>
+                `).join('')}
+            </div>
+        `).join('') || '<p>No conversations found.</p>'}
     </div>
-  );
+</body>
+</html>`;
+      zip.file('conversations.html', htmlContent);
 
-  const renderCategoryContent = () => {
-    switch (activeCategory) {
+      // 3. metadata.json
+      const metadata = {
+        exportDate: new Date().toISOString(),
+        user: {
+          id: user.id,
+          email: user.email,
+          displayName: profile?.display_name,
+          signupMethod: profile?.signup_method,
+          accountCreated: profile?.created_at,
+          theme: profile?.theme,
+          accentColor: profile?.accent_color
+        },
+        statistics: {
+          totalChats: chats?.length || 0,
+          totalMessages: chats?.reduce((acc, chat) => acc + chat.messages.length, 0) || 0,
+          firstChatDate: chats?.[0]?.created_at,
+          lastChatDate: chats?.[chats.length - 1]?.created_at
+        }
+      };
+      zip.file('metadata.json', JSON.stringify(metadata, null, 2));
+
+      // Generate and download ZIP
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      const url = URL.createObjectURL(zipBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `adamgpt-export-${new Date().toISOString().split('T')[0]}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Export completed",
+        description: "Your data has been successfully exported and downloaded.",
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export failed",
+        description: "There was an error exporting your data. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDeleteAllChats = async () => {
+    if (!user) return;
+    
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Chats deleted",
+        description: "All your chats have been permanently deleted.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting chats",
+        description: "Unable to delete chats. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+    
+    try {
+      // Get the current session token for authentication
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No active session found');
+      }
+
+      // Call the edge function to delete the account
+      const { data, error } = await supabase.functions.invoke('delete-account', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to delete account');
+      }
+      
+      toast({
+        title: "Account deleted",
+        description: "Your account has been permanently deleted.",
+      });
+      
+      // Sign out and close modal
+      await supabase.auth.signOut();
+      onOpenChange(false);
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      toast({
+        title: "Error deleting account",
+        description: error.message || "Unable to delete account. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const renderContent = () => {
+    switch (activeTab) {
       case 'general':
-        return renderGeneralSettings();
-      case 'notifications':
-        return <div className="text-[hsl(var(--muted))] text-sm">Notification settings coming soon...</div>;
-      case 'personalization':
-        return <div className="text-[hsl(var(--muted))] text-sm">Personalization settings coming soon...</div>;
-      case 'apps':
-        return <div className="text-[hsl(var(--muted))] text-sm">Connected apps settings coming soon...</div>;
-      case 'data':
         return (
           <div className="space-y-6">
-            <div className="border border-[hsl(var(--border))] rounded-lg p-4 bg-[hsl(var(--surface))]">
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">General</h2>
+              <p className="text-muted-foreground">Customize your interface preferences</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Theme Setting */}
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Export data</h3>
-                  <p className="text-sm text-[hsl(var(--muted))]">Download your chat history and data</p>
+                <div>
+                  <p className="font-medium">Theme</p>
+                  <p className="text-sm text-muted-foreground">Choose your interface theme</p>
                 </div>
-                <Button
-                  onClick={handleExportData}
-                  variant="outline"
-                  className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-4 py-2"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
+                <Select value={theme} onValueChange={handleSetTheme}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-md z-50">
+                    {themeOptions.map((option) => {
+                      const Icon = option.icon;
+                      return (
+                        <SelectItem key={option.value} value={option.value}>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-4 w-4" />
+                            {option.label}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              {/* Accent Color Setting */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Accent Color</p>
+                  <p className="text-sm text-muted-foreground">Choose your preferred accent color</p>
+                </div>
+                <Select value={accentColor} onValueChange={handleSetAccentColor}>
+                  <SelectTrigger className="w-32">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-md z-50">
+                    {accentColors.map((color) => (
+                      <SelectItem key={color.value} value={color.value}>
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: color.color }}
+                          />
+                          {color.label}
+                        </div>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
         );
+
+      case 'profile':
+        return (
+          <div className="space-y-6">
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">Profile</h2>
+              <p className="text-muted-foreground">Manage your account information</p>
+            </div>
+            
+            <div className="space-y-6">
+              <div>
+                <p className="font-medium mb-1">Email</p>
+                <p className="text-muted-foreground">{user?.email}</p>
+              </div>
+
+              <Separator />
+
+              <div>
+                <p className="font-medium mb-3">Login Methods</p>
+                <div className="space-y-3">
+                  {/* Show login method based on user's signup method */}
+                  {userProfile?.signup_method === 'google' ? (
+                    // Google Login Only
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <svg className="h-4 w-4" viewBox="0 0 24 24">
+                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                          </svg>
+                        </div>
+                        <div>
+                          <p className="font-medium">Google</p>
+                          <p className="text-sm text-muted-foreground">Sign in with your Google account</p>
+                        </div>
+                      </div>
+                      <Check className="h-5 w-5 text-green-500" />
+                    </div>
+                  ) : (
+                    // Email & Password Only
+                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-full">
+                          <Mail className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="font-medium">Email & Password</p>
+                          <p className="text-sm text-muted-foreground">Sign in with your email address</p>
+                        </div>
+                      </div>
+                      <Check className="h-5 w-5 text-green-500" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'security':
         return (
           <div className="space-y-6">
-            <div className="border border-blue-200 rounded-lg p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 dark:border-blue-800/30">
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-blue-900 dark:text-blue-100">Login methods</h3>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">Manage your authentication methods</p>
-                </div>
-                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-100 dark:bg-blue-900/40 rounded-full">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
-                  </span>
-                </div>
-              </div>
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">Security</h2>
+              <p className="text-muted-foreground">Manage your account security and sessions</p>
             </div>
             
-            <div className="border border-red-200 rounded-lg p-4 bg-gradient-to-r from-red-50 to-pink-50 dark:from-red-950/20 dark:to-pink-950/20 dark:border-red-800/30">
+            <div className="space-y-6">
+              {/* Multi-Factor Authentication */}
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-red-900 dark:text-red-100">Log out all devices</h3>
-                  <p className="text-sm text-red-700 dark:text-red-300">Sign out from all devices and sessions</p>
+                <div>
+                  <p className="font-medium">Multi-Factor Authentication</p>
+                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
+                </div>
+                <Button variant="outline" disabled>
+                  Coming Soon
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Log out this device */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Log out of this device</p>
+                  <p className="text-sm text-muted-foreground">End your current session on this device only</p>
+                </div>
+                <Button variant="outline" onClick={handleLogoutThisDevice}>
+                  Log Out
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Log out all devices */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Log out of all devices</p>
+                  <p className="text-sm text-muted-foreground">End all active sessions across all devices</p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-4 py-2"
-                    >
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log out all
+                    <Button variant="outline">
+                      Log Out Everywhere
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                  <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-[hsl(var(--text))]">Log out all devices?</AlertDialogTitle>
-                      <AlertDialogDescription className="text-[hsl(var(--muted))]">
-                        This will sign you out from all devices and sessions. You'll need to sign in again.
+                      <AlertDialogTitle>Log out of all devices?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will end all active sessions across all devices where you're currently signed in. You'll need to sign in again on each device.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
-                        Cancel
-                      </AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleLogoutAllDevices}>
+                        Log Out Everywhere
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+
+              <Separator />
+
+              {/* Delete Account */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-destructive">Delete Account</p>
+                  <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+                </div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" size="sm">
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account and remove all your chats and data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction 
-                        onClick={handleLogoutAllDevices} 
-                        className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                        onClick={handleDeleteAccount}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        Log out all
+                        Delete Account
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -260,42 +559,56 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             </div>
           </div>
         );
-      case 'account':
+
+      case 'data':
         return (
           <div className="space-y-6">
-            <div className="border border-[hsl(var(--danger))]/20 rounded-lg p-4 bg-[hsl(var(--danger))]/5">
+            <div>
+              <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
+              <p className="text-muted-foreground">Manage your data and privacy settings</p>
+            </div>
+            
+            <div className="space-y-6">
+              {/* Export Data */}
               <div className="flex items-center justify-between">
-                <div className="space-y-1">
-                  <h3 className="text-sm font-medium text-[hsl(var(--text))]">Delete account</h3>
-                  <p className="text-sm text-[hsl(var(--muted))]">Permanently delete your account and all data</p>
+                <div>
+                  <p className="font-medium">Export Data</p>
+                  <p className="text-sm text-muted-foreground">Download all your chats and account information</p>
+                </div>
+                <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
+                  {isExporting ? "Exporting..." : "Export Data"}
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Delete All Chats */}
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium text-destructive">Delete All Chats</p>
+                  <p className="text-sm text-muted-foreground">Permanently delete all your conversations</p>
                 </div>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className="border-[hsl(var(--danger))] text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/10 rounded-md px-4 py-2"
-                    >
+                    <Button variant="destructive" size="sm">
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Delete account
+                      Delete All Chats
                     </Button>
                   </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                  <AlertDialogContent>
                     <AlertDialogHeader>
-                      <AlertDialogTitle className="text-[hsl(var(--text))]">Delete your account?</AlertDialogTitle>
-                      <AlertDialogDescription className="text-[hsl(var(--muted))]">
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                      <AlertDialogTitle>Delete all conversations?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete all your chat conversations and messages.
                       </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
-                        Cancel
-                      </AlertDialogCancel>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
                       <AlertDialogAction 
-                        onClick={handleDeleteAccount} 
-                        disabled={isDeleting}
-                        className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                        onClick={handleDeleteAllChats}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
-                        {isDeleting ? 'Deleting...' : 'Delete account'}
+                        Delete All Chats
                       </AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
@@ -304,6 +617,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             </div>
           </div>
         );
+
       default:
         return null;
     }
@@ -311,31 +625,31 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full h-[600px] bg-[hsl(var(--bg))] border-[hsl(var(--border))] p-0 animate-scale-in rounded-lg overflow-hidden">
+      <DialogContent className="max-w-4xl w-full h-[600px] max-h-[80vh] p-0 gap-0 fixed-size" aria-describedby="settings-description">
         <div className="flex h-full">
-          {/* Sidebar */}
-          <div className="w-64 bg-[hsl(var(--surface))] border-r border-[hsl(var(--border))]">
-            <DialogHeader className="px-6 py-4 border-b border-[hsl(var(--border))]">
-              <DialogTitle className="text-lg font-semibold text-[hsl(var(--text))] text-left">
-                Settings
-              </DialogTitle>
-            </DialogHeader>
-            <div className="p-4">
-              <nav className="space-y-1">
-                {settingsCategories.map((category) => {
-                  const Icon = category.icon;
+          {/* Left Sidebar */}
+          <div className="w-64 bg-muted/20 border-r flex-shrink-0">
+            <div className="p-6 h-full flex flex-col">
+              <DialogHeader className="pb-6 flex-shrink-0">
+                <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
+                <p id="settings-description" className="sr-only">Customize your adamGPT experience</p>
+              </DialogHeader>
+              
+              <nav className="space-y-1 flex-1">
+                {sidebarItems.map((item) => {
+                  const Icon = item.icon;
                   return (
                     <button
-                      key={category.id}
-                      onClick={() => setActiveCategory(category.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-all text-left ${
-                        activeCategory === category.id
-                          ? 'bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--text))]'
-                          : 'text-[hsl(var(--muted))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--text))]'
+                      key={item.id}
+                      onClick={() => setActiveTab(item.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
+                        activeTab === item.id
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
                       }`}
                     >
-                      <Icon className="h-4 w-4" />
-                      {category.label}
+                      <Icon className="h-5 w-5" />
+                      {item.label}
                     </button>
                   );
                 })}
@@ -344,26 +658,8 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col">
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
-              <h1 className="text-lg font-semibold text-[hsl(var(--text))] capitalize">
-                {settingsCategories.find(c => c.id === activeCategory)?.label}
-              </h1>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                className="text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
-              >
-                <X className="h-5 w-5" />
-              </Button>
-            </div>
-
-            {/* Content */}
-            <div className="flex-1 p-6 overflow-y-auto scrollbar-thin">
-              {renderCategoryContent()}
-            </div>
+          <div className="flex-1 p-6 overflow-y-auto min-h-0">
+            {renderContent()}
           </div>
         </div>
       </DialogContent>

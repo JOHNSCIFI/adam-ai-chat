@@ -5,11 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Send, Paperclip, Copy, Check, X, FileText, ImageIcon, User, Bot, MessageSquare, ChevronDown } from 'lucide-react';
-import { FilePreviewModal } from '@/components/FilePreviewModal';
+import { MessageSquare, Send, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useResponsive } from '@/hooks/use-responsive';
-import { useSidebar } from '@/contexts/SidebarContext';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
@@ -33,10 +30,6 @@ export default function Chat() {
   const { chatId } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  const { isMobile, isTablet } = useResponsive();
-  const { isCollapsed } = useSidebar();
-  
-  const isMobileOrTablet = isMobile || isTablet;
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -45,16 +38,10 @@ export default function Chat() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const [previewFile, setPreviewFile] = useState<{
-    name: string;
-    type: string;
-    url: string;
-    size: number;
-  } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
@@ -72,10 +59,7 @@ export default function Chat() {
           }, 
           (payload) => {
             console.log('New message received:', payload);
-            const newMessage = {
-              ...payload.new,
-              file_attachments: Array.isArray(payload.new.file_attachments) ? (payload.new.file_attachments as unknown as FileAttachment[]) : []
-            } as Message;
+            const newMessage = payload.new as Message;
             setMessages(prev => {
               // Check if message already exists to prevent duplicates
               if (prev.find(msg => msg.id === newMessage.id)) {
@@ -113,18 +97,11 @@ export default function Chat() {
 
     if (!error && data) {
       // Type assertion to handle Json type from database
-      console.log('Raw messages from database:', data);
-      const typedMessages = data.map(msg => {
-        console.log('Processing message:', msg.id, 'file_attachments:', msg.file_attachments);
-        return {
-          ...msg,
-          file_attachments: Array.isArray(msg.file_attachments) ? (msg.file_attachments as unknown as FileAttachment[]) : []
-        };
-      }) as Message[];
-      console.log('Typed messages:', typedMessages);
+      const typedMessages = data.map(msg => ({
+        ...msg,
+        file_attachments: (msg.file_attachments as any) || []
+      })) as Message[];
       setMessages(typedMessages);
-    } else if (error) {
-      console.error('Error fetching messages:', error);
     }
   };
 
@@ -367,28 +344,28 @@ export default function Chat() {
 
   if (!chatId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-[#343541] p-4">
+      <div className="flex-1 flex items-center justify-center bg-background p-4">
         <div className="text-center max-w-2xl w-full">
-          <div className="w-16 h-16 bg-[#10a37f] rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
-            <MessageSquare className="text-2xl text-white h-8 w-8" />
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
+            <MessageSquare className="text-2xl text-primary-foreground h-8 w-8" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Welcome to AdamGPT</h2>
-          <p className="text-gray-400 mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
+          <p className="text-muted-foreground mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in">
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in">
               <div className="text-2xl mb-3">💬</div>
-              <h3 className="font-semibold text-base mb-2 text-white">Natural Conversations</h3>
-              <p className="text-sm text-gray-400">Chat naturally and get helpful responses</p>
+              <h3 className="font-semibold text-base mb-2">Natural Conversations</h3>
+              <p className="text-sm text-muted-foreground">Chat naturally and get helpful responses</p>
             </div>
-            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="text-2xl mb-3">⚡</div>
-              <h3 className="font-semibold text-base mb-2 text-white">Fast & Accurate</h3>
-              <p className="text-sm text-gray-400">Get quick and reliable answers</p>
+              <h3 className="font-semibold text-base mb-2">Fast & Accurate</h3>
+              <p className="text-sm text-muted-foreground">Get quick and reliable answers</p>
             </div>
-            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="text-2xl mb-3">🔒</div>
-              <h3 className="font-semibold text-base mb-2 text-white">Secure & Private</h3>
-              <p className="text-sm text-gray-400">Your conversations are protected</p>
+              <h3 className="font-semibold text-base mb-2">Secure & Private</h3>
+              <p className="text-sm text-muted-foreground">Your conversations are protected</p>
             </div>
           </div>
         </div>
@@ -397,288 +374,253 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[hsl(var(--bg))] relative">
-      {/* Top Header */}
-      <div className={`fixed top-0 right-0 z-20 bg-[hsl(var(--bg))] backdrop-blur-sm border-b border-[hsl(var(--border))] ${
-        isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
-      } transition-all duration-300`}>
-        <div className="flex items-center justify-between px-4 py-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-[hsl(var(--text))]">AdamGPT</h1>
-            <ChevronDown className="h-4 w-4 text-[hsl(var(--muted))]" />
-          </div>
-        </div>
-      </div>
-
-      {/* Messages area - with top padding for fixed header */}
-      <div className="flex-1 overflow-y-auto pt-16 pb-32 scrollbar-thin">
-        <div className="w-full">
+    <div className="flex-1 flex flex-col h-full bg-background">
+      {/* Messages area - responsive max width */}
+      <div className="flex-1 overflow-y-auto">
+        <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md px-4">
-                <div className="w-12 h-12 bg-[hsl(var(--accent))] rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="h-6 w-6 text-white" />
+                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <h3 className="text-xl font-medium mb-2 text-[hsl(var(--text))]">How can I help you today?</h3>
-                <p className="text-[hsl(var(--muted))] text-sm">Start a conversation with AdamGPT</p>
+                <h3 className="text-xl font-medium mb-2 text-foreground">How can I help you today?</h3>
+                <p className="text-muted-foreground text-sm">Start a conversation with adamGPT</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-0">
+            <div className="space-y-4 sm:space-y-6">
               {messages.map((message) => (
                 <div 
                   key={message.id} 
-                  className={`group animate-message-in border-b border-[hsl(var(--border))]/10 last:border-b-0 ${
-                    message.role === 'user' 
-                      ? 'bg-[hsl(var(--bg))]' 
-                      : 'bg-[hsl(var(--surface))]'
-                  }`}
+                  className="group animate-fade-in"
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
-                  <div className="max-w-3xl mx-auto px-6 py-8">
-                    <div className={`flex gap-6 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}>
-                      {/* Avatar */}
-                      <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${
-                          message.role === 'user' 
-                            ? 'bg-[hsl(var(--accent))] text-white' 
-                            : 'bg-green-600 text-white'
-                        }`}>
-                          {message.role === 'user' ? (
-                            <User className="h-4 w-4" />
-                          ) : (
-                            <div className="text-xs font-bold">A</div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Message Content */}
-                      <div className={`flex-1 min-w-0 relative ${message.role === 'user' ? 'text-right' : ''}`}>
-                        {/* File attachments */}
+                  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[85%] relative`}>
+                      <div className={`${
+                        message.role === 'user' 
+                          ? 'chat-user-bg text-foreground rounded-2xl rounded-br-md' 
+                          : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
+                      } px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
+                        
                         {message.file_attachments && message.file_attachments.length > 0 && (
-                          <div className="mb-4 space-y-2">
+                          <div className="mb-3 space-y-2">
                             {message.file_attachments.map((file, index) => (
-                              <div 
-                                key={index}
-                                className="p-3 border border-[hsl(var(--border))] rounded-lg cursor-pointer hover:bg-[hsl(var(--sidebar-hover))] transition-colors bg-[hsl(var(--surface))]"
-                                onClick={() => setPreviewFile(file)}
-                              >
-                                <div className="flex items-center gap-3">
-                                  {getFileIcon(file.type)}
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm text-[hsl(var(--text))] truncate">{file.name}</p>
-                                    <p className="text-xs text-[hsl(var(--muted))]">{formatFileSize(file.size)}</p>
+                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                                message.role === 'user' 
+                                  ? 'bg-black/10 border-white/20' 
+                                  : 'bg-accent border-border'
+                              }`}>
+                                {isImageFile(file.type) && file.url ? (
+                                  <img 
+                                    src={file.url} 
+                                    alt={file.name} 
+                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                    message.role === 'user' 
+                                      ? 'bg-white/20' 
+                                      : 'bg-muted'
+                                  }`}>
+                                    {getFileIcon(file.type)}
                                   </div>
-                                  {isImageFile(file.type) && (
-                                    <div className="w-12 h-12 rounded overflow-hidden bg-[hsl(var(--muted))]/20">
-                                      <img 
-                                        src={file.url} 
-                                        alt={file.name}
-                                        className="w-full h-full object-cover"
-                                        loading="lazy"
-                                      />
-                                    </div>
-                                  )}
+                                )}
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-sm font-medium truncate text-foreground">
+                                    {file.name}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatFileSize(file.size)}
+                                  </p>
                                 </div>
                               </div>
                             ))}
                           </div>
                         )}
                         
-                        {/* Message Text */}
-                        <div className={`prose prose-sm max-w-none leading-relaxed ${
-                          message.role === 'user' 
-                            ? 'bg-[hsl(var(--accent))] text-white rounded-2xl px-4 py-3 inline-block max-w-lg ml-auto' 
-                            : 'text-[hsl(var(--text))]'
-                        }`}>
-                          {message.role === 'user' ? (
-                            <div className="whitespace-pre-wrap break-words text-white">
-                              {message.content}
-                            </div>
-                          ) : (
-                            <ReactMarkdown 
+                        {message.content && (
+                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:text-foreground">
+                            <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               components={{
-                                p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-[hsl(var(--text))]">{children}</p>,
-                                code: ({ className, children, ...props }: any) => {
-                                  const inline = 'inline' in props ? props.inline : false;
-                                  const match = /language-(\w+)/.exec(className || '');
-                                  return !inline ? (
-                                    <pre className="code-block">
-                                      <code className={className} {...props}>
-                                        {children}
-                                      </code>
-                                    </pre>
-                                  ) : (
-                                    <code className="bg-[hsl(var(--muted))]/20 px-1.5 py-0.5 rounded text-sm text-[hsl(var(--text))]" {...props}>
-                                      {children}
-                                    </code>
-                                  );
-                                },
-                                ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ul>,
-                                ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-[hsl(var(--text))]">{children}</ol>,
-                                li: ({ children }) => <li className="leading-relaxed text-[hsl(var(--text))]">{children}</li>,
-                                h1: ({ children }) => <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-[hsl(var(--text))]">{children}</h1>,
-                                h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 mt-5 first:mt-0 text-[hsl(var(--text))]">{children}</h2>,
-                                h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-[hsl(var(--text))]">{children}</h3>,
-                                blockquote: ({ children }) => (
-                                  <blockquote className="border-l-4 border-[hsl(var(--accent))] pl-4 italic my-4 text-[hsl(var(--text))]">
-                                    {children}
-                                  </blockquote>
-                                ),
+                                h1: ({children}) => <h1 className="text-xl font-bold mb-4 text-foreground">{children}</h1>,
+                                h2: ({children}) => <h2 className="text-lg font-semibold mb-3 text-foreground">{children}</h2>,
+                                h3: ({children}) => <h3 className="text-base font-medium mb-2 text-foreground">{children}</h3>,
+                                p: ({children}) => <p className="mb-3 text-sm leading-relaxed text-foreground">{children}</p>,
+                                strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
+                                em: ({children}) => <em className="italic text-foreground">{children}</em>,
+                                ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
+                                ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
+                                li: ({children}) => <li className="text-sm text-foreground">{children}</li>,
+                                code: ({children}) => <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono text-foreground">{children}</code>,
+                                pre: ({children}) => <pre className="bg-muted p-3 rounded-md overflow-x-auto text-sm">{children}</pre>,
+                                blockquote: ({children}) => <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
                               }}
                             >
                               {message.content}
                             </ReactMarkdown>
-                          )}
-                        </div>
-                        
-                        {/* Copy button - positioned like ChatGPT */}
-                        {message.role === 'assistant' && (
-                          <div className="flex items-center gap-1 mt-4 -ml-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => copyToClipboard(message.content, message.id)}
-                              className="h-8 w-8 p-0 text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              {copiedMessageId === message.id ? (
-                                <Check className="h-4 w-4" />
-                              ) : (
-                                <Copy className="h-4 w-4" />
-                              )}
-                            </Button>
                           </div>
                         )}
                       </div>
+                      
+                      {/* Copy button positioned absolutely to prevent layout shifts */}
+                      {hoveredMessage === message.id && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => copyToClipboard(message.content, message.id)}
+                          className={`absolute -bottom-8 h-8 w-8 p-0 chat-hover rounded-md opacity-0 group-hover:opacity-100 transition-all duration-150 ${
+                            message.role === 'user' ? 'right-0' : 'left-0'
+                          }`}
+                        >
+                          {copiedMessageId === message.id ? (
+                            <Check className="h-4 w-4 text-primary animate-scale-in" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
               ))}
+              
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="flex flex-col items-start max-w-[85%]">
+                    <div className="chat-ai-bg text-foreground rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
             </div>
           )}
-          <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input area - fixed at bottom with ChatGPT styling */}
-      <div className={`fixed bottom-0 right-0 bg-[hsl(var(--bg))] border-t border-[hsl(var(--border))] ${
-        isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
-      } transition-all duration-300`}>
-        <div className="max-w-3xl mx-auto p-4">
-          {/* File attachments preview */}
-          {selectedFiles.length > 0 && (
-            <div className="mb-4 p-3 bg-[hsl(var(--surface))] rounded-lg border border-[hsl(var(--border))]">
-              <div className="flex flex-wrap gap-2">
+      {/* Input area - ChatGPT style */}
+      <div className="border-t border-border bg-background">
+        <div className="max-w-4xl mx-auto w-full px-6 py-4">
+          <form onSubmit={sendMessage} className="relative">
+            {/* File previews */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-3 p-3 bg-accent/30 border border-border rounded-xl space-y-2 animate-fade-in">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-[hsl(var(--muted))]/20 px-3 py-2 rounded-lg text-sm text-[hsl(var(--text))]">
-                    {getFileIcon(file.type)}
-                    <span className="truncate max-w-32">{file.name}</span>
-                    <span className="text-xs text-[hsl(var(--muted))]">({formatFileSize(file.size)})</span>
+                  <div key={index} className="flex items-center gap-3 p-2 bg-background/50 rounded-lg group hover:bg-background/80 transition-colors duration-150">
+                    {isImageFile(file.type) ? (
+                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                        <img 
+                          src={URL.createObjectURL(file)} 
+                          alt={file.name} 
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
+                        {getFileIcon(file.type)}
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-foreground truncate">
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {formatFileSize(file.size)}
+                      </p>
+                    </div>
                     <Button
+                      type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFile(index)}
-                      className="h-5 w-5 p-0 ml-2 text-[hsl(var(--muted))] hover:text-[hsl(var(--text))]"
+                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-destructive/20 hover:text-destructive"
                     >
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-          
-          {/* Message input */}
-          <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-end gap-3 bg-[hsl(var(--surface))] border border-[hsl(var(--border))] rounded-xl px-4 py-3 shadow-card composer">
-              {/* File attachment button */}
+            )}
+            
+            {/* ChatGPT-style input field */}
+            <div className="relative flex items-center chat-input-bg border border-border rounded-full px-4 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all duration-200 shadow-sm">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="p-2 h-auto text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-lg">
-                    <Paperclip className="h-4 w-4" />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-accent rounded-lg flex-shrink-0 transition-colors duration-150 mr-3"
+                  >
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent 
-                  className="w-56 p-2 bg-[hsl(var(--surface))] border border-[hsl(var(--border))] shadow-modal z-50" 
-                  align="start"
-                  side="top"
-                  sideOffset={8}
-                >
-                  <div className="space-y-1">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleFileUpload}
-                      className="w-full justify-start h-8 text-sm text-white hover:bg-[#4a4a4a]"
-                    >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Upload files
-                    </Button>
-                  </div>
+                <PopoverContent className="w-48 p-2 animate-scale-in border-border" align="start">
+                  <Button
+                    variant="ghost"
+                    onClick={handleFileUpload}
+                    className="w-full justify-start gap-3 h-10 px-3 hover:bg-accent transition-colors duration-150 text-sm"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Add photos & files
+                  </Button>
                 </PopoverContent>
               </Popover>
               
-              <textarea
-                ref={textareaRef}
+              <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
+                placeholder="Message adamGPT..."
+                disabled={loading}
+                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm resize-none min-h-0 h-auto"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
-                    sendMessage(e);
+                    sendMessage(e as any);
                   }
                 }}
-                placeholder="Ask anything"
-                className="flex-1 min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-white placeholder:text-gray-400 text-sm leading-5"
-                rows={1}
-                style={{
-                  height: 'auto',
-                  minHeight: '20px'
-                }}
-                onInput={(e) => {
-                  const target = e.target as HTMLTextAreaElement;
-                  target.style.height = 'auto';
-                  target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
-                }}
-                disabled={loading}
               />
               
               <Button 
                 type="submit" 
-                size="sm" 
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                className="p-2 h-auto bg-[#19c37d] text-white hover:bg-[#10a37f] disabled:opacity-50 disabled:bg-[#565869] rounded-lg"
+                size="sm"
+                className={`rounded-full h-8 w-8 p-0 ml-3 transition-all duration-150 ${
+                  (input.trim() || selectedFiles.length > 0) && !loading 
+                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 shadow-sm' 
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
               >
                 <Send className="h-4 w-4" />
               </Button>
             </div>
+            
+            {/* Hidden file input */}
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              onChange={handleFileChange}
+              className="hidden"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
+            />
+            
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              adamGPT can make mistakes. Consider checking important information.
+            </p>
           </form>
-          
-          {/* Disclaimer */}
-          <p className="text-xs text-gray-400 text-center mt-3">
-            AdamGPT can make mistakes. Check important info.
-          </p>
         </div>
-
-        {/* Hidden file input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          onChange={handleFileChange}
-          className="hidden"
-          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
-        />
       </div>
-
-      {/* File Preview Modal */}
-      <FilePreviewModal 
-        open={!!previewFile} 
-        onOpenChange={(open) => !open && setPreviewFile(null)} 
-        file={previewFile} 
-      />
     </div>
   );
 }

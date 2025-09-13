@@ -2,9 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff } from 'lucide-react';
+import { Mail, ArrowLeft, Chrome, Eye, EyeOff, Shield } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 export default function AuthPage() {
@@ -184,123 +187,111 @@ export default function AuthPage() {
 
   const getTitle = () => {
     switch (mode) {
-      case 'login': return 'Welcome back';
-      case 'signup': return 'Create your account';
-      case 'forgot': return 'Reset your password';
-      case 'reset': return 'Set new password';
-      default: return 'ChatGPT';
+      case 'login': return 'Welcome Back';
+      case 'signup': return 'Create Account';
+      case 'forgot': return 'Reset Password';
+      case 'reset': return 'Set New Password';
+      default: return 'adamGPT';
     }
   };
 
-  const getSubtitle = () => {
+  const getDescription = () => {
     switch (mode) {
-      case 'login': return 'Enter your details to sign in to your account';
-      case 'signup': return 'Create an account to get started';
+      case 'login': return 'Sign in to continue your conversation';
+      case 'signup': return 'Join thousands of users already using adamGPT';
       case 'forgot': return 'Enter your email to reset your password';
-      case 'reset': return 'Enter your new password';
+      case 'reset': return 'Enter your new password below';
       default: return '';
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background px-4 py-12 sm:px-6 lg:px-8">
-      <div className="w-full max-w-sm space-y-10">
-        <div className="text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
-            <svg
-              className="h-8 w-8 text-primary"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
-              />
-            </svg>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4">
+      <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm bg-card/95">
+        <CardHeader className="text-center space-y-4 pb-8">
+          <div className="w-20 h-20 bg-gradient-to-br from-primary via-primary/90 to-primary/70 rounded-3xl flex items-center justify-center mx-auto mb-2 shadow-2xl ring-1 ring-primary/20">
+            {mode === 'reset' ? (
+              <Shield className="w-8 h-8 text-primary-foreground" />
+            ) : (
+              <span className="text-3xl font-bold text-primary-foreground">A</span>
+            )}
           </div>
-          <h2 className="mt-8 text-2xl font-semibold tracking-tight text-foreground">
+          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
             {getTitle()}
-          </h2>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {getSubtitle()}
-          </p>
-        </div>
+          </CardTitle>
+          <CardDescription className="text-base text-muted-foreground leading-relaxed">
+            {getDescription()}
+          </CardDescription>
+        </CardHeader>
         
-        <div className="space-y-6">
+        <CardContent className="space-y-6 p-8">
           {(mode === 'forgot' || mode === 'reset') && (
             <Button
               variant="ghost"
               onClick={() => setMode('login')}
-              className="w-full text-sm text-muted-foreground hover:text-foreground"
+              className="w-full mb-4 text-muted-foreground hover:text-foreground transition-colors"
             >
-              ← Back to sign in
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to login
             </Button>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {mode === 'signup' && (
-              <div>
-                <label htmlFor="displayName" className="block text-sm font-medium text-foreground">
-                  Name
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="displayName" className="text-sm font-semibold text-foreground/90">Display Name</Label>
                 <Input
                   id="displayName"
                   type="text"
-                  placeholder="Enter your name"
+                  placeholder="Enter your display name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="mt-1"
-                  required
+                  className="h-14 px-4 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                 />
               </div>
             )}
             
             {mode !== 'reset' && (
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-foreground">
-                  Email address
-                </label>
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-semibold text-foreground/90">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="mt-1"
                   required
+                  className="h-14 px-4 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                 />
               </div>
             )}
             
             {mode !== 'forgot' && (
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-foreground">
-                  {mode === 'reset' ? 'New password' : 'Password'}
-                </label>
-                <div className="relative mt-1">
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-semibold text-foreground/90">
+                  {mode === 'reset' ? 'New Password' : 'Password'}
+                </Label>
+                <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder={mode === 'reset' ? "Enter new password" : "Enter your password"}
+                    placeholder={mode === 'reset' ? "Enter your new password" : "Enter your password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="pr-10"
                     required
+                    className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
                   >
                     {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-5 w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-5 w-5 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -308,31 +299,29 @@ export default function AuthPage() {
             )}
 
             {mode === 'reset' && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-foreground">
-                  Confirm new password
-                </label>
-                <div className="relative mt-1">
+              <div className="space-y-2">
+                <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground/90">Confirm New Password</Label>
+                <div className="relative">
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    placeholder="Confirm new password"
+                    placeholder="Confirm your new password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="pr-10"
                     required
+                    className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                      <EyeOff className="h-5 w-5 text-muted-foreground" />
                     ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
+                      <Eye className="h-5 w-5 text-muted-foreground" />
                     )}
                   </Button>
                 </div>
@@ -340,14 +329,14 @@ export default function AuthPage() {
             )}
             
             {mode === 'login' && availableAuthMethods.email && (
-              <div className="flex items-center justify-end">
+              <div className="text-right">
                 <Button
                   type="button"
-                  variant="link"
+                  variant="ghost"
                   onClick={() => setMode('forgot')}
-                  className="text-sm text-primary p-0 h-auto"
+                  className="text-sm text-muted-foreground hover:text-primary p-0 h-auto font-normal transition-colors"
                 >
-                  Forgot password?
+                  Forgot your password?
                 </Button>
               </div>
             )}
@@ -355,19 +344,19 @@ export default function AuthPage() {
             {((mode === 'login' && availableAuthMethods.email) || mode !== 'login') && (
               <Button 
                 type="submit" 
-                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 text-primary-foreground font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]" 
                 disabled={loading}
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground/30 border-t-primary-foreground" />
+                    <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
                     Please wait...
                   </div>
                 ) : (
-                  mode === 'login' ? 'Continue' : 
-                  mode === 'signup' ? 'Create account' : 
-                  mode === 'reset' ? 'Update password' :
-                  'Continue'
+                  mode === 'login' ? 'Sign In' : 
+                  mode === 'signup' ? 'Create Account' : 
+                  mode === 'reset' ? 'Update Password' :
+                  'Send Reset Link'
                 )}
               </Button>
             )}
@@ -376,99 +365,61 @@ export default function AuthPage() {
           {mode !== 'forgot' && mode !== 'reset' && (
             <>
               {((mode === 'login' && availableAuthMethods.email) || mode === 'signup') && (
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">Or</span>
-                  </div>
+                <div className="relative my-8">
+                  <Separator className="bg-border/30" />
+                  <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    or continue with
+                  </span>
                 </div>
               )}
               
               {((mode === 'login' && availableAuthMethods.google) || mode === 'signup') && (
                 <Button 
                   variant="outline" 
-                  className="w-full" 
+                  className="w-full h-14 rounded-2xl border-border/30 hover:bg-accent/30 hover:border-primary/20 transition-all duration-200 hover:scale-[1.01] shadow-md font-medium" 
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading || loading}
                 >
+                  <Chrome className="w-5 h-5 mr-3 text-primary" />
                   {googleLoading ? (
                     <div className="flex items-center gap-2">
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                      <div className="w-4 h-4 border-2 border-muted-foreground/30 border-t-muted-foreground rounded-full animate-spin" />
                       Connecting...
                     </div>
-                  ) : (
-                    <>
-                      <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
-                        <path
-                          fill="currentColor"
-                          d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                        />
-                        <path
-                          fill="currentColor"
-                          d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                        />
-                      </svg>
-                      Continue with Google
-                    </>
-                  )}
+                  ) : 'Continue with Google'}
                 </Button>
               )}
               
               {mode === 'login' && !availableAuthMethods.email && (
-                <div className="rounded-lg border border-border p-4 text-center">
-                  <svg className="mx-auto mb-2 h-6 w-6 text-primary" viewBox="0 0 24 24">
-                    <path
-                      fill="currentColor"
-                      d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-                    />
-                    <path
-                      fill="currentColor"
-                      d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                    />
-                  </svg>
-                  <p className="text-sm font-medium text-foreground">
-                    This account uses Google sign-in
+                <div className="text-center p-6 bg-accent/5 rounded-2xl border border-border/20 backdrop-blur-sm">
+                  <Chrome className="w-8 h-8 mx-auto mb-3 text-primary" />
+                  <p className="text-sm font-medium text-foreground/90 mb-2">
+                    This account was created with Google
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Please use Google to sign in to your account
+                    Please use Google sign-in to access your account
                   </p>
                 </div>
               )}
               
+              <Separator className="bg-border/20 my-6" />
+              
               <div className="text-center">
                 <Button
-                  variant="link"
+                  variant="ghost"
                   onClick={() => setMode(mode === 'login' ? 'signup' : 'login')}
-                  className="text-sm text-muted-foreground"
+                  className="text-sm text-muted-foreground hover:text-primary font-medium transition-colors"
                 >
                   {mode === 'login' 
-                    ? "Don't have an account? Sign up" 
+                    ? "Don't have an account? Create one" 
                     : "Already have an account? Sign in"
                   }
                 </Button>
               </div>
             </>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
