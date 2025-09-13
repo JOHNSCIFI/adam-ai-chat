@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
-import { Send, Copy, Plus, Paperclip, X, FileText, Image as ImageIcon, Check, MessageSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { MessageSquare, Send, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 interface Message {
@@ -13,11 +13,11 @@ interface Message {
   content: string;
   role: 'user' | 'assistant';
   created_at: string;
-  chat_id: string;
   file_attachments?: FileAttachment[];
 }
 
 interface FileAttachment {
+  id: string;
   name: string;
   size: number;
   type: string;
@@ -26,59 +26,58 @@ interface FileAttachment {
 
 export default function Chat() {
   const { chatId } = useParams();
+  const { user } = useAuth();
+  const { toast } = useToast();
+  
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
-  const { user } = useAuth();
-  const { toast } = useToast();
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
       fetchMessages();
+      
+      // Set up real-time subscription for new messages
+      const subscription = supabase
+        .channel(`messages-${chatId}`)
+        .on('postgres_changes', 
+          { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'messages',
+            filter: `chat_id=eq.${chatId}`
+          }, 
+          (payload) => {
+            console.log('New message received:', payload);
+            const newMessage = payload.new as Message;
+            setMessages(prev => {
+              // Check if message already exists to prevent duplicates
+              if (prev.find(msg => msg.id === newMessage.id)) {
+                return prev;
+              }
+              return [...prev, newMessage];
+            });
+            scrollToBottom();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        subscription.unsubscribe();
+      };
     }
   }, [chatId, user]);
 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-
-  // Set up real-time subscription for messages
-  useEffect(() => {
-    if (!chatId || !user) return;
-
-    const channel = supabase
-      .channel('chat-messages')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'messages',
-          filter: `chat_id=eq.${chatId}`
-        },
-        (payload) => {
-          console.log('Trigger: New Message Received');
-          setMessages(current => {
-            const exists = current.find(m => m.id === payload.new.id);
-            if (!exists) {
-              return [...current, payload.new as Message];
-            }
-            return current;
-          });
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [chatId, user]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -94,12 +93,30 @@ export default function Chat() {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      const messagesWithParsedAttachments = data.map(message => ({
-        ...message,
-        file_attachments: message.file_attachments ? JSON.parse(message.file_attachments as string) : []
-      }));
-      setMessages(messagesWithParsedAttachments as Message[]);
+      // Type assertion to handle Json type from database
+      const typedMessages = data.map(msg => ({
+        ...msg,
+        file_attachments: (msg.file_attachments as any) || []
+      })) as Message[];
+      setMessages(typedMessages);
     }
+  };
+
+  // File size limits based on ChatGPT recommendations
+  const getMaxFileSize = (type: string) => {
+    if (type.startsWith('image/')) return 10 * 1024 * 1024; // 10MB for images
+    if (type.startsWith('video/')) return 100 * 1024 * 1024; // 100MB for videos
+    if (type.startsWith('audio/')) return 50 * 1024 * 1024; // 50MB for audio
+    if (type.includes('pdf') || type.includes('document') || type.includes('text')) return 25 * 1024 * 1024; // 25MB for documents
+    return 20 * 1024 * 1024; // 20MB for other files
+  };
+
+  const getFileTypeCategory = (type: string) => {
+    if (type.startsWith('image/')) return 'image';
+    if (type.startsWith('video/')) return 'video';
+    if (type.startsWith('audio/')) return 'audio';
+    if (type.includes('pdf') || type.includes('document') || type.includes('text')) return 'document';
+    return 'file';
   };
 
   const sendMessage = async (e: React.FormEvent) => {
@@ -113,38 +130,50 @@ export default function Chat() {
     setSelectedFiles([]);
 
     try {
-      // Upload files to Supabase storage if any
-      let fileAttachments: FileAttachment[] = [];
+      // Upload files to Supabase storage first
+      const uploadedFiles: FileAttachment[] = [];
       
-      if (files.length > 0) {
-        for (const file of files) {
-          const fileName = `${user.id}/${Date.now()}-${file.name}`;
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from('chat-files')
-            .upload(fileName, file);
-            
-          if (uploadError) {
-            console.error('File upload error:', uploadError);
-            toast({
-              title: "File upload failed",
-              description: `Failed to upload ${file.name}`,
-              variant: "destructive",
-            });
-            continue;
-          }
-          
-          // Get public URL for the file
-          const { data: publicUrlData } = supabase.storage
-            .from('chat-files')
-            .getPublicUrl(fileName);
-            
-          fileAttachments.push({
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url: publicUrlData.publicUrl
+      for (const file of files) {
+        // Check file size limits
+        const maxSize = getMaxFileSize(file.type);
+        if (file.size > maxSize) {
+          toast({
+            title: "File too large",
+            description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${getFileTypeCategory(file.type)} files.`,
+            variant: "destructive",
           });
+          continue;
         }
+
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-files')
+          .upload(fileName, file);
+
+        if (uploadError) {
+          console.error('File upload error:', uploadError);
+          toast({
+            title: "Upload failed",
+            description: `Failed to upload ${file.name}`,
+            variant: "destructive",
+          });
+          continue;
+        }
+
+        // Get public URL for the uploaded file
+        const { data: urlData } = supabase.storage
+          .from('chat-files')
+          .getPublicUrl(fileName);
+
+        uploadedFiles.push({
+          id: uploadData.id || Date.now().toString(),
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: urlData.publicUrl
+        });
       }
 
       // Add user message to database with file attachments
@@ -154,7 +183,7 @@ export default function Chat() {
           chat_id: chatId,
           content: userMessage,
           role: 'user',
-          file_attachments: fileAttachments.length > 0 ? JSON.stringify(fileAttachments) : null
+          file_attachments: uploadedFiles as any // Cast to Json type for database
         });
 
       if (userError) throw userError;
@@ -273,54 +302,19 @@ export default function Chat() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const validFiles: File[] = [];
-      let hasInvalidFiles = false;
+      const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+      const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
       
-      // File size limits (in bytes)
-      const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-      const MAX_DOCUMENT_SIZE = 25 * 1024 * 1024; // 25MB
-      const MAX_AUDIO_VIDEO_SIZE = 100 * 1024 * 1024; // 100MB
-      const MAX_TOTAL_SIZE = 50 * 1024 * 1024; // 50MB per message
-      
-      for (const file of Array.from(files)) {
-        let maxSize = MAX_DOCUMENT_SIZE;
-        
-        if (file.type.startsWith('image/')) {
-          maxSize = MAX_IMAGE_SIZE;
-        } else if (file.type.startsWith('audio/') || file.type.startsWith('video/')) {
-          maxSize = MAX_AUDIO_VIDEO_SIZE;
-        }
-        
-        if (file.size > maxSize) {
-          hasInvalidFiles = true;
-          toast({
-            title: "File too large",
-            description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${file.type.split('/')[0]} files.`,
-            variant: "destructive",
-          });
-          continue;
-        }
-        
-        validFiles.push(file);
-      }
-      
-      // Check total size
-      const currentTotalSize = selectedFiles.reduce((sum, file) => sum + file.size, 0);
-      const newTotalSize = validFiles.reduce((sum, file) => sum + file.size, 0);
-      
-      if (currentTotalSize + newTotalSize > MAX_TOTAL_SIZE) {
+      if (totalSize > maxTotalSize) {
         toast({
           title: "Total file size too large",
-          description: `Combined file size cannot exceed ${formatFileSize(MAX_TOTAL_SIZE)} per message.`,
+          description: `Total file size cannot exceed ${formatFileSize(maxTotalSize)} per message.`,
           variant: "destructive",
         });
         return;
       }
       
-      if (validFiles.length > 0) {
-        setSelectedFiles(prev => [...prev, ...validFiles]);
-      }
-      
+      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
       // Reset the input
       event.target.value = '';
     }
@@ -598,7 +592,7 @@ export default function Chat() {
               multiple
               onChange={handleFileChange}
               className="hidden"
-              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json"
+              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
             />
             
             <p className="text-xs text-muted-foreground text-center mt-3">

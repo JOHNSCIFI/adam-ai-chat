@@ -73,6 +73,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initial session check and auth callback handling
     handleAuthCallback();
 
+    // Fetch user profile for existing sessions
+    const fetchUserProfile = async (userId: string) => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+        
+        if (!error && data) {
+          setUserProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user profile:', error);
+      }
+    };
+
     return () => subscription.unsubscribe();
   }, []);
 

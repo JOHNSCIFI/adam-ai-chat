@@ -8,7 +8,7 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import MainLayout from '@/layouts/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import Auth from '@/pages/Auth';
+import AuthPage from '@/pages/AuthPage';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
 import Profile from '@/pages/Profile';
@@ -26,7 +26,7 @@ function App() {
           <ThemeProvider>
             <Router>
               <Routes>
-                <Route path="/auth" element={<Auth />} />
+                <Route path="/auth" element={<AuthPage />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <MainLayout>
