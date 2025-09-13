@@ -5,6 +5,8 @@ import { useToast } from '@/hooks/use-toast';
 
 export default function AuthPage() {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isSignUp, setIsSignUp] = useState(true);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   
@@ -17,19 +19,30 @@ export default function AuthPage() {
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email) return;
+    if (!email || !password) return;
     
     setLoading(true);
     try {
-      // Try to sign in first, if it fails, try sign up
-      const { error: signInError } = await signIn(email, 'temp');
-      if (signInError) {
-        // If sign in fails, try sign up (this is simplified for the ChatGPT-like flow)
-        const { error: signUpError } = await signUp(email, 'temp', '');
-        if (signUpError && !signUpError.message.includes('User already registered')) {
+      if (isSignUp) {
+        const { error } = await signUp(email, password, '');
+        if (error) {
           toast({
-            title: "Authentication failed",
-            description: signUpError.message,
+            title: "Sign up failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Check your email",
+            description: "We've sent you a verification link.",
+          });
+        }
+      } else {
+        const { error } = await signIn(email, password);
+        if (error) {
+          toast({
+            title: "Sign in failed",
+            description: error.message,
             variant: "destructive",
           });
         }
@@ -79,14 +92,44 @@ export default function AuthPage() {
         <div className="w-full max-w-sm">
           {/* Title Section */}
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-normal text-black mb-3">Log in or sign up</h1>
+            <h1 className="text-3xl font-normal text-black mb-3">
+              {isSignUp ? 'Create your account' : 'Welcome back'}
+            </h1>
             <p className="text-base text-gray-600 leading-relaxed">
-              You'll get smarter responses and can upload<br />
-              files, images, and more.
+              {isSignUp 
+                ? 'You\'ll get smarter responses and can upload files, images, and more.'
+                : 'Sign in to continue your conversation.'
+              }
             </p>
           </div>
 
-          {/* Email Form */}
+          {/* Auth Mode Toggle */}
+          <div className="flex mb-6 bg-gray-100 rounded-lg p-1">
+            <button
+              type="button"
+              onClick={() => setIsSignUp(true)}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                isSignUp 
+                  ? 'bg-white text-black shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Sign up
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsSignUp(false)}
+              className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors ${
+                !isSignUp 
+                  ? 'bg-white text-black shadow-sm' 
+                  : 'text-gray-600 hover:text-gray-800'
+              }`}
+            >
+              Sign in
+            </button>
+          </div>
+
+          {/* Email & Password Form */}
           <form onSubmit={handleEmailSubmit} className="mb-4">
             <div className="mb-4">
               <input
@@ -98,18 +141,28 @@ export default function AuthPage() {
                 className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
               />
             </div>
+            <div className="mb-6">
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
+              />
+            </div>
             <button
               type="submit"
-              disabled={loading || !email}
+              disabled={loading || !email || !password}
               className="w-full h-12 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors flex items-center justify-center"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
-                  Continue
+                  {isSignUp ? 'Creating account...' : 'Signing in...'}
                 </>
               ) : (
-                'Continue'
+                isSignUp ? 'Create account' : 'Sign in'
               )}
             </button>
           </form>
