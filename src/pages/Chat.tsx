@@ -14,11 +14,10 @@ interface Message {
   role: 'user' | 'assistant';
   created_at: string;
   chat_id: string;
-  attachments?: FileAttachment[];
+  file_attachments?: FileAttachment[];
 }
 
 interface FileAttachment {
-  id: string;
   name: string;
   size: number;
   type: string;
@@ -95,7 +94,11 @@ export default function Chat() {
       .order('created_at', { ascending: true });
 
     if (!error && data) {
-      setMessages(data as Message[]);
+      const messagesWithParsedAttachments = data.map(message => ({
+        ...message,
+        file_attachments: message.file_attachments ? JSON.parse(message.file_attachments as string) : []
+      }));
+      setMessages(messagesWithParsedAttachments as Message[]);
     }
   };
 
@@ -147,12 +150,12 @@ export default function Chat() {
       // Add user message to database with file attachments
       const { error: userError } = await supabase
         .from('messages')
-        .insert([{
+        .insert({
           chat_id: chatId,
           content: userMessage,
           role: 'user',
-          file_attachments: fileAttachments
-        }]);
+          file_attachments: fileAttachments.length > 0 ? JSON.stringify(fileAttachments) : null
+        });
 
       if (userError) throw userError;
 
