@@ -25,7 +25,7 @@ export function useTheme() {
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [theme, setTheme] = useState<Theme>('dark'); // Default to dark for ChatGPT style
-  const [accentColor, setAccentColor] = useState<AccentColor>('green'); // Default to green for ChatGPT brand
+  const [accentColor, setAccentColor] = useState<AccentColor>('blue'); // Default to blue for ChatGPT brand
   const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
   const { user } = useAuth();
 

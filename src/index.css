@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* ChatGPT Light Theme - exact colors from images */
+    /* ChatGPT Light Theme - exact colors from reference */
     --background: 0 0% 100%; /* Pure white main area */
     --foreground: 0 0% 6%; /* Almost black text */
     --card: 0 0% 100%;
@@ -17,27 +17,27 @@ All colors MUST be HSL.
     --popover-foreground: 0 0% 6%;
     --primary: 217 91% 60%; /* ChatGPT blue accent */
     --primary-foreground: 0 0% 100%;
-    --secondary: 240 5% 96%; /* Light gray backgrounds */
+    --secondary: 0 0% 96%; /* Light gray backgrounds */
     --secondary-foreground: 0 0% 6%;
-    --muted: 240 5% 96%;
+    --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%; /* Gray text */
-    --accent: 240 5% 96%;
+    --accent: 0 0% 96%;
     --accent-foreground: 0 0% 6%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
-    --border: 240 6% 90%; /* Light borders */
+    --border: 0 0% 90%; /* Light borders */
     --input: 0 0% 100%; /* White input fields */
     --ring: 217 91% 60%;
     --radius: 0.75rem; /* More rounded like ChatGPT */
     
-    /* ChatGPT Light Sidebar - off-white like in image */
+    /* ChatGPT Light Sidebar - very light gray */
     --sidebar-background: 0 0% 98%; /* #fcfcfc - very light gray */
     --sidebar-foreground: 0 0% 6%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 5% 93%; /* Subtle hover */
+    --sidebar-accent: 0 0% 93%; /* Subtle hover */
     --sidebar-accent-foreground: 0 0% 6%;
-    --sidebar-border: 240 6% 90%;
+    --sidebar-border: 0 0% 90%;
     --sidebar-ring: 217 91% 60%;
 
     /* ChatGPT accent colors */
@@ -49,42 +49,42 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* ChatGPT Dark Theme - exact colors from images */
-    --background: 0 0% 13%; /* #212121 - Main chat area */
+    /* ChatGPT Dark Theme - exact colors from reference */
+    --background: 0 0% 8%; /* #141414 - Very dark main area like ChatGPT */
     --foreground: 0 0% 86%; /* Light gray text */
-    --card: 0 0% 13%;
+    --card: 0 0% 8%;
     --card-foreground: 0 0% 86%;
-    --popover: 0 0% 15%; /* Slightly lighter for popups */
+    --popover: 0 0% 12%; /* Slightly lighter for popups */
     --popover-foreground: 0 0% 86%;
     --primary: 217 91% 60%; /* ChatGPT blue accent */
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 15%; /* Darker gray backgrounds */
+    --secondary: 0 0% 12%; /* Dark gray backgrounds */
     --secondary-foreground: 0 0% 86%;
-    --muted: 0 0% 15%;
+    --muted: 0 0% 12%;
     --muted-foreground: 0 0% 60%; /* Medium gray text */
-    --accent: 0 0% 18%; /* Hover states */
+    --accent: 0 0% 15%; /* Hover states */
     --accent-foreground: 0 0% 86%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
     --border: 0 0% 20%; /* Dark borders */
-    --input: 0 0% 15%; /* Dark input fields */
+    --input: 0 0% 12%; /* Dark input fields */
     --ring: 217 91% 60%;
     
-    /* ChatGPT Dark Sidebar - very dark like in image */
-    --sidebar-background: 0 0% 9%; /* #171717 - very dark sidebar */
+    /* ChatGPT Dark Sidebar - extremely dark like reference */
+    --sidebar-background: 0 0% 4%; /* #0a0a0a - Almost black sidebar like ChatGPT */
     --sidebar-foreground: 0 0% 86%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 0 0% 15%; /* Subtle hover */
+    --sidebar-accent: 0 0% 12%; /* Subtle hover */
     --sidebar-accent-foreground: 0 0% 86%;
-    --sidebar-border: 0 0% 15%;
+    --sidebar-border: 0 0% 12%;
     --sidebar-ring: 217 91% 60%;
     
     /* ChatGPT specific backgrounds */
-    --chat-user-bg: 0 0% 15%; /* User message background */
-    --chat-ai-bg: 0 0% 13%; /* AI message background */
-    --chat-input-bg: 0 0% 15%; /* Input field */
-    --chat-hover: 0 0% 18%; /* Hover states */
+    --chat-user-bg: 0 0% 12%; /* User message background */
+    --chat-ai-bg: 0 0% 8%; /* AI message background */
+    --chat-input-bg: 0 0% 12%; /* Input field */
+    --chat-hover: 0 0% 15%; /* Hover states */
   }
 
   /* Accent color variants - comprehensive theming */
