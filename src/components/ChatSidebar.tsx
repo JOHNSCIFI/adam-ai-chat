@@ -246,7 +246,7 @@ export function ChatSidebar() {
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border">
+      <Sidebar className="border-r border-sidebar-border md:w-60 w-16" collapsible="icon">
         <SidebarHeader className="p-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -254,10 +254,10 @@ export function ChatSidebar() {
                 <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
               </div>
               {!collapsed && (
-                <h1 className="text-lg font-semibold text-sidebar-foreground">adamGPT</h1>
+                <h1 className="text-lg font-semibold text-sidebar-foreground hidden md:block">adamGPT</h1>
               )}
             </div>
-            <SidebarTrigger className="hover:bg-sidebar-accent rounded-md" />
+            <SidebarTrigger className="hover:bg-sidebar-accent rounded-md md:hidden" />
           </div>
         </SidebarHeader>
 
@@ -268,11 +268,11 @@ export function ChatSidebar() {
                 <SidebarMenuItem>
                   <Button 
                     onClick={handleNewChat}
-                    className="w-full justify-start bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
+                    className="w-full justify-center md:justify-start bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
                     size={collapsed ? "sm" : "default"}
                   >
-                    <Plus className={collapsed ? "h-4 w-4" : "h-4 w-4 mr-2"} />
-                    {!collapsed && "Create New Chat"}
+                    <Plus className={collapsed || window.innerWidth < 768 ? "h-4 w-4" : "h-4 w-4 mr-2"} />
+                    <span className="hidden md:inline">{!collapsed && "Create New Chat"}</span>
                   </Button>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -281,21 +281,22 @@ export function ChatSidebar() {
 
           <SidebarSeparator />
 
-          {!collapsed && (
-            <SidebarGroup>
-              <div className="flex items-center justify-between px-2 py-1">
-                <span className="text-xs font-medium text-sidebar-muted-foreground uppercase tracking-wider">
-                  Recent Chats
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
-                  className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground"
-                >
-                  <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
-                </Button>
-              </div>
+          <div className="hidden md:block">
+            {!collapsed && (
+              <SidebarGroup>
+                <div className="flex items-center justify-between px-2 py-1">
+                  <span className="text-xs font-medium text-sidebar-muted-foreground uppercase tracking-wider">
+                    Recent Chats
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
+                    className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground"
+                  >
+                    <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
+                  </Button>
+                </div>
               
               <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[600px] opacity-100'}`}>
                 <SidebarGroupContent>
@@ -395,7 +396,8 @@ export function ChatSidebar() {
                 </SidebarGroupContent>
               </div>
             </SidebarGroup>
-          )}
+            )}
+          </div>
         </SidebarContent>
 
         <SidebarFooter className="p-2">
