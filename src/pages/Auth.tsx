@@ -70,18 +70,18 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between p-6">
-        <div className="text-xl font-semibold text-black">AdamGPT</div>
+      <div className="p-8">
+        <div className="text-xl font-semibold text-gray-900">AdamGPT</div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-6">
-        <div className="w-full max-w-sm space-y-8">
+      <div className="flex-1 flex items-center justify-center px-8">
+        <div className="w-full max-w-sm space-y-6">
           {/* Title Section */}
           <div className="text-center space-y-3">
-            <h1 className="text-3xl font-semibold text-black">Log in or sign up</h1>
+            <h1 className="text-3xl font-semibold text-gray-900 mb-2">Log in or sign up</h1>
             <p className="text-base text-gray-600">
               You'll get smarter responses and can upload files, images, and more.
             </p>
@@ -96,47 +96,46 @@ export default function Auth() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-12 px-4 border border-gray-300 rounded-md bg-white text-black placeholder-gray-500 focus:border-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-400"
+                className="w-full h-14 px-4 text-base border border-gray-300 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:border-gray-400 focus:outline-none focus:ring-0 transition-colors"
               />
             </div>
-            <Button
+            <button
               type="submit"
               disabled={loading || !email}
-              className="w-full h-12 bg-black text-white rounded-md font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors"
+              className="w-full h-14 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors flex items-center justify-center"
             >
               {loading ? (
-                <div className="flex items-center justify-center">
+                <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
                   Continue
-                </div>
+                </>
               ) : (
                 'Continue'
               )}
-            </Button>
+            </button>
           </form>
 
           {/* OR Divider */}
-          <div className="relative">
+          <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200" />
+              <div className="w-full border-t border-gray-300" />
             </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-gray-500">OR</span>
+            <div className="relative flex justify-center">
+              <span className="px-4 bg-gray-50 text-gray-500 text-sm font-medium">OR</span>
             </div>
           </div>
 
           {/* Google Sign In */}
-          <Button
+          <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            variant="outline"
-            className="w-full h-12 border border-gray-300 rounded-md bg-white text-black hover:bg-gray-50 transition-colors"
+            className="w-full h-14 border border-gray-300 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center font-medium"
           >
             {googleLoading ? (
-              <div className="flex items-center justify-center">
-                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-2" />
+              <>
+                <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin mr-3" />
                 Continue with Google
-              </div>
+              </>
             ) : (
               <>
                 <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
@@ -148,15 +147,15 @@ export default function Auth() {
                 Continue with Google
               </>
             )}
-          </Button>
+          </button>
         </div>
       </div>
 
       {/* Footer */}
-      <div className="p-6">
-        <div className="text-center space-x-4 text-sm text-gray-500">
+      <div className="pb-8">
+        <div className="text-center text-sm text-gray-500">
           <a href="#" className="hover:underline">Terms of Use</a>
-          <span>|</span>
+          <span className="mx-2">|</span>
           <a href="#" className="hover:underline">Privacy Policy</a>
         </div>
       </div>
