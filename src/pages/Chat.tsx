@@ -6,6 +6,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Send, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { FilePreviewModal } from '@/components/FilePreviewModal';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -38,6 +39,12 @@ export default function Chat() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [previewFile, setPreviewFile] = useState<{
+    name: string;
+    type: string;
+    url: string;
+    size: number;
+  } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -373,9 +380,9 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background">
-      {/* Messages area - responsive max width */}
-      <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 flex flex-col h-full bg-background relative">
+      {/* Messages area - responsive max width with padding bottom for fixed input */}
+      <div className="flex-1 overflow-y-auto pb-32">
         <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
@@ -408,19 +415,28 @@ export default function Chat() {
                         {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-3 space-y-2">
                             {message.file_attachments.map((file, index) => (
-                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
-                                message.role === 'user' 
-                                  ? 'bg-black/10 border-white/20' 
-                                  : 'bg-accent border-border'
-                              }`}>
+                              <div 
+                                key={index} 
+                                className={`flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer hover:scale-105 ${
+                                  message.role === 'user' 
+                                    ? 'bg-black/10 border-white/20 hover:bg-black/20' 
+                                    : 'bg-accent border-border hover:bg-accent/70'
+                                }`}
+                                onClick={() => setPreviewFile({
+                                  name: file.name,
+                                  type: file.type,
+                                  url: file.url,
+                                  size: file.size
+                                })}
+                              >
                                 {isImageFile(file.type) && file.url ? (
                                   <img 
                                     src={file.url} 
                                     alt={file.name} 
-                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0 shadow-sm"
                                   />
                                 ) : (
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                  <div className={`w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                     message.role === 'user' 
                                       ? 'bg-white/20' 
                                       : 'bg-muted'
@@ -433,7 +449,7 @@ export default function Chat() {
                                     {file.name}
                                   </p>
                                   <p className="text-xs text-muted-foreground">
-                                    {formatFileSize(file.size)}
+                                    {formatFileSize(file.size)} • Click to preview
                                   </p>
                                 </div>
                               </div>
@@ -491,17 +507,17 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Input area - responsive design */}
-      <div className="border-t border-border bg-background/95 backdrop-blur-sm p-safe">
-        <div className="max-w-4xl mx-auto w-full p-2 sm:p-3">
-          <form onSubmit={sendMessage} className="space-y-4">
+      {/* Fixed Input area at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 border-t border-border bg-background/95 backdrop-blur-sm z-10">
+        <div className="max-w-4xl mx-auto w-full p-3">
+          <form onSubmit={sendMessage} className="space-y-3">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg animate-fade-in">
+              <div className="flex flex-wrap gap-2 p-2 bg-muted/50 rounded-lg animate-fade-in">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-background rounded-md p-2 border">
+                  <div key={index} className="flex items-center gap-2 bg-background rounded-md p-2 border shadow-sm">
                     {getFileIcon(file.type)}
-                    <span className="text-sm truncate max-w-[120px] sm:max-w-[200px]">{file.name}</span>
+                    <span className="text-sm truncate max-w-[120px] sm:max-w-[150px]">{file.name}</span>
                     <Button
                       type="button"
                       variant="ghost"
@@ -516,8 +532,8 @@ export default function Chat() {
               </div>
             )}
             
-            {/* Message input container with ChatGPT styling */}
-            <div className="flex items-end gap-2 p-2 rounded-xl border border-border bg-muted/50 shadow-sm focus-within:shadow-md transition-all duration-200">
+            {/* Message input container */}
+            <div className="flex items-end gap-2 p-3 rounded-xl border border-border bg-background shadow-sm focus-within:shadow-md transition-all duration-200">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
@@ -593,12 +609,19 @@ export default function Chat() {
               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
             />
             
-            <p className="text-xs text-muted-foreground text-center px-4">
+            <p className="text-xs text-muted-foreground text-center">
               adamGPT can make mistakes. Consider checking important information.
             </p>
           </form>
         </div>
       </div>
+
+      {/* File Preview Modal */}
+      <FilePreviewModal 
+        open={!!previewFile} 
+        onOpenChange={(open) => !open && setPreviewFile(null)} 
+        file={previewFile} 
+      />
     </div>
   );
 }

@@ -294,19 +294,19 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                   to={`/chat/${chat.id}`} 
                   onClick={() => isMobileOrTablet && setIsDrawerOpen(false)}
                   className={({ isActive }) =>
-                    `flex items-center gap-3 px-3 py-3 rounded-lg transition-all duration-200 flex-1 min-h-[44px] ${
+                    `flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-300 flex-1 min-h-[52px] group hover:scale-105 ${
                       isActive 
-                        ? "bg-primary/10 text-primary font-medium border border-primary/20" 
-                        : "hover:bg-accent/50 text-foreground"
+                        ? "bg-gradient-to-r from-primary/15 via-primary/10 to-primary/5 text-primary font-semibold border border-primary/20 shadow-lg ring-2 ring-primary/10" 
+                        : "hover:bg-gradient-to-r hover:from-sidebar-accent/50 hover:to-sidebar-accent/30 text-foreground hover:shadow-md hover:ring-1 hover:ring-primary/10"
                     }`
                   }
                   title={isCollapsed ? chat.title : undefined}
                 >
-                  <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                  <MessageSquare className={`h-5 w-5 flex-shrink-0 transition-all duration-300 ${isCollapsed ? '' : 'group-hover:scale-110'}`} />
                   {!isCollapsed && (
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm truncate">{chat.title}</p>
-                      <p className="text-xs text-muted-foreground">{formatChatDate(chat.created_at)}</p>
+                      <p className="text-sm truncate font-medium group-hover:text-primary transition-colors">{chat.title}</p>
+                      <p className="text-xs text-muted-foreground font-medium">{formatChatDate(chat.created_at)}</p>
                     </div>
                   )}
                 </NavLink>
@@ -348,17 +348,17 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
   );
 
   const sidebarContent = (
-    <div className="flex flex-col h-screen bg-sidebar-background">
+    <div className="flex flex-col h-screen bg-gradient-to-b from-sidebar-background to-sidebar-background/95 border-r border-sidebar-border/50">
       {/* Header */}
-      <div className={`${isCollapsed ? 'p-2' : 'p-4'} border-b border-sidebar-border`}>
-        <div className={`flex items-center ${isCollapsed ? 'justify-center mb-2' : 'gap-3 mb-4'}`}>
-          <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-sm">
-            <MessageSquare className="w-4 h-4 text-primary-foreground" />
+      <div className={`${isCollapsed ? 'p-3' : 'p-6'} border-b border-sidebar-border/50 bg-gradient-to-r from-primary/5 to-primary/10`}>
+        <div className={`flex items-center ${isCollapsed ? 'justify-center mb-3' : 'gap-4 mb-6'}`}>
+          <div className="w-10 h-10 bg-gradient-to-br from-primary via-primary/90 to-primary/80 rounded-xl flex items-center justify-center shadow-lg ring-2 ring-primary/20">
+            <MessageSquare className="w-5 h-5 text-primary-foreground drop-shadow-sm" />
           </div>
           {!isCollapsed && (
             <div>
-              <h1 className="text-lg font-bold text-sidebar-foreground">adamGPT</h1>
-              <p className="text-xs text-sidebar-muted-foreground">AI Assistant</p>
+              <h1 className="text-xl font-bold text-sidebar-foreground bg-gradient-to-r from-sidebar-foreground to-sidebar-foreground/80 bg-clip-text">adamGPT</h1>
+              <p className="text-sm text-sidebar-muted-foreground font-medium">AI Assistant</p>
             </div>
           )}
         </div>
@@ -384,49 +384,49 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
         {/* New Chat Button */}
         <Button 
           onClick={handleNewChat}
-          className={`${isCollapsed ? 'w-8 h-8 p-0' : 'w-full justify-start'} bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md min-h-[44px]`}
+          className={`${isCollapsed ? 'w-10 h-10 p-0' : 'w-full justify-start py-3'} bg-gradient-to-r from-primary via-primary to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 text-primary-foreground shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 ring-2 ring-primary/20 hover:ring-primary/30 min-h-[48px] font-medium`}
           size="default"
           title={isCollapsed ? "New Chat" : undefined}
         >
-          <Plus className="h-4 w-4 mr-2" />
-          {!isCollapsed && <span>New Chat</span>}
+          <Plus className={`${isCollapsed ? 'h-5 w-5' : 'h-4 w-4 mr-3'} drop-shadow-sm`} />
+          {!isCollapsed && <span className="text-sm">New Chat</span>}
         </Button>
       </div>
 
       {/* Chat Lists */}
-      <div className="flex-1 overflow-y-auto p-2">
+      <div className="flex-1 overflow-y-auto px-3 py-4">
         {renderChatList(chats)}
       </div>
 
       {/* Footer */}
-      <div className={`${isCollapsed ? 'p-2' : 'p-3'} border-t border-sidebar-border`}>
+      <div className={`${isCollapsed ? 'p-3' : 'p-4'} border-t border-sidebar-border/50 bg-gradient-to-r from-sidebar-background to-sidebar-background/95`}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button 
               variant="ghost" 
-              className={`${isCollapsed ? 'w-8 h-8 p-0' : 'w-full justify-start p-3 h-auto'} hover:bg-sidebar-accent rounded-lg transition-colors min-h-[52px]`}
+              className={`${isCollapsed ? 'w-10 h-10 p-0' : 'w-full justify-start p-4 h-auto'} hover:bg-sidebar-accent/50 rounded-xl transition-all duration-300 hover:shadow-lg hover:scale-105 ring-1 ring-transparent hover:ring-primary/20 min-h-[56px] group`}
               title={isCollapsed ? getUserDisplayName() : undefined}
             >
               {isCollapsed ? (
-                <Avatar className="h-6 w-6 border-2 border-primary/20">
+                <Avatar className="h-8 w-8 border-2 border-primary/30 shadow-md">
                   <AvatarImage src="" />
-                  <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
+                  <AvatarFallback className="text-sm bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold shadow-inner">
                     {getUserInitials()}
                   </AvatarFallback>
                 </Avatar>
               ) : (
-                <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-8 w-8 border-2 border-primary/20">
+                <div className="flex items-center gap-4 w-full">
+                  <Avatar className="h-10 w-10 border-2 border-primary/30 shadow-lg">
                     <AvatarImage src="" />
-                    <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
+                    <AvatarFallback className="text-sm bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold shadow-inner">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   <div className="flex-1 text-left">
-                    <p className="text-sm font-semibold text-sidebar-foreground">{getUserDisplayName()}</p>
-                    <p className="text-xs text-sidebar-muted-foreground">Free Plan</p>
+                    <p className="text-sm font-semibold text-sidebar-foreground group-hover:text-primary transition-colors">{getUserDisplayName()}</p>
+                    <p className="text-xs text-sidebar-muted-foreground font-medium">Free Plan</p>
                   </div>
-                  <ChevronUp className="h-4 w-4 text-sidebar-muted-foreground transition-transform group-hover:text-sidebar-foreground" />
+                  <ChevronUp className="h-4 w-4 text-sidebar-muted-foreground transition-all duration-300 group-hover:text-primary group-hover:scale-110" />
                 </div>
               )}
             </Button>
