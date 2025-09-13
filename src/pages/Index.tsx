@@ -58,10 +58,7 @@ export default function Index() {
       <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
         <div className="text-xl font-semibold text-foreground">AdamGPT</div>
         <div className="flex items-center space-x-4">
-          <Button variant="outline" onClick={() => handleNewChat()} className="text-foreground border-border hover:bg-accent">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            New chat
-          </Button>
+          
         </div>
       </div>
 
