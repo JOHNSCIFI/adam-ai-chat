@@ -205,24 +205,17 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Main Content - centered like ChatGPT */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32">
-        <div className="w-full max-w-4xl">
+      {/* Main Content - centered from all sides */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-full max-w-3xl text-center">
           {/* Welcome Message */}
-          <div className="text-center mb-12">
-            <h1 className="text-3xl font-normal text-foreground mb-6">
-              How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
-            </h1>
-          </div>
-        </div>
-      </div>
-
-      {/* Input Area - ChatGPT style */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-6">
+          <h1 className="text-3xl font-normal text-foreground mb-12">
+            How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
+          </h1>
+          
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-wrap gap-2 justify-center">
               {selectedFiles.map((file, index) => (
                 <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   {getFileIcon(file.type)}
@@ -289,6 +282,10 @@ export default function Index() {
             AdamGPT can make mistakes. Check important info.
           </p>
         </div>
+      </div>
+
+      {/* Input Area moved to center - keep this div for proper structure */}
+      <div className="hidden">
       </div>
 
       {/* Hidden file input */}
