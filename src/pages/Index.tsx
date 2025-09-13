@@ -6,7 +6,7 @@ import { MessageSquare, Send, Sparkles, Code, FileText, HelpCircle } from 'lucid
 import { supabase } from '@/integrations/supabase/client';
 
 export default function Index() {
-  const { user, loading } = useAuth();
+  const { user, loading, userProfile } = useAuth();
   const navigate = useNavigate();
   const [message, setMessage] = useState('');
 
@@ -81,7 +81,9 @@ export default function Index() {
         <div className="w-full max-w-4xl">
           {/* Welcome Message - exactly like ChatGPT */}
           <div className="text-center mb-12">
-            <h1 className="text-3xl font-normal text-foreground mb-6">Where should we begin?</h1>
+            <h1 className="text-3xl font-normal text-foreground mb-6">
+              How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
+            </h1>
           </div>
 
           {/* Example Prompts - ChatGPT style */}

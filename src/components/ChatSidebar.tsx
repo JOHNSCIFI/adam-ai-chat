@@ -145,6 +145,20 @@ export function ChatSidebar() {
     }
   };
 
+  const handleChatSwitch = async (chatId: string) => {
+    // Check for empty chats and remove them
+    const { data: messages } = await supabase
+      .from('messages')
+      .select('id')
+      .eq('chat_id', chatId);
+
+    // If the chat has no messages, delete it
+    if (!messages || messages.length === 0) {
+      await handleDeleteChat(chatId);
+      return;
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -196,8 +210,8 @@ export function ChatSidebar() {
                                 : 'text-sidebar-foreground hover:bg-sidebar-accent'
                             }`
                           }
+                          onClick={() => handleChatSwitch(chat.id)}
                         >
-                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
                           {editingChatId === chat.id ? (
                             <input
                               type="text"
