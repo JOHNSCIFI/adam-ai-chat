@@ -206,7 +206,7 @@ export default function Index() {
       </div>
 
       {/* Main Content - centered from all sides */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6" style={{ paddingTop: '20vh' }}>
+      <div className="flex-1 flex flex-col items-center justify-center px-6" style={{ paddingTop: '30vh' }}>
         <div className="w-full max-w-3xl text-center">
           {/* Welcome Message */}
           <h1 className="text-3xl font-normal text-foreground mb-12">
@@ -270,8 +270,9 @@ export default function Index() {
               <Button
                 type="submit"
                 disabled={(!message.trim() && selectedFiles.length === 0)}
+                variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full"
+                className="h-8 w-8 p-0 m-2 rounded-full hover:bg-muted"
               >
                 <Send className="h-4 w-4" />
               </Button>
