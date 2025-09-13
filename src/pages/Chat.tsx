@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Send, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { MessageSquare, Send, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -41,7 +41,6 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
@@ -405,6 +404,7 @@ export default function Chat() {
                           : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
                       } px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
                         
+                        {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-3 space-y-2">
                             {message.file_attachments.map((file, index) => (
@@ -466,20 +466,18 @@ export default function Chat() {
                         )}
                       </div>
                       
-                      {/* Copy button positioned absolutely to prevent layout shifts */}
+                      {/* Copy button - better positioning for mobile */}
                       {hoveredMessage === message.id && (
                         <Button
                           variant="ghost"
                           size="sm"
+                          className={`absolute ${message.role === 'user' ? 'left-0' : 'right-0'} top-0 -translate-y-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md min-h-[32px] min-w-[32px]`}
                           onClick={() => copyToClipboard(message.content, message.id)}
-                          className={`absolute -bottom-8 h-8 w-8 p-0 chat-hover rounded-md opacity-0 group-hover:opacity-100 transition-all duration-150 ${
-                            message.role === 'user' ? 'right-0' : 'left-0'
-                          }`}
                         >
                           {copiedMessageId === message.id ? (
-                            <Check className="h-4 w-4 text-primary animate-scale-in" />
+                            <Check className="h-3 w-3 text-green-500" />
                           ) : (
-                            <Copy className="h-4 w-4" />
+                            <Copy className="h-3 w-3" />
                           )}
                         </Button>
                       )}
@@ -487,63 +485,29 @@ export default function Chat() {
                   </div>
                 </div>
               ))}
-              
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="flex flex-col items-start max-w-[85%]">
-                    <div className="chat-ai-bg text-foreground rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                        <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              <div ref={messagesEndRef} />
             </div>
           )}
+          <div ref={messagesEndRef} />
         </div>
       </div>
 
-      {/* Input area - ChatGPT style */}
-      <div className="border-t border-border bg-background">
-        <div className="max-w-4xl mx-auto w-full px-6 py-4">
-          <form onSubmit={sendMessage} className="relative">
-            {/* File previews */}
+      {/* Input area - responsive design */}
+      <div className="border-t border-border bg-background/95 backdrop-blur-sm p-safe">
+        <div className="max-w-4xl mx-auto w-full p-4 sm:p-6">
+          <form onSubmit={sendMessage} className="space-y-4">
+            {/* File attachments preview */}
             {selectedFiles.length > 0 && (
-              <div className="mb-3 p-3 bg-accent/30 border border-border rounded-xl space-y-2 animate-fade-in">
+              <div className="flex flex-wrap gap-2 p-3 bg-muted rounded-lg animate-fade-in">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-3 p-2 bg-background/50 rounded-lg group hover:bg-background/80 transition-colors duration-150">
-                    {isImageFile(file.type) ? (
-                      <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
-                        <img 
-                          src={URL.createObjectURL(file)} 
-                          alt={file.name} 
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
-                        {getFileIcon(file.type)}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">
-                        {file.name}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatFileSize(file.size)}
-                      </p>
-                    </div>
+                  <div key={index} className="flex items-center gap-2 bg-background rounded-md p-2 border">
+                    {getFileIcon(file.type)}
+                    <span className="text-sm truncate max-w-[120px] sm:max-w-[200px]">{file.name}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
+                      className="h-5 w-5 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                       onClick={() => removeFile(index)}
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity duration-150 hover:bg-destructive/20 hover:text-destructive"
                     >
                       <X className="h-3 w-3" />
                     </Button>
@@ -552,37 +516,45 @@ export default function Chat() {
               </div>
             )}
             
-            {/* ChatGPT-style input field */}
-            <div className="relative flex items-center chat-input-bg border border-border rounded-full px-4 py-3 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary/40 transition-all duration-200 shadow-sm">
+            {/* Message input container with ChatGPT styling */}
+            <div className="flex items-end gap-2 sm:gap-3 p-3 rounded-2xl border border-border bg-muted/50 shadow-sm focus-within:shadow-md transition-all duration-200">
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-accent rounded-lg flex-shrink-0 transition-colors duration-150 mr-3"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 animate-scale-in border-border" align="start">
-                  <Button
-                    variant="ghost"
-                    onClick={handleFileUpload}
-                    className="w-full justify-start gap-3 h-10 px-3 hover:bg-accent transition-colors duration-150 text-sm"
+                    className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0"
+                    disabled={loading}
                   >
                     <Paperclip className="h-4 w-4" />
-                    Add photos & files
                   </Button>
+                </PopoverTrigger>
+                <PopoverContent side="top" className="w-64 p-3 bg-popover border shadow-lg z-50">
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">Attach files</p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      className="w-full justify-start h-auto p-3 hover:bg-accent rounded-lg"
+                      onClick={handleFileUpload}
+                    >
+                      <Paperclip className="h-4 w-4 mr-2" />
+                      <div className="text-left">
+                        <div className="text-sm font-medium">Choose files</div>
+                        <div className="text-xs text-muted-foreground">Images, documents, videos</div>
+                      </div>
+                    </Button>
+                  </div>
                 </PopoverContent>
               </Popover>
               
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Message adamGPT..."
+                placeholder="Type your message..."
+                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-0 h-auto py-2"
                 disabled={loading}
-                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-sm resize-none min-h-0 h-auto"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
@@ -595,13 +567,19 @@ export default function Chat() {
                 type="submit" 
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                 size="sm"
-                className={`rounded-full h-8 w-8 p-0 ml-3 transition-all duration-150 ${
+                className={`rounded-full h-8 w-8 p-0 flex-shrink-0 transition-all duration-200 min-h-[32px] min-w-[32px] ${
                   (input.trim() || selectedFiles.length > 0) && !loading 
                     ? 'bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 shadow-sm' 
                     : 'bg-muted text-muted-foreground cursor-not-allowed'
                 }`}
               >
-                <Send className="h-4 w-4" />
+                {loading ? (
+                  <div className="animate-pulse-subtle">
+                    <div className="w-4 h-4 rounded-full bg-current" />
+                  </div>
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
               </Button>
             </div>
             
@@ -615,7 +593,7 @@ export default function Chat() {
               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
             />
             
-            <p className="text-xs text-muted-foreground text-center mt-3">
+            <p className="text-xs text-muted-foreground text-center px-4">
               adamGPT can make mistakes. Consider checking important information.
             </p>
           </form>
