@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
+import { X, Settings, Bell, User, Plug, Shield, UserCheck, Download, LogOut, Trash2, Check, ChevronDown } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { 
-  Settings, 
-  Bell, 
-  User, 
-  Puzzle, 
-  Shield, 
-  Database,
-  Lock,
-  X,
-  Download,
-  Trash2,
-  LogOut
-} from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -30,18 +19,19 @@ const settingsCategories = [
   { id: 'general', label: 'General', icon: Settings },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'personalization', label: 'Personalization', icon: User },
-  { id: 'connected-apps', label: 'Connected apps', icon: Puzzle },
-  { id: 'data-controls', label: 'Data controls', icon: Database },
+  { id: 'apps', label: 'Connected apps', icon: Plug },
+  { id: 'data', label: 'Data controls', icon: Shield },
   { id: 'security', label: 'Security', icon: Shield },
-  { id: 'account', label: 'Account', icon: User },
+  { id: 'account', label: 'Account', icon: UserCheck },
 ];
 
 const accentColors = [
-  { id: 'green', label: 'Green', colorClass: 'bg-green-500' },
-  { id: 'blue', label: 'Blue', colorClass: 'bg-blue-500' },
-  { id: 'purple', label: 'Purple', colorClass: 'bg-purple-500' },
-  { id: 'orange', label: 'Orange', colorClass: 'bg-orange-500' },
-  { id: 'red', label: 'Red', colorClass: 'bg-red-500' },
+  { id: 'green', label: 'Default', color: '#10B981' },
+  { id: 'blue', label: 'Blue', color: '#3B82F6' },
+  { id: 'purple', label: 'Purple', color: '#8B5CF6' },
+  { id: 'yellow', label: 'Yellow', color: '#F59E0B' },
+  { id: 'pink', label: 'Pink', color: '#EC4899' },
+  { id: 'orange', label: 'Orange', color: '#F97316' },
 ];
 
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
@@ -118,34 +108,99 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   };
 
   const renderGeneralSettings = () => (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-medium text-white mb-3">Theme</label>
+    <div className="space-y-8">
+      {/* Theme Setting */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-[hsl(var(--text))]">Theme</label>
         <Select value={theme} onValueChange={setTheme}>
-          <SelectTrigger className="w-full bg-[#2f2f2f] border-[#4a4a4a] text-white">
+          <SelectTrigger className="w-48 h-10 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] rounded-md">
             <SelectValue />
           </SelectTrigger>
-          <SelectContent className="bg-[#2f2f2f] border-[#4a4a4a]">
-            <SelectItem value="system" className="text-white hover:bg-[#404040]">System</SelectItem>
-            <SelectItem value="light" className="text-white hover:bg-[#404040]">Light</SelectItem>
-            <SelectItem value="dark" className="text-white hover:bg-[#404040]">Dark</SelectItem>
+          <SelectContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md z-50">
+            <SelectItem value="light" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Light</SelectItem>
+            <SelectItem value="dark" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Dark</SelectItem>
+            <SelectItem value="system" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">System</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div>
-        <label className="block text-sm font-medium text-white mb-3">Accent color</label>
-        <div className="grid grid-cols-5 gap-2">
-          {accentColors.map((color) => (
-            <button
-              key={color.id}
-              onClick={() => setAccentColor(color.id as any)}
-              className={`w-12 h-12 rounded-full ${color.colorClass} border-2 transition-all ${
-                accentColor === color.id ? 'border-white scale-110' : 'border-transparent hover:border-gray-400'
-              }`}
-              title={color.label}
-            />
-          ))}
+      {/* Accent Color Setting */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-[hsl(var(--text))]">Accent color</label>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="outline"
+              className="w-48 h-10 justify-between bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md px-3"
+            >
+              <div className="flex items-center gap-2">
+                <div 
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: accentColors.find(c => c.id === accentColor)?.color }}
+                />
+                <span className="text-sm">{accentColors.find(c => c.id === accentColor)?.label}</span>
+              </div>
+              <ChevronDown className="w-4 h-4 opacity-50" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent 
+            className="w-48 bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md shadow-modal z-50 p-1"
+            align="start"
+          >
+            {accentColors.map((color) => (
+              <DropdownMenuItem
+                key={color.id}
+                onClick={() => setAccentColor(color.id as any)}
+                className="flex items-center justify-between px-3 py-2.5 text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] cursor-pointer rounded-sm"
+              >
+                <div className="flex items-center gap-2.5">
+                  <div 
+                    className="w-3 h-3 rounded-full"
+                    style={{ backgroundColor: color.color }}
+                  />
+                  <span className="text-sm">{color.label}</span>
+                </div>
+                {accentColor === color.id && (
+                  <Check className="w-4 h-4 text-[hsl(var(--accent))]" />
+                )}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Language Setting */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-[hsl(var(--text))]">Language</label>
+        <Select defaultValue="en">
+          <SelectTrigger className="w-48 h-10 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] rounded-md">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-md z-50">
+            <SelectItem value="en" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">English</SelectItem>
+            <SelectItem value="es" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Español</SelectItem>
+            <SelectItem value="fr" className="text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-sm">Français</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Spoken Language */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-[hsl(var(--text))]">Spoken language</label>
+        <p className="text-sm text-[hsl(var(--muted))] leading-relaxed">
+          For best results, select the language you mainly speak. If it's not available, 
+          it may still be supported via auto-detection.
+        </p>
+      </div>
+
+      {/* Voice */}
+      <div className="space-y-3">
+        <label className="text-sm font-medium text-[hsl(var(--text))]">Voice</label>
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 bg-[hsl(var(--accent))] rounded-full flex items-center justify-center">
+            <div className="w-3 h-3 bg-white rounded-full"></div>
+          </div>
+          <span className="text-sm text-[hsl(var(--text))]">Play</span>
         </div>
       </div>
     </div>
@@ -156,126 +211,99 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'general':
         return renderGeneralSettings();
       case 'notifications':
-        return (
-          <div className="py-12 text-center text-muted-foreground">
-            <Bell className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Notification settings coming soon</p>
-          </div>
-        );
+        return <div className="text-[hsl(var(--muted))] text-sm">Notification settings coming soon...</div>;
       case 'personalization':
-        return (
-          <div className="py-12 text-center text-muted-foreground">
-            <User className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Personalization settings coming soon</p>
-          </div>
-        );
-      case 'connected-apps':
-        return (
-          <div className="py-12 text-center text-muted-foreground">
-            <Puzzle className="h-12 w-12 mx-auto mb-4 opacity-50" />
-            <p>Connected apps settings coming soon</p>
-          </div>
-        );
-      case 'data-controls':
+        return <div className="text-[hsl(var(--muted))] text-sm">Personalization settings coming soon...</div>;
+      case 'apps':
+        return <div className="text-[hsl(var(--muted))] text-sm">Connected apps settings coming soon...</div>;
+      case 'data':
         return (
           <div className="space-y-4">
-            <div className="border border-[#4a4a4a] rounded-lg p-4 bg-[#2f2f2f]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Export data</h3>
-                  <p className="text-gray-400 text-sm">Download your chat history and data</p>
-                </div>
-                <Button onClick={handleExportData} variant="outline" className="border-[#4a4a4a] text-white hover:bg-[#404040]">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export
-                </Button>
-              </div>
-            </div>
+            <Button
+              onClick={handleExportData}
+              variant="outline"
+              className="flex items-center gap-2 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
+            >
+              <Download className="h-4 w-4" />
+              Export data
+            </Button>
           </div>
         );
       case 'security':
         return (
-          <div className="space-y-4">
-            <div className="border border-[#4a4a4a] rounded-lg p-4 bg-[#2f2f2f]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Login methods</h3>
-                  <p className="text-gray-400 text-sm">Manage your login options</p>
-                </div>
-                <div className="text-gray-400 text-sm">
-                  {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
-                </div>
-              </div>
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-sm font-medium text-[hsl(var(--text))] mb-2">Login methods</h3>
+              <p className="text-sm text-[hsl(var(--muted))]">
+                {user?.app_metadata?.provider === 'google' ? 'Google' : 'Email'}
+              </p>
             </div>
-            <div className="border border-[#4a4a4a] rounded-lg p-4 bg-[#2f2f2f]">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Log out all devices</h3>
-                  <p className="text-gray-400 text-sm">Sign out from all devices and sessions</p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="border-[#4a4a4a] text-white hover:bg-[#404040]">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Log out all
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-[#2f2f2f] border-[#4a4a4a]">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-white">Log out all devices?</AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-400">
-                        This will sign you out from all devices and sessions. You'll need to sign in again.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-transparent border-[#4a4a4a] text-white hover:bg-[#404040]">Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleLogoutAllDevices} className="bg-red-600 hover:bg-red-700">
-                        Log out all
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 bg-[hsl(var(--surface))] border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Log out all devices
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-[hsl(var(--text))]">Log out all devices?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-[hsl(var(--muted))]">
+                    This will sign you out from all devices and sessions. You'll need to sign in again.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleLogoutAllDevices} 
+                    className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                  >
+                    Log out all
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         );
       case 'account':
         return (
           <div className="space-y-4">
-            <div className="border border-red-500/20 rounded-lg p-4 bg-red-500/5">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-white font-medium">Delete account</h3>
-                  <p className="text-gray-400 text-sm">Permanently delete your account and all data</p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" className="border-red-500 text-red-500 hover:bg-red-500/10">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete account
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent className="bg-[#2f2f2f] border-[#4a4a4a]">
-                    <AlertDialogHeader>
-                      <AlertDialogTitle className="text-white">Delete your account?</AlertDialogTitle>
-                      <AlertDialogDescription className="text-gray-400">
-                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel className="bg-transparent border-[#4a4a4a] text-white hover:bg-[#404040]">Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteAccount} 
-                        disabled={isDeleting}
-                        className="bg-red-600 hover:bg-red-700"
-                      >
-                        {isDeleting ? 'Deleting...' : 'Delete account'}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  className="flex items-center gap-2 border-[hsl(var(--danger))] text-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/10 rounded-md"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Delete account
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="bg-[hsl(var(--surface))] border-[hsl(var(--border))] rounded-lg">
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-[hsl(var(--text))]">Delete your account?</AlertDialogTitle>
+                  <AlertDialogDescription className="text-[hsl(var(--muted))]">
+                    This action cannot be undone. This will permanently delete your account and remove all your data from our servers.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="bg-transparent border-[hsl(var(--border))] text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))]">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction 
+                    onClick={handleDeleteAccount} 
+                    disabled={isDeleting}
+                    className="bg-[hsl(var(--danger))] hover:bg-[hsl(var(--danger))]/90 text-white"
+                  >
+                    {isDeleting ? 'Deleting...' : 'Delete account'}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         );
       default:
@@ -285,41 +313,32 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full h-[600px] p-0 bg-[#212121] border border-[#4a4a4a] rounded-xl overflow-hidden">
+      <DialogContent className="max-w-4xl w-full h-[600px] bg-[hsl(var(--bg))] border-[hsl(var(--border))] p-0 animate-scale-in rounded-lg overflow-hidden">
         <div className="flex h-full">
           {/* Sidebar */}
-          <div className="w-72 bg-[#171717] border-r border-[#4a4a4a]">
-            <DialogHeader className="px-6 py-4 border-b border-[#4a4a4a]">
-              <div className="flex items-center justify-between">
-                <DialogTitle className="text-lg font-semibold text-white">Settings</DialogTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onOpenChange(false)}
-                  className="h-8 w-8 p-0 rounded-md text-gray-400 hover:text-white hover:bg-[#404040]"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-              </div>
+          <div className="w-64 bg-[hsl(var(--surface))] border-r border-[hsl(var(--border))]">
+            <DialogHeader className="px-6 py-4 border-b border-[hsl(var(--border))]">
+              <DialogTitle className="text-lg font-semibold text-[hsl(var(--text))] text-left">
+                Settings
+              </DialogTitle>
             </DialogHeader>
             <div className="p-4">
               <nav className="space-y-1">
                 {settingsCategories.map((category) => {
                   const Icon = category.icon;
                   return (
-                    <Button
+                    <button
                       key={category.id}
-                      variant="ghost"
-                      className={`w-full justify-start h-10 text-sm font-normal px-3 ${
-                        activeCategory === category.id 
-                          ? 'bg-[#10a37f] text-white hover:bg-[#10a37f]' 
-                          : 'text-gray-300 hover:bg-[#404040] hover:text-white'
-                      }`}
                       onClick={() => setActiveCategory(category.id)}
+                      className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm rounded-md transition-all text-left ${
+                        activeCategory === category.id
+                          ? 'bg-[hsl(var(--sidebar-selected))] text-[hsl(var(--text))]'
+                          : 'text-[hsl(var(--muted))] hover:bg-[hsl(var(--sidebar-hover))] hover:text-[hsl(var(--text))]'
+                      }`}
                     >
-                      <Icon className="h-4 w-4 mr-3 flex-shrink-0" />
+                      <Icon className="h-4 w-4" />
                       {category.label}
-                    </Button>
+                    </button>
                   );
                 })}
               </nav>
@@ -328,12 +347,23 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
           {/* Main Content */}
           <div className="flex-1 flex flex-col">
-            <div className="px-8 py-6 border-b border-[#4a4a4a]">
-              <h2 className="text-xl font-semibold text-white">
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-[hsl(var(--border))]">
+              <h1 className="text-lg font-semibold text-[hsl(var(--text))] capitalize">
                 {settingsCategories.find(c => c.id === activeCategory)?.label}
-              </h2>
+              </h1>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="text-[hsl(var(--muted))] hover:text-[hsl(var(--text))] hover:bg-[hsl(var(--sidebar-hover))] rounded-md"
+              >
+                <X className="h-5 w-5" />
+              </Button>
             </div>
-            <div className="flex-1 overflow-y-auto px-8 py-6">
+
+            {/* Content */}
+            <div className="flex-1 p-6 overflow-y-auto scrollbar-thin">
               {renderCategoryContent()}
             </div>
           </div>
