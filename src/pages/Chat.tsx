@@ -367,28 +367,28 @@ export default function Chat() {
 
   if (!chatId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background p-4">
+      <div className="flex-1 flex items-center justify-center bg-[#343541] p-4">
         <div className="text-center max-w-2xl w-full">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
-            <MessageSquare className="text-2xl text-primary-foreground h-8 w-8" />
+          <div className="w-16 h-16 bg-[#10a37f] rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
+            <MessageSquare className="text-2xl text-white h-8 w-8" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
-          <p className="text-muted-foreground mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-white">Welcome to ChatGPT</h2>
+          <p className="text-gray-400 mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in">
+            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in">
               <div className="text-2xl mb-3">💬</div>
-              <h3 className="font-semibold text-base mb-2">Natural Conversations</h3>
-              <p className="text-sm text-muted-foreground">Chat naturally and get helpful responses</p>
+              <h3 className="font-semibold text-base mb-2 text-white">Natural Conversations</h3>
+              <p className="text-sm text-gray-400">Chat naturally and get helpful responses</p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in" style={{ animationDelay: '0.1s' }}>
               <div className="text-2xl mb-3">⚡</div>
-              <h3 className="font-semibold text-base mb-2">Fast & Accurate</h3>
-              <p className="text-sm text-muted-foreground">Get quick and reliable answers</p>
+              <h3 className="font-semibold text-base mb-2 text-white">Fast & Accurate</h3>
+              <p className="text-sm text-gray-400">Get quick and reliable answers</p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-[#2f2f2f] border border-[#4a4a4a] rounded-xl p-6 text-center hover:bg-[#404040] transition-colors animate-fade-in" style={{ animationDelay: '0.2s' }}>
               <div className="text-2xl mb-3">🔒</div>
-              <h3 className="font-semibold text-base mb-2">Secure & Private</h3>
-              <p className="text-sm text-muted-foreground">Your conversations are protected</p>
+              <h3 className="font-semibold text-base mb-2 text-white">Secure & Private</h3>
+              <p className="text-sm text-gray-400">Your conversations are protected</p>
             </div>
           </div>
         </div>
@@ -411,44 +411,44 @@ export default function Chat() {
       </div>
 
       {/* Messages area - with top padding for fixed header */}
-      <div className="flex-1 overflow-y-auto pt-16 pb-32">{/* ... keep existing code */}
+      <div className="flex-1 overflow-y-auto pt-16 pb-32">
         <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md px-4">
-                <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
-                  <MessageSquare className="h-6 w-6 text-primary-foreground" />
+                <div className="w-12 h-12 bg-[#10a37f] rounded-xl flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-xl font-medium mb-2 text-foreground">How can I help you today?</h3>
-                <p className="text-muted-foreground text-sm">Start a conversation with adamGPT</p>
+                <h3 className="text-xl font-medium mb-2 text-white">How can I help you today?</h3>
+                <p className="text-gray-400 text-sm">Start a conversation with ChatGPT</p>
               </div>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-0">
               {messages.map((message) => (
                 <div 
                   key={message.id} 
-                  className={`group animate-fade-in ${
+                  className={`group animate-fade-in border-b border-[#4a4a4a] last:border-b-0 ${
                     message.role === 'user' 
-                      ? 'bg-background' 
-                      : 'bg-card'
+                      ? 'bg-[#343541]' 
+                      : 'bg-[#2f2f2f]'
                   }`}
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
-                  <div className="max-w-4xl mx-auto px-4 py-6">
-                    <div className="flex gap-4">
+                  <div className="max-w-4xl mx-auto px-6 py-6">
+                    <div className="flex gap-6">
                       {/* Avatar */}
                       <div className="flex-shrink-0">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                        <div className={`w-8 h-8 rounded-sm flex items-center justify-center ${
                           message.role === 'user' 
-                            ? 'bg-primary text-primary-foreground' 
-                            : 'bg-muted'
+                            ? 'bg-[#10a37f] text-white' 
+                            : 'bg-[#19c37d] text-white'
                         }`}>
                           {message.role === 'user' ? (
                             <User className="h-4 w-4" />
                           ) : (
-                            <Bot className="h-4 w-4" />
+                            <div className="text-xs font-bold">GP</div>
                           )}
                         </div>
                       </div>
@@ -457,103 +457,89 @@ export default function Chat() {
                       <div className="flex-1 min-w-0 relative">
                         {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
-                          <div className="mb-4 space-y-3">
-                            {message.file_attachments.map((file, index) => {
-                              console.log('Rendering file attachment:', file);
-                              console.log('File type:', file.type);
-                              console.log('File URL:', file.url);
-                              console.log('Is image file:', isImageFile(file.type));
-                              
-                              return (
-                                <div key={index}>
-                                  {isImageFile(file.type) && file.url ? (
-                                    <div className="relative max-w-sm">
+                          <div className="mb-4 space-y-2">
+                            {message.file_attachments.map((file, index) => (
+                              <div 
+                                key={index}
+                                className={`p-3 border rounded-lg cursor-pointer hover:bg-accent/5 transition-colors ${
+                                  isImageFile(file.type) ? 'border-primary/20' : 'border-border'
+                                }`}
+                                onClick={() => setPreviewFile(file)}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {getFileIcon(file.type)}
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm text-foreground truncate">{file.name}</p>
+                                    <p className="text-xs text-muted-foreground">{formatFileSize(file.size)}</p>
+                                  </div>
+                                  {isImageFile(file.type) && (
+                                    <div className="w-12 h-12 rounded overflow-hidden bg-muted">
                                       <img 
                                         src={file.url} 
-                                        alt={file.name} 
-                                        className="max-w-full h-auto rounded-lg shadow-sm cursor-pointer hover:shadow-lg transition-shadow border border-border/20"
-                                        onClick={() => setPreviewFile({
-                                          name: file.name,
-                                          type: file.type,
-                                          url: file.url,
-                                          size: file.size
-                                        })}
-                                        onLoad={() => console.log('Image loaded successfully:', file.url)}
-                                        onError={(e) => {
-                                          console.error('Image failed to load:', file.url);
-                                          console.error('Error event:', e);
-                                        }}
+                                        alt={file.name}
+                                        className="w-full h-full object-cover"
+                                        loading="lazy"
                                       />
-                                    </div>
-                                  ) : (
-                                    <div 
-                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted/70 transition-colors cursor-pointer max-w-sm"
-                                      onClick={() => setPreviewFile({
-                                        name: file.name,
-                                        type: file.type,
-                                        url: file.url,
-                                        size: file.size
-                                      })}
-                                    >
-                                      <div className="w-8 h-8 rounded bg-background flex items-center justify-center flex-shrink-0">
-                                        {getFileIcon(file.type)}
-                                      </div>
-                                      <div className="flex-1 min-w-0">
-                                        <p className="text-sm font-medium truncate text-foreground">
-                                          {file.name}
-                                        </p>
-                                        <p className="text-xs text-muted-foreground">
-                                          {formatFileSize(file.size)}
-                                        </p>
-                                      </div>
                                     </div>
                                   )}
                                 </div>
-                              );
-                            })}
+                              </div>
+                            ))}
                           </div>
                         )}
                         
                         {/* Message Text */}
-                        {message.content && (
-                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:text-foreground">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                h1: ({children}) => <h1 className="text-xl font-bold mb-4 text-foreground">{children}</h1>,
-                                h2: ({children}) => <h2 className="text-lg font-semibold mb-3 text-foreground">{children}</h2>,
-                                h3: ({children}) => <h3 className="text-base font-medium mb-2 text-foreground">{children}</h3>,
-                                p: ({children}) => <p className="mb-3 leading-relaxed text-foreground">{children}</p>,
-                                strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
-                                em: ({children}) => <em className="italic text-foreground">{children}</em>,
-                                ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
-                                ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                                li: ({children}) => <li className="text-foreground">{children}</li>,
-                                code: ({children}) => <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">{children}</code>,
-                                pre: ({children}) => <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm border">{children}</pre>,
-                                blockquote: ({children}) => <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
-                              }}
-                            >
-                              {message.content}
-                            </ReactMarkdown>
-                          </div>
-                        )}
+                        <div className="prose prose-invert max-w-none text-white leading-relaxed">
+                          <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                              p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-white">{children}</p>,
+                              code: ({ inline, className, children, ...props }) => {
+                                const match = /language-(\w+)/.exec(className || '');
+                                return !inline ? (
+                                  <pre className="bg-[#0d1117] rounded-lg p-4 overflow-x-auto my-4 border border-[#4a4a4a]">
+                                    <code className={className} {...props}>
+                                      {children}
+                                    </code>
+                                  </pre>
+                                ) : (
+                                  <code className="bg-[#4a4a4a] px-1.5 py-0.5 rounded text-sm text-white" {...props}>
+                                    {children}
+                                  </code>
+                                );
+                              },
+                              ul: ({ children }) => <ul className="list-disc pl-6 mb-4 space-y-1 text-white">{children}</ul>,
+                              ol: ({ children }) => <ol className="list-decimal pl-6 mb-4 space-y-1 text-white">{children}</ol>,
+                              li: ({ children }) => <li className="leading-relaxed text-white">{children}</li>,
+                              h1: ({ children }) => <h1 className="text-xl font-semibold mb-3 mt-6 first:mt-0 text-white">{children}</h1>,
+                              h2: ({ children }) => <h2 className="text-lg font-semibold mb-2 mt-5 first:mt-0 text-white">{children}</h2>,
+                              h3: ({ children }) => <h3 className="text-base font-semibold mb-2 mt-4 first:mt-0 text-white">{children}</h3>,
+                              blockquote: ({ children }) => (
+                                <blockquote className="border-l-4 border-[#10a37f] pl-4 italic my-4 text-white">
+                                  {children}
+                                </blockquote>
+                              ),
+                            }}
+                          >
+                            {message.content}
+                          </ReactMarkdown>
+                        </div>
                         
-                        {/* Copy button */}
-                        {hoveredMessage === message.id && (
+                        {/* Copy button - positioned like ChatGPT */}
+                        <div className="flex items-center gap-1 mt-3 -ml-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="absolute -right-10 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md"
                             onClick={() => copyToClipboard(message.content, message.id)}
+                            className="h-8 w-8 p-0 text-gray-400 hover:text-white hover:bg-[#404040] rounded-md opacity-70 hover:opacity-100"
                           >
                             {copiedMessageId === message.id ? (
-                              <Check className="h-4 w-4 text-green-500" />
+                              <Check className="h-4 w-4" />
                             ) : (
                               <Copy className="h-4 w-4" />
                             )}
                           </Button>
-                        )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -565,133 +551,115 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Fixed Input area at bottom */}
-      <div className={`fixed bottom-0 right-0 bg-background z-10 ${
+      {/* Input area - fixed at bottom with ChatGPT styling */}
+      <div className={`fixed bottom-0 right-0 bg-[#343541] border-t border-[#4a4a4a] ${
         isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
       } transition-all duration-300`}>
-        <div className="w-full px-4 py-4">
-          <form onSubmit={sendMessage} className="max-w-4xl mx-auto">
-            {/* File attachments preview */}
-            {selectedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-3 mb-3 bg-muted/50 rounded-xl animate-fade-in">
+        <div className="max-w-4xl mx-auto p-4">
+          {/* File attachments preview */}
+          {selectedFiles.length > 0 && (
+            <div className="mb-4 p-3 bg-[#2f2f2f] rounded-lg border border-[#4a4a4a]">
+              <div className="flex flex-wrap gap-2">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-background rounded-lg p-2 border shadow-sm">
+                  <div key={index} className="flex items-center gap-2 bg-[#4a4a4a] px-3 py-2 rounded-lg text-sm text-white">
                     {getFileIcon(file.type)}
-                    <span className="text-sm truncate max-w-[120px] sm:max-w-[150px]">{file.name}</span>
+                    <span className="truncate max-w-32">{file.name}</span>
+                    <span className="text-xs text-gray-400">({formatFileSize(file.size)})</span>
                     <Button
-                      type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-5 w-5 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                       onClick={() => removeFile(index)}
+                      className="h-5 w-5 p-0 ml-2 text-gray-400 hover:text-white"
                     >
                       <X className="h-3 w-3" />
                     </Button>
                   </div>
                 ))}
               </div>
-            )}
-            
-            {/* Message input container */}
-            <div className="relative">
-              <div className="flex items-end gap-3 p-4 rounded-3xl border border-border bg-background shadow-sm hover:shadow-md transition-all duration-200">
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
+            </div>
+          )}
+          
+          {/* Message input */}
+          <form onSubmit={sendMessage} className="relative">
+            <div className="flex items-end gap-3 bg-[#40414f] border border-[#565869] rounded-xl px-4 py-3 shadow-lg">
+              {/* File attachment button */}
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="p-2 h-auto text-gray-400 hover:text-white hover:bg-[#565869]/50 rounded-lg">
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent 
+                  className="w-56 p-2 bg-[#2f2f2f] border border-[#4a4a4a] shadow-lg" 
+                  align="start"
+                  side="top"
+                  sideOffset={8}
+                >
+                  <div className="space-y-1">
                     <Button
-                      type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0 text-muted-foreground hover:text-foreground"
-                      disabled={loading}
+                      onClick={handleFileUpload}
+                      className="w-full justify-start h-8 text-sm text-white hover:bg-[#4a4a4a]"
                     >
-                      <Paperclip className="h-4 w-4" />
+                      <FileText className="h-4 w-4 mr-2" />
+                      Upload files
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent side="top" className="w-64 p-3 bg-popover border shadow-lg z-50">
-                    <div className="space-y-2">
-                      <p className="text-sm font-medium">Attach files</p>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        className="w-full justify-start h-auto p-3 hover:bg-accent rounded-lg"
-                        onClick={handleFileUpload}
-                      >
-                        <Paperclip className="h-4 w-4 mr-2" />
-                        <div className="text-left">
-                          <div className="text-sm font-medium">Choose files</div>
-                          <div className="text-xs text-muted-foreground">Images, documents, videos</div>
-                        </div>
-                      </Button>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                
-                <Input
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask anything"
-                  className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-0 h-auto py-2"
-                  disabled={loading}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage(e as any);
-                    }
-                  }}
-                />
-                
-                <div className="flex items-center gap-2">
-                  {/* Microphone button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0 text-muted-foreground hover:text-foreground"
-                    disabled={loading}
-                  >
-                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
-                    </svg>
-                  </Button>
-                  
-                  {/* Send button */}
-                  <Button 
-                    type="submit" 
-                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    size="sm"
-                    className={`rounded-full h-8 w-8 p-0 flex-shrink-0 transition-all duration-200 min-h-[32px] min-w-[32px] ${
-                      (input.trim() || selectedFiles.length > 0) && !loading 
-                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm' 
-                        : 'bg-muted text-muted-foreground cursor-not-allowed'
-                    }`}
-                  >
-                    {loading ? (
-                      <div className="animate-spin">
-                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
-                      </div>
-                    ) : (
-                      <Send className="h-4 w-4" />
-                    )}
-                  </Button>
-                </div>
-              </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
+              
+              <textarea
+                ref={textareaRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    sendMessage(e);
+                  }
+                }}
+                placeholder="Ask anything"
+                className="flex-1 min-h-[20px] max-h-32 resize-none bg-transparent border-none outline-none text-white placeholder:text-gray-400 text-sm leading-5"
+                rows={1}
+                style={{
+                  height: 'auto',
+                  minHeight: '20px'
+                }}
+                onInput={(e) => {
+                  const target = e.target as HTMLTextAreaElement;
+                  target.style.height = 'auto';
+                  target.style.height = `${Math.min(target.scrollHeight, 128)}px`;
+                }}
+                disabled={loading}
+              />
+              
+              <Button 
+                type="submit" 
+                size="sm" 
+                disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                className="p-2 h-auto bg-[#19c37d] text-white hover:bg-[#10a37f] disabled:opacity-50 disabled:bg-[#565869] rounded-lg"
+              >
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
-            
-            {/* Hidden file input */}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-              accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
-            />
-            
-            <p className="text-xs text-muted-foreground text-center mt-3">
-              ChatGPT can make mistakes. Check important info.
-            </p>
           </form>
+          
+          {/* Disclaimer */}
+          <p className="text-xs text-gray-400 text-center mt-3">
+            ChatGPT can make mistakes. Check important info.
+          </p>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
+        />
       </div>
 
       {/* File Preview Modal */}

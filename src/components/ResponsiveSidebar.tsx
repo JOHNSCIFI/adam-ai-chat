@@ -270,19 +270,16 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
         )}
       </div>
 
-      {/* Navigation Items */}
-      <div className="px-3 space-y-1">
-        {navigationItems.map((item, index) => (
-          <Button
-            key={index}
-            onClick={item.action}
-            variant="ghost"
-            className="w-full justify-start h-9 text-sm bg-[#10a37f] hover:bg-[#0d9467] text-white"
-          >
-            <item.icon className="h-4 w-4" />
-            {(!isCollapsed || isMobileOrTablet) && <span className="ml-3">{item.label}</span>}
-          </Button>
-        ))}
+      {/* New Chat Button */}
+      <div className="px-3 mb-4">
+        <Button
+          onClick={createNewChat}
+          variant="ghost"
+          className="w-full justify-start h-11 text-sm text-white hover:bg-[#2f2f2f] border border-[#4a4a4a] rounded-lg"
+        >
+          <Plus className="h-4 w-4" />
+          {(!isCollapsed || isMobileOrTablet) && <span className="ml-3">New chat</span>}
+        </Button>
       </div>
 
       {/* Chats Section */}
@@ -381,7 +378,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
               <div className="flex items-center gap-3 min-w-0 w-full">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src={userProfile?.avatar_url} />
-                  <AvatarFallback className="bg-gradient-to-br from-orange-400 to-red-400 text-white text-xs font-medium">
+                  <AvatarFallback className="bg-blue-600 text-white text-xs font-medium">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>
@@ -397,7 +394,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs text-gray-400 hover:text-white h-6 px-2"
+                        className="text-xs text-gray-400 hover:text-white h-6 px-2 rounded"
                         onClick={(e) => {
                           e.stopPropagation();
                           // Handle upgrade click
@@ -420,7 +417,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={userProfile?.avatar_url} />
-                  <AvatarFallback className="bg-gradient-to-br from-orange-400 to-red-400 text-white font-medium">
+                  <AvatarFallback className="bg-blue-600 text-white font-medium">
                     {getInitials()}
                   </AvatarFallback>
                 </Avatar>

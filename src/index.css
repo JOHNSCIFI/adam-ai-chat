@@ -44,43 +44,43 @@ Add touch-friendly mobile styles.
   }
 
   .dark {
-    /* ChatGPT Dark Theme - Exact Colors */
-    --background: 212 13% 14%; /* #212121 */
-    --foreground: 0 0% 95%; /* #F2F2F2 */
-    --card: 220 13% 18%; /* #2F2F2F */
-    --card-foreground: 0 0% 95%;
-    --popover: 220 13% 16%; /* #2A2A2A */
-    --popover-foreground: 0 0% 95%;
+    /* ChatGPT Dark Theme - Exact Colors from Image */
+    --background: 202 13% 20%; /* #343541 - Main chat area */
+    --foreground: 0 0% 100%; /* Pure white text */
+    --card: 210 11% 15%; /* #2F2F2F - AI message background */
+    --card-foreground: 0 0% 100%;
+    --popover: 210 11% 15%; /* #2F2F2F */
+    --popover-foreground: 0 0% 100%;
     --primary: 160 84% 35%; /* #10A37F - ChatGPT Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 220 13% 16%; /* #2A2A2A */
-    --secondary-foreground: 0 0% 95%;
-    --muted: 220 13% 20%; /* #343434 */
-    --muted-foreground: 0 0% 63%; /* #A1A1A1 */
-    --accent: 220 13% 22%; /* #383838 */
-    --accent-foreground: 0 0% 95%;
+    --secondary: 210 11% 15%; /* #2F2F2F */
+    --secondary-foreground: 0 0% 100%;
+    --muted: 202 13% 20%; /* #343541 */
+    --muted-foreground: 0 0% 70%; /* Light gray text */
+    --accent: 210 11% 18%; /* #383838 */
+    --accent-foreground: 0 0% 100%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 220 13% 22%; /* #383838 */
-    --input: 220 13% 20%; /* #343434 */
+    --border: 210 11% 18%; /* #383838 */
+    --input: 210 11% 18%; /* #383838 */
     --ring: 160 84% 35%;
     
-    /* Sidebar - ChatGPT Style */
-    --sidebar-background: 212 13% 12%; /* #1F1F1F */
-    --sidebar-foreground: 0 0% 95%;
+    /* Sidebar - Very Dark ChatGPT Style */
+    --sidebar-background: 0 0% 9%; /* #171717 - Very dark sidebar */
+    --sidebar-foreground: 0 0% 100%;
     --sidebar-primary: 160 84% 35%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 220 13% 18%; /* #2F2F2F */
-    --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 220 13% 18%;
+    --sidebar-accent: 210 11% 15%; /* #2F2F2F */
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 210 11% 15%;
     --sidebar-ring: 160 84% 35%;
-    --sidebar-muted-foreground: 0 0% 63%;
+    --sidebar-muted-foreground: 0 0% 70%;
     
     /* ChatGPT specific message backgrounds */
-    --chat-user-bg: 212 13% 14%; /* Same as background for user */
-    --chat-ai-bg: 220 13% 18%; /* #2F2F2F for AI */
-    --chat-input-bg: 220 13% 20%; /* #343434 */
-    --chat-hover: 220 13% 22%; /* #383838 */
+    --chat-user-bg: 202 13% 20%; /* #343541 - Same as main background */
+    --chat-ai-bg: 210 11% 15%; /* #2F2F2F for AI messages */
+    --chat-input-bg: 210 11% 18%; /* #383838 */
+    --chat-hover: 210 11% 20%; /* Slightly lighter for hover */
   }
 
   /* Accent color variants - comprehensive theming */
