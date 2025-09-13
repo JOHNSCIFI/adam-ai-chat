@@ -259,81 +259,8 @@ export default function Chat() {
 
       if (userError) throw userError;
 
-      // Send message to n8n webhook with retry logic
-      console.log('Trigger: Send Message to AI');
-      console.log('Sending webhook request to:', 'https://adsgbt.app.n8n.cloud/webhook/message');
-      console.log('Webhook payload:', { message: userMessage, chat_id: chatId, user_id: user.id });
-      
-      let assistantResponse = '';
-      let retryCount = 0;
-      const maxRetries = 3;
-      
-      while (retryCount < maxRetries) {
-        try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-          
-          const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              message: userMessage,
-              chat_id: chatId,
-              user_id: user.id
-            }),
-            signal: controller.signal
-          });
-
-          clearTimeout(timeoutId);
-          console.log('Webhook response status:', webhookResponse.status);
-
-          if (!webhookResponse.ok) {
-            const errorText = await webhookResponse.text();
-            console.error('Webhook error response:', errorText);
-            throw new Error(`Webhook failed with status ${webhookResponse.status}`);
-          }
-
-          const responseData = await webhookResponse.json();
-          console.log('Webhook response data:', responseData);
-
-          // Handle different response formats from n8n webhook
-          if (Array.isArray(responseData)) {
-            assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message || '';
-          } else {
-            assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
-          }
-          
-          if (assistantResponse) {
-            break; // Success, exit retry loop
-          }
-          
-        } catch (webhookError: any) {
-          console.error(`Webhook attempt ${retryCount + 1} failed:`, webhookError);
-          retryCount++;
-          
-          if (retryCount < maxRetries) {
-            // Wait before retry (exponential backoff)
-            await new Promise(resolve => setTimeout(resolve, Math.pow(2, retryCount) * 1000));
-          }
-        }
-      }
-      
-      if (!assistantResponse) {
-        assistantResponse = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
-      }
-      
-      // Add assistant response to database
-      const { error: assistantError } = await supabase
-        .from('messages')
-        .insert([{
-          chat_id: chatId,
-          content: assistantResponse,
-          role: 'assistant'
-        }]);
-
-      if (assistantError) throw assistantError;
+      // Note: AI response will be automatically triggered by the useEffect hook
+      // that detects new user messages - no need to call webhook here
 
       // Update chat title if it's the first message
       if (messages.length === 0) {
