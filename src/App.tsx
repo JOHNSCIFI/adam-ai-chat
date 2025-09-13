@@ -9,7 +9,6 @@ import { ThemeProvider } from '@/contexts/ThemeContext';
 import MainLayout from '@/layouts/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import AuthPage from '@/pages/AuthPage';
-import ResetPasswordPage from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
 import Profile from '@/pages/Profile';
@@ -28,7 +27,6 @@ function App() {
             <Router>
               <Routes>
                 <Route path="/auth" element={<AuthPage />} />
-                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/" element={
                   <ProtectedRoute>
                     <MainLayout>
