@@ -48,49 +48,54 @@ export default function Index() {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-black min-h-screen">
-      {/* Main Content - centered and minimalist */}
-      <div className="flex-1 flex flex-col items-center justify-center px-6">
-        <div className="text-center mb-32">
-          <h1 className="text-2xl font-normal text-white">
-            How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
-          </h1>
+    <div className="flex-1 flex flex-col bg-background">
+      {/* Header - clean like ChatGPT */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+        <div className="text-xl font-semibold text-foreground">AdamGPT</div>
+        <div className="flex items-center space-x-4">
+          
         </div>
       </div>
 
-      {/* Input Area - minimalist design */}
-      <div className="fixed bottom-0 left-0 right-0 bg-black">
-        <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* Main Content - centered like ChatGPT */}
+      <div className="flex-1 flex flex-col items-center justify-center px-6 pb-32">
+        <div className="w-full max-w-4xl">
+          {/* Welcome Message */}
+          <div className="text-center mb-12">
+            <h1 className="text-3xl font-normal text-foreground mb-6">
+              How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
+            </h1>
+          </div>
+        </div>
+      </div>
+
+      {/* Input Area - ChatGPT style */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-6">
           <form onSubmit={handleSubmit} className="relative">
-            <div className="flex items-center bg-gray-800 border border-gray-700 rounded-full shadow-sm">
-              <div className="pl-4">
-                <div className="w-5 h-5 text-gray-400">
-                  <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 5v14m-7-7h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
+            <div className="flex items-center gap-2 bg-background border border-border rounded-3xl shadow-sm">
+              <div className="flex-1 flex items-center">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Ask anything..."
+                  className="flex-1 bg-transparent border-none outline-none py-3 px-4 text-foreground placeholder-muted-foreground resize-none"
+                />
               </div>
-              
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ask anything..."
-                className="flex-1 bg-transparent border-none outline-none py-4 px-4 text-white placeholder-gray-400"
-              />
               
               <Button
                 type="submit"
                 disabled={!message.trim()}
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600"
+                className="h-8 w-8 p-0 m-2 rounded-full"
               >
-                <Send className="h-4 w-4 text-white" />
+                <Send className="h-4 w-4" />
               </Button>
             </div>
           </form>
           
-          <p className="text-xs text-gray-500 text-center mt-3">
+          <p className="text-xs text-muted-foreground text-center mt-2">
             AdamGPT can make mistakes. Check important info.
           </p>
         </div>
