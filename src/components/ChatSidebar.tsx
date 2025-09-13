@@ -254,11 +254,7 @@ export function ChatSidebar() {
                 <SidebarMenu>
                   {chats.map((chat) => (
                     <SidebarMenuItem key={chat.id}>
-                      <div 
-                        className="group relative"
-                        onMouseEnter={() => {}}
-                        onMouseLeave={() => {}}
-                      >
+                      <div className="group relative">
                         <NavLink
                           to={`/chat/${chat.id}`}
                           onClick={() => handleChatSwitch(chat.id)}
