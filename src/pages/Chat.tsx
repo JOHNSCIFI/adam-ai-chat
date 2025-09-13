@@ -417,58 +417,62 @@ export default function Chat() {
                           : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
                       } px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
                         
-                        {/* File attachments */}
-                        {message.file_attachments && message.file_attachments.length > 0 && (
-                          <div className="mb-3 space-y-2">
-                            {message.file_attachments.map((file, index) => (
-                              isImageFile(file.type) && file.url ? (
-                                <img 
-                                  key={index}
-                                  src={file.url} 
-                                  alt={file.name} 
-                                  className="max-w-xs max-h-48 object-cover rounded-xl shadow-lg cursor-pointer hover:scale-105 transition-transform duration-200 border border-border/20"
-                                  onClick={() => setPreviewFile({
-                                    name: file.name,
-                                    type: file.type,
-                                    url: file.url,
-                                    size: file.size
-                                  })}
-                                />
-                              ) : (
-                                <div 
-                                  key={index}
-                                  className={`flex items-center gap-3 p-3 rounded-xl border transition-colors cursor-pointer hover:scale-105 ${
-                                    message.role === 'user' 
-                                      ? 'bg-black/10 border-white/20 hover:bg-black/20' 
-                                      : 'bg-accent border-border hover:bg-accent/70'
-                                  }`}
-                                  onClick={() => setPreviewFile({
-                                    name: file.name,
-                                    type: file.type,
-                                    url: file.url,
-                                    size: file.size
-                                  })}
-                                >
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                    message.role === 'user' 
-                                      ? 'bg-white/20' 
-                                      : 'bg-muted'
-                                  }`}>
-                                    {getFileIcon(file.type)}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-sm font-medium truncate text-foreground">
-                                      {file.name}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">
-                                      {formatFileSize(file.size)} • Click to preview
-                                    </p>
-                                  </div>
-                                </div>
-                              )
-                            ))}
-                          </div>
-                        )}
+                         {/* File attachments */}
+                         {message.file_attachments && message.file_attachments.length > 0 && (
+                           <div className="mb-3 space-y-3">
+                             {message.file_attachments.map((file, index) => (
+                               <div key={index}>
+                                 {isImageFile(file.type) && file.url ? (
+                                   <img 
+                                     src={file.url} 
+                                     alt={file.name} 
+                                     className="max-w-xs max-h-56 object-cover rounded-xl shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300 border border-border/20 bg-muted/20"
+                                     onClick={() => setPreviewFile({
+                                       name: file.name,
+                                       type: file.type,
+                                       url: file.url,
+                                       size: file.size
+                                     })}
+                                     onError={(e) => {
+                                       console.error('Image failed to load:', file.url);
+                                       e.currentTarget.style.display = 'none';
+                                     }}
+                                   />
+                                 ) : (
+                                   <div 
+                                     className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-md ${
+                                       message.role === 'user' 
+                                         ? 'bg-black/10 border-white/20 hover:bg-black/20' 
+                                         : 'bg-accent border-border hover:bg-accent/70'
+                                     }`}
+                                     onClick={() => setPreviewFile({
+                                       name: file.name,
+                                       type: file.type,
+                                       url: file.url,
+                                       size: file.size
+                                     })}
+                                   >
+                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                       message.role === 'user' 
+                                         ? 'bg-white/20' 
+                                         : 'bg-muted'
+                                     }`}>
+                                       {getFileIcon(file.type)}
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-sm font-medium truncate text-foreground">
+                                         {file.name}
+                                       </p>
+                                       <p className="text-xs text-muted-foreground">
+                                         {formatFileSize(file.size)} • Click to preview
+                                       </p>
+                                     </div>
+                                   </div>
+                                 )}
+                               </div>
+                             ))}
+                           </div>
+                         )}
                         
                         {message.content && (
                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:text-foreground">

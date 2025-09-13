@@ -432,25 +432,65 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent 
-            side="top" 
+            side="bottom" 
             align="start" 
-            className="w-64 mb-2 bg-popover border shadow-lg z-50"
+            className="w-72 mt-2 bg-gradient-to-br from-popover via-popover to-popover/95 border border-border/50 shadow-2xl backdrop-blur-sm z-50 animate-in slide-in-from-top-2 duration-300"
+            sideOffset={8}
           >
-            <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer min-h-[40px]">
-              <Settings className="mr-2 h-4 w-4" />
-              Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem asChild>
-              <NavLink to="/help" className="cursor-pointer min-h-[40px]">
-                <HelpCircle className="mr-2 h-4 w-4" />
-                Help & Support
-              </NavLink>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive min-h-[40px]">
-              <LogOut className="mr-2 h-4 w-4" />
-              Sign out
-            </DropdownMenuItem>
+            <div className="p-2">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/5 to-primary/10 mb-2">
+                <Avatar className="h-10 w-10 border-2 border-primary/30 shadow-md">
+                  <AvatarImage src="" />
+                  <AvatarFallback className="text-sm bg-gradient-to-br from-primary via-primary/90 to-primary/80 text-primary-foreground font-bold">
+                    {getUserInitials()}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{getUserDisplayName()}</p>
+                  <p className="text-xs text-muted-foreground font-medium">Free Plan</p>
+                </div>
+              </div>
+              
+              <div className="space-y-1">
+                <DropdownMenuItem 
+                  onClick={() => setSettingsOpen(true)} 
+                  className="cursor-pointer min-h-[44px] rounded-lg hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 transition-all duration-200 hover:scale-105"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-primary/20 to-primary/10">
+                      <Settings className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="font-medium">Settings</span>
+                  </div>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem asChild>
+                  <NavLink 
+                    to="/help" 
+                    className="cursor-pointer min-h-[44px] rounded-lg hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-500/5 transition-all duration-200 hover:scale-105 flex items-center gap-3 w-full px-2 py-2"
+                  >
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-500/10">
+                      <HelpCircle className="h-4 w-4 text-blue-500" />
+                    </div>
+                    <span className="font-medium">Help & Support</span>
+                  </NavLink>
+                </DropdownMenuItem>
+                
+                <DropdownMenuSeparator className="my-2 bg-gradient-to-r from-transparent via-border to-transparent" />
+                
+                <DropdownMenuItem 
+                  onClick={handleSignOut} 
+                  className="cursor-pointer min-h-[44px] rounded-lg hover:bg-gradient-to-r hover:from-destructive/10 hover:to-destructive/5 transition-all duration-200 hover:scale-105 group"
+                >
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="p-2 rounded-lg bg-gradient-to-br from-destructive/20 to-destructive/10 group-hover:from-destructive/30 group-hover:to-destructive/20 transition-all duration-200">
+                      <LogOut className="h-4 w-4 text-destructive" />
+                    </div>
+                    <span className="font-medium text-destructive">Sign out</span>
+                  </div>
+                </DropdownMenuItem>
+              </div>
+            </div>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
