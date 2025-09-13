@@ -5,7 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Send, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -570,7 +571,7 @@ export default function Chat() {
                 size="sm"
                 className="h-8 w-8 p-0 m-2 rounded-full"
               >
-                <Send className="h-4 w-4" />
+                <SendHorizontalIcon className="h-4 w-4" />
               </Button>
             </div>
           </form>
