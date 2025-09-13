@@ -41,7 +41,6 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
@@ -344,25 +343,25 @@ export default function Chat() {
 
   if (!chatId) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-background p-4">
-        <div className="text-center max-w-2xl w-full">
-          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6 animate-bounce-in">
+      <div className="flex-1 flex items-center justify-center bg-background">
+        <div className="text-center max-w-2xl px-6">
+          <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
             <MessageSquare className="text-2xl text-primary-foreground h-8 w-8" />
           </div>
-          <h2 className="text-2xl sm:text-3xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
-          <p className="text-muted-foreground mb-8 text-base sm:text-lg">Your intelligent AI assistant ready to help with any questions or tasks</p>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
+          <p className="text-muted-foreground mb-8 text-base">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in">
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
               <div className="text-2xl mb-3">💬</div>
               <h3 className="font-semibold text-base mb-2">Natural Conversations</h3>
               <p className="text-sm text-muted-foreground">Chat naturally and get helpful responses</p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.1s' }}>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
               <div className="text-2xl mb-3">⚡</div>
               <h3 className="font-semibold text-base mb-2">Fast & Accurate</h3>
               <p className="text-sm text-muted-foreground">Get quick and reliable answers</p>
             </div>
-            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors animate-fade-in" style={{ animationDelay: '0.2s' }}>
+            <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
               <div className="text-2xl mb-3">🔒</div>
               <h3 className="font-semibold text-base mb-2">Secure & Private</h3>
               <p className="text-sm text-muted-foreground">Your conversations are protected</p>
@@ -375,12 +374,12 @@ export default function Chat() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background">
-      {/* Messages area - responsive max width */}
+      {/* Messages area - max width centered like ChatGPT */}
       <div className="flex-1 overflow-y-auto">
-        <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6">
+        <div className="max-w-4xl mx-auto w-full px-6 py-6">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
-              <div className="text-center max-w-md px-4">
+              <div className="text-center max-w-md">
                 <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mx-auto mb-4">
                   <MessageSquare className="h-6 w-6 text-primary-foreground" />
                 </div>
@@ -389,26 +388,27 @@ export default function Chat() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-6">
               {messages.map((message) => (
                 <div 
                   key={message.id} 
-                  className="group animate-fade-in"
+                  className="group"
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
                   <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[85%] relative`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[85%] relative`}>
                       <div className={`${
                         message.role === 'user' 
                           ? 'chat-user-bg text-foreground rounded-2xl rounded-br-md' 
                           : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
-                      } px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
+                      } px-4 py-3 shadow-sm`}>
                         
+                        {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
                           <div className="mb-3 space-y-2">
                             {message.file_attachments.map((file, index) => (
-                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border transition-colors ${
+                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
                                 message.role === 'user' 
                                   ? 'bg-black/10 border-white/20' 
                                   : 'bg-accent border-border'
