@@ -9,80 +9,78 @@ Add touch-friendly mobile styles.
 
 @layer base {
   :root {
+    /* Light Theme - Clean ChatGPT Style */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 0 0% 9%;
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 0 0% 9%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-    --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
-    --sidebar-muted-foreground: 240 3.8% 46.1%;
-
-    /* ChatGPT-style accent colors */
-    --accent-blue: 213 94% 68%;
-    --accent-purple: 262 83% 58%;
-    --accent-green: 142 76% 36%;
-    --accent-orange: 25 95% 53%;
-    --accent-red: 0 84% 60%;
+    --popover-foreground: 0 0% 9%;
+    --primary: 160 84% 35%; /* #10A37F - ChatGPT Green */
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 9%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 9%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 90%;
+    --input: 0 0% 96%;
+    --ring: 160 84% 35%;
+    --radius: 0.75rem;
+    
+    /* Sidebar colors */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 0 0% 9%;
+    --sidebar-primary: 160 84% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 9%;
+    --sidebar-border: 0 0% 90%;
+    --sidebar-ring: 160 84% 35%;
+    --sidebar-muted-foreground: 0 0% 45%;
   }
 
   .dark {
-    /* ChatGPT Dark Theme Colors */
-    --background: 230 7% 13%; /* #202123 - Chat area background */
-    --foreground: 0 0% 93%; /* #ECECEC - Primary text */
-    --card: 225 9% 31%; /* #444654 - AI message background */
-    --card-foreground: 0 0% 93%; /* #ECECEC */
-    --popover: 225 7% 25%; /* #343541 */
-    --popover-foreground: 0 0% 93%;
-    --primary: 160 84% 35%; /* #10A37F - Brand green */
+    /* ChatGPT Dark Theme - Exact Colors */
+    --background: 212 13% 14%; /* #212121 */
+    --foreground: 0 0% 95%; /* #F2F2F2 */
+    --card: 220 13% 18%; /* #2F2F2F */
+    --card-foreground: 0 0% 95%;
+    --popover: 220 13% 16%; /* #2A2A2A */
+    --popover-foreground: 0 0% 95%;
+    --primary: 160 84% 35%; /* #10A37F - ChatGPT Green */
     --primary-foreground: 0 0% 100%;
-    --secondary: 225 7% 25%; /* #343541 - User message background */
-    --secondary-foreground: 0 0% 93%;
-    --muted: 225 10% 29%; /* #40414F - Input background */
-    --muted-foreground: 220 9% 65%; /* #9CA3AF - Secondary text */
-    --accent: 225 6% 18%; /* #2A2B32 - Hover states */
-    --accent-foreground: 0 0% 93%;
-    --destructive: 0 84% 60%; /* #EF4444 */
+    --secondary: 220 13% 16%; /* #2A2A2A */
+    --secondary-foreground: 0 0% 95%;
+    --muted: 220 13% 20%; /* #343434 */
+    --muted-foreground: 0 0% 63%; /* #A1A1A1 */
+    --accent: 220 13% 22%; /* #383838 */
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 225 6% 18%; /* #2A2B32 */
-    --input: 225 10% 29%; /* #40414F */
-    --ring: 160 84% 35%; /* #10A37F */
-    --sidebar-background: 240 9% 13%; /* #1E1F23 - Side panel background */
-    --sidebar-foreground: 0 0% 93%;
-    --sidebar-primary: 160 84% 35%; /* #10A37F - Brand green */
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 225 6% 18%; /* #2A2B32 */
-    --sidebar-accent-foreground: 0 0% 93%;
-    --sidebar-border: 225 6% 18%;
-    --sidebar-ring: 160 84% 35%;
-    --sidebar-muted-foreground: 220 9% 65%;
+    --border: 220 13% 22%; /* #383838 */
+    --input: 220 13% 20%; /* #343434 */
+    --ring: 160 84% 35%;
     
-    /* ChatGPT specific backgrounds */
-    --chat-user-bg: 225 7% 25%; /* #343541 - User message */
-    --chat-ai-bg: 225 9% 31%; /* #444654 - AI message */
-    --chat-input-bg: 225 10% 29%; /* #40414F - Input field */
-    --chat-hover: 225 6% 18%; /* #2A2B32 - Hover states */
+    /* Sidebar - ChatGPT Style */
+    --sidebar-background: 212 13% 12%; /* #1F1F1F */
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 160 84% 35%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 18%; /* #2F2F2F */
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 13% 18%;
+    --sidebar-ring: 160 84% 35%;
+    --sidebar-muted-foreground: 0 0% 63%;
+    
+    /* ChatGPT specific message backgrounds */
+    --chat-user-bg: 212 13% 14%; /* Same as background for user */
+    --chat-ai-bg: 220 13% 18%; /* #2F2F2F for AI */
+    --chat-input-bg: 220 13% 20%; /* #343434 */
+    --chat-hover: 220 13% 22%; /* #383838 */
   }
 
   /* Accent color variants - comprehensive theming */
@@ -139,8 +137,9 @@ Add touch-friendly mobile styles.
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    font-family: 'Söhne', 'ui-sans-serif', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Ubuntu', 'Cantarell', 'Noto Sans', sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    line-height: 1.5;
+    letter-spacing: -0.01em;
   }
   
   /* Smooth scrolling */

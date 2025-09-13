@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Send, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { Send, Paperclip, Copy, Check, X, FileText, ImageIcon, User, Bot, MessageSquare } from 'lucide-react';
 import { FilePreviewModal } from '@/components/FilePreviewModal';
 import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -54,6 +54,7 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (chatId && user) {
@@ -411,89 +412,97 @@ export default function Chat() {
               </div>
             </div>
           ) : (
-            <div className="space-y-4 sm:space-y-6">
+            <div className="space-y-6">
               {messages.map((message) => (
                 <div 
                   key={message.id} 
-                  className="group animate-fade-in"
+                  className={`group animate-fade-in ${
+                    message.role === 'user' 
+                      ? 'bg-background' 
+                      : 'bg-card'
+                  }`}
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
-                  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[85%] relative`}>
-                      <div className={`${
-                        message.role === 'user' 
-                          ? 'chat-user-bg text-foreground rounded-2xl rounded-br-md' 
-                          : 'chat-ai-bg text-foreground rounded-2xl rounded-bl-md'
-                      } px-4 py-3 shadow-sm transition-all duration-200 hover:shadow-md`}>
+                  <div className="max-w-4xl mx-auto px-4 py-6">
+                    <div className="flex gap-4">
+                      {/* Avatar */}
+                      <div className="flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          message.role === 'user' 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'bg-muted'
+                        }`}>
+                          {message.role === 'user' ? (
+                            <User className="h-4 w-4" />
+                          ) : (
+                            <Bot className="h-4 w-4" />
+                          )}
+                        </div>
+                      </div>
+                      
+                      {/* Message Content */}
+                      <div className="flex-1 min-w-0 relative">
+                        {/* File attachments */}
+                        {message.file_attachments && message.file_attachments.length > 0 && (
+                          <div className="mb-4 space-y-3">
+                            {message.file_attachments.map((file, index) => {
+                              console.log('Rendering file attachment:', file);
+                              console.log('File type:', file.type);
+                              console.log('File URL:', file.url);
+                              console.log('Is image file:', isImageFile(file.type));
+                              
+                              return (
+                                <div key={index}>
+                                  {isImageFile(file.type) && file.url ? (
+                                    <div className="relative max-w-sm">
+                                      <img 
+                                        src={file.url} 
+                                        alt={file.name} 
+                                        className="max-w-full h-auto rounded-lg shadow-sm cursor-pointer hover:shadow-lg transition-shadow border border-border/20"
+                                        onClick={() => setPreviewFile({
+                                          name: file.name,
+                                          type: file.type,
+                                          url: file.url,
+                                          size: file.size
+                                        })}
+                                        onLoad={() => console.log('Image loaded successfully:', file.url)}
+                                        onError={(e) => {
+                                          console.error('Image failed to load:', file.url);
+                                          console.error('Error event:', e);
+                                        }}
+                                      />
+                                    </div>
+                                  ) : (
+                                    <div 
+                                      className="flex items-center gap-3 p-3 rounded-lg border bg-muted/50 hover:bg-muted/70 transition-colors cursor-pointer max-w-sm"
+                                      onClick={() => setPreviewFile({
+                                        name: file.name,
+                                        type: file.type,
+                                        url: file.url,
+                                        size: file.size
+                                      })}
+                                    >
+                                      <div className="w-8 h-8 rounded bg-background flex items-center justify-center flex-shrink-0">
+                                        {getFileIcon(file.type)}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate text-foreground">
+                                          {file.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatFileSize(file.size)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
                         
-                         {/* File attachments */}
-                         {message.file_attachments && message.file_attachments.length > 0 && (
-                           <div className="mb-3 space-y-3">
-                             {message.file_attachments.map((file, index) => {
-                               console.log('Rendering file attachment:', file);
-                               console.log('File type:', file.type);
-                               console.log('File URL:', file.url);
-                               console.log('Is image file:', isImageFile(file.type));
-                               
-                               return (
-                                 <div key={index}>
-                                   {isImageFile(file.type) && file.url ? (
-                                     <div className="relative">
-                                       <img 
-                                         src={file.url} 
-                                         alt={file.name} 
-                                         className="max-w-xs max-h-56 object-cover rounded-xl shadow-lg cursor-pointer hover:scale-105 transition-transform duration-300 border border-border/20 bg-muted/20"
-                                         onClick={() => setPreviewFile({
-                                           name: file.name,
-                                           type: file.type,
-                                           url: file.url,
-                                           size: file.size
-                                         })}
-                                         onLoad={() => console.log('Image loaded successfully:', file.url)}
-                                         onError={(e) => {
-                                           console.error('Image failed to load:', file.url);
-                                           console.error('Error event:', e);
-                                         }}
-                                       />
-                                     </div>
-                                   ) : (
-                                     <div 
-                                       className={`flex items-center gap-3 p-3 rounded-xl border transition-all duration-300 cursor-pointer hover:scale-105 hover:shadow-md ${
-                                         message.role === 'user' 
-                                           ? 'bg-black/10 border-white/20 hover:bg-black/20' 
-                                           : 'bg-accent border-border hover:bg-accent/70'
-                                       }`}
-                                       onClick={() => setPreviewFile({
-                                         name: file.name,
-                                         type: file.type,
-                                         url: file.url,
-                                         size: file.size
-                                       })}
-                                     >
-                                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                         message.role === 'user' 
-                                           ? 'bg-white/20' 
-                                           : 'bg-muted'
-                                       }`}>
-                                         {getFileIcon(file.type)}
-                                       </div>
-                                       <div className="flex-1 min-w-0">
-                                         <p className="text-sm font-medium truncate text-foreground">
-                                           {file.name}
-                                         </p>
-                                         <p className="text-xs text-muted-foreground">
-                                           {formatFileSize(file.size)} • Click to preview
-                                         </p>
-                                       </div>
-                                     </div>
-                                   )}
-                                 </div>
-                               );
-                             })}
-                           </div>
-                         )}
-                        
+                        {/* Message Text */}
                         {message.content && (
                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-em:text-foreground prose-code:text-foreground prose-pre:bg-muted prose-pre:text-foreground">
                             <ReactMarkdown
@@ -502,14 +511,14 @@ export default function Chat() {
                                 h1: ({children}) => <h1 className="text-xl font-bold mb-4 text-foreground">{children}</h1>,
                                 h2: ({children}) => <h2 className="text-lg font-semibold mb-3 text-foreground">{children}</h2>,
                                 h3: ({children}) => <h3 className="text-base font-medium mb-2 text-foreground">{children}</h3>,
-                                p: ({children}) => <p className="mb-3 text-sm leading-relaxed text-foreground">{children}</p>,
+                                p: ({children}) => <p className="mb-3 leading-relaxed text-foreground">{children}</p>,
                                 strong: ({children}) => <strong className="font-semibold text-foreground">{children}</strong>,
                                 em: ({children}) => <em className="italic text-foreground">{children}</em>,
                                 ul: ({children}) => <ul className="list-disc list-inside mb-3 space-y-1">{children}</ul>,
                                 ol: ({children}) => <ol className="list-decimal list-inside mb-3 space-y-1">{children}</ol>,
-                                li: ({children}) => <li className="text-sm text-foreground">{children}</li>,
-                                code: ({children}) => <code className="bg-muted px-1 py-0.5 rounded text-xs font-mono text-foreground">{children}</code>,
-                                pre: ({children}) => <pre className="bg-muted p-3 rounded-md overflow-x-auto text-sm">{children}</pre>,
+                                li: ({children}) => <li className="text-foreground">{children}</li>,
+                                code: ({children}) => <code className="bg-muted px-2 py-1 rounded text-sm font-mono text-foreground">{children}</code>,
+                                pre: ({children}) => <pre className="bg-muted p-4 rounded-lg overflow-x-auto text-sm border">{children}</pre>,
                                 blockquote: ({children}) => <blockquote className="border-l-4 border-primary pl-4 italic text-muted-foreground mb-3">{children}</blockquote>,
                               }}
                             >
@@ -517,23 +526,23 @@ export default function Chat() {
                             </ReactMarkdown>
                           </div>
                         )}
+                        
+                        {/* Copy button */}
+                        {hoveredMessage === message.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="absolute -right-10 top-0 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md"
+                            onClick={() => copyToClipboard(message.content, message.id)}
+                          >
+                            {copiedMessageId === message.id ? (
+                              <Check className="h-4 w-4 text-green-500" />
+                            ) : (
+                              <Copy className="h-4 w-4" />
+                            )}
+                          </Button>
+                        )}
                       </div>
-                      
-                      {/* Copy button - better positioning for mobile */}
-                      {hoveredMessage === message.id && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`absolute ${message.role === 'user' ? 'left-0' : 'right-0'} top-0 -translate-y-8 opacity-0 group-hover:opacity-100 transition-opacity bg-background/80 backdrop-blur-sm border shadow-sm hover:shadow-md min-h-[32px] min-w-[32px]`}
-                          onClick={() => copyToClipboard(message.content, message.id)}
-                        >
-                          {copiedMessageId === message.id ? (
-                            <Check className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </Button>
-                      )}
                     </div>
                   </div>
                 </div>
