@@ -494,7 +494,8 @@ export default function Chat() {
                             remarkPlugins={[remarkGfm]}
                             components={{
                               p: ({ children }) => <p className="mb-3 last:mb-0 leading-relaxed text-white">{children}</p>,
-                              code: ({ inline, className, children, ...props }) => {
+                              code: ({ className, children, ...props }: any) => {
+                                const inline = 'inline' in props ? props.inline : false;
                                 const match = /language-(\w+)/.exec(className || '');
                                 return !inline ? (
                                   <pre className="bg-[#0d1117] rounded-lg p-4 overflow-x-auto my-4 border border-[#4a4a4a]">
