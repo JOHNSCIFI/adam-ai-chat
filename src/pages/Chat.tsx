@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
+import { StopIcon } from '@/components/ui/stop-icon';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -81,6 +82,73 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Check if we need to trigger AI response for new user messages
+  useEffect(() => {
+    if (messages.length > 0 && !loading) {
+      const lastMessage = messages[messages.length - 1];
+      const secondLastMessage = messages.length > 1 ? messages[messages.length - 2] : null;
+      
+      // If last message is from user and there's no assistant response after it, trigger AI
+      if (lastMessage.role === 'user' && 
+          (!secondLastMessage || secondLastMessage.role !== 'assistant' || 
+           secondLastMessage.created_at < lastMessage.created_at)) {
+        console.log('Triggering AI response for user message:', lastMessage.content);
+        triggerAIResponse(lastMessage.content, lastMessage.id);
+      }
+    }
+  }, [messages, loading]);
+
+  const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
+    if (!chatId || !user || loading) return;
+    
+    setLoading(true);
+    try {
+      console.log('Trigger: Send Message to AI (auto)');
+      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          chat_id: chatId,
+          user_id: user.id
+        }),
+      });
+
+      console.log('Webhook response status:', webhookResponse.status);
+
+      if (webhookResponse.ok) {
+        const responseData = await webhookResponse.json();
+        console.log('Webhook response data:', responseData);
+
+        let assistantResponse = '';
+        if (Array.isArray(responseData)) {
+          assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message || '';
+        } else {
+          assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
+        }
+        
+        if (!assistantResponse) {
+          assistantResponse = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+        }
+        
+        // Add assistant response to database
+        await supabase
+          .from('messages')
+          .insert([{
+            chat_id: chatId,
+            content: assistantResponse,
+            role: 'assistant'
+          }]);
+      }
+    } catch (error) {
+      console.error('Auto AI response error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -572,7 +640,7 @@ export default function Chat() {
                 size="sm"
                 className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
               >
-                <SendHorizontalIcon className="h-4 w-4" />
+                {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
               </Button>
             </div>
           </form>

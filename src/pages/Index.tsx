@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Plus, Paperclip, X, FileText, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
+import { StopIcon } from '@/components/ui/stop-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,15 +18,16 @@ interface FileAttachment {
 }
 
 export default function Index() {
-  const { user, loading, userProfile } = useAuth();
+  const { user, loading: authLoading, userProfile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -101,6 +103,9 @@ export default function Index() {
   };
 
   const handleNewChat = async (initialMessage: string, files: File[] = []) => {
+    if (loading) return;
+    setLoading(true);
+    
     try {
       // Create the chat first
       const { data: chatData, error: chatError } = await supabase
@@ -175,7 +180,7 @@ export default function Index() {
       }
 
       // Navigate to the new chat immediately for smooth experience
-      // The chat page will handle getting the AI response
+      // The chat page will handle getting the AI response automatically
       navigate(`/chat/${chatData.id}`);
 
     } catch (error: any) {
@@ -185,6 +190,8 @@ export default function Index() {
         description: "Unable to create new chat. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -271,12 +278,12 @@ export default function Index() {
               
               <Button
                 type="submit"
-                disabled={(!message.trim() && selectedFiles.length === 0)}
+                disabled={(!message.trim() && selectedFiles.length === 0) || loading}
                 variant="ghost"
                 size="sm"
                 className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
               >
-                <SendHorizontalIcon className="h-4 w-4" />
+                {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
               </Button>
             </div>
           </form>
