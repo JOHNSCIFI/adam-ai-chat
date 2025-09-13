@@ -568,8 +568,9 @@ export default function Chat() {
               <Button
                 type="submit"
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full"
+                className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
               >
                 <SendHorizontalIcon className="h-4 w-4" />
               </Button>

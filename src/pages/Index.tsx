@@ -172,53 +172,10 @@ export default function Index() {
           });
 
         if (messageError) throw messageError;
-
-        // Send message to n8n webhook to get AI response
-        if (initialMessage.trim()) {
-          try {
-            console.log('Sending message to AI from index page...');
-            const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                message: initialMessage,
-                chat_id: chatData.id,
-                user_id: user.id
-              }),
-            });
-
-            if (webhookResponse.ok) {
-              const responseData = await webhookResponse.json();
-              let assistantResponse = '';
-              
-              // Handle different response formats from n8n webhook
-              if (Array.isArray(responseData)) {
-                assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message || '';
-              } else {
-                assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
-              }
-              
-              if (assistantResponse) {
-                // Add assistant response to database
-                await supabase
-                  .from('messages')
-                  .insert([{
-                    chat_id: chatData.id,
-                    content: assistantResponse,
-                    role: 'assistant'
-                  }]);
-              }
-            }
-          } catch (webhookError) {
-            console.error('Webhook error from index:', webhookError);
-            // Don't block navigation on webhook failure
-          }
-        }
       }
 
-      // Navigate to the new chat
+      // Navigate to the new chat immediately for smooth experience
+      // The chat page will handle getting the AI response
       navigate(`/chat/${chatData.id}`);
 
     } catch (error: any) {
@@ -317,7 +274,7 @@ export default function Index() {
                 disabled={(!message.trim() && selectedFiles.length === 0)}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full hover:bg-muted"
+                className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
               >
                 <SendHorizontalIcon className="h-4 w-4" />
               </Button>
