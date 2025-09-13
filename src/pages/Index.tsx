@@ -70,31 +70,34 @@ export default function Index() {
       </div>
 
       {/* Input Area - ChatGPT style */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
-        <div className="max-w-4xl mx-auto px-6 py-4">
+      <div className="fixed bottom-0 left-0 right-0 bg-background">
+        <div className="max-w-3xl mx-auto px-4 py-6">
           <form onSubmit={handleSubmit} className="relative">
-            <div className="flex items-center border border-border rounded-2xl bg-background shadow-sm">
-              <input
-                type="text"
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                placeholder="Ask anything..."
-                className="flex-1 px-4 py-3 text-base bg-transparent border-none outline-none placeholder-muted-foreground text-foreground"
-              />
-              <button
+            <div className="flex items-center gap-2 bg-background border border-border rounded-3xl shadow-sm">
+              <div className="flex-1 flex items-center">
+                <input
+                  type="text"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder="Ask anything..."
+                  className="flex-1 bg-transparent border-none outline-none py-3 px-4 text-foreground placeholder-muted-foreground resize-none"
+                />
+              </div>
+              
+              <Button
                 type="submit"
                 disabled={!message.trim()}
-                className="p-2 m-2 bg-foreground text-background rounded-lg hover:bg-foreground/90 disabled:bg-muted disabled:text-muted-foreground transition-colors"
+                size="sm"
+                className="h-8 w-8 p-0 m-2 rounded-full"
               >
-                <Send className="w-4 h-4" />
-              </button>
+                <Send className="h-4 w-4" />
+              </Button>
             </div>
           </form>
-          <div className="text-center mt-2">
-            <p className="text-xs text-muted-foreground">
-              AdamGPT can make mistakes. Check important info.
-            </p>
-          </div>
+          
+          <p className="text-xs text-muted-foreground text-center mt-2">
+            AdamGPT can make mistakes. Check important info.
+          </p>
         </div>
       </div>
     </div>
