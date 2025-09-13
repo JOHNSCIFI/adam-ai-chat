@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Send, Paperclip, Copy, Check, X, FileText, ImageIcon, User, Bot, MessageSquare } from 'lucide-react';
+import { Send, Paperclip, Copy, Check, X, FileText, ImageIcon, User, Bot, MessageSquare, ChevronDown } from 'lucide-react';
 import { FilePreviewModal } from '@/components/FilePreviewModal';
 import { useToast } from '@/hooks/use-toast';
 import { useResponsive } from '@/hooks/use-responsive';
@@ -398,8 +398,33 @@ export default function Chat() {
 
   return (
     <div className="flex-1 flex flex-col h-full bg-background relative">
-      {/* Messages area - responsive max width with padding bottom for fixed input */}
-      <div className="flex-1 overflow-y-auto pb-32">
+      {/* Top Header with Share button */}
+      <div className={`fixed top-0 right-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border ${
+        isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
+      } transition-all duration-300`}>
+        <div className="flex items-center justify-between px-4 py-3">
+          <div className="flex items-center gap-3">
+            <h1 className="text-lg font-semibold text-foreground">ChatGPT</h1>
+            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+              </svg>
+              Share
+            </Button>
+            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+              </svg>
+            </Button>
+          </div>
+        </div>
+      </div>
+
+      {/* Messages area - with top padding for fixed header */}
+      <div className="flex-1 overflow-y-auto pt-16 pb-32">{/* ... keep existing code */}
         <div className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-4 sm:py-6">
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
@@ -554,16 +579,16 @@ export default function Chat() {
       </div>
 
       {/* Fixed Input area at bottom */}
-      <div className={`fixed bottom-0 right-0 border-t border-border bg-background/95 backdrop-blur-sm z-10 ${
+      <div className={`fixed bottom-0 right-0 bg-background z-10 ${
         isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
       } transition-all duration-300`}>
-        <div className="w-full p-3">
-          <form onSubmit={sendMessage} className="space-y-3">
+        <div className="w-full px-4 py-4">
+          <form onSubmit={sendMessage} className="max-w-4xl mx-auto">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
-              <div className="flex flex-wrap gap-2 p-2 bg-muted/50 rounded-lg animate-fade-in">
+              <div className="flex flex-wrap gap-2 p-3 mb-3 bg-muted/50 rounded-xl animate-fade-in">
                 {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-background rounded-md p-2 border shadow-sm">
+                  <div key={index} className="flex items-center gap-2 bg-background rounded-lg p-2 border shadow-sm">
                     {getFileIcon(file.type)}
                     <span className="text-sm truncate max-w-[120px] sm:max-w-[150px]">{file.name}</span>
                     <Button
@@ -581,70 +606,88 @@ export default function Chat() {
             )}
             
             {/* Message input container */}
-            <div className="flex items-end gap-2 p-3 rounded-xl border border-border bg-background shadow-sm focus-within:shadow-md transition-all duration-200">
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
+            <div className="relative">
+              <div className="flex items-end gap-3 p-4 rounded-3xl border border-border bg-background shadow-sm hover:shadow-md transition-all duration-200">
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0 text-muted-foreground hover:text-foreground"
+                      disabled={loading}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent side="top" className="w-64 p-3 bg-popover border shadow-lg z-50">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Attach files</p>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        className="w-full justify-start h-auto p-3 hover:bg-accent rounded-lg"
+                        onClick={handleFileUpload}
+                      >
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        <div className="text-left">
+                          <div className="text-sm font-medium">Choose files</div>
+                          <div className="text-xs text-muted-foreground">Images, documents, videos</div>
+                        </div>
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                
+                <Input
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Ask anything"
+                  className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-0 h-auto py-2"
+                  disabled={loading}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      sendMessage(e as any);
+                    }
+                  }}
+                />
+                
+                <div className="flex items-center gap-2">
+                  {/* Microphone button */}
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0"
+                    className="h-8 w-8 p-0 hover:bg-accent rounded-full flex-shrink-0 text-muted-foreground hover:text-foreground"
                     disabled={loading}
                   >
-                    <Paperclip className="h-4 w-4" />
+                    <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M7 4a3 3 0 016 0v4a3 3 0 11-6 0V4zm4 10.93A7.001 7.001 0 0017 8a1 1 0 10-2 0A5 5 0 015 8a1 1 0 00-2 0 7.001 7.001 0 006 6.93V17H6a1 1 0 100 2h8a1 1 0 100-2h-3v-2.07z" clipRule="evenodd" />
+                    </svg>
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent side="top" className="w-64 p-3 bg-popover border shadow-lg z-50">
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Attach files</p>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      className="w-full justify-start h-auto p-3 hover:bg-accent rounded-lg"
-                      onClick={handleFileUpload}
-                    >
-                      <Paperclip className="h-4 w-4 mr-2" />
-                      <div className="text-left">
-                        <div className="text-sm font-medium">Choose files</div>
-                        <div className="text-xs text-muted-foreground">Images, documents, videos</div>
+                  
+                  {/* Send button */}
+                  <Button 
+                    type="submit" 
+                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                    size="sm"
+                    className={`rounded-full h-8 w-8 p-0 flex-shrink-0 transition-all duration-200 min-h-[32px] min-w-[32px] ${
+                      (input.trim() || selectedFiles.length > 0) && !loading 
+                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm' 
+                        : 'bg-muted text-muted-foreground cursor-not-allowed'
+                    }`}
+                  >
+                    {loading ? (
+                      <div className="animate-spin">
+                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full" />
                       </div>
-                    </Button>
-                  </div>
-                </PopoverContent>
-              </Popover>
-              
-              <Input
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message..."
-                className="flex-1 border-0 bg-transparent placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 text-base resize-none min-h-0 h-auto py-2"
-                disabled={loading}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage(e as any);
-                  }
-                }}
-              />
-              
-              <Button 
-                type="submit" 
-                disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                size="sm"
-                className={`rounded-full h-8 w-8 p-0 flex-shrink-0 transition-all duration-200 min-h-[32px] min-w-[32px] ${
-                  (input.trim() || selectedFiles.length > 0) && !loading 
-                    ? 'bg-primary hover:bg-primary/90 text-primary-foreground hover:scale-105 shadow-sm' 
-                    : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }`}
-              >
-                {loading ? (
-                  <div className="animate-pulse-subtle">
-                    <div className="w-4 h-4 rounded-full bg-current" />
-                  </div>
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-              </Button>
+                    ) : (
+                      <Send className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+              </div>
             </div>
             
             {/* Hidden file input */}
@@ -657,8 +700,8 @@ export default function Chat() {
               accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.ppt,.pptx,.xls,.xlsx"
             />
             
-            <p className="text-xs text-muted-foreground text-center">
-              adamGPT can make mistakes. Consider checking important information.
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              ChatGPT can make mistakes. Check important info.
             </p>
           </form>
         </div>
