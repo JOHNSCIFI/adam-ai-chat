@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Navigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 
@@ -70,39 +68,40 @@ export default function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <div className="p-8">
-        <div className="text-xl font-semibold text-gray-900">AdamGPT</div>
+      <div className="px-8 pt-8 pb-4">
+        <div className="text-xl font-semibold text-black">AdamGPT</div>
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex items-center justify-center px-8">
-        <div className="w-full max-w-sm space-y-6">
+      <div className="flex items-center justify-center px-8" style={{ minHeight: 'calc(100vh - 200px)' }}>
+        <div className="w-full max-w-sm">
           {/* Title Section */}
-          <div className="text-center space-y-3">
-            <h1 className="text-3xl font-semibold text-gray-900 mb-2">Log in or sign up</h1>
-            <p className="text-base text-gray-600">
-              You'll get smarter responses and can upload files, images, and more.
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-normal text-black mb-3">Log in or sign up</h1>
+            <p className="text-base text-gray-600 leading-relaxed">
+              You'll get smarter responses and can upload<br />
+              files, images, and more.
             </p>
           </div>
 
           {/* Email Form */}
-          <form onSubmit={handleEmailSubmit} className="space-y-4">
-            <div>
-              <Input
+          <form onSubmit={handleEmailSubmit} className="mb-4">
+            <div className="mb-4">
+              <input
                 type="email"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-14 px-4 text-base border border-gray-300 rounded-xl bg-white text-gray-900 placeholder-gray-500 focus:border-gray-400 focus:outline-none focus:ring-0 transition-colors"
+                className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
               />
             </div>
             <button
               type="submit"
               disabled={loading || !email}
-              className="w-full h-14 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors flex items-center justify-center"
+              className="w-full h-12 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors flex items-center justify-center"
             >
               {loading ? (
                 <>
@@ -118,10 +117,10 @@ export default function Auth() {
           {/* OR Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300" />
+              <div className="w-full border-t border-gray-200" />
             </div>
             <div className="relative flex justify-center">
-              <span className="px-4 bg-gray-50 text-gray-500 text-sm font-medium">OR</span>
+              <span className="px-4 bg-white text-gray-500 text-sm font-medium">OR</span>
             </div>
           </div>
 
@@ -129,7 +128,7 @@ export default function Auth() {
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full h-14 border border-gray-300 rounded-xl bg-white text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center font-medium"
+            className="w-full h-12 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center font-medium"
           >
             {googleLoading ? (
               <>
@@ -153,9 +152,9 @@ export default function Auth() {
 
       {/* Footer */}
       <div className="pb-8">
-        <div className="text-center text-sm text-gray-500">
+        <div className="text-center text-sm text-gray-500 space-x-1">
           <a href="#" className="hover:underline">Terms of Use</a>
-          <span className="mx-2">|</span>
+          <span>|</span>
           <a href="#" className="hover:underline">Privacy Policy</a>
         </div>
       </div>
