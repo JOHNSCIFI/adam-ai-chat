@@ -28,7 +28,7 @@ interface FileAttachment {
 
 export default function Chat() {
   const { chatId } = useParams();
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const { toast } = useToast();
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -380,7 +380,9 @@ export default function Chat() {
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
-                <h3 className="text-2xl font-normal mb-6 text-foreground">Where should we begin?</h3>
+                <h3 className="text-2xl font-normal mb-6 text-foreground">
+                  How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
+                </h3>
               </div>
             </div>
           ) : (

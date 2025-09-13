@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
@@ -54,6 +54,7 @@ export function ChatSidebar() {
   const { user, signOut, userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { chatId } = useParams();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
@@ -141,7 +142,30 @@ export function ChatSidebar() {
 
     if (!error) {
       setChats(prev => prev.filter(chat => chat.id !== chatId));
-      navigate('/');
+      // Create a new chat after deletion
+      handleNewChat();
+    }
+  };
+
+  const handleChatSwitch = async (newChatId: string) => {
+    // Check if current chat is empty and delete it
+    if (chatId && chatId !== newChatId) {
+      const { data: messages } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('chat_id', chatId)
+        .limit(1);
+
+      // If no messages, delete the empty chat
+      if (messages && messages.length === 0) {
+        await supabase
+          .from('chats')
+          .delete()
+          .eq('id', chatId);
+        
+        // Update the chats list to remove the deleted chat
+        setChats(prev => prev.filter(chat => chat.id !== chatId));
+      }
     }
   };
 
@@ -189,6 +213,7 @@ export function ChatSidebar() {
                       <div className="group relative">
                         <NavLink
                           to={`/chat/${chat.id}`}
+                          onClick={() => handleChatSwitch(chat.id)}
                           className={({ isActive }) =>
                             `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
                               isActive
@@ -197,7 +222,6 @@ export function ChatSidebar() {
                             }`
                           }
                         >
-                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
                           {editingChatId === chat.id ? (
                             <input
                               type="text"
