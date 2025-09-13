@@ -246,33 +246,36 @@ export function ChatSidebar() {
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border md:w-60 w-16" collapsible="icon">
-        <SidebarHeader className="p-4">
+      <Sidebar className="border-r border-sidebar-border" collapsible="icon">
+        <SidebarHeader className="p-4 border-b border-sidebar-border">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 bg-sidebar-primary rounded-sm flex items-center justify-center">
-                <MessageSquare className="w-4 h-4 text-sidebar-primary-foreground" />
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/80 rounded-lg flex items-center justify-center shadow-sm">
+                <MessageSquare className="w-4 h-4 text-primary-foreground" />
               </div>
               {!collapsed && (
-                <h1 className="text-lg font-semibold text-sidebar-foreground hidden md:block">adamGPT</h1>
+                <div>
+                  <h1 className="text-lg font-bold text-sidebar-foreground">adamGPT</h1>
+                  <p className="text-xs text-sidebar-muted-foreground">AI Assistant</p>
+                </div>
               )}
             </div>
-            <SidebarTrigger className="hover:bg-sidebar-accent rounded-md md:hidden" />
+            <SidebarTrigger className="hover:bg-sidebar-accent rounded-lg p-1.5 transition-colors" />
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="px-2">
+        <SidebarContent className="px-3 py-2">
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
                 <SidebarMenuItem>
                   <Button 
                     onClick={handleNewChat}
-                    className="w-full justify-center md:justify-start bg-sidebar-primary hover:bg-sidebar-primary/90 text-sidebar-primary-foreground"
-                    size={collapsed ? "sm" : "default"}
+                    className="w-full justify-start bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary/80 text-primary-foreground shadow-sm transition-all duration-200 hover:shadow-md"
+                    size="default"
                   >
-                    <Plus className={collapsed || window.innerWidth < 768 ? "h-4 w-4" : "h-4 w-4 mr-2"} />
-                    <span className="hidden md:inline">{!collapsed && "Create New Chat"}</span>
+                    <Plus className="h-4 w-4 mr-2" />
+                    {!collapsed && <span>New Chat</span>}
                   </Button>
                 </SidebarMenuItem>
               </SidebarMenu>
@@ -281,27 +284,33 @@ export function ChatSidebar() {
 
           <SidebarSeparator />
 
-          <div className="hidden md:block">
-            {!collapsed && (
-              <SidebarGroup>
-                <div className="flex items-center justify-between px-2 py-1">
-                  <span className="text-xs font-medium text-sidebar-muted-foreground uppercase tracking-wider">
-                    Recent Chats
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
-                    className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground"
-                  >
-                    <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
-                  </Button>
-                </div>
+          <SidebarGroup className="mt-4">
+            <div className="flex items-center justify-between px-2 py-2">
+              <span className="text-xs font-semibold text-sidebar-foreground uppercase tracking-wider">
+                Recent Chats
+              </span>
+              {!collapsed && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setChatsPanelCollapsed(!chatsPanelCollapsed)}
+                  className="h-6 w-6 p-0 hover:bg-sidebar-accent text-sidebar-muted-foreground hover:text-sidebar-foreground rounded-md transition-colors"
+                >
+                  <ChevronUp className={`h-3 w-3 transition-transform duration-200 ${chatsPanelCollapsed ? 'rotate-180' : ''}`} />
+                </Button>
+              )}
+            </div>
               
-              <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[600px] opacity-100'}`}>
-                <SidebarGroupContent>
-                  <SidebarMenu>
-                    {chats.map((chat) => (
+            <div className={`transition-all duration-300 ease-out ${chatsPanelCollapsed ? 'max-h-0 opacity-0 overflow-hidden' : 'max-h-[500px] opacity-100'}`}>
+              <SidebarGroupContent>
+                <SidebarMenu className="space-y-1">
+                  {chats.length === 0 ? (
+                    <div className="px-2 py-4 text-center">
+                      <p className="text-xs text-sidebar-muted-foreground">No chats yet</p>
+                      <p className="text-xs text-sidebar-muted-foreground mt-1">Start a new conversation</p>
+                    </div>
+                  ) : (
+                    chats.map((chat) => (
                       <SidebarMenuItem key={chat.id}>
                         <div 
                           className="group relative"
@@ -309,8 +318,8 @@ export function ChatSidebar() {
                           onMouseLeave={() => setHoveredChatId(null)}
                         >
                           {editingChatId === chat.id ? (
-                            <div className="flex items-center gap-1 px-2 py-1.5 text-sm">
-                              <MessageSquare className="h-4 w-4 text-sidebar-foreground/60 flex-shrink-0" />
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent/50">
+                              <MessageSquare className="h-3 w-3 text-sidebar-foreground/60 flex-shrink-0" />
                               <Input
                                 value={editTitle}
                                 onChange={(e) => setEditTitle(e.target.value)}
@@ -322,14 +331,14 @@ export function ChatSidebar() {
                                   }
                                 }}
                                 onBlur={() => handleRenameChat(chat.id, editTitle)}
-                                className="h-6 text-xs bg-sidebar-accent border-sidebar-border"
+                                className="h-6 text-xs bg-background border-border flex-1"
                                 autoFocus
                               />
                               <div className="flex gap-1 flex-shrink-0">
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  className="h-5 w-5 p-0 hover:bg-primary hover:text-primary-foreground rounded-md"
                                   onClick={() => handleRenameChat(chat.id, editTitle)}
                                 >
                                   <Check className="h-3 w-3" />
@@ -337,7 +346,7 @@ export function ChatSidebar() {
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                                  className="h-5 w-5 p-0 hover:bg-muted rounded-md"
                                   onClick={cancelEditing}
                                 >
                                   <X className="h-3 w-3" />
@@ -345,26 +354,29 @@ export function ChatSidebar() {
                               </div>
                             </div>
                           ) : (
-                            <div className="flex items-center">
-                              <SidebarMenuButton asChild className="flex-1 pr-0">
-                                  <NavLink 
+                            <div className="flex items-center group">
+                              <SidebarMenuButton asChild className="flex-1 pr-8">
+                                <NavLink 
                                   to={`/chat/${chat.id}`} 
                                   className={({ isActive }) =>
-                                    isActive 
-                                      ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-sm" 
-                                      : "hover:bg-sidebar-accent/30 text-sidebar-foreground"
+                                    `flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 ${
+                                      isActive 
+                                        ? "bg-primary/10 text-primary font-medium border border-primary/20" 
+                                        : "hover:bg-sidebar-accent/50 text-sidebar-foreground"
+                                    }`
                                   }
                                 >
-                                  <span className="truncate">{chat.title}</span>
+                                  <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                  {!collapsed && <span className="truncate text-sm">{chat.title}</span>}
                                 </NavLink>
                               </SidebarMenuButton>
                               
-                              {hoveredChatId === chat.id && (
-                                <div className="flex gap-1 pr-2 flex-shrink-0">
+                              {!collapsed && hoveredChatId === chat.id && (
+                                <div className="absolute right-2 flex gap-1 bg-sidebar-background/80 backdrop-blur-sm rounded-md p-1">
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0 hover:bg-sidebar-accent opacity-70 hover:opacity-100"
+                                    className="h-5 w-5 p-0 hover:bg-sidebar-accent rounded-sm"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
@@ -376,73 +388,72 @@ export function ChatSidebar() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground opacity-70 hover:opacity-100"
+                                    className="h-5 w-5 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-sm"
                                     onClick={(e) => {
                                       e.preventDefault();
                                       e.stopPropagation();
-                                      handleDeleteChat(chat.id);
-                                    }}
-                                  >
-                                    <Trash2 className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </SidebarMenuItem>
-                    ))}
-                  </SidebarMenu>
-                </SidebarGroupContent>
-              </div>
-            </SidebarGroup>
-            )}
-          </div>
+                                       handleDeleteChat(chat.id);
+                                     }}
+                                   >
+                                     <Trash2 className="h-3 w-3" />
+                                   </Button>
+                                 </div>
+                               )}
+                             </div>
+                           )}
+                         </div>
+                       </SidebarMenuItem>
+                     ))
+                   )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </div>
+          </SidebarGroup>
         </SidebarContent>
 
-        <SidebarFooter className="p-2">
+        <SidebarFooter className="p-3 border-t border-sidebar-border">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent"
+                className="w-full justify-start p-3 h-auto hover:bg-sidebar-accent rounded-lg transition-colors"
               >
                 <div className="flex items-center gap-3 w-full">
-                  <Avatar className="h-8 w-8">
+                  <Avatar className="h-8 w-8 border-2 border-primary/20">
                     <AvatarImage src="" />
-                    <AvatarFallback className="text-xs bg-sidebar-primary text-sidebar-primary-foreground">
+                    <AvatarFallback className="text-xs bg-gradient-to-br from-primary to-primary/80 text-primary-foreground font-semibold">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
                   {!collapsed && (
                     <div className="flex-1 text-left">
-                      <p className="text-sm font-medium text-sidebar-foreground">{getUserDisplayName()}</p>
-                      <p className="text-xs text-sidebar-foreground/60">Free</p>
+                      <p className="text-sm font-semibold text-sidebar-foreground">{getUserDisplayName()}</p>
+                      <p className="text-xs text-sidebar-muted-foreground">Free Plan</p>
                     </div>
                   )}
-                  {!collapsed && <ChevronUp className="h-4 w-4 text-sidebar-foreground/60" />}
+                  {!collapsed && <ChevronUp className="h-4 w-4 text-sidebar-muted-foreground transition-transform group-hover:text-sidebar-foreground" />}
                 </div>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent 
               side="top" 
               align="start" 
-              className="w-64 mb-2"
+              className="w-64 mb-2 bg-popover border shadow-lg"
             >
-              <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
+              <DropdownMenuItem onClick={() => setSettingsOpen(true)} className="cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 Settings
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <NavLink to="/help" className="cursor-pointer">
                   <HelpCircle className="mr-2 h-4 w-4" />
-                  Help
+                  Help & Support
                 </NavLink>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>
+              <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive focus:text-destructive">
                 <LogOut className="mr-2 h-4 w-4" />
-                Log out
+                Sign out
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
