@@ -57,28 +57,61 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   const handleSetTheme = (newTheme: typeof theme) => {
     setTheme(newTheme);
-    toast({
-      title: "Theme updated",
-      description: `Switched to ${newTheme} theme`,
-    });
   };
 
   const handleSetAccentColor = (color: typeof accentColor) => {
     setAccentColor(color);
-    toast({
-      title: "Accent color updated", 
-      description: `Switched to ${color} accent color`,
-    });
   };
+
+  const renderContent = () => {
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
+        <div className="flex h-full">
+          {/* Sidebar */}
+          <div className="w-64 bg-muted/20 border-r border-border">
+            <div className="p-4 border-b border-border">
+              <DialogHeader className="text-left">
+                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
+              </DialogHeader>
+            </div>
+            <nav className="p-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
+              {renderContent()}
+            </div>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
 
   const handleLogoutThisDevice = async () => {
     try {
       await signOut();
       onOpenChange(false);
-      toast({
-        title: "Logged out",
-        description: "You have been logged out of this device.",
-      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -96,10 +129,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       
       await signOut();
       onOpenChange(false);
-      toast({
-        title: "Logged out everywhere",
-        description: "You have been logged out of all devices.",
-      });
     } catch (error: any) {
       toast({
         title: "Error",
@@ -334,24 +363,22 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     switch (activeTab) {
       case 'general':
         return (
-          <div className="space-y-6">
+          <div className="space-y-8">
             <div>
-              <h2 className="text-2xl font-semibold mb-1">General</h2>
-              <p className="text-muted-foreground">Customize your interface preferences</p>
+              <h2 className="text-xl font-semibold mb-1 text-foreground">General</h2>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4">
               {/* Theme Setting */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium">Theme</p>
-                  <p className="text-sm text-muted-foreground">Choose your interface theme</p>
+                  <p className="font-medium text-foreground">Theme</p>
                 </div>
                 <Select value={theme} onValueChange={handleSetTheme}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-background border">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-md z-50">
+                  <SelectContent className="bg-background border shadow-lg z-50">
                     {themeOptions.map((option) => {
                       const Icon = option.icon;
                       return (
@@ -370,16 +397,15 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               <Separator />
 
               {/* Accent Color Setting */}
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between py-3">
                 <div>
-                  <p className="font-medium">Accent Color</p>
-                  <p className="text-sm text-muted-foreground">Choose your preferred accent color</p>
+                  <p className="font-medium text-foreground">Accent color</p>
                 </div>
                 <Select value={accentColor} onValueChange={handleSetAccentColor}>
-                  <SelectTrigger className="w-32">
+                  <SelectTrigger className="w-32 bg-background border">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-md z-50">
+                  <SelectContent className="bg-background border shadow-lg z-50">
                     {accentColors.map((color) => (
                       <SelectItem key={color.value} value={color.value}>
                         <div className="flex items-center gap-2">
@@ -391,6 +417,26 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                         </div>
                       </SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <Separator />
+
+              {/* Language Setting */}
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="font-medium text-foreground">Language</p>
+                </div>
+                <Select defaultValue="auto">
+                  <SelectTrigger className="w-32 bg-background border">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-background border shadow-lg z-50">
+                    <SelectItem value="auto">Auto-detect</SelectItem>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
