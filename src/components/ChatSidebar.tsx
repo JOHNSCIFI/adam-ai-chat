@@ -254,7 +254,7 @@ export function ChatSidebar() {
                 <SidebarMenu>
                   {chats.map((chat) => (
                     <SidebarMenuItem key={chat.id}>
-                      <div className="group relative">
+                      <div className="group/chat relative">
                         <NavLink
                           to={`/chat/${chat.id}`}
                           onClick={() => handleChatSwitch(chat.id)}
@@ -287,7 +287,7 @@ export function ChatSidebar() {
                         
                         {/* Edit/Delete buttons - only show on hover for this specific chat */}
                         {editingChatId !== chat.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
