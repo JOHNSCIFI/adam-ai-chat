@@ -241,26 +241,20 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
 
   const navigationItems = [
     { icon: MessageSquare, label: 'New chat', action: createNewChat, variant: 'primary' as const },
-    { icon: Search, label: 'Search chats', action: () => {}, disabled: true },
-    { icon: BookOpen, label: 'Library', action: () => {}, disabled: true },
-    { icon: Sparkles, label: 'Sora', action: () => {}, disabled: true },
-    { icon: FolderOpen, label: 'GPTs', action: () => {}, disabled: true },
-    { icon: FolderOpen, label: 'New project', action: () => {}, disabled: true },
-    { icon: Plus, label: 'Investing', action: () => {}, disabled: true },
   ];
 
   const SidebarContent = () => (
-    <div className="flex h-full flex-col bg-sidebar-background">
+    <div className="flex h-full flex-col bg-[#171717]">
       {/* Header with ChatGPT logo */}
       <div className="flex items-center justify-between px-3 py-4">
         <div className="flex items-center gap-2">
           <div className="flex h-6 w-6 items-center justify-center">
-            <MessageSquare className="h-5 w-5 text-sidebar-foreground" />
+            <MessageSquare className="h-5 w-5 text-white" />
           </div>
           {(!isCollapsed || isMobileOrTablet) && (
             <div className="flex items-center gap-2">
-              <span className="text-lg font-semibold text-sidebar-foreground">ChatGPT</span>
-              <ChevronDown className="h-4 w-4 text-sidebar-muted-foreground" />
+              <span className="text-lg font-semibold text-white">ChatGPT</span>
+              <ChevronDown className="h-4 w-4 text-gray-400" />
             </div>
           )}
         </div>
@@ -269,7 +263,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
             variant="ghost"
             size="sm"
             onClick={onToggleCollapse}
-            className="h-6 w-6 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+            className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-[#2f2f2f]"
           >
             {isCollapsed ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
           </Button>
@@ -282,13 +276,8 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
           <Button
             key={index}
             onClick={item.action}
-            disabled={item.disabled}
-            variant={item.variant === 'primary' ? 'default' : 'ghost'}
-            className={`w-full justify-start h-9 text-sm ${
-              item.variant === 'primary' 
-                ? 'bg-primary hover:bg-primary/90 text-primary-foreground' 
-                : 'text-sidebar-foreground hover:bg-sidebar-accent'
-            } ${item.disabled ? 'opacity-50 cursor-default' : ''}`}
+            variant="ghost"
+            className="w-full justify-start h-9 text-sm bg-[#10a37f] hover:bg-[#0d9467] text-white"
           >
             <item.icon className="h-4 w-4" />
             {(!isCollapsed || isMobileOrTablet) && <span className="ml-3">{item.label}</span>}
@@ -299,7 +288,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
       {/* Chats Section */}
       <div className="flex-1 overflow-y-auto px-3 mt-6">
         {(!isCollapsed || isMobileOrTablet) && chats.length > 0 && (
-          <div className="text-xs font-medium text-sidebar-muted-foreground mb-2 px-2">Chats</div>
+          <div className="text-xs font-medium text-gray-400 mb-2 px-2">Chats</div>
         )}
         <div className="space-y-1">
           {chats.map((chat) => (
@@ -307,8 +296,8 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
               key={chat.id}
               className={`group relative rounded-md transition-colors ${
                 location.pathname === `/chat/${chat.id}` 
-                  ? 'bg-sidebar-accent text-sidebar-accent-foreground' 
-                  : 'hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+                  ? 'bg-[#2f2f2f] text-white' 
+                  : 'hover:bg-[#2f2f2f] hover:text-white'
               }`}
               onMouseEnter={() => setHoveredChatId(chat.id)}
               onMouseLeave={() => setHoveredChatId(null)}
@@ -322,14 +311,14 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                       if (e.key === 'Enter') handleEditSubmit(chat.id);
                       if (e.key === 'Escape') handleEditCancel();
                     }}
-                    className="h-7 bg-background border-border text-xs"
+                    className="h-7 bg-[#343541] border-[#4a4a4a] text-white text-xs"
                     autoFocus
                   />
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => handleEditSubmit(chat.id)}
-                    className="h-7 w-7 p-0 text-primary hover:bg-primary/10"
+                    className="h-7 w-7 p-0 text-[#10a37f] hover:bg-[#10a37f]/10"
                   >
                     <Check className="h-3 w-3" />
                   </Button>
@@ -337,7 +326,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                     size="sm"
                     variant="ghost"
                     onClick={handleEditCancel}
-                    className="h-7 w-7 p-0 text-muted-foreground hover:bg-accent"
+                    className="h-7 w-7 p-0 text-gray-400 hover:bg-[#404040]"
                   >
                     <X className="h-3 w-3" />
                   </Button>
@@ -348,17 +337,17 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                   className="flex items-center gap-3 px-3 py-2 text-sm rounded-md"
                   onClick={() => isMobileOrTablet && setIsDrawerOpen(false)}
                 >
-                  <MessageSquare className="h-4 w-4 flex-shrink-0 text-sidebar-muted-foreground" />
+                  <MessageSquare className="h-4 w-4 flex-shrink-0 text-gray-400" />
                   {(!isCollapsed || isMobileOrTablet) && (
                     <>
-                      <span className="flex-1 truncate text-sidebar-foreground">{chat.title}</span>
+                      <span className="flex-1 truncate text-gray-300">{chat.title}</span>
                       {hoveredChatId === chat.id && (
                         <div className="flex items-center gap-1 opacity-100">
                           <Button
                             size="sm"
                             variant="ghost"
                             onClick={(e) => handleEditStart(chat, e)}
-                            className="h-6 w-6 p-0 text-sidebar-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-white hover:bg-[#404040]"
                           >
                             <Edit3 className="h-3 w-3" />
                           </Button>
@@ -366,7 +355,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                             size="sm"
                             variant="ghost"
                             onClick={(e) => deleteChat(chat.id, e)}
-                            className="h-6 w-6 p-0 text-sidebar-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                            className="h-6 w-6 p-0 text-gray-400 hover:text-red-500 hover:bg-red-500/10"
                           >
                             <Trash2 className="h-3 w-3" />
                           </Button>
@@ -382,12 +371,12 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
       </div>
 
       {/* User Profile Section */}
-      <div className="border-t border-sidebar-border p-3">
+      <div className="border-t border-[#303030] p-3">
         <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start p-2 h-auto hover:bg-sidebar-accent rounded-md"
+              className="w-full justify-start p-2 h-auto hover:bg-[#2f2f2f] rounded-md"
             >
               <div className="flex items-center gap-3 min-w-0 w-full">
                 <Avatar className="h-8 w-8">
@@ -400,15 +389,15 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                   <div className="flex-1 min-w-0 text-left">
                     <div className="flex items-center justify-between">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium text-sidebar-foreground truncate">
+                        <p className="text-sm font-medium text-white truncate">
                           {getDisplayName()}
                         </p>
-                        <p className="text-xs text-sidebar-muted-foreground">Free</p>
+                        <p className="text-xs text-gray-400">Free</p>
                       </div>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs text-sidebar-muted-foreground hover:text-sidebar-foreground h-6 px-2"
+                        className="text-xs text-gray-400 hover:text-white h-6 px-2"
                         onClick={(e) => {
                           e.stopPropagation();
                           // Handle upgrade click
@@ -425,9 +414,9 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
           <DropdownMenuContent
             align="end"
             side="top"
-            className="w-64 mb-2 bg-popover border-border shadow-lg rounded-lg"
+            className="w-64 mb-2 bg-[#2f2f2f] border-[#4a4a4a] shadow-lg rounded-lg"
           >
-            <div className="px-3 py-3 border-b border-border">
+            <div className="px-3 py-3 border-b border-[#4a4a4a]">
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={userProfile?.avatar_url} />
@@ -436,39 +425,39 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">
+                  <p className="text-sm font-medium text-white truncate">
                     {getDisplayName()}
                   </p>
-                  <p className="text-xs text-muted-foreground">Free plan</p>
+                  <p className="text-xs text-gray-400">Free plan</p>
                 </div>
               </div>
             </div>
-            <DropdownMenuItem className="cursor-pointer flex items-center gap-3">
+            <DropdownMenuItem className="cursor-pointer flex items-center gap-3 text-gray-300 hover:text-white hover:bg-[#404040]">
               <Crown className="h-4 w-4" />
               <span>Upgrade plan</span>
             </DropdownMenuItem>
-            <DropdownMenuItem className="cursor-pointer flex items-center gap-3">
+            <DropdownMenuItem className="cursor-pointer flex items-center gap-3 text-gray-300 hover:text-white hover:bg-[#404040]">
               <Palette className="h-4 w-4" />
               <span>Customize ChatGPT</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => setSettingsOpen(true)}
-              className="cursor-pointer flex items-center gap-3"
+              className="cursor-pointer flex items-center gap-3 text-gray-300 hover:text-white hover:bg-[#404040]"
             >
               <Settings className="h-4 w-4" />
               <span>Settings</span>
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => navigate('/help')}
-              className="cursor-pointer flex items-center gap-3"
+              className="cursor-pointer flex items-center gap-3 text-gray-300 hover:text-white hover:bg-[#404040]"
             >
               <HelpCircle className="h-4 w-4" />
               <span>Help</span>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-[#4a4a4a]" />
             <DropdownMenuItem 
               onClick={handleSignOut}
-              className="cursor-pointer text-destructive focus:text-destructive flex items-center gap-3"
+              className="cursor-pointer text-red-400 hover:text-red-300 hover:bg-red-500/10 flex items-center gap-3"
             >
               <LogOut className="h-4 w-4" />
               <span>Log out</span>
@@ -493,7 +482,7 @@ export function ResponsiveSidebar({ className, isCollapsed = false, onToggleColl
             <Menu className="h-5 w-5" />
           </Button>
         </DrawerTrigger>
-        <DrawerContent className="h-[85vh] bg-sidebar-background">
+        <DrawerContent className="h-[85vh] bg-[#171717]">
           <DrawerHeader className="pb-0">
             <DrawerTitle className="sr-only">Navigation</DrawerTitle>
           </DrawerHeader>

@@ -397,28 +397,15 @@ export default function Chat() {
   }
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-background relative">
-      {/* Top Header with Share button */}
-      <div className={`fixed top-0 right-0 z-20 bg-background/95 backdrop-blur-sm border-b border-border ${
+    <div className="flex-1 flex flex-col h-full bg-[#343541] relative">
+      {/* Top Header */}
+      <div className={`fixed top-0 right-0 z-20 bg-[#343541] backdrop-blur-sm border-b border-[#4a4a4a] ${
         isMobileOrTablet ? 'left-0' : (isCollapsed ? 'left-16' : 'left-80')
       } transition-all duration-300`}>
         <div className="flex items-center justify-between px-4 py-3">
           <div className="flex items-center gap-3">
-            <h1 className="text-lg font-semibold text-foreground">ChatGPT</h1>
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              <svg className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
-              </svg>
-              Share
-            </Button>
-            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </Button>
+            <h1 className="text-lg font-semibold text-white">ChatGPT</h1>
+            <ChevronDown className="h-4 w-4 text-gray-400" />
           </div>
         </div>
       </div>
