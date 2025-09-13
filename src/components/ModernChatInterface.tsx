@@ -424,18 +424,18 @@ export function ModernChatInterface() {
                             <ReactMarkdown 
                               remarkPlugins={[remarkGfm]}
                               components={{
-                                code: ({node, inline, className, children, ...props}) => {
-                                  const match = /language-(\w+)/.exec(className || '');
-                                  return !inline ? (
-                                    <div className="relative">
-                                      <pre className={`${className} bg-muted/50 rounded-lg p-4 overflow-x-auto text-sm`} {...props}>
-                                        <code>{children}</code>
-                                      </pre>
-                                    </div>
-                                  ) : (
+                                code: ({className, children, ...props}: any) => {
+                                  const isInline = !props.node || props.node.tagName !== 'pre';
+                                  return isInline ? (
                                     <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm" {...props}>
                                       {children}
                                     </code>
+                                  ) : (
+                                    <div className="relative">
+                                      <pre className={`${className} bg-muted/50 rounded-lg p-4 overflow-x-auto text-sm`}>
+                                        <code>{children}</code>
+                                      </pre>
+                                    </div>
                                   );
                                 },
                                 p: ({children}) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
