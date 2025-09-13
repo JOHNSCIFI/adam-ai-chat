@@ -17,7 +17,6 @@ import {
   Sun,
   Moon,
   Trash2,
-  ChevronDown,
   Mail,
   Shield,
   Check
@@ -51,6 +50,7 @@ const accentColors = [
 
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [activeTab, setActiveTab] = React.useState('general');
+  const [isExporting, setIsExporting] = React.useState(false);
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
   const { toast } = useToast();
   const { user, signOut, userProfile } = useAuth();
@@ -62,51 +62,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const handleSetAccentColor = (color: typeof accentColor) => {
     setAccentColor(color);
   };
-
-  const renderContent = () => {
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
-        <div className="flex h-full">
-          {/* Sidebar */}
-          <div className="w-64 bg-muted/20 border-r border-border">
-            <div className="p-4 border-b border-border">
-              <DialogHeader className="text-left">
-                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
-              </DialogHeader>
-            </div>
-            <nav className="p-2">
-              {sidebarItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => setActiveTab(item.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
-                      activeTab === item.id
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
-                    }`}
-                  >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-
-          {/* Main Content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
-              {renderContent()}
-            </div>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
 
   const handleLogoutThisDevice = async () => {
     try {
@@ -123,7 +78,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   const handleLogoutAllDevices = async () => {
     try {
-      // This will invalidate all sessions globally
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) throw error;
       
@@ -137,8 +91,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       });
     }
   };
-
-  const [isExporting, setIsExporting] = React.useState(false);
 
   const handleExportData = async () => {
     if (!user) return;
@@ -514,93 +466,69 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             
             <div className="space-y-6">
               {/* Multi-Factor Authentication */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Multi-Factor Authentication</p>
-                  <p className="text-sm text-muted-foreground">Add an extra layer of security to your account</p>
-                </div>
-                <Button variant="outline" disabled>
-                  Coming Soon
-                </Button>
-              </div>
-
-              <Separator />
-
-              {/* Log out this device */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Log out of this device</p>
-                  <p className="text-sm text-muted-foreground">End your current session on this device only</p>
-                </div>
-                <Button variant="outline" onClick={handleLogoutThisDevice}>
-                  Log Out
-                </Button>
-              </div>
-
-              <Separator />
-
-              {/* Log out all devices */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Log out of all devices</p>
-                  <p className="text-sm text-muted-foreground">End all active sessions across all devices</p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline">
-                      Log Out Everywhere
+              <div>
+                <p className="font-medium mb-3">Multi-Factor Authentication</p>
+                <div className="p-4 bg-muted/30 rounded-lg border">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-medium">Two-Factor Authentication</p>
+                      <p className="text-sm text-muted-foreground">Not available yet</p>
+                    </div>
+                    <Button variant="outline" disabled>
+                      Enable
                     </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Log out of all devices?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will end all active sessions across all devices where you're currently signed in. You'll need to sign in again on each device.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleLogoutAllDevices}>
-                        Log Out Everywhere
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                  </div>
+                </div>
               </div>
 
               <Separator />
 
-              {/* Delete Account */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-destructive">Delete Account</p>
-                  <p className="text-sm text-muted-foreground">Permanently delete your account and all data</p>
+              {/* Session Management */}
+              <div>
+                <p className="font-medium mb-3">Session Management</p>
+                <div className="space-y-3">
+                  <div className="p-4 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">Current Device</p>
+                        <p className="text-sm text-muted-foreground">You are currently signed in on this device</p>
+                      </div>
+                      <Button variant="outline" onClick={handleLogoutThisDevice}>
+                        Sign Out
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="p-4 bg-muted/30 rounded-lg border">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-medium">All Devices</p>
+                        <p className="text-sm text-muted-foreground">Sign out of all devices and sessions</p>
+                      </div>
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button variant="outline">
+                            Sign Out Everywhere
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Sign out of all devices?</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This will sign you out of all devices and sessions. You'll need to sign in again on each device.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLogoutAllDevices}>
+                              Sign Out Everywhere
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                  </div>
                 </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete your account and remove all your chats and data from our servers.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteAccount}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete Account
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
               </div>
             </div>
           </div>
@@ -611,55 +539,96 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           <div className="space-y-6">
             <div>
               <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
-              <p className="text-muted-foreground">Manage your data and privacy settings</p>
+              <p className="text-muted-foreground">Manage your data and account</p>
             </div>
             
             <div className="space-y-6">
-              {/* Export Data */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Export Data</p>
-                  <p className="text-sm text-muted-foreground">Download all your chats and account information</p>
-                </div>
-                <Button variant="outline" onClick={handleExportData} disabled={isExporting}>
-                  {isExporting ? "Exporting..." : "Export Data"}
-                </Button>
-              </div>
-
-              <Separator />
+              {/* Data Export */}
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold mb-1">Export Data</h3>
+                      <p className="text-sm text-muted-foreground">Download all your conversations and account data</p>
+                    </div>
+                    <Button 
+                      onClick={handleExportData}
+                      disabled={isExporting}
+                      variant="outline"
+                    >
+                      {isExporting ? 'Exporting...' : 'Export'}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Delete All Chats */}
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-destructive">Delete All Chats</p>
-                  <p className="text-sm text-muted-foreground">Permanently delete all your conversations</p>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="destructive" size="sm">
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete All Chats
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Delete all conversations?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This action cannot be undone. This will permanently delete all your chat conversations and messages.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
-                        onClick={handleDeleteAllChats}
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      >
-                        Delete All Chats
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
+              <Card>
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold mb-1">Delete All Chats</h3>
+                      <p className="text-sm text-muted-foreground">Permanently delete all your conversations</p>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete All
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete all chats?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. All your conversations will be permanently deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteAllChats} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete All Chats
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Delete Account */}
+              <Card className="border-destructive/50">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold mb-1">Delete Account</h3>
+                      <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data</p>
+                    </div>
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="sm">
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete Account
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. Your account and all associated data will be permanently deleted.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Delete Account
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         );
@@ -671,41 +640,41 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full h-[600px] max-h-[80vh] p-0 gap-0 fixed-size" aria-describedby="settings-description">
+      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
         <div className="flex h-full">
-          {/* Left Sidebar */}
-          <div className="w-64 bg-muted/20 border-r flex-shrink-0">
-            <div className="p-6 h-full flex flex-col">
-              <DialogHeader className="pb-6 flex-shrink-0">
-                <DialogTitle className="text-xl font-semibold">Settings</DialogTitle>
-                <p id="settings-description" className="sr-only">Customize your adamGPT experience</p>
+          {/* Sidebar */}
+          <div className="w-64 bg-muted/20 border-r border-border">
+            <div className="p-4 border-b border-border">
+              <DialogHeader className="text-left">
+                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
               </DialogHeader>
-              
-              <nav className="space-y-1 flex-1">
-                {sidebarItems.map((item) => {
-                  const Icon = item.icon;
-                  return (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                        activeTab === item.id
-                          ? 'bg-primary/10 text-primary font-medium'
-                          : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-                      }`}
-                    >
-                      <Icon className="h-5 w-5" />
-                      {item.label}
-                    </button>
-                  );
-                })}
-              </nav>
             </div>
+            <nav className="p-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 p-6 overflow-y-auto min-h-0">
-            {renderContent()}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
+              {renderContent()}
+            </div>
           </div>
         </div>
       </DialogContent>
