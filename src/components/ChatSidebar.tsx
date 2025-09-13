@@ -175,27 +175,6 @@ export function ChatSidebar() {
         </SidebarHeader>
 
         <SidebarContent className="px-2">
-          {/* Navigation Items - like ChatGPT */}
-          <SidebarGroup>
-            <SidebarGroupContent>
-              <SidebarMenu>
-                <SidebarMenuItem>
-                  <div className="flex items-center gap-3 px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer">
-                    <Search className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Search chats</span>}
-                  </div>
-                </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <div className="flex items-center gap-3 px-3 py-2 text-sidebar-foreground hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer">
-                    <Library className="h-4 w-4" />
-                    {!collapsed && <span className="text-sm">Library</span>}
-                  </div>
-                </SidebarMenuItem>
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-
-          <SidebarSeparator className="my-4" />
 
           {/* Recent Chats */}
           {!collapsed && (
@@ -238,28 +217,30 @@ export function ChatSidebar() {
                           )}
                         </NavLink>
                         
-                        {/* Edit/Delete buttons on hover */}
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-sidebar-accent"
-                            onClick={() => {
-                              setEditingChatId(chat.id);
-                              setEditingTitle(chat.title);
-                            }}
-                          >
-                            <Edit2 className="h-3 w-3" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0 hover:bg-sidebar-accent text-destructive"
-                            onClick={() => handleDeleteChat(chat.id)}
-                          >
-                            <Trash2 className="h-3 w-3" />
-                          </Button>
-                        </div>
+                        {/* Edit/Delete buttons on hover - hide delete when editing */}
+                        {editingChatId !== chat.id && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-sidebar-accent"
+                              onClick={() => {
+                                setEditingChatId(chat.id);
+                                setEditingTitle(chat.title);
+                              }}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 hover:bg-sidebar-accent text-destructive"
+                              onClick={() => handleDeleteChat(chat.id)}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     </SidebarMenuItem>
                   ))}

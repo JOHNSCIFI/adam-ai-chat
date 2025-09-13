@@ -373,25 +373,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                 </Select>
               </div>
 
-              <Separator />
-
-              {/* Language Setting */}
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium text-foreground">Language</p>
-                </div>
-                <Select defaultValue="auto">
-                  <SelectTrigger className="w-32 bg-background border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    <SelectItem value="auto">Auto-detect</SelectItem>
-                    <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="es">Español</SelectItem>
-                    <SelectItem value="fr">Français</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
           </div>
         );

@@ -505,7 +505,7 @@ export default function Chat() {
       </div>
 
       {/* Input area - fixed at bottom like ChatGPT */}
-      <div className="border-t border-border bg-background">
+      <div className="bg-background">
         <div className="max-w-3xl mx-auto px-4 py-6">
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
@@ -526,8 +526,8 @@ export default function Chat() {
           )}
           
           <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-end gap-2 bg-background border border-border rounded-3xl shadow-sm">
-              <div className="flex-1 flex items-end">
+            <div className="flex items-center gap-2 bg-background border border-border rounded-3xl shadow-sm">
+              <div className="flex-1 flex items-center">
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
