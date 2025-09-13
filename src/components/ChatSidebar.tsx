@@ -32,7 +32,8 @@ import {
   Search,
   Library,
   Bot,
-  Folder
+  Folder,
+  PenTool
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -189,10 +190,10 @@ export function ChatSidebar() {
           <div className="flex items-center gap-2">
             <Button 
               onClick={handleNewChat}
-              className="w-full justify-start bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border border-sidebar-border/50 hover:border-sidebar-border transition-all"
+              className="w-full justify-start bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal"
               size="sm"
             >
-              <Plus className="h-4 w-4 mr-2" />
+              <PenTool className="h-4 w-4 mr-2" />
               {!collapsed && <span>New chat</span>}
             </Button>
           </div>
