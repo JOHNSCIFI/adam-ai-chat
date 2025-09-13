@@ -47,21 +47,6 @@ export default function Index() {
     }
   };
 
-  const examplePrompts = [
-    {
-      text: "Create a travel itinerary for a weekend in Paris"
-    },
-    {
-      text: "Write a Python script to analyze data"
-    },
-    {
-      text: "Draft a professional email to a client"
-    },
-    {
-      text: "Explain quantum physics in simple terms"
-    }
-  ];
-
   return (
     <div className="flex-1 flex flex-col bg-background">
       {/* Header - clean like ChatGPT */}
@@ -80,21 +65,6 @@ export default function Index() {
             <h1 className="text-3xl font-normal text-foreground mb-6">
               How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
             </h1>
-          </div>
-
-          {/* Example Prompts - ChatGPT style */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-            {examplePrompts.map((prompt, index) => (
-              <button
-                key={index}
-                onClick={() => handleNewChat(prompt.text)}
-                className="p-4 text-left border border-border rounded-lg hover:bg-accent/50 transition-colors group"
-              >
-                <div className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-                  {prompt.text}
-                </div>
-              </button>
-            ))}
           </div>
         </div>
       </div>

@@ -33,7 +33,8 @@ import {
   Library,
   Bot,
   Folder,
-  MessageCircle
+  MessageCircle,
+  Edit3
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -235,7 +236,7 @@ export function ChatSidebar() {
               className="w-full justify-start bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal"
               size="sm"
             >
-              <MessageCircle className="h-4 w-4 mr-2" />
+              <Edit3 className="h-4 w-4 mr-2" />
               {!collapsed && <span>New chat</span>}
             </Button>
           </div>
@@ -262,7 +263,7 @@ export function ChatSidebar() {
                           to={`/chat/${chat.id}`}
                           onClick={() => handleChatSwitch(chat.id)}
                           className={({ isActive }) =>
-                            `flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-sm ${
+                            `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
                               isActive
                                 ? 'bg-sidebar-accent text-sidebar-foreground'
                                 : 'text-sidebar-foreground hover:bg-sidebar-accent'
@@ -280,21 +281,21 @@ export function ChatSidebar() {
                                   handleRenameChat(chat.id, editingTitle);
                                 }
                               }}
-                              className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-2"
+                              className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-1.5"
                               autoFocus
                             />
                           ) : (
-                            <span className="flex-1 truncate px-3 py-2">{chat.title}</span>
+                            <span className="flex-1 truncate px-3 py-1.5">{chat.title}</span>
                           )}
                         </NavLink>
                         
                         {/* Edit/Delete buttons - only show on hover for this specific chat */}
                         {editingChatId !== chat.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-sidebar rounded px-1">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 hover:bg-sidebar-accent"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
@@ -307,7 +308,7 @@ export function ChatSidebar() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-7 w-7 p-0 hover:bg-sidebar-accent text-destructive"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
