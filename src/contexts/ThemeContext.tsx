@@ -30,18 +30,15 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { user } = useAuth();
 
   useEffect(() => {
-    // Load saved preferences from Supabase if user is authenticated
-    const loadUserPreferences = async () => {
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('theme, accent_color')
-          .eq('user_id', user.id)
-          .single();
+    // Load saved preferences from user metadata if user is authenticated
+    const loadUserPreferences = () => {
+      if (user?.user_metadata) {
+        const userTheme = user.user_metadata.theme as Theme;
+        const userAccent = user.user_metadata.accent_color as AccentColor;
         
-        if (data?.theme) setTheme(data.theme as Theme);
-        if (data?.accent_color) setAccentColor(data.accent_color as AccentColor);
-      } else {
+        if (userTheme) setTheme(userTheme);
+        if (userAccent) setAccentColor(userAccent);
+      } else if (!user) {
         // Fallback to localStorage for non-authenticated users
         const savedTheme = localStorage.getItem('adamgpt-theme') as Theme;
         const savedAccent = localStorage.getItem('adamgpt-accent') as AccentColor;
@@ -78,11 +75,13 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     // Save preferences
     const savePreferences = async () => {
       if (user) {
-        // Save to Supabase for authenticated users
-        await supabase
-          .from('profiles')
-          .update({ theme, accent_color: accentColor })
-          .eq('user_id', user.id);
+        // Save to user metadata for authenticated users
+        await supabase.auth.updateUser({
+          data: { 
+            theme, 
+            accent_color: accentColor 
+          }
+        });
       } else {
         // Fallback to localStorage for non-authenticated users
         localStorage.setItem('adamgpt-theme', theme);

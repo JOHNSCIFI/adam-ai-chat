@@ -209,8 +209,8 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           displayName: profile?.display_name,
           signupMethod: profile?.signup_method,
           accountCreated: profile?.created_at,
-          theme: profile?.theme,
-          accentColor: profile?.accent_color
+          theme: theme,
+          accentColor: accentColor
         },
         statistics: {
           totalChats: chats?.length || 0,

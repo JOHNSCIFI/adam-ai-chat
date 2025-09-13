@@ -9,6 +9,7 @@ import { Moon, Sun, Monitor, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 
 export default function Settings() {
   const [darkMode, setDarkMode] = useState(false);
@@ -17,6 +18,7 @@ export default function Settings() {
   const [isExporting, setIsExporting] = useState(false);
   const { toast } = useToast();
   const { user } = useAuth();
+  const { theme, accentColor } = useTheme();
 
   const handleSave = () => {
     toast({
@@ -141,8 +143,8 @@ export default function Settings() {
           displayName: profile?.display_name,
           signupMethod: profile?.signup_method,
           accountCreated: profile?.created_at,
-          theme: profile?.theme,
-          accentColor: profile?.accent_color
+          theme: theme,
+          accentColor: accentColor
         },
         statistics: {
           totalChats: chats?.length || 0,
