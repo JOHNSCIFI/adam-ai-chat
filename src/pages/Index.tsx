@@ -72,7 +72,20 @@ export default function Index() {
 
           {/* Example Prompts - ChatGPT style */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-8">
-            {examplePrompts.map((prompt, index) => {})}
+            {examplePrompts.map((prompt, index) => (
+              <button
+                key={index}
+                onClick={() => handleNewChat(prompt.text)}
+                className="p-4 text-left border border-border rounded-xl hover:bg-muted/50 transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  {prompt.icon}
+                  <span className="text-sm text-foreground group-hover:text-foreground">
+                    {prompt.text}
+                  </span>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
       </div>
