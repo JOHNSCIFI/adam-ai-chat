@@ -116,6 +116,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
     
+    // Handle case where user already exists
+    if (data?.user && !data?.session && !error) {
+      return { 
+        error: { 
+          message: "An account with this email already exists. Please sign in instead.",
+          code: "user_already_registered"
+        } 
+      };
+    }
+    
     console.log('Signup result:', { error, user: data.user?.email });
     return { error };
   };

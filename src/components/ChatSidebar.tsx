@@ -143,7 +143,17 @@ export function ChatSidebar() {
       .eq('id', chatId);
 
     if (!error) {
-      setChats(prev => prev.filter(chat => chat.id !== chatId));
+      setChats(prev => {
+        const updatedChats = prev.filter(chat => chat.id !== chatId);
+        
+        // If this was the last chat and we're in settings, redirect to home
+        if (updatedChats.length === 0 && window.location.pathname === '/settings') {
+          navigate('/');
+        }
+        
+        return updatedChats;
+      });
+      
       // Navigate to home if we're currently viewing the deleted chat
       if (window.location.pathname.includes(chatId)) {
         navigate('/');
@@ -230,10 +240,12 @@ export function ChatSidebar() {
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
         <SidebarHeader className="p-3">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center">
             <Button 
               onClick={handleNewChat}
-              className="w-full justify-start bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal"
+              className={`bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal ${
+                collapsed ? 'w-8 h-8 p-0 justify-center' : 'w-full justify-center'
+              }`}
               size="sm"
             >
               <Edit3 className="h-4 w-4 mr-2" />
@@ -329,7 +341,9 @@ export function ChatSidebar() {
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full">
+                  <div className={`flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full ${
+                    collapsed ? 'justify-center' : ''
+                  }`}>
                     <Avatar className="h-6 w-6">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                         {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}

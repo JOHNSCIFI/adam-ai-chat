@@ -10,15 +10,18 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 export default function Settings() {
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [emailUpdates, setEmailUpdates] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const { theme, accentColor } = useTheme();
+  const navigate = useNavigate();
 
   const handleSave = () => {
     toast({
@@ -182,6 +185,50 @@ export default function Settings() {
     }
   };
 
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    if (!window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
+      return;
+    }
+
+    setIsDeleting(true);
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session.session) {
+        throw new Error('No active session');
+      }
+
+      const { error } = await supabase.functions.invoke('delete-account', {
+        headers: {
+          Authorization: `Bearer ${session.session.access_token}`
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Account deleted",
+        description: "Your account has been successfully deleted.",
+      });
+
+      // Sign out and redirect
+      await signOut();
+      navigate('/');
+    } catch (error: any) {
+      console.error('Delete account error:', error);
+      toast({
+        title: "Delete failed",
+        description: error.message || "Failed to delete account. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <div className="flex-1 p-6 max-w-2xl mx-auto">
       <div className="space-y-6">
@@ -296,8 +343,12 @@ export default function Settings() {
           <CardContent>
             <div className="space-y-2">
               <Label>Delete Account</Label>
-              <Button variant="destructive" disabled>
-                Delete My Account (Coming Soon)
+              <Button 
+                variant="destructive" 
+                onClick={handleDeleteAccount}
+                disabled={isDeleting}
+              >
+                {isDeleting ? "Deleting..." : "Delete My Account"}
               </Button>
               <p className="text-sm text-muted-foreground">
                 Permanently delete your account and all data
