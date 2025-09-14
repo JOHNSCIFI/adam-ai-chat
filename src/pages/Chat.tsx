@@ -40,6 +40,7 @@ export default function Chat() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -85,23 +86,30 @@ export default function Chat() {
 
   // Check if we need to trigger AI response for new user messages
   useEffect(() => {
-    if (messages.length > 0 && !loading) {
+    if (messages.length > 0 && !loading && !isGeneratingResponse) {
       const lastMessage = messages[messages.length - 1];
-      const secondLastMessage = messages.length > 1 ? messages[messages.length - 2] : null;
       
-      // If last message is from user and there's no assistant response after it, trigger AI
-      if (lastMessage.role === 'user' && 
-          (!secondLastMessage || secondLastMessage.role !== 'assistant' || 
-           secondLastMessage.created_at < lastMessage.created_at)) {
-        console.log('Triggering AI response for user message:', lastMessage.content);
-        triggerAIResponse(lastMessage.content, lastMessage.id);
+      // Only trigger AI if:
+      // 1. Last message is from user
+      // 2. There's no assistant message after this user message
+      if (lastMessage.role === 'user') {
+        const hasAssistantResponseAfter = messages.some(msg => 
+          msg.role === 'assistant' && 
+          new Date(msg.created_at) > new Date(lastMessage.created_at)
+        );
+        
+        if (!hasAssistantResponseAfter) {
+          console.log('Triggering AI response for user message:', lastMessage.content);
+          triggerAIResponse(lastMessage.content, lastMessage.id);
+        }
       }
     }
-  }, [messages, loading]);
+  }, [messages, loading, isGeneratingResponse]);
 
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    if (!chatId || !user || loading) return;
+    if (!chatId || !user || loading || isGeneratingResponse) return;
     
+    setIsGeneratingResponse(true);
     setLoading(true);
     try {
       console.log('Trigger: Send Message to AI (auto)');
@@ -147,6 +155,7 @@ export default function Chat() {
       console.error('Auto AI response error:', error);
     } finally {
       setLoading(false);
+      setIsGeneratingResponse(false);
     }
   };
 
