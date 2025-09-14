@@ -44,9 +44,12 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const processedUserMessages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (chatId && user) {
+      // Clear processed messages when changing chats
+      processedUserMessages.current.clear();
       fetchMessages();
       
       // Set up real-time subscription for new messages
@@ -86,13 +89,14 @@ export default function Chat() {
 
   // Check if we need to trigger AI response for new user messages
   useEffect(() => {
-    if (messages.length > 0 && !loading && !isGeneratingResponse) {
+    if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
       // Only trigger AI if:
       // 1. Last message is from user
       // 2. There's no assistant message after this user message
-      if (lastMessage.role === 'user') {
+      // 3. We haven't already processed this user message
+      if (lastMessage.role === 'user' && !processedUserMessages.current.has(lastMessage.id)) {
         const hasAssistantResponseAfter = messages.some(msg => 
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
@@ -100,17 +104,24 @@ export default function Chat() {
         
         if (!hasAssistantResponseAfter) {
           console.log('Triggering AI response for user message:', lastMessage.content);
+          // Mark this message as processed to prevent duplicate responses
+          processedUserMessages.current.add(lastMessage.id);
           triggerAIResponse(lastMessage.content, lastMessage.id);
         }
       }
     }
-  }, [messages, loading, isGeneratingResponse]);
+  }, [messages, loading, isGeneratingResponse, chatId]);
 
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    if (!chatId || !user || loading || isGeneratingResponse) return;
+    if (!chatId || !user || loading || isGeneratingResponse) {
+      console.log('Skipping AI response - already in progress or missing data');
+      return;
+    }
     
+    console.log(`Starting AI response for message: ${userMessageId}`);
     setIsGeneratingResponse(true);
     setLoading(true);
+    
     try {
       console.log('Trigger: Send Message to AI (auto)');
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
@@ -150,9 +161,16 @@ export default function Chat() {
             content: assistantResponse,
             role: 'assistant'
           }]);
+        
+        console.log(`AI response completed for message: ${userMessageId}`);
+      } else {
+        console.error('Webhook failed with status:', webhookResponse.status);
+        throw new Error(`Webhook failed: ${webhookResponse.status}`);
       }
     } catch (error) {
       console.error('Auto AI response error:', error);
+      // Remove the message from processed set on error so it can be retried
+      processedUserMessages.current.delete(userMessageId);
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
