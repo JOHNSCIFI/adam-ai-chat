@@ -398,10 +398,15 @@ export default function Chat() {
   }
 
   return (
-    <div className="fixed inset-0 flex flex-col bg-background">
-      {/* Messages area - takes all available space above input */}
+    <div className="flex-1 flex flex-col bg-background">
+      {/* Header - same as Index page */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+        <div className="text-xl font-semibold text-foreground">AdamGPT</div>
+      </div>
+
+      {/* Messages area - centered between sidebar and right edge */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="max-w-3xl mx-auto w-full px-4 py-6">
+        <div className="max-w-4xl mx-auto w-full px-6 py-6" style={{ marginLeft: 'calc((100vw - 280px) / 2 - 320px)', marginRight: 'calc((100vw - 280px) / 2 - 320px)' }}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -491,16 +496,12 @@ export default function Chat() {
                           </div>
                         )}
                         
-                        {/* Copy button - only visible on hover, positioned differently for user vs AI messages */}
-                        {hoveredMessage === message.id && (
+                        {/* Copy button - always visible, positioned below message */}
+                        {message.role === 'assistant' && (
                           <Button
                             variant="ghost"
                             size="sm"
-                            className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
-                              message.role === 'user' 
-                                ? 'bottom-0 right-0' 
-                                : 'bottom-0 left-0'
-                            }`}
+                            className="mt-2 h-6 w-6 p-0 bg-background/60 backdrop-blur-sm border border-border/30 shadow-sm hover:bg-muted transition-all opacity-60 hover:opacity-100"
                             onClick={() => copyToClipboard(message.content, message.id)}
                           >
                             {copiedMessageId === message.id ? (
@@ -535,9 +536,9 @@ export default function Chat() {
         </div>
       </div>
 
-      {/* Input area - fixed at bottom like ChatGPT */}
+      {/* Input area - fixed at bottom, centered with messages */}
       <div className="fixed bottom-0 left-0 right-0 bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-4">
+        <div className="max-w-4xl mx-auto px-6 py-4" style={{ marginLeft: 'calc((100vw - 280px) / 2 - 320px)', marginRight: 'calc((100vw - 280px) / 2 - 320px)' }}>
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
