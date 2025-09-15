@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -34,6 +35,27 @@ export default function Chat() {
   const { user, userProfile } = useAuth();
   const { actualTheme } = useTheme();
   const { toast } = useToast();
+  const { state: sidebarState } = useSidebar();
+  const collapsed = sidebarState === 'collapsed';
+
+  // Calculate proper centering based on sidebar state
+  const getContainerStyle = () => {
+    if (collapsed) {
+      // When collapsed, center in the remaining space (accounting for collapsed sidebar width ~56px)
+      return { 
+        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
+      };
+    } else {
+      // When expanded, center in the remaining space (accounting for expanded sidebar width ~280px)
+      return { 
+        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
+      };
+    }
+  };
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -401,7 +423,7 @@ export default function Chat() {
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="max-w-3xl mx-auto w-full px-4 py-6" style={{ marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', marginRight: 'auto' }}>
+        <div className="w-full px-4 py-6" style={getContainerStyle()}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -537,7 +559,7 @@ export default function Chat() {
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background">
-        <div className="max-w-3xl px-4 py-4" style={{ marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', marginRight: 'auto' }}>
+        <div className="px-4 py-4" style={getContainerStyle()}>
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
