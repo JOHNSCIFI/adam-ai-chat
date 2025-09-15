@@ -51,36 +51,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          // Fetch user profile after signin and update with fresh data if email signup
+          // Fetch user profile after signin
           setTimeout(async () => {
-            let { data: profile } = await supabase
+            const { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .single();
-            
-            // If user signed up with email but has gmail, try to get their Google profile info
-            if (profile && profile.signup_method === 'email' && session.user.email?.endsWith('@gmail.com')) {
-              // Try to get updated profile data from user metadata if available
-              const updatedProfile = {
-                ...profile,
-                display_name: session.user.user_metadata?.full_name || profile.display_name,
-                avatar_url: session.user.user_metadata?.avatar_url || session.user.user_metadata?.picture || profile.avatar_url
-              };
-              
-              // Update profile if we got new data
-              if (updatedProfile.display_name !== profile.display_name || updatedProfile.avatar_url !== profile.avatar_url) {
-                await supabase
-                  .from('profiles')
-                  .update({
-                    display_name: updatedProfile.display_name,
-                    avatar_url: updatedProfile.avatar_url
-                  })
-                  .eq('user_id', session.user.id);
-                profile = updatedProfile;
-              }
-            }
-            
             setUserProfile(profile);
           }, 0);
         } else if (event === 'SIGNED_OUT') {

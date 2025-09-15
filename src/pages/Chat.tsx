@@ -29,24 +29,10 @@ interface FileAttachment {
   url: string;
 }
 
-// Get user message background color based on accent color
-const getUserMessageColor = (accent: string): string => {
-  const colorMap: Record<string, string> = {
-    gray: '#F4F4F5',
-    blue: '#E0F2FF', 
-    indigo: '#E0E7FF',
-    purple: '#F3E8FF',
-    green: '#DCFCE7',
-    orange: '#FFEEDB',
-    red: '#FEE2E2'
-  };
-  return colorMap[accent] || colorMap.blue;
-};
-
 export default function Chat() {
   const { chatId } = useParams();
   const { user, userProfile } = useAuth();
-  const { actualTheme, accentColor } = useTheme();
+  const { actualTheme } = useTheme();
   const { toast } = useToast();
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -426,94 +412,20 @@ export default function Chat() {
             </div>
           ) : (
             <div className="space-y-6">
-              {messages.map((message) => {
-                const messageColor = getUserMessageColor(accentColor);
-                const isUser = message.role === 'user';
-                
-                return (
-                  <div 
-                    key={message.id} 
-                    className="group mb-4"
-                    onMouseEnter={() => setHoveredMessage(message.id)}
-                    onMouseLeave={() => setHoveredMessage(null)}
-                  >
-                    <div className={`flex ${isUser ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
-                      <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
-                        <div 
-                          className={`${
-                            message.role === 'user' 
-                              ? 'rounded-2xl text-foreground' 
-                              : 'bg-muted/30 text-foreground rounded-2xl'
-                          } px-3.5 py-2.5 shadow-sm relative`} 
-                          style={{ 
-                            padding: '10px 14px',
-                            backgroundColor: message.role === 'user' ? messageColor : undefined
-                          }}
-                        >
-                        
-                        {/* File attachments */}
-                        {message.file_attachments && message.file_attachments.length > 0 && (
-                          <div className="mb-3 space-y-2">
-                            {message.file_attachments.map((file, index) => (
-                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
-                                message.role === 'user' 
-                                  ? 'bg-black/10 border-white/20' 
-                                  : 'bg-accent border-border'
-                              }`}>
-                                {isImageFile(file.type) && file.url ? (
-                                  <img 
-                                    src={file.url} 
-                                    alt={file.name} 
-                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                    message.role === 'user' 
-                                      ? 'bg-white/20' 
-                                      : 'bg-muted'
-                                  }`}>
-                                    {getFileIcon(file.type)}
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate text-foreground">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFileSize(file.size)}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                        
-                        {message.content && (
-                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current">
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                code({node, className, children, ...props}: any) {
-                                  const match = /language-(\w+)/.exec(className || '');
-                                  const inline = !match;
-                                  return inline ? (
-                                    <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm" {...props}>
-                                      {children}
-                                    </code>
-                                  ) : (
-                                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto">
-                                      <code {...props}>
-                                        {children}
-                                      </code>
-                                    </pre>
-                                  );
-                                },
-                              }}
-                            >
-                              {message.content}
-                            </ReactMarkdown>
-                          </div>
-                        )}
+              {messages.map((message) => (
+                <div 
+                  key={message.id} 
+                  className="group mb-4"
+                  onMouseEnter={() => setHoveredMessage(message.id)}
+                  onMouseLeave={() => setHoveredMessage(null)}
+                >
+                  <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
+                      <div className={`${
+                        message.role === 'user' 
+                          ? 'bg-primary text-primary-foreground rounded-2xl' 
+                          : 'text-foreground rounded-2xl'
+                      } px-3.5 py-2.5 shadow-sm relative`} style={{ padding: '10px 14px' }}>
                         
                         {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
@@ -585,7 +497,7 @@ export default function Chat() {
                             variant="ghost"
                             size="sm"
                             className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
-                              isUser 
+                              message.role === 'user' 
                                 ? 'bottom-0 right-0' 
                                 : 'bottom-0 left-0'
                             }`}
@@ -598,14 +510,13 @@ export default function Chat() {
                             )}
                           </Button>
                         )}
-                       </div>
-                     </div>
-                   </div>
-                 </div>
-               );
-               })}
-               
-               {loading && (
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {loading && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted text-foreground rounded-3xl rounded-bl-lg px-5 py-3.5 shadow-sm">
