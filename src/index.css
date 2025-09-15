@@ -46,6 +46,7 @@ All colors MUST be HSL.
     --accent-green: 142 76% 36%;
     --accent-orange: 25 95% 53%;
     --accent-red: 0 84% 60%;
+    --user-message-bg: 217 100% 94%; /* Default light blue for user messages */
   }
 
   .dark {
@@ -85,6 +86,7 @@ All colors MUST be HSL.
     --chat-ai-bg: 0 0% 8%; /* AI message background */
     --chat-input-bg: 0 0% 12%; /* Input field */
     --chat-hover: 0 0% 15%; /* Hover states */
+    --user-message-bg: 0 0% 18%; /* Default dark user message bg */
   }
 
   /* Accent color variants - comprehensive theming */
@@ -95,6 +97,7 @@ All colors MUST be HSL.
     --accent: 217 91% 60%;
     --ring: 217 91% 60%;
     --sidebar-ring: 217 91% 60%;
+    --user-message-bg: 217 100% 94%; /* #E0F2FF - Light blue for user messages */
   }
 
   .accent-indigo {
@@ -104,6 +107,7 @@ All colors MUST be HSL.
     --accent: 239 84% 67%;
     --ring: 239 84% 67%;
     --sidebar-ring: 239 84% 67%;
+    --user-message-bg: 239 100% 93%; /* #E0E7FF - Light indigo for user messages */
   }
 
   .accent-purple {
@@ -113,6 +117,7 @@ All colors MUST be HSL.
     --accent: 262 83% 58%;
     --ring: 262 83% 58%;
     --sidebar-ring: 262 83% 58%;
+    --user-message-bg: 262 100% 95%; /* #F3E8FF - Light purple for user messages */
   }
 
   .accent-green {
@@ -122,6 +127,7 @@ All colors MUST be HSL.
     --accent: 160 84% 39%;
     --ring: 160 84% 39%;
     --sidebar-ring: 160 84% 39%;
+    --user-message-bg: 160 100% 92%; /* #DCFCE7 - Light green for user messages */
   }
 
   .accent-orange {
@@ -131,6 +137,7 @@ All colors MUST be HSL.
     --accent: 25 95% 53%;
     --ring: 25 95% 53%;
     --sidebar-ring: 25 95% 53%;
+    --user-message-bg: 25 100% 92%; /* #FFEEDB - Light orange for user messages */
   }
 
   .accent-red {
@@ -140,6 +147,7 @@ All colors MUST be HSL.
     --accent: 0 84% 60%;
     --ring: 0 84% 60%;
     --sidebar-ring: 0 84% 60%;
+    --user-message-bg: 0 100% 94%; /* #FEE2E2 - Light red for user messages */
   }
 
   .accent-gray {
@@ -149,6 +157,7 @@ All colors MUST be HSL.
     --accent: 215 16% 47%;
     --ring: 215 16% 47%;
     --sidebar-ring: 215 16% 47%;
+    --user-message-bg: 0 0% 96%; /* #F4F4F5 - Light gray for user messages */
   }
 }
 

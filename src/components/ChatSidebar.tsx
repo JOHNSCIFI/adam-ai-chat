@@ -239,19 +239,17 @@ export function ChatSidebar() {
   return (
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
-        <SidebarHeader className="p-3">
-          <div className="flex items-center justify-center">
-            <Button 
-              onClick={handleNewChat}
-              className={`bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border-none hover:border-none transition-all text-sm font-normal ${
-                collapsed ? 'w-8 h-8 p-0 justify-center' : 'w-full justify-center'
-              }`}
-              size="sm"
-            >
-              <Edit3 className="h-4 w-4 mr-2" />
-              {!collapsed && <span>New chat</span>}
-            </Button>
-          </div>
+        <SidebarHeader className="p-4">
+          <Button 
+            onClick={handleNewChat}
+            className={`w-full rounded-3xl border border-sidebar-border/50 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 ${
+              collapsed ? 'h-10 w-10 p-0 rounded-full' : 'h-12 justify-start gap-3 px-4'
+            }`}
+            size="sm"
+          >
+            <MessageSquare className="h-5 w-5 flex-shrink-0" />
+            {!collapsed && <span className="font-medium">New Chat</span>}
+          </Button>
         </SidebarHeader>
 
         <SidebarContent className="px-2">

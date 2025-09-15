@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
@@ -31,6 +32,7 @@ interface FileAttachment {
 export default function Chat() {
   const { chatId } = useParams();
   const { user, userProfile } = useAuth();
+  const { actualTheme } = useTheme();
   const { toast } = useToast();
   
   const [messages, setMessages] = useState<Message[]>([]);
@@ -534,8 +536,8 @@ export default function Chat() {
       </div>
 
       {/* Input area - fixed at bottom like ChatGPT */}
-      <div className="bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-6">
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+        <div className="max-w-3xl mx-auto px-4 py-4">
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
@@ -555,19 +557,17 @@ export default function Chat() {
           )}
           
           <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-center gap-2 border border-border rounded-3xl shadow-sm" style={{backgroundColor: document.documentElement.classList.contains('dark') ? '#303030' : '#FFFFFF'}}>
-              <div className="flex-1 flex items-center">
+            <div className="flex items-center gap-3">
+              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-2 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 m-2 hover:bg-muted/20 rounded-full"
+                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0"
                     >
-                      <Plus className={`h-5 w-5 ${
-                        document.documentElement.classList.contains('dark') ? 'text-white' : 'text-black'
-                      }`} />
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
@@ -587,31 +587,30 @@ export default function Chat() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask anything..."
-                  className={`flex-1 bg-transparent border-none outline-none py-3 pr-4 resize-none ${
-                    document.documentElement.classList.contains('dark') 
-                      ? 'text-white placeholder-gray-400' 
-                      : 'text-black placeholder-gray-500'
-                  }`}
+                  placeholder="Message AdamGPT..."
+                  className="flex-1 bg-transparent border-none outline-none py-2 px-3 text-foreground placeholder:text-muted-foreground"
                   disabled={false}
                 />
               </div>
               
-              <Button
-                type="submit"
-                disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 m-2 rounded-full hover:bg-muted/20 ${
-                  document.documentElement.classList.contains('dark') ? 'text-white' : 'text-black'
-                }`}
-              >
-                {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-              </Button>
+              {(input.trim() || selectedFiles.length > 0) && (
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  size="sm"
+                  className="h-10 w-10 p-0 rounded-full flex-shrink-0"
+                  style={{ 
+                    backgroundColor: actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))',
+                    color: actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))'
+                  }}
+                >
+                  {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
+                </Button>
+              )}
             </div>
           </form>
           
-          <p className="text-xs text-muted-foreground text-center mt-2">
+          <p className="text-xs text-muted-foreground text-center mt-3">
             AdamGPT can make mistakes. Check important info.
           </p>
         </div>
