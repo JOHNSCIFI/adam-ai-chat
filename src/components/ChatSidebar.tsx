@@ -239,11 +239,11 @@ export function ChatSidebar() {
   return (
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
-        <SidebarHeader className="p-4">
+        <SidebarHeader className="pt-5 px-3 pb-4">
           <Button 
             onClick={handleNewChat}
-            className={`w-full rounded-3xl border border-sidebar-border/50 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 ${
-              collapsed ? 'h-10 w-10 p-0 rounded-full' : 'h-12 justify-start gap-3 px-4'
+            className={`mx-2 rounded-full border border-sidebar-border/30 bg-sidebar/50 hover:bg-sidebar-accent hover:shadow-sm text-sidebar-foreground transition-all duration-200 ${
+              collapsed ? 'h-12 w-12 p-0' : 'h-12 w-full justify-start gap-2 px-4'
             }`}
             size="sm"
           >

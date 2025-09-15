@@ -34,7 +34,7 @@ export default function AuthPage() {
         } else {
           toast({
             title: "Check your email",
-            description: "We've sent you a verification link.",
+            description: "We've sent you a verification link to complete your signup.",
           });
         }
       } else {
