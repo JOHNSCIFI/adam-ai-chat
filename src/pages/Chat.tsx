@@ -422,7 +422,7 @@ export default function Chat() {
                       <div className={`${
                         message.role === 'user' 
                           ? 'bg-primary text-primary-foreground rounded-3xl rounded-br-lg' 
-                          : 'bg-muted text-foreground rounded-3xl rounded-bl-lg'
+                          : 'text-foreground rounded-3xl rounded-bl-lg'
                       } px-5 py-3.5 shadow-sm relative`}>
                         
                         {/* File attachments */}
@@ -489,21 +489,23 @@ export default function Chat() {
                           </div>
                         )}
                         
-                        {/* Copy button on hover for assistant messages */}
-                        {message.role === 'assistant' && hoveredMessage === message.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="absolute -bottom-1 -right-1 h-8 w-8 p-0 bg-background border shadow-sm hover:bg-muted"
-                            onClick={() => copyToClipboard(message.content, message.id)}
-                          >
-                            {copiedMessageId === message.id ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
+                        {/* Copy button - always visible, positioned differently for user vs AI messages */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`absolute h-8 w-8 p-0 bg-background border shadow-sm hover:bg-muted ${
+                            message.role === 'user' 
+                              ? '-bottom-1 -left-1' 
+                              : '-bottom-1 -right-1'
+                          }`}
+                          onClick={() => copyToClipboard(message.content, message.id)}
+                        >
+                          {copiedMessageId === message.id ? (
+                            <Check className="h-3 w-3 text-green-500" />
+                          ) : (
+                            <Copy className="h-3 w-3" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -551,7 +553,7 @@ export default function Chat() {
           )}
           
           <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-center gap-2 bg-background border border-border rounded-3xl shadow-sm">
+            <div className="flex items-center gap-2 border border-border rounded-3xl shadow-sm" style={{backgroundColor: '#303030'}}>
               <div className="flex-1 flex items-center">
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
@@ -559,9 +561,9 @@ export default function Chat() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 m-2 hover:bg-muted rounded-full"
+                      className="h-10 w-10 p-0 m-2 hover:bg-muted/20 rounded-full"
                     >
-                      <Plus className="h-5 w-5" />
+                      <Plus className="h-5 w-5 text-white" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
@@ -582,7 +584,7 @@ export default function Chat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask anything..."
-                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-foreground placeholder-muted-foreground resize-none"
+                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-white placeholder-gray-400 resize-none"
                   disabled={loading}
                 />
               </div>
@@ -592,7 +594,7 @@ export default function Chat() {
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
+                className="h-8 w-8 p-0 m-2 rounded-full text-white hover:bg-muted/20"
               >
                 {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
               </Button>

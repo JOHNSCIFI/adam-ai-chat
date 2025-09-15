@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 type Theme = 'light' | 'dark' | 'system';
-type AccentColor = 'blue' | 'purple' | 'green' | 'orange' | 'red';
+type AccentColor = 'blue' | 'indigo' | 'purple' | 'green' | 'orange' | 'red' | 'gray';
 
 interface ThemeContextType {
   theme: Theme;
@@ -69,7 +69,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     root.classList.add(newActualTheme);
     
     // Apply accent color
-    root.classList.remove('accent-blue', 'accent-purple', 'accent-green', 'accent-orange', 'accent-red');
+    root.classList.remove('accent-blue', 'accent-indigo', 'accent-purple', 'accent-green', 'accent-orange', 'accent-red', 'accent-gray');
     root.classList.add(`accent-${accentColor}`);
 
     // Save preferences

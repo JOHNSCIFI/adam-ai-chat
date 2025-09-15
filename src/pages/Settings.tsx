@@ -62,6 +62,7 @@ export default function Settings() {
       if (profileError) throw profileError;
 
       // Create ZIP file
+      const JSZip = (await import('jszip')).default;
       const zip = new JSZip();
 
       // 1. conversations.json
@@ -199,14 +200,15 @@ export default function Settings() {
         throw new Error('No active session');
       }
 
-      const { error } = await supabase.functions.invoke('delete-account', {
+      const { data, error } = await supabase.functions.invoke('delete-account', {
         headers: {
           Authorization: `Bearer ${session.session.access_token}`
         }
       });
 
       if (error) {
-        throw error;
+        console.error('Edge function error:', error);
+        throw new Error(error.message || 'Failed to delete account');
       }
 
       toast({

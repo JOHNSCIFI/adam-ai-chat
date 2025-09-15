@@ -50,7 +50,7 @@ All colors MUST be HSL.
 
   .dark {
     /* ChatGPT Dark Theme - exact colors from reference */
-    --background: 0 0% 8%; /* #141414 - Very dark main area like ChatGPT */
+    --background: 0 0% 13%; /* #212121 - Dark main area */
     --foreground: 0 0% 86%; /* Light gray text */
     --card: 0 0% 8%;
     --card-foreground: 0 0% 86%;
@@ -89,16 +89,25 @@ All colors MUST be HSL.
 
   /* Accent color variants - comprehensive theming */
   .accent-blue {
-    --primary: 213 94% 68%;
+    --primary: 217 91% 60%; /* #3B82F6 - Blue (trusty + professional) */
     --primary-foreground: 0 0% 100%;
-    --sidebar-primary: 213 94% 68%;
-    --accent: 213 94% 68%;
-    --ring: 213 94% 68%;
-    --sidebar-ring: 213 94% 68%;
+    --sidebar-primary: 217 91% 60%;
+    --accent: 217 91% 60%;
+    --ring: 217 91% 60%;
+    --sidebar-ring: 217 91% 60%;
+  }
+
+  .accent-indigo {
+    --primary: 239 84% 67%; /* #6366F1 - Indigo (modern SaaS vibe) */
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 239 84% 67%;
+    --accent: 239 84% 67%;
+    --ring: 239 84% 67%;
+    --sidebar-ring: 239 84% 67%;
   }
 
   .accent-purple {
-    --primary: 262 83% 58%;
+    --primary: 262 83% 58%; /* #8B5CF6 - Purple (creative / premium feel) */
     --primary-foreground: 0 0% 100%;
     --sidebar-primary: 262 83% 58%;
     --accent: 262 83% 58%;
@@ -107,16 +116,16 @@ All colors MUST be HSL.
   }
 
   .accent-green {
-    --primary: 160 84% 35%; /* #10A37F - ChatGPT brand green */
+    --primary: 160 84% 39%; /* #10B981 - Green (success / positive actions) */
     --primary-foreground: 0 0% 100%;
-    --sidebar-primary: 160 84% 35%;
-    --accent: 160 84% 35%;
-    --ring: 160 84% 35%;
-    --sidebar-ring: 160 84% 35%;
+    --sidebar-primary: 160 84% 39%;
+    --accent: 160 84% 39%;
+    --ring: 160 84% 39%;
+    --sidebar-ring: 160 84% 39%;
   }
 
   .accent-orange {
-    --primary: 25 95% 53%;
+    --primary: 25 95% 53%; /* #F97316 - Orange (energy / attention-grabbing) */
     --primary-foreground: 0 0% 100%;
     --sidebar-primary: 25 95% 53%;
     --accent: 25 95% 53%;
@@ -125,12 +134,21 @@ All colors MUST be HSL.
   }
 
   .accent-red {
-    --primary: 0 84% 60%;
+    --primary: 0 84% 60%; /* #EF4444 - Red (warnings / errors) */
     --primary-foreground: 0 0% 100%;
     --sidebar-primary: 0 84% 60%;
     --accent: 0 84% 60%;
     --ring: 0 84% 60%;
     --sidebar-ring: 0 84% 60%;
+  }
+
+  .accent-gray {
+    --primary: 215 16% 47%; /* #6B7280 - Gray (neutral accents) */
+    --primary-foreground: 0 0% 100%;
+    --sidebar-primary: 215 16% 47%;
+    --accent: 215 16% 47%;
+    --ring: 215 16% 47%;
+    --sidebar-ring: 215 16% 47%;
   }
 }
 
