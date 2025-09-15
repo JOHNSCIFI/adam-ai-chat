@@ -58,6 +58,36 @@ export default function AuthPage() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email) return;
+    
+    setLoading(true);
+    try {
+      const { resetPassword } = useAuth();
+      const { error } = await resetPassword(email);
+      if (error) {
+        toast({
+          title: "Reset failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
@@ -141,15 +171,35 @@ export default function AuthPage() {
                 className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
               />
             </div>
-            <div className="mb-6">
+            <div className="mb-6 relative">
               <input
                 type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                required
+                required={isSignUp}
                 className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
               />
+              {!isSignUp && !password && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Handle forgot password
+                    if (email) {
+                      handleForgotPassword();
+                    } else {
+                      toast({
+                        title: "Email required",
+                        description: "Please enter your email address first.",
+                        variant: "destructive",
+                      });
+                    }
+                  }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-600 hover:text-gray-800 text-sm font-medium transition-colors"
+                >
+                  Forgot password?
+                </button>
+              )}
             </div>
             <button
               type="submit"
