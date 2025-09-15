@@ -401,7 +401,7 @@ export default function Chat() {
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="max-w-3xl mx-auto w-full px-4 py-6">
+        <div className="max-w-3xl mx-auto w-full px-4 py-6" style={{ marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', marginRight: 'auto' }}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -537,7 +537,7 @@ export default function Chat() {
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-4">
+        <div className="max-w-3xl px-4 py-4" style={{ marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', marginRight: 'auto' }}>
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
