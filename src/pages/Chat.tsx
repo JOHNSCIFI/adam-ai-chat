@@ -413,17 +413,17 @@ export default function Chat() {
               {messages.map((message) => (
                 <div 
                   key={message.id} 
-                  className="group"
+                  className="group mb-4"
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
-                  <div className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[80%] relative`}>
+                  <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                       <div className={`${
                         message.role === 'user' 
-                          ? 'bg-primary text-primary-foreground rounded-3xl rounded-br-lg' 
-                          : 'text-foreground rounded-3xl rounded-bl-lg'
-                      } px-5 py-3.5 shadow-sm relative`}>
+                          ? 'bg-primary text-primary-foreground rounded-2xl' 
+                          : 'text-foreground rounded-2xl'
+                      } px-3.5 py-2.5 shadow-sm relative`} style={{ padding: '10px 14px' }}>
                         
                         {/* File attachments */}
                         {message.file_attachments && message.file_attachments.length > 0 && (
@@ -489,23 +489,25 @@ export default function Chat() {
                           </div>
                         )}
                         
-                        {/* Copy button - always visible, positioned differently for user vs AI messages */}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className={`absolute h-8 w-8 p-0 bg-background border shadow-sm hover:bg-muted ${
-                            message.role === 'user' 
-                              ? '-bottom-1 -left-1' 
-                              : '-bottom-1 -right-1'
-                          }`}
-                          onClick={() => copyToClipboard(message.content, message.id)}
-                        >
-                          {copiedMessageId === message.id ? (
-                            <Check className="h-3 w-3 text-green-500" />
-                          ) : (
-                            <Copy className="h-3 w-3" />
-                          )}
-                        </Button>
+                        {/* Copy button - only visible on hover, positioned differently for user vs AI messages */}
+                        {hoveredMessage === message.id && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
+                              message.role === 'user' 
+                                ? 'bottom-0 right-0' 
+                                : 'bottom-0 left-0'
+                            }`}
+                            onClick={() => copyToClipboard(message.content, message.id)}
+                          >
+                            {copiedMessageId === message.id ? (
+                              <Check className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -553,7 +555,7 @@ export default function Chat() {
           )}
           
           <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-center gap-2 border border-border rounded-3xl shadow-sm" style={{backgroundColor: '#303030'}}>
+            <div className="flex items-center gap-2 border border-border rounded-3xl shadow-sm" style={{backgroundColor: document.documentElement.classList.contains('dark') ? '#303030' : '#FFFFFF'}}>
               <div className="flex-1 flex items-center">
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                   <PopoverTrigger asChild>
@@ -563,7 +565,9 @@ export default function Chat() {
                       size="sm"
                       className="h-10 w-10 p-0 m-2 hover:bg-muted/20 rounded-full"
                     >
-                      <Plus className="h-5 w-5 text-white" />
+                      <Plus className={`h-5 w-5 ${
+                        document.documentElement.classList.contains('dark') ? 'text-white' : 'text-black'
+                      }`} />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
@@ -584,7 +588,11 @@ export default function Chat() {
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Ask anything..."
-                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-white placeholder-gray-400 resize-none"
+                  className={`flex-1 bg-transparent border-none outline-none py-3 pr-4 resize-none ${
+                    document.documentElement.classList.contains('dark') 
+                      ? 'text-white placeholder-gray-400' 
+                      : 'text-black placeholder-gray-500'
+                  }`}
                   disabled={loading}
                 />
               </div>
@@ -594,7 +602,9 @@ export default function Chat() {
                 disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full text-white hover:bg-muted/20"
+                className={`h-8 w-8 p-0 m-2 rounded-full hover:bg-muted/20 ${
+                  document.documentElement.classList.contains('dark') ? 'text-white' : 'text-black'
+                }`}
               >
                 {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
               </Button>

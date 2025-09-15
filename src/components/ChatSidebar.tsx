@@ -345,9 +345,19 @@ export function ChatSidebar() {
                     collapsed ? 'justify-center' : ''
                   }`}>
                     <Avatar className="h-6 w-6">
-                      <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                        {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                      </AvatarFallback>
+                      {/* Show Google profile image if available */}
+                      {userProfile?.avatar_url && (
+                        <img 
+                          src={userProfile.avatar_url} 
+                          alt="Profile" 
+                          className="h-6 w-6 rounded-full object-cover"
+                        />
+                      )}
+                      {!userProfile?.avatar_url && (
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
+                      )}
                     </Avatar>
                     {!collapsed && (
                       <div className="flex-1 min-w-0">

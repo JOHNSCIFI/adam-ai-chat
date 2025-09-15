@@ -80,6 +80,13 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   const handleLogoutAllDevices = async () => {
     try {
+      // First revoke the refresh token which invalidates all sessions globally
+      const { error: revokeError } = await supabase.auth.admin.signOut(user?.id || '');
+      if (revokeError) {
+        console.log('Admin signout not available, using regular global signout');
+      }
+
+      // Use global signout scope to sign out from all devices
       const { error } = await supabase.auth.signOut({ scope: 'global' });
       if (error) throw error;
       
@@ -265,6 +272,9 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         title: "Chats deleted",
         description: "All your chats have been permanently deleted.",
       });
+
+      // Redirect to home page but keep settings modal open
+      window.history.pushState({}, '', '/');
     } catch (error: any) {
       toast({
         title: "Error deleting chats",
