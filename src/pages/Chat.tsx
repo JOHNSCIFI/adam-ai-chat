@@ -512,27 +512,26 @@ export default function Chat() {
                             </ReactMarkdown>
                           </div>
                         )}
-                        
-                        {/* Copy button - only visible on hover, positioned differently for user vs AI messages */}
-                        {hoveredMessage === message.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
-                              message.role === 'user' 
-                                ? 'bottom-0 right-0' 
-                                : 'bottom-0 left-0'
-                            }`}
-                            onClick={() => copyToClipboard(message.content, message.id)}
-                          >
-                            {copiedMessageId === message.id ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
-                      </div>
+                         
+                       </div>
+                       
+                       {/* Copy button - positioned below the message content */}
+                       {hoveredMessage === message.id && (
+                         <div className={`flex mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                           <Button
+                             variant="ghost"
+                             size="sm"
+                             className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity"
+                             onClick={() => copyToClipboard(message.content, message.id)}
+                           >
+                             {copiedMessageId === message.id ? (
+                               <Check className="h-3 w-3 text-green-500" />
+                             ) : (
+                               <Copy className="h-3 w-3" />
+                             )}
+                           </Button>
+                         </div>
+                       )}
                     </div>
                   </div>
                 </div>
