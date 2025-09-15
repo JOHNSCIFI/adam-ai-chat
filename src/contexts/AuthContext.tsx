@@ -51,28 +51,60 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          // Fetch user profile after signin and enhance with Gmail data if applicable
+          // Check if this is a new user and create/update profile
           setTimeout(async () => {
-            const { data: profile } = await supabase
+            // Determine signup method from session or user metadata
+            let signupMethod = 'email';
+            if (session.user.app_metadata?.provider === 'google' || 
+                session.user.user_metadata?.provider === 'google' ||
+                session.user.identities?.some(id => id.provider === 'google')) {
+              signupMethod = 'google';
+            }
+            
+            // Check if profile exists
+            const { data: existingProfile, error: fetchError } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .single();
+            
+            if (!existingProfile && !fetchError) {
+              // Create new profile
+              const profileData: any = {
+                user_id: session.user.id,
+                email: session.user.email,
+                signup_method: signupMethod
+              };
               
-            // If this is an email signup user and they have a Gmail address, enhance their profile
-            if (profile && session.user.email?.includes('@gmail.com') && profile.signup_method === 'email') {
-              const emailUsername = session.user.email.split('@')[0];
-              const gravatarUrl = `https://www.gravatar.com/avatar/${btoa(session.user.email.toLowerCase())}?s=200&d=identicon`;
-              
-              // Update profile with enhanced data if not already set
-              const updates: any = {};
-              if (!profile.display_name || profile.display_name === emailUsername) {
-                // Try to create a better display name from email
-                const betterName = emailUsername.replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-                updates.display_name = betterName;
+              if (signupMethod === 'google') {
+                profileData.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
+                profileData.avatar_url = session.user.user_metadata?.avatar_url;
+              } else {
+                profileData.display_name = session.user.user_metadata?.display_name || session.user.email?.split('@')[0];
               }
-              if (!profile.avatar_url) {
-                updates.avatar_url = gravatarUrl;
+              
+              await supabase
+                .from('profiles')
+                .insert(profileData);
+              
+              setUserProfile(profileData);
+            } else if (existingProfile) {
+              // Update existing profile if needed
+              const updates: any = {};
+              
+              // Update signup method if not set
+              if (!existingProfile.signup_method) {
+                updates.signup_method = signupMethod;
+              }
+              
+              // Update display name and avatar for Google users
+              if (signupMethod === 'google') {
+                if (!existingProfile.display_name || existingProfile.display_name !== session.user.user_metadata?.full_name) {
+                  updates.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
+                }
+                if (!existingProfile.avatar_url || existingProfile.avatar_url !== session.user.user_metadata?.avatar_url) {
+                  updates.avatar_url = session.user.user_metadata?.avatar_url;
+                }
               }
               
               if (Object.keys(updates).length > 0) {
@@ -81,18 +113,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                   .update(updates)
                   .eq('user_id', session.user.id);
                   
-                // Refetch the updated profile
-                const { data: updatedProfile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('user_id', session.user.id)
-                  .single();
-                setUserProfile(updatedProfile);
+                setUserProfile({ ...existingProfile, ...updates });
               } else {
-                setUserProfile(profile);
+                setUserProfile(existingProfile);
               }
-            } else {
-              setUserProfile(profile);
             }
           }, 0);
         } else if (event === 'SIGNED_OUT') {

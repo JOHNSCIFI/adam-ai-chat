@@ -72,7 +72,7 @@ All colors MUST be HSL.
     --ring: 217 91% 60%;
     
     /* ChatGPT Dark Sidebar - extremely dark like reference */
-    --sidebar-background: 0 0% 4%; /* #0a0a0a - Almost black sidebar like ChatGPT */
+    --sidebar-background: 0 0% 9%; /* #181818 - Dark sidebar */
     --sidebar-foreground: 0 0% 86%;
     --sidebar-primary: 217 91% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -157,7 +157,7 @@ All colors MUST be HSL.
     --accent: 215 16% 47%;
     --ring: 215 16% 47%;
     --sidebar-ring: 215 16% 47%;
-    --user-message-bg: 0 0% 96%; /* #F4F4F5 - Light gray for user messages */
+    --user-message-bg: 0 0% 19%; /* #303030 - Dark gray for user messages */
   }
 }
 

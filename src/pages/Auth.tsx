@@ -1,12 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export default function Auth() {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [userSignupMethod, setUserSignupMethod] = useState<string | null>(null);
+  const [checkingUser, setCheckingUser] = useState(false);
   
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
@@ -14,6 +17,40 @@ export default function Auth() {
   if (user) {
     return <Navigate to="/" replace />;
   }
+
+  const checkUserSignupMethod = async (email: string) => {
+    if (!email) return;
+    
+    setCheckingUser(true);
+    try {
+      const { data } = await supabase
+        .from('profiles')
+        .select('signup_method')
+        .eq('email', email)
+        .single();
+      
+      if (data) {
+        setUserSignupMethod(data.signup_method);
+      } else {
+        setUserSignupMethod(null);
+      }
+    } catch (error) {
+      setUserSignupMethod(null);
+    } finally {
+      setCheckingUser(false);
+    }
+  };
+
+  useEffect(() => {
+    if (email) {
+      const timeoutId = setTimeout(() => {
+        checkUserSignupMethod(email);
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    } else {
+      setUserSignupMethod(null);
+    }
+  }, [email]);
 
   const handleEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,10 +134,18 @@ export default function Auth() {
                 required
                 className="w-full h-12 px-4 text-base border border-gray-200 rounded-lg bg-white text-black placeholder-gray-400 focus:border-gray-300 focus:outline-none transition-colors"
               />
+              {email && userSignupMethod && (
+                <p className="text-sm text-gray-500 mt-2">
+                  {userSignupMethod === 'google' 
+                    ? 'This email is registered with Google. Please use Google sign-in.'
+                    : 'This email is registered with email/password. You can sign in with email or Google.'
+                  }
+                </p>
+              )}
             </div>
             <button
               type="submit"
-              disabled={loading || !email}
+              disabled={loading || !email || (userSignupMethod === 'google')}
               className="w-full h-12 bg-black text-white rounded-lg font-medium hover:bg-gray-800 disabled:bg-gray-300 disabled:text-gray-500 transition-colors flex items-center justify-center"
             >
               {loading ? (
@@ -128,7 +173,7 @@ export default function Auth() {
           <button
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
-            className="w-full h-12 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 transition-colors flex items-center justify-center font-medium"
+            className="w-full h-12 border border-gray-200 rounded-lg bg-white text-gray-700 hover:bg-gray-50 disabled:bg-gray-100 disabled:text-gray-400 transition-colors flex items-center justify-center font-medium"
           >
             {googleLoading ? (
               <>
