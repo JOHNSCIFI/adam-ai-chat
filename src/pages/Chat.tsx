@@ -427,9 +427,8 @@ export default function Chat() {
           ) : (
             <div className="space-y-6">
               {messages.map((message) => {
-                // Randomly decide positioning for both user and AI messages
-                const isRightAligned = Math.random() > 0.5;
                 const messageColor = getUserMessageColor(accentColor);
+                const isUser = message.role === 'user';
                 
                 return (
                   <div 
@@ -438,8 +437,8 @@ export default function Chat() {
                     onMouseEnter={() => setHoveredMessage(message.id)}
                     onMouseLeave={() => setHoveredMessage(null)}
                   >
-                    <div className={`flex ${isRightAligned ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
-                      <div className={`flex flex-col ${isRightAligned ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
+                    <div className={`flex ${isUser ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
+                      <div className={`flex flex-col ${isUser ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div 
                           className={`${
                             message.role === 'user' 
@@ -586,7 +585,7 @@ export default function Chat() {
                             variant="ghost"
                             size="sm"
                             className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
-                              isRightAligned 
+                              isUser 
                                 ? 'bottom-0 right-0' 
                                 : 'bottom-0 left-0'
                             }`}
