@@ -593,7 +593,7 @@ export default function Chat() {
                       ? 'text-white placeholder-gray-400' 
                       : 'text-black placeholder-gray-500'
                   }`}
-                  disabled={loading}
+                  disabled={false}
                 />
               </div>
               

@@ -346,14 +346,13 @@ export function ChatSidebar() {
                   }`}>
                     <Avatar className="h-6 w-6">
                       {/* Show Google profile image if available */}
-                      {userProfile?.avatar_url && (
+                      {userProfile?.avatar_url ? (
                         <img 
                           src={userProfile.avatar_url} 
                           alt="Profile" 
                           className="h-6 w-6 rounded-full object-cover"
                         />
-                      )}
-                      {!userProfile?.avatar_url && (
+                      ) : (
                         <AvatarFallback className="bg-primary text-primary-foreground text-xs">
                           {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                         </AvatarFallback>
