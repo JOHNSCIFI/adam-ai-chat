@@ -207,7 +207,7 @@ export default function Index() {
   return (
     <div className="flex-1 flex flex-col bg-background">
       {/* Header - clean like ChatGPT */}
-      <div className="flex items-center justify-between px-6 py-4 bg-background">
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
         <div className="text-xl font-semibold text-foreground">AdamGPT</div>
         <div className="flex items-center space-x-4">
           
@@ -249,9 +249,9 @@ export default function Index() {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-10 w-10 p-0 hover:bg-muted/20 rounded-full flex-shrink-0"
+                      className="h-10 w-10 p-0 m-2 hover:bg-muted rounded-full"
                     >
-                      <Plus className="h-5 w-5 text-muted-foreground" />
+                      <Plus className="h-5 w-5" />
                     </Button>
                   </PopoverTrigger>
                   <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
