@@ -241,30 +241,8 @@ export function ChatSidebar() {
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border bg-sidebar relative" collapsible="icon">
-        {/* ChatGPT Logo and Sidebar Toggle */}
-        <div className="absolute top-4 left-4 z-10">
-          {collapsed ? (
-            <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group">
-              <Bot className="h-5 w-5 group-hover:hidden" />
-              <Menu className="h-4 w-4 hidden group-hover:block" />
-            </SidebarTrigger>
-          ) : (
-            <div className="flex items-center gap-2">
-              <Bot className="h-6 w-6 text-sidebar-foreground" />
-              <span className="text-lg font-semibold text-sidebar-foreground">AdamGPT</span>
-            </div>
-          )}
-        </div>
-
-        {/* Sidebar Toggle Button (visible when expanded) */}
-        {!collapsed && (
-          <div className="absolute top-4 right-4 z-10">
-            <SidebarTrigger />
-          </div>
-        )}
-
-        <SidebarHeader className="pt-16 px-2 pb-4">
+      <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+        <SidebarHeader className="pt-5 px-2 pb-4">
           <Button 
             onClick={handleNewChat}
             className={`ml-1 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 ${
