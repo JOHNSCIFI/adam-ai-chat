@@ -400,7 +400,7 @@ export default function Chat() {
   return (
     <div className="flex-1 flex flex-col bg-background">
       {/* Header - same as Index page */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+      <div className="flex items-center justify-between px-6 py-4 bg-background">
         <div className="text-xl font-semibold text-foreground">AdamGPT</div>
       </div>
 
