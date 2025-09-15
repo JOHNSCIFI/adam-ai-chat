@@ -243,16 +243,17 @@ export function ChatSidebar() {
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
+          {/* Sidebar Toggle Button - always at the same position */}
+          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
+            <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
+              <Bot className="h-5 w-5 group-hover:hidden" />
+              <Menu className="h-4 w-4 hidden group-hover:block" />
+            </SidebarTrigger>
+          </div>
+
           {collapsed ? (
-            // Collapsed state: center both buttons vertically
-            <div className="flex flex-col items-center gap-3">
-              {/* ChatGPT Icon / Sidebar Toggle Button */}
-              <SidebarTrigger className="h-10 w-10 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
-                <Bot className="h-6 w-6 group-hover:hidden" />
-                <Menu className="h-5 w-5 hidden group-hover:block" />
-              </SidebarTrigger>
-              
-              {/* New Chat Button */}
+            // Collapsed state: center new chat button
+            <div className="flex justify-center">
               <Button 
                 onClick={handleNewChat}
                 className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
@@ -263,29 +264,18 @@ export function ChatSidebar() {
               </Button>
             </div>
           ) : (
-            // Expanded state: new chat button with text, sidebar button on right
-            <>
-              {/* Sidebar Toggle Button - positioned on the right at same level as collapsed icon */}
-              <div className="absolute top-0 right-0">
-                <SidebarTrigger className="h-10 w-10 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
-                  <Bot className="h-6 w-6 group-hover:hidden" />
-                  <Menu className="h-5 w-5 hidden group-hover:block" />
-                </SidebarTrigger>
-              </div>
-              
-              {/* New Chat Button with text - positioned lower */}
-              <div className="mt-4">
-                <Button 
-                  onClick={handleNewChat}
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Plus className="h-5 w-5 flex-shrink-0" />
-                  <span className="font-medium">New Chat</span>
-                </Button>
-              </div>
-            </>
+            // Expanded state: new chat button with text
+            <div className="mt-1">
+              <Button 
+                onClick={handleNewChat}
+                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                size="sm"
+                variant="ghost"
+              >
+                <Plus className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">New Chat</span>
+              </Button>
+            </div>
           )}
         </SidebarHeader>
 
