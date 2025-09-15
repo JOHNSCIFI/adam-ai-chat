@@ -242,11 +242,10 @@ export function ChatSidebar() {
         <SidebarHeader className="pt-5 px-3 pb-4">
           <Button 
             onClick={handleNewChat}
-            className={`ml-0 rounded-full bg-sidebar/50 hover:bg-sidebar-accent hover:shadow-sm text-sidebar-foreground transition-all duration-200 ${
+            className={`mx-2 rounded-full border border-sidebar-border/30 bg-sidebar/50 hover:bg-sidebar-accent hover:shadow-sm text-sidebar-foreground transition-all duration-200 ${
               collapsed ? 'h-12 w-12 p-0' : 'h-12 w-full justify-start gap-2 px-4'
             }`}
             size="sm"
-            variant="ghost"
           >
             <MessageSquare className="h-5 w-5 flex-shrink-0" />
             {!collapsed && <span className="font-medium">New Chat</span>}
