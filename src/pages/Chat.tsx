@@ -399,9 +399,14 @@ export default function Chat() {
 
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Header - AdamGPT branding */}
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+        <div className="text-xl font-semibold text-foreground">AdamGPT</div>
+      </div>
+      
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="max-w-3xl mx-auto w-full px-4 py-6">
+        <div className="w-full px-4 py-6" style={{ maxWidth: 'calc(100vw - 16rem)', marginLeft: 'calc(16rem + (100vw - 16rem - 768px) / 2)', marginRight: 'auto' }}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -491,25 +496,23 @@ export default function Chat() {
                           </div>
                         )}
                         
-                        {/* Copy button - only visible on hover, positioned differently for user vs AI messages */}
-                        {hoveredMessage === message.id && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className={`absolute h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity ${
-                              message.role === 'user' 
-                                ? 'bottom-0 right-0' 
-                                : 'bottom-0 left-0'
-                            }`}
-                            onClick={() => copyToClipboard(message.content, message.id)}
-                          >
-                            {copiedMessageId === message.id ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                          </Button>
-                        )}
+                        {/* Copy button - always visible, positioned below message */}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className={`mt-2 h-8 w-8 p-0 bg-background/90 backdrop-blur-sm border shadow-md hover:bg-muted transition-all opacity-80 hover:opacity-100 ${
+                            message.role === 'user' 
+                              ? 'self-end' 
+                              : 'self-start'
+                          }`}
+                          onClick={() => copyToClipboard(message.content, message.id)}
+                        >
+                          {copiedMessageId === message.id ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -537,7 +540,7 @@ export default function Chat() {
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background">
-        <div className="max-w-3xl mx-auto px-4 py-4">
+        <div className="px-4 py-4" style={{ maxWidth: 'calc(100vw - 16rem)', marginLeft: 'calc(16rem + (100vw - 16rem - 768px) / 2)', marginRight: 'auto' }}>
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
