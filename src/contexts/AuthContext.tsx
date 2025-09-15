@@ -51,14 +51,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(session);
           setUser(session.user);
           
-          // Fetch user profile after signin
+          // Fetch user profile after signin and enhance with Gmail data if applicable
           setTimeout(async () => {
             const { data: profile } = await supabase
               .from('profiles')
               .select('*')
               .eq('user_id', session.user.id)
               .single();
-            setUserProfile(profile);
+              
+            // If this is an email signup user and they have a Gmail address, enhance their profile
+            if (profile && session.user.email?.includes('@gmail.com') && profile.signup_method === 'email') {
+              const emailUsername = session.user.email.split('@')[0];
+              const gravatarUrl = `https://www.gravatar.com/avatar/${btoa(session.user.email.toLowerCase())}?s=200&d=identicon`;
+              
+              // Update profile with enhanced data if not already set
+              const updates: any = {};
+              if (!profile.display_name || profile.display_name === emailUsername) {
+                // Try to create a better display name from email
+                const betterName = emailUsername.replace(/[._]/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                updates.display_name = betterName;
+              }
+              if (!profile.avatar_url) {
+                updates.avatar_url = gravatarUrl;
+              }
+              
+              if (Object.keys(updates).length > 0) {
+                await supabase
+                  .from('profiles')
+                  .update(updates)
+                  .eq('user_id', session.user.id);
+                  
+                // Refetch the updated profile
+                const { data: updatedProfile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('user_id', session.user.id)
+                  .single();
+                setUserProfile(updatedProfile);
+              } else {
+                setUserProfile(profile);
+              }
+            } else {
+              setUserProfile(profile);
+            }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           console.log('User signed out');
