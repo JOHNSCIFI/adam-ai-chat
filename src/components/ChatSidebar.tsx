@@ -242,24 +242,49 @@ export function ChatSidebar() {
   return (
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
-        <SidebarHeader className="pt-5 px-2 pb-4 flex flex-col items-center gap-3">
-          {/* ChatGPT Icon / Sidebar Toggle Button */}
-          <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
-            <Bot className="h-5 w-5 group-hover:hidden" />
-            <Menu className="h-4 w-4 hidden group-hover:block" />
-          </SidebarTrigger>
-          
-          {/* New Chat Button */}
-          <Button 
-            onClick={handleNewChat}
-            className={`rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 ${
-              collapsed ? 'h-12 w-12 p-0' : 'h-12 w-12 p-0'
-            }`}
-            size="sm"
-            variant="ghost"
-          >
-            <Plus className="h-5 w-5 flex-shrink-0" />
-          </Button>
+        <SidebarHeader className="pt-5 px-2 pb-4 relative">
+          {collapsed ? (
+            // Collapsed state: center both buttons vertically
+            <div className="flex flex-col items-center gap-3">
+              {/* ChatGPT Icon / Sidebar Toggle Button */}
+              <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
+                <Bot className="h-5 w-5 group-hover:hidden" />
+                <Menu className="h-4 w-4 hidden group-hover:block" />
+              </SidebarTrigger>
+              
+              {/* New Chat Button */}
+              <Button 
+                onClick={handleNewChat}
+                className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                size="sm"
+                variant="ghost"
+              >
+                <Plus className="h-5 w-5 flex-shrink-0" />
+              </Button>
+            </div>
+          ) : (
+            // Expanded state: new chat button with text, sidebar button on right
+            <>
+              {/* Sidebar Toggle Button - positioned on the right */}
+              <div className="absolute top-0 right-0">
+                <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
+                  <Bot className="h-5 w-5 group-hover:hidden" />
+                  <Menu className="h-4 w-4 hidden group-hover:block" />
+                </SidebarTrigger>
+              </div>
+              
+              {/* New Chat Button with text */}
+              <Button 
+                onClick={handleNewChat}
+                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                size="sm"
+                variant="ghost"
+              >
+                <Plus className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">New Chat</span>
+              </Button>
+            </>
+          )}
         </SidebarHeader>
 
         <SidebarContent className="px-2">
