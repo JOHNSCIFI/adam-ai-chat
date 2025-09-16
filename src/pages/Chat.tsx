@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,6 +70,7 @@ export default function Chat() {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const processedUserMessages = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -243,8 +244,8 @@ export default function Chat() {
     return 'file';
   };
 
-  const sendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     if ((!input.trim() && selectedFiles.length === 0) || !chatId || !user || loading) return;
 
     setLoading(true);
@@ -252,6 +253,11 @@ export default function Chat() {
     const files = [...selectedFiles];
     setInput('');
     setSelectedFiles([]);
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
     try {
       // Upload files to Supabase storage first
@@ -430,6 +436,26 @@ export default function Chat() {
 
   const openFile = (url: string, name: string) => {
     window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const value = e.target.value;
+    setInput(value);
+    
+    // Auto-resize textarea
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = 200; // Maximum height in pixels
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
   };
 
   if (!chatId) {
@@ -623,70 +649,77 @@ export default function Chat() {
             </div>
           )}
           
-          <form onSubmit={sendMessage} className="relative">
-            <div className="flex items-center gap-3">
-              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-2 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
+          <div className="relative">
+            <div className="flex items-end gap-3">
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-full flex-shrink-0"
+                  >
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={handleFileUpload}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Attach files
+                  </Button>
+                </PopoverContent>
+              </Popover>
+              
+              <div className={`flex-1 flex items-end border rounded-3xl px-4 py-2 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Message AdamGPT..."
+                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground"
+                  disabled={loading}
+                  rows={1}
+                />
+                
+                <div className="flex items-center gap-1 ml-2">
+                  {/* Dictation button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                    onClick={isRecording ? stopRecording : startRecording}
+                    disabled={loading}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                  
+                  {/* Send button */}
+                  {(input.trim() || selectedFiles.length > 0) && (
                     <Button
                       type="button"
-                      variant="ghost"
+                      onClick={sendMessage}
+                      disabled={loading}
                       size="sm"
-                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0"
+                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                      style={{ 
+                        backgroundColor: actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))',
+                        color: actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))'
+                      }}
                     >
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={handleFileUpload}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                      Attach files
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-                
-                {/* Dictation button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                  onClick={isRecording ? stopRecording : startRecording}
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                
-                <input
-                  type="text"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  placeholder="Message AdamGPT..."
-                  className="flex-1 bg-transparent border-none outline-none py-2 px-3 text-foreground placeholder:text-muted-foreground"
-                  disabled={false}
-                />
+                  )}
+                </div>
               </div>
-              
-              {(input.trim() || selectedFiles.length > 0) && (
-                <Button
-                  type="submit"
-                  disabled={loading}
-                  size="sm"
-                  className="h-10 w-10 p-0 rounded-full flex-shrink-0"
-                  style={{ 
-                    backgroundColor: actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))',
-                    color: actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))'
-                  }}
-                >
-                  {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-                </Button>
-              )}
             </div>
-          </form>
+          </div>
           
           <p className="text-xs text-muted-foreground text-center mt-3">
             AdamGPT can make mistakes. Check important info.
