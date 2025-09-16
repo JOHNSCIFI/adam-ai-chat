@@ -321,31 +321,29 @@ export default function Chat() {
       // Note: AI response will be automatically triggered by the useEffect hook
       // that detects new user messages - no need to call webhook here
 
-      // Update chat title if it's the first message and current title is "New Chat"
-      if (messages.length === 0) {
-        console.log('Checking if we need to update chat title...');
-        // Check current title to avoid overwriting custom titles
-        const { data: currentChat } = await supabase
+      // Update chat title if current title is "New Chat" (regardless of message count)
+      console.log('Checking if we need to update chat title...');
+      // Check current title to avoid overwriting custom titles
+      const { data: currentChat } = await supabase
+        .from('chats')
+        .select('title')
+        .eq('id', chatId)
+        .single();
+      
+      console.log('Current chat title:', currentChat?.title);
+      
+      if (currentChat && currentChat.title === 'New Chat') {
+        const generatedTitle = generateChatTitle(userMessage);
+        console.log('Updating chat title to:', generatedTitle);
+        const { error: updateError } = await supabase
           .from('chats')
-          .select('title')
-          .eq('id', chatId)
-          .single();
+          .update({ title: generatedTitle })
+          .eq('id', chatId);
         
-        console.log('Current chat title:', currentChat?.title);
-        
-        if (currentChat && currentChat.title === 'New Chat') {
-          const generatedTitle = generateChatTitle(userMessage);
-          console.log('Updating chat title to:', generatedTitle);
-          const { error: updateError } = await supabase
-            .from('chats')
-            .update({ title: generatedTitle })
-            .eq('id', chatId);
-          
-          if (updateError) {
-            console.error('Error updating chat title:', updateError);
-          } else {
-            console.log('Chat title updated successfully');
-          }
+        if (updateError) {
+          console.error('Error updating chat title:', updateError);
+        } else {
+          console.log('Chat title updated successfully');
         }
       }
 
