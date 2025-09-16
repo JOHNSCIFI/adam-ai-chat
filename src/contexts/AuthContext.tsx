@@ -83,6 +83,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 profileData.display_name = session.user.user_metadata?.display_name || session.user.email?.split('@')[0];
               }
               
+              // Set default theme and accent color for new users
+              await supabase.auth.updateUser({
+                data: { 
+                  theme: 'system',
+                  accent_color: 'gray'
+                }
+              });
+              
               await supabase
                 .from('profiles')
                 .insert(profileData);

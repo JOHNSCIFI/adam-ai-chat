@@ -557,13 +557,14 @@ export default function Chat() {
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
-                            ? 'bg-primary text-primary-foreground rounded-2xl' 
+                            ? 'text-white rounded-2xl' 
                             : 'text-foreground rounded-2xl'
                         } px-3.5 py-2.5 shadow-sm relative break-words whitespace-pre-wrap`} style={{ 
                           padding: '10px 14px',
                           wordWrap: 'break-word',
                           overflowWrap: 'break-word',
-                          hyphens: 'auto'
+                          hyphens: 'auto',
+                          backgroundColor: message.role === 'user' ? '#30394F' : 'transparent'
                         }}>
                         
                          {/* File attachments */}
@@ -740,7 +741,7 @@ export default function Chat() {
                 rows={1}
               />
               
-              <div className="flex items-center gap-1 ml-2">
+              <div className="flex items-center gap-1 ml-2 pb-1">
                 {/* Dictation button */}
                 <Button
                   type="button"
