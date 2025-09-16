@@ -722,11 +722,11 @@ export default function Chat() {
                                      </pre>
                                    );
                                  },
-                                 p: ({children, ...props}) => (
-                                   <p {...props} className="break-words overflow-wrap-anywhere !my-1" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                                     {children}
-                                   </p>
-                                 ),
+                                  p: ({children, ...props}) => (
+                                    <p {...props} className="break-words overflow-wrap-anywhere !my-0" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+                                      {children}
+                                    </p>
+                                  ),
                                  h1: ({children, ...props}) => (
                                    <h1 {...props} className="!my-1 !mb-1">
                                      {children}
