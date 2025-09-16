@@ -117,6 +117,8 @@ export function ChatSidebar() {
       .single();
 
     if (!error && data) {
+      // Immediately update the chats list to show the new chat
+      fetchChats();
       navigate(`/chat/${data.id}`);
     }
   };
