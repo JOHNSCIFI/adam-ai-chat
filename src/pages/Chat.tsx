@@ -321,13 +321,22 @@ export default function Chat() {
       // Note: AI response will be automatically triggered by the useEffect hook
       // that detects new user messages - no need to call webhook here
 
-      // Update chat title if it's the first message
+      // Update chat title if it's the first message and current title is "New Chat"
       if (messages.length === 0) {
-        const generatedTitle = generateChatTitle(userMessage);
-        await supabase
+        // Check current title to avoid overwriting custom titles
+        const { data: currentChat } = await supabase
           .from('chats')
-          .update({ title: generatedTitle })
-          .eq('id', chatId);
+          .select('title')
+          .eq('id', chatId)
+          .single();
+        
+        if (currentChat && currentChat.title === 'New Chat') {
+          const generatedTitle = generateChatTitle(userMessage);
+          await supabase
+            .from('chats')
+            .update({ title: generatedTitle })
+            .eq('id', chatId);
+        }
       }
 
     } catch (error: any) {

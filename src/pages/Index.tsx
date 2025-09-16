@@ -111,12 +111,12 @@ export default function Index() {
     setLoading(true);
     
     try {
-      // Create the chat first
+      // Create the chat first with default title
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
         .insert([{
           user_id: user.id,
-          title: initialMessage || 'New Chat'
+          title: 'New Chat'
         }])
         .select()
         .single();
