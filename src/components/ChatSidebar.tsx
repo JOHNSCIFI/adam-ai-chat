@@ -259,16 +259,11 @@ export function ChatSidebar() {
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
-          {/* Header with Logo and Toggle */}
-          <div className="flex items-center justify-between mb-3">
-            {/* ChatGPT Logo - always visible on the left */}
-            <div className="flex items-center justify-center h-8 w-8">
-              <Bot className="h-6 w-6 text-sidebar-foreground" />
-            </div>
-            
-            {/* Sidebar Toggle Button - always on the right */}
+          {/* Sidebar Toggle Button - always at the same position */}
+          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
             <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
-              <Menu className="h-4 w-4" />
+              <Bot className="h-5 w-5 group-hover:hidden" />
+              <Menu className="h-4 w-4 hidden group-hover:block" />
             </SidebarTrigger>
           </div>
 
