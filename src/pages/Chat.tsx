@@ -651,14 +651,13 @@ export default function Chat() {
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
-                            ? 'text-white rounded-2xl' 
+                            ? 'text-foreground bg-[hsl(var(--user-message-bg))] rounded-2xl' 
                             : 'text-foreground rounded-2xl'
                         } px-3.5 py-2.5 shadow-sm relative break-words whitespace-pre-wrap`} style={{ 
                           padding: '10px 14px',
                           wordWrap: 'break-word',
                           overflowWrap: 'break-word',
-                          hyphens: 'auto',
-                          backgroundColor: message.role === 'user' ? '#30394F' : 'transparent'
+                          hyphens: 'auto'
                         }}>
                         
                          {/* File attachments */}
