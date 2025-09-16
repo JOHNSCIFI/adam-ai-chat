@@ -703,7 +703,7 @@ export default function Chat() {
                          )}
                         
                          {message.content && (
-                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0.5 [&>p]:!my-1 [&>h1]:!my-1 [&>h2]:!my-1 [&>h3]:!my-0.5 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-1 [&>ol]:!my-1 [&>blockquote]:!my-1 [&>pre]:!my-1 [&>table]:!my-1 [&>hr]:!my-1 [&>li]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0.5 [&>ol]:!my-0.5 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
                                components={{
