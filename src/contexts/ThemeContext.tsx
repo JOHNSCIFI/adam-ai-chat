@@ -24,9 +24,11 @@ export function useTheme() {
 }
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark'); // Default to dark for ChatGPT style
+  const [theme, setTheme] = useState<Theme>('system'); // Default to system theme
   const [accentColor, setAccentColor] = useState<AccentColor>('gray'); // Default to gray
-  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>('dark');
+  const [actualTheme, setActualTheme] = useState<'light' | 'dark'>(
+    window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  );
   const { user } = useAuth();
 
   useEffect(() => {

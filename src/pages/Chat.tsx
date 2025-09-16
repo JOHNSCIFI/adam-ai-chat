@@ -702,7 +702,7 @@ export default function Chat() {
           )}
           
           <div className="relative">
-            <div className={`flex-1 flex items-end border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
               {/* Attachment button - left side inside input */}
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
@@ -734,13 +734,13 @@ export default function Chat() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Message AdamGPT..."
-                className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-center"
+                className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
                 style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                 disabled={loading}
                 rows={1}
               />
               
-              <div className="flex items-center gap-1 ml-2 pb-1">
+              <div className="flex items-center gap-1 ml-2">
                 {/* Dictation button */}
                 <Button
                   type="button"
