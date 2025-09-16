@@ -186,18 +186,15 @@ export function ChatSidebar() {
     }
   };
 
-  // Function to clean up empty chats (only delete chats older than 5 minutes)
+  // Function to clean up empty chats
   const cleanupEmptyChats = async () => {
     if (!user) return;
 
-    // Get chats that are older than 5 minutes to avoid deleting newly created chats
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
-    
+    // Get all chats for the user
     const { data: userChats } = await supabase
       .from('chats')
-      .select('id, created_at')
-      .eq('user_id', user.id)
-      .lt('created_at', fiveMinutesAgo);
+      .select('id')
+      .eq('user_id', user.id);
 
     if (userChats) {
       for (const chat of userChats) {
