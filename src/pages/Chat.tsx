@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { useToast } from '@/hooks/use-toast';
@@ -65,6 +65,8 @@ export default function Chat() {
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -383,10 +385,52 @@ export default function Chat() {
 
   const getFileIcon = (type: string) => {
     if (type.startsWith('image/')) return <ImageIcon className="h-4 w-4" />;
+    if (type.includes('pdf')) return <FileText className="h-4 w-4 text-red-500" />;
+    if (type.includes('document') || type.includes('word')) return <FileText className="h-4 w-4 text-blue-500" />;
+    if (type.startsWith('audio/')) return <FileText className="h-4 w-4 text-green-500" />;
+    if (type.startsWith('video/')) return <FileText className="h-4 w-4 text-purple-500" />;
     return <FileText className="h-4 w-4" />;
   };
 
   const isImageFile = (type: string) => type.startsWith('image/');
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const chunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(chunks, { type: 'audio/wav' });
+        const file = new File([blob], `recording-${Date.now()}.wav`, { type: 'audio/wav' });
+        setSelectedFiles(prev => [...prev, file]);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: "Recording failed",
+        description: "Could not access microphone. Please check permissions.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+      setIsRecording(false);
+    }
+  };
+
+  const openFile = (url: string, name: string) => {
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
 
   if (!chatId) {
     return (
@@ -449,42 +493,46 @@ export default function Chat() {
                           : 'text-foreground rounded-2xl'
                       } px-3.5 py-2.5 shadow-sm relative`} style={{ padding: '10px 14px' }}>
                         
-                        {/* File attachments */}
-                        {message.file_attachments && message.file_attachments.length > 0 && (
-                          <div className="mb-3 space-y-2">
-                            {message.file_attachments.map((file, index) => (
-                              <div key={index} className={`flex items-center gap-3 p-3 rounded-xl border ${
-                                message.role === 'user' 
-                                  ? 'bg-black/10 border-white/20' 
-                                  : 'bg-accent border-border'
-                              }`}>
-                                {isImageFile(file.type) && file.url ? (
-                                  <img 
-                                    src={file.url} 
-                                    alt={file.name} 
-                                    className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
-                                  />
-                                ) : (
-                                  <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                    message.role === 'user' 
-                                      ? 'bg-white/20' 
-                                      : 'bg-muted'
-                                  }`}>
-                                    {getFileIcon(file.type)}
-                                  </div>
-                                )}
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-sm font-medium truncate text-foreground">
-                                    {file.name}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">
-                                    {formatFileSize(file.size)}
-                                  </p>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        )}
+                         {/* File attachments */}
+                         {message.file_attachments && message.file_attachments.length > 0 && (
+                           <div className="mb-3 space-y-2">
+                             {message.file_attachments.map((file, index) => (
+                               <div 
+                                 key={index} 
+                                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${
+                                   message.role === 'user' 
+                                     ? 'bg-black/10 border-white/20' 
+                                     : 'bg-accent border-border'
+                                 }`}
+                                 onClick={() => openFile(file.url, file.name)}
+                               >
+                                 {isImageFile(file.type) && file.url ? (
+                                   <img 
+                                     src={file.url} 
+                                     alt={file.name} 
+                                     className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                   />
+                                 ) : (
+                                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                     message.role === 'user' 
+                                       ? 'bg-white/20' 
+                                       : 'bg-muted'
+                                   }`}>
+                                     {getFileIcon(file.type)}
+                                   </div>
+                                 )}
+                                 <div className="flex-1 min-w-0">
+                                   <p className="text-sm font-medium truncate text-foreground">
+                                     {file.name}
+                                   </p>
+                                   <p className="text-xs text-muted-foreground">
+                                     {formatFileSize(file.size)} • Click to open
+                                   </p>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                         )}
                         
                         {message.content && (
                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current">
@@ -515,23 +563,21 @@ export default function Chat() {
                          
                        </div>
                        
-                       {/* Copy button - positioned below the message content */}
-                       {hoveredMessage === message.id && (
-                         <div className={`flex mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                           <Button
-                             variant="ghost"
-                             size="sm"
-                             className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity"
-                             onClick={() => copyToClipboard(message.content, message.id)}
-                           >
-                             {copiedMessageId === message.id ? (
-                               <Check className="h-3 w-3 text-green-500" />
-                             ) : (
-                               <Copy className="h-3 w-3" />
-                             )}
-                           </Button>
-                         </div>
-                       )}
+                        {/* Copy button - always visible, positioned below the message content */}
+                        <div className={`flex mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity"
+                            onClick={() => copyToClipboard(message.content, message.id)}
+                          >
+                            {copiedMessageId === message.id ? (
+                              <Check className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                          </Button>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -603,6 +649,17 @@ export default function Chat() {
                     </Button>
                   </PopoverContent>
                 </Popover>
+                
+                {/* Dictation button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                  onClick={isRecording ? stopRecording : startRecording}
+                >
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 
                 <input
                   type="text"
