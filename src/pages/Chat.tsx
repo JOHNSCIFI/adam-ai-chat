@@ -684,7 +684,7 @@ export default function Chat() {
                          )}
                         
                          {message.content && (
-                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-1 [&>p]:!my-2 [&>h1]:!my-2 [&>h2]:!my-2 [&>h3]:!my-2 [&>h4]:!my-2 [&>h5]:!my-2 [&>h6]:!my-2 [&>ul]:!my-2 [&>ol]:!my-2 [&>blockquote]:!my-2 [&>pre]:!my-2 [&>table]:!my-2 [&>hr]:!my-2" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0.5 [&>p]:!my-1 [&>h1]:!my-1 [&>h2]:!my-1 [&>h3]:!my-0.5 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-1 [&>ol]:!my-1 [&>blockquote]:!my-1 [&>pre]:!my-1 [&>table]:!my-1 [&>hr]:!my-1 [&>li]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
                                components={{
@@ -696,7 +696,7 @@ export default function Chat() {
                                        {children}
                                      </code>
                                    ) : (
-                                     <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-2">
+                                     <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-1">
                                        <code {...props}>
                                          {children}
                                        </code>
@@ -704,47 +704,57 @@ export default function Chat() {
                                    );
                                  },
                                  p: ({children, ...props}) => (
-                                   <p {...props} className="break-words overflow-wrap-anywhere !my-2" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+                                   <p {...props} className="break-words overflow-wrap-anywhere !my-1" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
                                      {children}
                                    </p>
                                  ),
                                  h1: ({children, ...props}) => (
-                                   <h1 {...props} className="!my-2 !mb-3">
+                                   <h1 {...props} className="!my-1 !mb-1">
                                      {children}
                                    </h1>
                                  ),
                                  h2: ({children, ...props}) => (
-                                   <h2 {...props} className="!my-2 !mb-3">
+                                   <h2 {...props} className="!my-1 !mb-1">
                                      {children}
                                    </h2>
                                  ),
                                  h3: ({children, ...props}) => (
-                                   <h3 {...props} className="!my-2 !mb-2">
+                                   <h3 {...props} className="!my-0.5 !mb-0.5">
                                      {children}
                                    </h3>
                                  ),
+                                 h4: ({children, ...props}) => (
+                                   <h4 {...props} className="!my-0.5 !mb-0.5">
+                                     {children}
+                                   </h4>
+                                 ),
                                  ul: ({children, ...props}) => (
-                                   <ul {...props} className="!my-2">
+                                   <ul {...props} className="!my-1 [&>li]:!my-0">
                                      {children}
                                    </ul>
                                  ),
                                  ol: ({children, ...props}) => (
-                                   <ol {...props} className="!my-2">
+                                   <ol {...props} className="!my-1 [&>li]:!my-0">
                                      {children}
                                    </ol>
                                  ),
+                                 li: ({children, ...props}) => (
+                                   <li {...props} className="!my-0">
+                                     {children}
+                                   </li>
+                                 ),
                                  blockquote: ({children, ...props}) => (
-                                   <blockquote {...props} className="!my-2">
+                                   <blockquote {...props} className="!my-1">
                                      {children}
                                    </blockquote>
                                  ),
                                  table: ({children, ...props}) => (
-                                   <table {...props} className="!my-2">
+                                   <table {...props} className="!my-1">
                                      {children}
                                    </table>
                                  ),
                                  hr: ({...props}) => (
-                                   <hr {...props} className="!my-3" />
+                                   <hr {...props} className="!my-1" />
                                  ),
                                }}
                              >
