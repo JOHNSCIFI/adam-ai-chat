@@ -244,7 +244,7 @@ export default function Index() {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} className="relative">
+          <div className="relative">
             <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
               {/* Attachment button - left side inside input */}
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -296,9 +296,10 @@ export default function Index() {
               />
               
               <div className="flex items-center gap-1 ml-2 pb-1">
-                {/* Send button */}
+                {/* Send button - always visible */}
                 <Button
-                  type="submit"
+                  type="button"
+                  onClick={handleSubmit}
                   disabled={(!message.trim() && selectedFiles.length === 0) || loading}
                   size="sm"
                   className="h-8 w-8 p-0 rounded-full flex-shrink-0"
@@ -307,7 +308,7 @@ export default function Index() {
                       ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
                       : 'hsl(var(--muted))',
                     color: (message.trim() || selectedFiles.length > 0) && !loading
-                      ? (actualTheme === 'light' ? 'white' : 'hsl(var(--primary-foreground))')
+                      ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
                       : 'hsl(var(--muted-foreground))'
                   }}
                 >
@@ -315,7 +316,7 @@ export default function Index() {
                 </Button>
               </div>
             </div>
-          </form>
+          </div>
           
           <p className="text-xs text-muted-foreground text-center mt-2">
             AdamGPT can make mistakes. Check important info.
