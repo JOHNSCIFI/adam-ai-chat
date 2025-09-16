@@ -566,7 +566,7 @@ export default function Chat() {
                          )}
                         
                         {message.content && (
-                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current">
+                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                             <ReactMarkdown
                               remarkPlugins={[remarkGfm]}
                               components={{
@@ -574,17 +574,22 @@ export default function Chat() {
                                   const match = /language-(\w+)/.exec(className || '');
                                   const inline = !match;
                                   return inline ? (
-                                    <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm" {...props}>
+                                    <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
                                       {children}
                                     </code>
                                   ) : (
-                                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto">
+                                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words">
                                       <code {...props}>
                                         {children}
                                       </code>
                                     </pre>
                                   );
                                 },
+                                p: ({children, ...props}) => (
+                                  <p {...props} className="break-words overflow-wrap-anywhere" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+                                    {children}
+                                  </p>
+                                ),
                               }}
                             >
                               {message.content}
@@ -655,14 +660,15 @@ export default function Chat() {
           )}
           
           <div className="relative">
-            <div className="flex items-end gap-3">
+            <div className={`flex-1 flex items-end border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              {/* Attachment button - left side inside input */}
               <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon"
-                    className="h-10 w-10 rounded-full flex-shrink-0"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
                   >
                     <Paperclip className="h-4 w-4 text-muted-foreground" />
                   </Button>
@@ -680,51 +686,49 @@ export default function Chat() {
                 </PopoverContent>
               </Popover>
               
-              <div className={`flex-1 flex items-end border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder="Message AdamGPT..."
-                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words"
-                  style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+              <Textarea
+                ref={textareaRef}
+                value={input}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                placeholder="Message AdamGPT..."
+                className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words"
+                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                disabled={loading}
+                rows={1}
+              />
+              
+              <div className="flex items-center gap-1 ml-2 pb-1">
+                {/* Dictation button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                  onClick={isRecording ? stopRecording : startRecording}
                   disabled={loading}
-                  rows={1}
-                />
+                >
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
                 
-                <div className="flex items-center gap-1 ml-2 pb-1">
-                  {/* Dictation button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                    onClick={isRecording ? stopRecording : startRecording}
-                    disabled={loading}
-                  >
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                  
-                  {/* Send button - always visible */}
-                  <Button
-                    type="button"
-                    onClick={sendMessage}
-                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-                    style={{ 
-                      backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
-                        ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
-                        : 'hsl(var(--muted))',
-                      color: (input.trim() || selectedFiles.length > 0) && !loading
-                        ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
-                        : 'hsl(var(--muted-foreground))'
-                    }}
-                  >
-                    {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-                  </Button>
-                </div>
+                {/* Send button - always visible */}
+                <Button
+                  type="button"
+                  onClick={sendMessage}
+                  disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                  size="sm"
+                  className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                  style={{ 
+                    backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
+                      ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                      : 'hsl(var(--muted))',
+                    color: (input.trim() || selectedFiles.length > 0) && !loading
+                      ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
+                      : 'hsl(var(--muted-foreground))'
+                  }}
+                >
+                  {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
+                </Button>
               </div>
             </div>
           </div>
