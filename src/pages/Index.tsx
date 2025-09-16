@@ -1,10 +1,11 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Plus, Paperclip, X, FileText, ImageIcon } from 'lucide-react';
+import { Paperclip, X, FileText, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,6 +21,7 @@ interface FileAttachment {
 
 export default function Index() {
   const { user, loading: authLoading, userProfile } = useAuth();
+  const { actualTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [message, setMessage] = useState('');
@@ -243,64 +245,75 @@ export default function Index() {
           )}
           
           <form onSubmit={handleSubmit} className="relative">
-            <div className="flex items-center gap-2 bg-background border border-border rounded-3xl shadow-sm">
-              <div className="flex-1 flex items-center">
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-10 w-10 p-0 m-2 hover:bg-muted rounded-full"
-                    >
-                      <Plus className="h-5 w-5" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={handleFileUpload}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                      Attach files
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-                
-                <Textarea
-                  ref={textareaRef}
-                  value={message}
-                  onChange={(e) => {
-                    setMessage(e.target.value);
-                    // Auto-resize textarea
-                    if (textareaRef.current) {
-                      textareaRef.current.style.height = 'auto';
-                      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
-                    }
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit(e);
-                    }
-                  }}
-                  placeholder="Ask anything..."
-                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-foreground placeholder-muted-foreground resize-none min-h-[20px] max-h-[200px] overflow-y-auto"
-                  style={{ height: 'auto' }}
-                />
-              </div>
+            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              {/* Attachment button - left side inside input */}
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+                  >
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={handleFileUpload}
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    Attach files
+                  </Button>
+                </PopoverContent>
+              </Popover>
               
-              <Button
-                type="submit"
-                disabled={(!message.trim() && selectedFiles.length === 0) || loading}
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 p-0 m-2 rounded-full text-foreground hover:bg-muted"
-              >
-                {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-              </Button>
+              <Textarea
+                ref={textareaRef}
+                value={message}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  // Auto-resize textarea
+                  if (textareaRef.current) {
+                    textareaRef.current.style.height = 'auto';
+                    textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+                  }
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSubmit(e);
+                  }
+                }}
+                placeholder="Ask anything..."
+                className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                disabled={loading}
+                rows={1}
+              />
+              
+              <div className="flex items-center gap-1 ml-2 pb-1">
+                {/* Send button */}
+                <Button
+                  type="submit"
+                  disabled={(!message.trim() && selectedFiles.length === 0) || loading}
+                  size="sm"
+                  className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                  style={{ 
+                    backgroundColor: (message.trim() || selectedFiles.length > 0) && !loading
+                      ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                      : 'hsl(var(--muted))',
+                    color: (message.trim() || selectedFiles.length > 0) && !loading
+                      ? (actualTheme === 'light' ? 'white' : 'hsl(var(--primary-foreground))')
+                      : 'hsl(var(--muted-foreground))'
+                  }}
+                >
+                  {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
+                </Button>
+              </div>
             </div>
           </form>
           
