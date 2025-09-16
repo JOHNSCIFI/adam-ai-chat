@@ -77,7 +77,8 @@ export function ChatSidebar() {
             table: 'chats',
             filter: `user_id=eq.${user.id}`
           }, 
-          () => {
+          (payload) => {
+            console.log('ChatSidebar: Received real-time update:', payload);
             fetchChats();
           }
         )
@@ -92,6 +93,7 @@ export function ChatSidebar() {
   const fetchChats = async () => {
     if (!user) return;
 
+    console.log('ChatSidebar: Fetching chats for user:', user.id);
     const { data, error } = await supabase
       .from('chats')
       .select('id, title, created_at')
@@ -100,7 +102,10 @@ export function ChatSidebar() {
       .limit(20);
 
     if (!error && data) {
+      console.log('ChatSidebar: Fetched chats:', data);
       setChats(data);
+    } else if (error) {
+      console.error('ChatSidebar: Error fetching chats:', error);
     }
   };
 

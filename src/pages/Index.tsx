@@ -111,6 +111,7 @@ export default function Index() {
     setLoading(true);
     
     try {
+      console.log('Creating new chat with message:', initialMessage);
       // Create the chat first with default title
       const { data: chatData, error: chatError } = await supabase
         .from('chats')
@@ -122,6 +123,7 @@ export default function Index() {
         .single();
 
       if (chatError || !chatData) throw chatError;
+      console.log('Chat created:', chatData);
 
       // Upload files to Supabase storage if any
       const uploadedFiles: FileAttachment[] = [];
@@ -171,6 +173,7 @@ export default function Index() {
 
       // Add initial message to the chat if provided
       if (initialMessage.trim() || uploadedFiles.length > 0) {
+        console.log('Adding initial message to chat');
         const { error: messageError } = await supabase
           .from('messages')
           .insert({
@@ -181,6 +184,7 @@ export default function Index() {
           });
 
         if (messageError) throw messageError;
+        console.log('Initial message added');
       }
 
       // Navigate to the new chat immediately for smooth experience
