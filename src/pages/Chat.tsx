@@ -513,11 +513,16 @@ export default function Chat() {
                 >
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
-                      <div className={`${
-                        message.role === 'user' 
-                          ? 'bg-primary text-primary-foreground rounded-2xl' 
-                          : 'text-foreground rounded-2xl'
-                      } px-3.5 py-2.5 shadow-sm relative`} style={{ padding: '10px 14px' }}>
+                        <div className={`${
+                          message.role === 'user' 
+                            ? 'bg-primary text-primary-foreground rounded-2xl' 
+                            : 'text-foreground rounded-2xl'
+                        } px-3.5 py-2.5 shadow-sm relative break-words whitespace-pre-wrap`} style={{ 
+                          padding: '10px 14px',
+                          wordWrap: 'break-word',
+                          overflowWrap: 'break-word',
+                          hyphens: 'auto'
+                        }}>
                         
                          {/* File attachments */}
                          {message.file_attachments && message.file_attachments.length > 0 && (
@@ -675,19 +680,20 @@ export default function Chat() {
                 </PopoverContent>
               </Popover>
               
-              <div className={`flex-1 flex items-end border rounded-3xl px-4 py-2 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              <div className={`flex-1 flex items-end border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
                 <Textarea
                   ref={textareaRef}
                   value={input}
                   onChange={handleInputChange}
                   onKeyDown={handleKeyDown}
                   placeholder="Message AdamGPT..."
-                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground"
+                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words"
+                  style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                   disabled={loading}
                   rows={1}
                 />
                 
-                <div className="flex items-center gap-1 ml-2">
+                <div className="flex items-center gap-1 ml-2 pb-1">
                   {/* Dictation button */}
                   <Button
                     type="button"
@@ -700,22 +706,24 @@ export default function Chat() {
                     {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
                   
-                  {/* Send button */}
-                  {(input.trim() || selectedFiles.length > 0) && (
-                    <Button
-                      type="button"
-                      onClick={sendMessage}
-                      disabled={loading}
-                      size="sm"
-                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-                      style={{ 
-                        backgroundColor: actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))',
-                        color: actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))'
-                      }}
-                    >
-                      {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-                    </Button>
-                  )}
+                  {/* Send button - always visible */}
+                  <Button
+                    type="button"
+                    onClick={sendMessage}
+                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                    style={{ 
+                      backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
+                        ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                        : 'hsl(var(--muted))',
+                      color: (input.trim() || selectedFiles.length > 0) && !loading
+                        ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
+                        : 'hsl(var(--muted-foreground))'
+                    }}
+                  >
+                    {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
             </div>
