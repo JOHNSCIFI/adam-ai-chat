@@ -651,8 +651,8 @@ export default function Chat() {
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
-                            ? 'text-gray-900 dark:text-white bg-[hsl(var(--user-message-bg))] rounded-2xl' 
-                            : 'text-foreground rounded-2xl bg-transparent border-none'
+                            ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[hsl(var(--user-message-bg))] rounded-2xl' 
+                            : 'text-black dark:text-white rounded-2xl bg-transparent border-none'
                         } px-3.5 py-2.5 relative break-words whitespace-pre-wrap`} style={{ 
                           padding: '10px 14px',
                           wordWrap: 'break-word',
