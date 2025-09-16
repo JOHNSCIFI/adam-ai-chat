@@ -323,9 +323,10 @@ export default function Chat() {
 
       // Update chat title if it's the first message
       if (messages.length === 0) {
+        const generatedTitle = generateChatTitle(userMessage);
         await supabase
           .from('chats')
-          .update({ title: userMessage.slice(0, 50) + (userMessage.length > 50 ? '...' : '') })
+          .update({ title: generatedTitle })
           .eq('id', chatId);
       }
 
@@ -474,6 +475,80 @@ export default function Chat() {
         variant: "destructive",
       });
     }
+  };
+
+  const generateChatTitle = (message: string) => {
+    // Remove extra whitespace and normalize
+    const cleaned = message.trim().replace(/\s+/g, ' ');
+    
+    // Common words to filter out
+    const stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+      'will', 'would', 'could', 'should', 'can', 'may', 'might', 'must', 'i', 'you', 'he', 'she',
+      'it', 'we', 'they', 'me', 'him', 'her', 'us', 'them', 'my', 'your', 'his', 'her', 'its',
+      'our', 'their', 'this', 'that', 'these', 'those', 'what', 'when', 'where', 'why', 'how',
+      'please', 'help', 'tell', 'explain', 'show', 'give', 'get', 'make', 'take', 'go', 'come'
+    ]);
+    
+    // Split into words and filter
+    const words = cleaned.toLowerCase().split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.has(word))
+      .map(word => word.replace(/[^\w]/g, '')) // Remove punctuation
+      .filter(word => word.length > 2);
+    
+    // If we have good keywords, use them
+    if (words.length >= 2) {
+      // Take first 3-4 most important words
+      const selectedWords = words.slice(0, 4);
+      
+      // Capitalize each word
+      const title = selectedWords
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+        
+      // Ensure it's not too long
+      if (title.length <= 40) {
+        return title;
+      }
+    }
+    
+    // Fallback: look for question patterns
+    if (cleaned.toLowerCase().startsWith('how')) {
+      const match = cleaned.match(/^how (?:to |do i |can i |should i )?([\w\s]{3,25})/i);
+      if (match) {
+        return `How to ${match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1)}`;
+      }
+    }
+    
+    if (cleaned.toLowerCase().startsWith('what')) {
+      const match = cleaned.match(/^what (?:is |are |does |do )?([\w\s]{3,25})/i);
+      if (match) {
+        return `What is ${match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1)}`;
+      }
+    }
+    
+    if (cleaned.toLowerCase().startsWith('why')) {
+      const match = cleaned.match(/^why (?:is |are |does |do |did )?([\w\s]{3,25})/i);
+      if (match) {
+        return `Why ${match[1].trim().charAt(0).toUpperCase() + match[1].trim().slice(1)}`;
+      }
+    }
+    
+    // Final fallback: truncate smartly
+    if (cleaned.length <= 40) {
+      return cleaned.charAt(0).toUpperCase() + cleaned.slice(1);
+    }
+    
+    // Find a good breaking point near 40 characters
+    const truncated = cleaned.slice(0, 37);
+    const lastSpace = truncated.lastIndexOf(' ');
+    
+    if (lastSpace > 20) {
+      return truncated.slice(0, lastSpace) + '...';
+    }
+    
+    return truncated + '...';
   };
 
   const openFile = (url: string, name: string) => {

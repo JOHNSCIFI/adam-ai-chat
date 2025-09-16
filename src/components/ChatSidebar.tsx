@@ -318,7 +318,7 @@ export function ChatSidebar() {
                               autoFocus
                             />
                           ) : (
-                            <span className="flex-1 truncate px-3 py-1.5">{chat.title}</span>
+                            <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={chat.title}>{chat.title}</span>
                           )}
                         </NavLink>
                         
