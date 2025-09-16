@@ -84,8 +84,17 @@ export function ChatSidebar() {
         )
         .subscribe();
 
+      // Listen for forced refresh events from main page
+      const handleForceRefresh = () => {
+        console.log('ChatSidebar: Forcing refresh due to new chat creation');
+        fetchChats();
+      };
+      
+      window.addEventListener('force-chat-refresh', handleForceRefresh);
+
       return () => {
         subscription.unsubscribe();
+        window.removeEventListener('force-chat-refresh', handleForceRefresh);
       };
     }
   }, [user]);

@@ -344,6 +344,8 @@ export default function Chat() {
           console.error('Error updating chat title:', updateError);
         } else {
           console.log('Chat title updated successfully');
+          // Trigger sidebar refresh to show updated title
+          window.dispatchEvent(new CustomEvent('force-chat-refresh'));
         }
       }
 

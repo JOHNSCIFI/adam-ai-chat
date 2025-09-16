@@ -190,6 +190,11 @@ export default function Index() {
       // Navigate to the new chat immediately for smooth experience
       // The chat page will handle getting the AI response automatically
       navigate(`/chat/${chatData.id}`);
+      
+      // Force sidebar update after a short delay to ensure the new chat appears
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+      }, 100);
 
     } catch (error: any) {
       console.error('Create chat error:', error);
