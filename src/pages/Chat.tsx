@@ -747,16 +747,16 @@ export default function Chat() {
                                      {children}
                                    </h4>
                                  ),
-                                 ul: ({children, ...props}) => (
-                                   <ul {...props} className="!my-1 [&>li]:!my-0">
-                                     {children}
-                                   </ul>
-                                 ),
-                                 ol: ({children, ...props}) => (
-                                   <ol {...props} className="!my-1 [&>li]:!my-0">
-                                     {children}
-                                   </ol>
-                                 ),
+                                  ul: ({children, ...props}) => (
+                                    <ul {...props} className="!my-0 [&>li]:!my-0">
+                                      {children}
+                                    </ul>
+                                  ),
+                                  ol: ({children, ...props}) => (
+                                    <ol {...props} className="!my-0 [&>li]:!my-0">
+                                      {children}
+                                    </ol>
+                                  ),
                                  li: ({children, ...props}) => (
                                    <li {...props} className="!my-0">
                                      {children}
