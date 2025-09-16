@@ -651,9 +651,9 @@ export default function Chat() {
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
-                            ? 'text-foreground bg-[hsl(var(--user-message-bg))] rounded-2xl' 
-                            : 'text-foreground rounded-2xl'
-                        } px-3.5 py-2.5 shadow-sm relative break-words whitespace-pre-wrap`} style={{ 
+                            ? 'text-gray-900 dark:text-white bg-[hsl(var(--user-message-bg))] rounded-2xl' 
+                            : 'text-foreground rounded-2xl bg-transparent border-none'
+                        } px-3.5 py-2.5 relative break-words whitespace-pre-wrap`} style={{ 
                           padding: '10px 14px',
                           wordWrap: 'break-word',
                           overflowWrap: 'break-word',
