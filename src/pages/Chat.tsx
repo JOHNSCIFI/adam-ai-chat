@@ -703,7 +703,7 @@ export default function Chat() {
                          )}
                         
                          {message.content && (
-                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0.5 [&>ol]:!my-0.5 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
                                components={{
@@ -748,12 +748,12 @@ export default function Chat() {
                                    </h4>
                                  ),
                                   ul: ({children, ...props}) => (
-                                    <ul {...props} className="!my-0 [&>li]:!my-0">
+                                    <ul {...props} className="!my-0 !leading-tight [&>li]:!my-0">
                                       {children}
                                     </ul>
                                   ),
                                   ol: ({children, ...props}) => (
-                                    <ol {...props} className="!my-0 [&>li]:!my-0">
+                                    <ol {...props} className="!my-0 !leading-tight [&>li]:!my-0">
                                       {children}
                                     </ol>
                                   ),
