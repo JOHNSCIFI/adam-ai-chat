@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Plus, Paperclip, X, FileText, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
@@ -26,6 +27,7 @@ export default function Index() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   if (authLoading) {
     return (
@@ -267,12 +269,26 @@ export default function Index() {
                   </PopoverContent>
                 </Popover>
                 
-                <input
-                  type="text"
+                <Textarea
+                  ref={textareaRef}
                   value={message}
-                  onChange={(e) => setMessage(e.target.value)}
+                  onChange={(e) => {
+                    setMessage(e.target.value);
+                    // Auto-resize textarea
+                    if (textareaRef.current) {
+                      textareaRef.current.style.height = 'auto';
+                      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 200)}px`;
+                    }
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e);
+                    }
+                  }}
                   placeholder="Ask anything..."
-                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-foreground placeholder-muted-foreground resize-none"
+                  className="flex-1 bg-transparent border-none outline-none py-3 pr-4 text-foreground placeholder-muted-foreground resize-none min-h-[20px] max-h-[200px] overflow-y-auto"
+                  style={{ height: 'auto' }}
                 />
               </div>
               

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
@@ -64,7 +64,7 @@ function App() {
                     </MainLayout>
                   </ProtectedRoute>
                 } />
-                <Route path="*" element={<NotFound />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Router>
             <Toaster />
