@@ -683,37 +683,75 @@ export default function Chat() {
                            </div>
                          )}
                         
-                        {message.content && (
-                          <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                            <ReactMarkdown
-                              remarkPlugins={[remarkGfm]}
-                              components={{
-                                code({node, className, children, ...props}: any) {
-                                  const match = /language-(\w+)/.exec(className || '');
-                                  const inline = !match;
-                                  return inline ? (
-                                    <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
-                                      {children}
-                                    </code>
-                                  ) : (
-                                    <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words">
-                                      <code {...props}>
-                                        {children}
-                                      </code>
-                                    </pre>
-                                  );
-                                },
-                                p: ({children, ...props}) => (
-                                  <p {...props} className="break-words overflow-wrap-anywhere" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
-                                    {children}
-                                  </p>
-                                ),
-                              }}
-                            >
-                              {message.content}
-                            </ReactMarkdown>
-                          </div>
-                        )}
+                         {message.content && (
+                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-1 [&>p]:!my-2 [&>h1]:!my-2 [&>h2]:!my-2 [&>h3]:!my-2 [&>h4]:!my-2 [&>h5]:!my-2 [&>h6]:!my-2 [&>ul]:!my-2 [&>ol]:!my-2 [&>blockquote]:!my-2 [&>pre]:!my-2 [&>table]:!my-2 [&>hr]:!my-2" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                             <ReactMarkdown
+                               remarkPlugins={[remarkGfm]}
+                               components={{
+                                 code({node, className, children, ...props}: any) {
+                                   const match = /language-(\w+)/.exec(className || '');
+                                   const inline = !match;
+                                   return inline ? (
+                                     <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
+                                       {children}
+                                     </code>
+                                   ) : (
+                                     <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-2">
+                                       <code {...props}>
+                                         {children}
+                                       </code>
+                                     </pre>
+                                   );
+                                 },
+                                 p: ({children, ...props}) => (
+                                   <p {...props} className="break-words overflow-wrap-anywhere !my-2" style={{wordBreak: 'break-word', overflowWrap: 'anywhere'}}>
+                                     {children}
+                                   </p>
+                                 ),
+                                 h1: ({children, ...props}) => (
+                                   <h1 {...props} className="!my-2 !mb-3">
+                                     {children}
+                                   </h1>
+                                 ),
+                                 h2: ({children, ...props}) => (
+                                   <h2 {...props} className="!my-2 !mb-3">
+                                     {children}
+                                   </h2>
+                                 ),
+                                 h3: ({children, ...props}) => (
+                                   <h3 {...props} className="!my-2 !mb-2">
+                                     {children}
+                                   </h3>
+                                 ),
+                                 ul: ({children, ...props}) => (
+                                   <ul {...props} className="!my-2">
+                                     {children}
+                                   </ul>
+                                 ),
+                                 ol: ({children, ...props}) => (
+                                   <ol {...props} className="!my-2">
+                                     {children}
+                                   </ol>
+                                 ),
+                                 blockquote: ({children, ...props}) => (
+                                   <blockquote {...props} className="!my-2">
+                                     {children}
+                                   </blockquote>
+                                 ),
+                                 table: ({children, ...props}) => (
+                                   <table {...props} className="!my-2">
+                                     {children}
+                                   </table>
+                                 ),
+                                 hr: ({...props}) => (
+                                   <hr {...props} className="!my-3" />
+                                 ),
+                               }}
+                             >
+                               {message.content}
+                             </ReactMarkdown>
+                           </div>
+                         )}
                          
                        </div>
                        
