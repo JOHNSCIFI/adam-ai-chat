@@ -259,7 +259,10 @@ export default function Chat() {
         content: userMessage, // Keep user message clean
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: tempFileAttachments // Show files cleanly
+        file_attachments: tempFileAttachments.map(file => ({
+          ...file,
+          url: file.url // Ensure URL is preserved for display
+        }))
       };
 
       // Add to UI immediately
@@ -512,19 +515,75 @@ export default function Chat() {
         return text; // Return the actual content, not metadata
         
       } else if (fileType.startsWith('image/')) {
-        // For images, do comprehensive analysis
-        console.log('Performing comprehensive image analysis...');
+        // For images, use OpenAI Vision API for analysis
+        console.log('Performing OpenAI image analysis...');
         
         try {
-          const analysisResult = await analyzeImageComprehensively(file);
-          
+          // Convert image to base64
+          const reader = new FileReader();
+          const imageBase64 = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => {
+              const result = reader.result as string;
+              const base64 = result.split(',')[1]; // Remove data:image/...;base64, prefix
+              resolve(base64);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          // Call OpenAI image analysis
+          const response = await supabase.functions.invoke('analyze-image', {
+            body: {
+              imageBase64,
+              fileName: file.name,
+              chatId: chatId,
+              userId: user?.id
+            }
+          });
+
+          if (response.error) {
+            console.error('Image analysis error:', response.error);
+            return `[Image file: ${file.name} - OpenAI analysis failed, but image is available for editing and questions]`;
+          }
+
           // Store the analysis result for future reference
+          const analysisResult = {
+            id: `img-${Date.now()}`,
+            fileName: file.name,
+            url: URL.createObjectURL(file),
+            basicInfo: {
+              width: 0,
+              height: 0,
+              size: file.size,
+              format: file.type,
+              aspectRatio: 1
+            },
+            visualAnalysis: {
+              dominantColors: [],
+              brightness: 0,
+              contrast: 0,
+              colorfulness: 0,
+              composition: 'unknown',
+              quality: 'unknown'
+            },
+            detectedElements: {
+              hasText: false,
+              textAreas: 0,
+              hasFaces: false,
+              faceCount: 0,
+              hasObjects: false,
+              objectTypes: []
+            },
+            aiDescription: response.data.analysis,
+            timestamp: new Date().toISOString()
+          };
+          
           setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
           
-          console.log('Image analysis completed:', analysisResult);
+          console.log('OpenAI image analysis completed');
           
-          // Return the AI description as content
-          return analysisResult.aiDescription;
+          // Return the OpenAI analysis as content
+          return response.data.analysis;
           
         } catch (error) {
           console.error('Image analysis failed:', error);
@@ -1107,31 +1166,35 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           hyphens: 'auto'
                         }}>
                         
-                         {/* File attachments */}
-                         {message.file_attachments && message.file_attachments.length > 0 && (
-                           <div className="mb-3 space-y-3">
-                             {message.file_attachments.map((file, index) => (
-                               <div key={index}>
-                                 {isImageFile(file.type) && file.url ? (
-                                   <div className="space-y-2">
-                                     <img 
-                                       src={file.url} 
-                                       alt="Generated image" 
-                                       className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
-                                       onClick={() => setSelectedImage({ url: file.url, name: file.name })}
-                                     />
-                                     <div className="flex gap-2">
-                                       <Button
-                                         variant="ghost"
-                                         size="sm"
-                                         className="h-7 px-2 text-xs"
-                                         onClick={() => downloadImageFromChat(file.url, file.name)}
-                                       >
-                                         <Download className="h-3 w-3 mr-1" />
-                                         Download
-                                       </Button>
-                                     </div>
-                                   </div>
+          {/* File attachments */}
+          {message.file_attachments && message.file_attachments.length > 0 && (
+            <div className="mb-3 space-y-3">
+              {message.file_attachments.map((file, index) => (
+                <div key={index}>
+                  {isImageFile(file.type) && file.url ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={file.url} 
+                        alt={file.name || "Image"} 
+                        className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
+                        onClick={() => setSelectedImage({ url: file.url, name: file.name })}
+                        onError={(e) => {
+                          console.error('Image load error:', e);
+                          e.currentTarget.style.display = 'none';
+                        }}
+                      />
+                      <div className="flex gap-2">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 px-2 text-xs"
+                          onClick={() => downloadImageFromChat(file.url, file.name)}
+                        >
+                          <Download className="h-3 w-3 mr-1" />
+                          Download
+                        </Button>
+                      </div>
+                    </div>
                                  ) : (
                                    <div 
                                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${
