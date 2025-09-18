@@ -67,6 +67,7 @@ export default function Chat() {
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -170,10 +171,27 @@ export default function Chat() {
         console.log('Webhook response data:', responseData);
 
         let assistantResponse = '';
+        let isImageGeneration = false;
+        
+        // Check if this is an image generation response
         if (Array.isArray(responseData)) {
-          assistantResponse = responseData[0]?.output || responseData[0]?.value || responseData[0]?.message || '';
+          const firstItem = responseData[0];
+          if (firstItem?.mimeType && firstItem?.fileType === 'image') {
+            isImageGeneration = true;
+            assistantResponse = "🎨 Generating your image... This may take a few moments.";
+            // Add this message to pending image generations
+            setPendingImageGenerations(prev => new Set(prev).add(userMessageId));
+          } else {
+            assistantResponse = firstItem?.output || firstItem?.value || firstItem?.message || '';
+          }
         } else {
-          assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
+          if (responseData?.mimeType && responseData?.fileType === 'image') {
+            isImageGeneration = true;
+            assistantResponse = "🎨 Generating your image... This may take a few moments.";
+            setPendingImageGenerations(prev => new Set(prev).add(userMessageId));
+          } else {
+            assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
+          }
         }
         
         if (!assistantResponse) {
@@ -701,8 +719,17 @@ export default function Chat() {
                            </div>
                          )}
                         
-                         {message.content && (
-                           <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                          {message.content && (
+                            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                              {message.content.includes("🎨 Generating your image") ? (
+                                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
+                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                  <div>
+                                    <p className="text-sm font-medium">Generating your image...</p>
+                                    <p className="text-xs text-muted-foreground">This may take a few moments</p>
+                                  </div>
+                                </div>
+                              ) : (
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
                                components={{
@@ -775,11 +802,12 @@ export default function Chat() {
                                    <hr {...props} className="!my-1" />
                                  ),
                                }}
-                             >
-                               {message.content}
-                             </ReactMarkdown>
-                           </div>
-                         )}
+                              >
+                                {message.content}
+                              </ReactMarkdown>
+                              )}
+                            </div>
+                          )}
                          
                        </div>
                        
