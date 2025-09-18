@@ -101,10 +101,12 @@ export default function ImageGeneration() {
     setIsGenerating(true);
     const promptText = newPrompt.trim();
     setNewPrompt('');
+    
+    let generation: any = null;
 
     try {
       // Create generation record
-      const { data: generation, error } = await supabase
+      const { data: generationData, error } = await supabase
         .from('image_generations')
         .insert({
           image_session_id: sessionId,
@@ -116,6 +118,8 @@ export default function ImageGeneration() {
         .single();
 
       if (error) throw error;
+      
+      generation = generationData;
 
       // Add to local state immediately
       setGenerations(prev => [...prev, generation]);
@@ -135,9 +139,19 @@ export default function ImageGeneration() {
         body: { prompt: promptText }
       });
 
+      console.log('Supabase function response:', { imageData, apiError });
+
       if (apiError) {
-        throw new Error(apiError.message);
+        console.error('Supabase function error:', apiError);
+        throw new Error(apiError.message || 'Failed to call image generation function');
       }
+
+      if (!imageData || !imageData.imageUrl) {
+        console.error('Invalid response from image generation:', imageData);
+        throw new Error('Invalid response from image generation service');
+      }
+
+      console.log('Generated image URL:', imageData.imageUrl);
 
       // Update generation with the actual image URL
       await supabase
@@ -152,9 +166,20 @@ export default function ImageGeneration() {
 
     } catch (error) {
       console.error('Error generating image:', error);
+      
+      // Update the generation record to show failed status
+      if (generation?.id) {
+        await supabase
+          .from('image_generations')
+          .update({ 
+            status: 'failed' 
+          })
+          .eq('id', generation.id);
+      }
+      
       toast({
-        title: "Error",
-        description: "Failed to generate image. Please try again.",
+        title: "Image Generation Error",
+        description: error instanceof Error ? error.message : "Failed to generate image. Please try again.",
         variant: "destructive",
       });
       
@@ -327,23 +352,45 @@ export default function ImageGeneration() {
       <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/40">
         <div className="w-full px-4 py-4" style={getContainerStyle()}>
           <div className="relative">
-            <Textarea
-              ref={textareaRef}
-              placeholder="Describe the image you want to generate..."
-              value={newPrompt}
-              onChange={(e) => setNewPrompt(e.target.value)}
-              onKeyDown={handleKeyDown}
-              className="min-h-[60px] max-h-[200px] resize-none pr-12 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
-            />
-            <Button 
-              onClick={handleGenerate}
-              disabled={!newPrompt.trim() || isGenerating}
-              size="sm"
-              className="absolute bottom-2 right-2 h-8 w-8 p-0"
-            >
-              <SendHorizontalIcon className="h-4 w-4" />
-            </Button>
+            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 bg-white dark:bg-[hsl(var(--input))] border-gray-200 dark:border-border`}>
+              <Textarea
+                ref={textareaRef}
+                value={newPrompt}
+                onChange={(e) => setNewPrompt(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Describe the image you want to generate..."
+                className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                disabled={isGenerating}
+                rows={1}
+              />
+              
+              <div className="flex items-center gap-1 ml-2 pb-1">
+                {/* Send button - always visible */}
+                <Button
+                  type="button"
+                  onClick={handleGenerate}
+                  disabled={!newPrompt.trim() || isGenerating}
+                  size="sm"
+                  className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                  style={{ 
+                    backgroundColor: newPrompt.trim() && !isGenerating
+                      ? 'hsl(var(--primary))'
+                      : 'hsl(var(--muted))',
+                    color: newPrompt.trim() && !isGenerating
+                      ? 'hsl(var(--primary-foreground))'
+                      : 'hsl(var(--muted-foreground))'
+                  }}
+                >
+                  <SendHorizontalIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
           </div>
+          
+          <p className="text-xs text-muted-foreground text-center mt-3">
+            AI can make mistakes. Check important info.
+          </p>
         </div>
       </div>
       
