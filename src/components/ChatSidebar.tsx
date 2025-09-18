@@ -477,45 +477,76 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                   {projects.map((project) => {
                     const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
                     return (
-                      <SidebarMenuItem key={project.id} className="group/project relative">
-                        <div 
-                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
-                          onClick={() => navigate(`/project/${project.id}`)}
-                        >
-                          <IconComponent 
-                            className="w-4 h-4 flex-shrink-0"
-                            style={{ color: project.color }}
-                          />
-                          <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
-                        </div>
-                        
-                        {/* Project Actions */}
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/project:opacity-100 transition-opacity">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                <MoreHorizontal className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem onClick={() => {
-                                setEditingProjectId(project.id);
-                                setEditingProjectTitle(project.title);
-                              }}>
-                                <Edit2 className="mr-2 h-3 w-3" />
-                                Rename
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteProject(project.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-3 w-3" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      </SidebarMenuItem>
+                       <SidebarMenuItem key={project.id} className="group/project relative">
+                         {editingProjectId === project.id ? (
+                           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent">
+                             <IconComponent 
+                               className="w-4 h-4 flex-shrink-0"
+                               style={{ color: project.color }}
+                             />
+                             <input
+                               type="text"
+                               value={editingProjectTitle}
+                               onChange={(e) => setEditingProjectTitle(e.target.value)}
+                               onKeyDown={(e) => {
+                                 if (e.key === 'Enter') {
+                                   e.preventDefault();
+                                   handleRenameProject(project.id, editingProjectTitle);
+                                 } else if (e.key === 'Escape') {
+                                   setEditingProjectId(null);
+                                   setEditingProjectTitle('');
+                                 }
+                               }}
+                               onBlur={() => handleRenameProject(project.id, editingProjectTitle)}
+                               className="flex-1 bg-transparent border-none outline-none text-sm font-medium"
+                               autoFocus
+                               onFocus={(e) => {
+                                 // Position cursor at the end and make it blink
+                                 const length = e.target.value.length;
+                                 e.target.setSelectionRange(length, length);
+                               }}
+                             />
+                           </div>
+                         ) : (
+                           <div 
+                             className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
+                             onClick={() => navigate(`/project/${project.id}`)}
+                           >
+                             <IconComponent 
+                               className="w-4 h-4 flex-shrink-0"
+                               style={{ color: project.color }}
+                             />
+                             <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
+                           </div>
+                         )}
+                         
+                         {/* Project Actions */}
+                         <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/project:opacity-100 transition-opacity">
+                           <DropdownMenu>
+                             <DropdownMenuTrigger asChild>
+                               <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                 <MoreHorizontal className="h-3 w-3" />
+                               </Button>
+                             </DropdownMenuTrigger>
+                             <DropdownMenuContent>
+                               <DropdownMenuItem onClick={() => {
+                                 setEditingProjectId(project.id);
+                                 setEditingProjectTitle(project.title);
+                               }}>
+                                 <Edit2 className="mr-2 h-3 w-3" />
+                                 Rename
+                               </DropdownMenuItem>
+                               <DropdownMenuItem
+                                 onClick={() => handleDeleteProject(project.id)}
+                                 className="text-destructive"
+                               >
+                                 <Trash2 className="mr-2 h-3 w-3" />
+                                 Delete
+                               </DropdownMenuItem>
+                             </DropdownMenuContent>
+                           </DropdownMenu>
+                         </div>
+                       </SidebarMenuItem>
                     );
                   })}
                 </SidebarMenu>
@@ -630,24 +661,20 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                     )}
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuItem onClick={() => navigate('/profile')}>
-                    <User className="mr-2 h-4 w-4" />
-                    Profile
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    Settings
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/help')}>
-                    <HelpCircle className="mr-2 h-4 w-4" />
-                    Help
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign Out
-                  </DropdownMenuItem>
+                 <DropdownMenuContent align="end" className="w-56">
+                   <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                     <Settings className="mr-2 h-4 w-4" />
+                     Settings
+                   </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => navigate('/help')}>
+                     <HelpCircle className="mr-2 h-4 w-4" />
+                     Help
+                   </DropdownMenuItem>
+                   <DropdownMenuSeparator />
+                   <DropdownMenuItem onClick={handleSignOut}>
+                     <LogOut className="mr-2 h-4 w-4" />
+                     Sign Out
+                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             </SidebarMenuItem>

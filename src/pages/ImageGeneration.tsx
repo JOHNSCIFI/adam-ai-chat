@@ -96,96 +96,41 @@ export default function ImageGeneration() {
   };
 
   const handleGenerate = async () => {
-    if (!newPrompt.trim() || !sessionId || !user || isGenerating) return;
+    if (!newPrompt.trim() || isGenerating) return;
 
-    setIsGenerating(true);
     const promptText = newPrompt.trim();
     setNewPrompt('');
-    
-    let generation: any = null;
+    setIsGenerating(true);
 
     try {
-      // Create generation record
-      const { data: generationData, error } = await supabase
-        .from('image_generations')
+      // Create new chat with the prompt
+      const { data: newChat, error } = await supabase
+        .from('chats')
         .insert({
-          image_session_id: sessionId,
           user_id: user.id,
-          prompt: promptText,
-          status: 'generating'
+          title: promptText.length > 50 ? promptText.substring(0, 50) + '...' : promptText
         })
         .select()
         .single();
 
       if (error) throw error;
-      
-      generation = generationData;
 
-      // Add to local state immediately
-      setGenerations(prev => [...prev, generation]);
-
-      // Update session title if this is the first generation
-      if (generations.length === 0) {
-        const title = promptText.length > 50 ? promptText.substring(0, 50) + '...' : promptText;
-        await supabase
-          .from('image_sessions')
-          .update({ title })
-          .eq('id', sessionId);
-        setSessionTitle(title);
-      }
-
-      // Call OpenAI image generation API
-      const { data: imageData, error: apiError } = await supabase.functions.invoke('generate-image', {
-        body: { prompt: promptText }
-      });
-
-      console.log('Supabase function response:', { imageData, apiError });
-
-      if (apiError) {
-        console.error('Supabase function error:', apiError);
-        throw new Error(apiError.message || 'Failed to call image generation function');
-      }
-
-      if (!imageData || !imageData.imageUrl) {
-        console.error('Invalid response from image generation:', imageData);
-        throw new Error('Invalid response from image generation service');
-      }
-
-      console.log('Generated image URL:', imageData.imageUrl);
-
-      // Update generation with the actual image URL
+      // Add initial message to the chat
       await supabase
-        .from('image_generations')
-        .update({ 
-          image_url: imageData.imageUrl, 
-          status: 'completed' 
-        })
-        .eq('id', generation.id);
+        .from('messages')
+        .insert({
+          chat_id: newChat.id,
+          content: promptText,
+          role: 'user'
+        });
 
-      fetchGenerations();
-
+      // Navigate to the new chat
+      window.location.href = `/chat/${newChat.id}`;
+      
     } catch (error) {
-      console.error('Error generating image:', error);
-      
-      // Update the generation record to show failed status
-      if (generation?.id) {
-        await supabase
-          .from('image_generations')
-          .update({ 
-            status: 'failed' 
-          })
-          .eq('id', generation.id);
-      }
-      
-      toast({
-        title: "Image Generation Error",
-        description: error instanceof Error ? error.message : "Failed to generate image. Please try again.",
-        variant: "destructive",
-      });
-      
-      fetchGenerations();
-    } finally {
+      console.error('Error creating chat:', error);
       setIsGenerating(false);
+      setNewPrompt(promptText);
     }
   };
 
