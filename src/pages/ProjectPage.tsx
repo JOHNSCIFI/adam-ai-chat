@@ -338,94 +338,96 @@ export default function ProjectPage() {
     <div className="flex h-screen bg-background">
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto pb-32">
-          <div style={getContainerStyle()} className="min-h-screen flex flex-col justify-center pb-32">
-            {/* Header */}
-            <div className="flex flex-col items-center justify-center mb-8">
-              <div 
-                className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
-                onClick={() => setIsEditingProject(true)}
-              >
-                {(() => {
-                  const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                  return (
-                    <div 
-                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                      style={{ backgroundColor: project.color }}
-                    >
-                      <IconComponent className="w-6 h-6 text-white" />
-                    </div>
-                  );
-                })()}
-                <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+          <div className="min-h-screen flex flex-col justify-center pb-32">
+            <div style={getContainerStyle()}>
+              {/* Header */}
+              <div className="flex flex-col items-center justify-center mb-8">
+                <div 
+                  className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setIsEditingProject(true)}
+                >
+                  {(() => {
+                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                    return (
+                      <div 
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ backgroundColor: project.color }}
+                      >
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>
+                    );
+                  })()}
+                  <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+                </div>
               </div>
-            </div>
 
-            {/* Chat List */}
-            {chats.length > 0 && (
-              <div className="space-y-3 mb-8 flex flex-col items-center">
-                {chats.map((chat) => (
-                  <div
-                    key={chat.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group w-full max-w-2xl"
-                  >
-                    <div 
-                      className="flex-1 cursor-pointer"
-                      onClick={() => navigate(`/chat/${chat.id}`)}
+              {/* Chat List */}
+              {chats.length > 0 && (
+                <div className="space-y-3 mb-8 flex flex-col items-center">
+                  {chats.map((chat) => (
+                    <div
+                      key={chat.id}
+                      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group w-full max-w-2xl"
                     >
-                      <div className="flex flex-col gap-1">
-                        {editingChatId === chat.id ? (
-                          <input
-                            value={editingChatTitle}
-                            onChange={(e) => setEditingChatTitle(e.target.value)}
-                            onBlur={() => saveRename(chat.id)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') saveRename(chat.id);
-                              if (e.key === 'Escape') {
-                                setEditingChatId(null);
-                                setEditingChatTitle('');
-                              }
-                            }}
-                            className="font-medium text-foreground bg-transparent border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                            autoFocus
-                          />
-                        ) : (
-                          <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                        </p>
+                      <div 
+                        className="flex-1 cursor-pointer"
+                        onClick={() => navigate(`/chat/${chat.id}`)}
+                      >
+                        <div className="flex flex-col gap-1">
+                          {editingChatId === chat.id ? (
+                            <input
+                              value={editingChatTitle}
+                              onChange={(e) => setEditingChatTitle(e.target.value)}
+                              onBlur={() => saveRename(chat.id)}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') saveRename(chat.id);
+                                if (e.key === 'Escape') {
+                                  setEditingChatId(null);
+                                  setEditingChatTitle('');
+                                }
+                              }}
+                              className="font-medium text-foreground bg-transparent border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                              autoFocus
+                            />
+                          ) : (
+                            <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </p>
+                        </div>
+                      </div>
+                      
+                      {/* Chat Actions */}
+                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startRenameChat(chat);
+                          }}
+                        >
+                          <Edit2 className="h-3 w-3" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteChat(chat.id);
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
                       </div>
                     </div>
-                    
-                    {/* Chat Actions */}
-                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startRenameChat(chat);
-                        }}
-                      >
-                        <Edit2 className="h-3 w-3" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteChat(chat.id);
-                        }}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
