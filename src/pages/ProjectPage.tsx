@@ -69,19 +69,19 @@ export default function ProjectPage() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Calculate proper positioning based on sidebar state
+  // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
     if (collapsed) {
       return { 
-        marginLeft: '56px',
-        marginRight: '0',
-        width: '100%'
+        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
       };
     } else {
       return { 
-        marginLeft: '280px',
-        marginRight: '0',
-        width: '100%'
+        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
       };
     }
   };
