@@ -9,6 +9,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon, Plus, Copy, Check, Download, Sparkles } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
+import { ImagePopupModal } from '@/components/ImagePopupModal';
 
 interface ImageGeneration {
   id: string;
@@ -31,6 +32,7 @@ export default function ImageGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [copiedImageId, setCopiedImageId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState('New Image Session');
+  const [selectedImage, setSelectedImage] = useState<{url: string, prompt: string} | null>(null);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -128,21 +130,25 @@ export default function ImageGeneration() {
         setSessionTitle(title);
       }
 
-      // Here you would call your image generation API
-      // For now, we'll simulate it
-      setTimeout(async () => {
-        const mockImageUrl = `https://picsum.photos/512/512?random=${Date.now()}`;
-        
-        await supabase
-          .from('image_generations')
-          .update({ 
-            image_url: mockImageUrl, 
-            status: 'completed' 
-          })
-          .eq('id', generation.id);
+      // Call OpenAI image generation API
+      const { data: imageData, error: apiError } = await supabase.functions.invoke('generate-image', {
+        body: { prompt: promptText }
+      });
 
-        fetchGenerations();
-      }, 3000);
+      if (apiError) {
+        throw new Error(apiError.message);
+      }
+
+      // Update generation with the actual image URL
+      await supabase
+        .from('image_generations')
+        .update({ 
+          image_url: imageData.imageUrl, 
+          status: 'completed' 
+        })
+        .eq('id', generation.id);
+
+      fetchGenerations();
 
     } catch (error) {
       console.error('Error generating image:', error);
@@ -151,6 +157,8 @@ export default function ImageGeneration() {
         description: "Failed to generate image. Please try again.",
         variant: "destructive",
       });
+      
+      fetchGenerations();
     } finally {
       setIsGenerating(false);
     }
@@ -264,14 +272,18 @@ export default function ImageGeneration() {
                               <img 
                                 src={generation.image_url} 
                                 alt={generation.prompt}
-                                className="w-full max-w-md rounded-lg shadow-sm"
+                                className="w-full max-w-md rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
+                                onClick={() => setSelectedImage({url: generation.image_url!, prompt: generation.prompt})}
                               />
                               <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-x-1">
                                 <Button
                                   size="sm"
                                   variant="secondary"
                                   className="h-8 w-8 p-0"
-                                  onClick={() => copyImageUrl(generation.image_url!, generation.id)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    copyImageUrl(generation.image_url!, generation.id);
+                                  }}
                                 >
                                   {copiedImageId === generation.id ? (
                                     <Check className="h-4 w-4" />
@@ -283,7 +295,10 @@ export default function ImageGeneration() {
                                   size="sm"
                                   variant="secondary"
                                   className="h-8 w-8 p-0"
-                                  onClick={() => downloadImage(generation.image_url!, generation.prompt)}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    downloadImage(generation.image_url!, generation.prompt);
+                                  }}
                                 >
                                   <Download className="h-4 w-4" />
                                 </Button>
@@ -327,6 +342,16 @@ export default function ImageGeneration() {
           </div>
         </div>
       </div>
+      
+      {/* Image Popup Modal */}
+      {selectedImage && (
+        <ImagePopupModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          imageUrl={selectedImage.url}
+          prompt={selectedImage.prompt}
+        />
+      )}
     </div>
   );
 }

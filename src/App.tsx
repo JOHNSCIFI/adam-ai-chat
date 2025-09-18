@@ -13,6 +13,7 @@ import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
 import ImageGeneration from '@/pages/ImageGeneration';
+import ProjectPage from '@/pages/ProjectPage';
 import Profile from '@/pages/Profile';
 import Settings from '@/pages/Settings';
 import Help from '@/pages/Help';
@@ -48,6 +49,13 @@ function App() {
                   <ProtectedRoute>
                     <MainLayout>
                       <ImageGeneration />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
+                <Route path="/project/:projectId" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <ProjectPage />
                     </MainLayout>
                   </ProtectedRoute>
                 } />

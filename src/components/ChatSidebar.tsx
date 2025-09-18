@@ -43,6 +43,11 @@ import {
   ChevronDown,
   ChevronRight
 } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { ProjectModal } from '@/components/ProjectModal';
+import { AddToProjectModal } from '@/components/AddToProjectModal';
 import { 
   Briefcase, 
   BookOpen, 
@@ -705,20 +710,26 @@ export function ChatSidebar() {
             </SidebarGroup>
           )}
 
-          {/* Unorganized Chats */}
-          {!collapsed && unorganizedChats.length > 0 && (
+          {/* Unorganized Chats and Image Sessions */}
+          {!collapsed && (unorganizedChats.length > 0 || unorganizedImageSessions.length > 0) && (
             <SidebarGroup>
               <SidebarGroupLabel className="px-3 text-xs text-sidebar-foreground/60 font-medium">
                 Chats
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {unorganizedChats.map((chat) => (
-                    <SidebarMenuItem key={chat.id}>
+                  {/* Mix chats and image sessions together, sorted by updated_at */}
+                  {[
+                    ...unorganizedChats.map(chat => ({ ...chat, type: 'chat' as const })),
+                    ...unorganizedImageSessions.map(session => ({ ...session, type: 'image' as const }))
+                  ]
+                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                    .map((item) => (
+                    <SidebarMenuItem key={`${item.type}-${item.id}`}>
                       <div className="group/chat relative">
                         <NavLink
-                          to={`/chat/${chat.id}`}
-                          onClick={() => handleChatSwitch(chat.id)}
+                          to={item.type === 'chat' ? `/chat/${item.id}` : `/image/${item.id}`}
+                          onClick={() => item.type === 'chat' && handleChatSwitch(item.id)}
                           className={({ isActive }) =>
                             `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
                               isActive
@@ -727,54 +738,75 @@ export function ChatSidebar() {
                             }`
                           }
                         >
-                          {editingChatId === chat.id ? (
-                            <input
-                              type="text"
-                              value={editingTitle}
-                              onChange={(e) => setEditingTitle(e.target.value)}
-                              onBlur={() => handleRenameChat(chat.id, editingTitle)}
-                              onKeyPress={(e) => {
-                                if (e.key === 'Enter') {
-                                  handleRenameChat(chat.id, editingTitle);
-                                }
-                              }}
-                              className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-1.5"
-                              autoFocus
-                            />
+                          {item.type === 'chat' ? (
+                            <>
+                              {editingChatId === item.id ? (
+                                <input
+                                  type="text"
+                                  value={editingTitle}
+                                  onChange={(e) => setEditingTitle(e.target.value)}
+                                  onBlur={() => handleRenameChat(item.id, editingTitle)}
+                                  onKeyPress={(e) => {
+                                    if (e.key === 'Enter') {
+                                      handleRenameChat(item.id, editingTitle);
+                                    }
+                                  }}
+                                  className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-1.5"
+                                  autoFocus
+                                />
+                              ) : (
+                                <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={item.title}>{item.title}</span>
+                              )}
+                            </>
                           ) : (
-                            <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={chat.title}>{chat.title}</span>
+                            <>
+                              <ImageIcon className="h-3 w-3 flex-shrink-0" />
+                              <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={item.title}>{item.title}</span>
+                            </>
                           )}
                         </NavLink>
                         
-                        {/* Edit/Delete buttons - only show on hover for this specific chat */}
-                        {editingChatId !== chat.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex items-center gap-1">
+                        {/* Edit/Delete buttons - only show for chats */}
+                        {item.type === 'chat' && editingChatId !== item.id && (
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex gap-1">
                             <Button
-                              variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
+                              variant="ghost"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                setEditingChatId(chat.id);
-                                setEditingTitle(chat.title);
+                                setEditingChatId(item.id);
+                                setEditingTitle(item.title);
                               }}
+                              className="h-6 w-6 p-0 hover:bg-sidebar-accent"
                             >
                               <Edit2 className="h-3 w-3" />
                             </Button>
                             <Button
-                              variant="ghost"
                               size="sm"
-                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
+                              variant="ghost"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
-                                handleDeleteChat(chat.id);
+                                handleDeleteChat(item.id);
                               }}
+                              className="h-6 w-6 p-0 hover:bg-sidebar-accent text-red-500 hover:text-red-600"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
                           </div>
+                        )}
+
+                        {/* Add to Project button - only show for chats */}
+                        {item.type === 'chat' && (
+                          <AddToProjectModal 
+                            chatId={item.id} 
+                            projects={projects} 
+                            onProjectAssigned={() => {
+                              fetchChats();
+                              fetchProjects();
+                            }}
+                          />
                         )}
                       </div>
                     </SidebarMenuItem>
@@ -784,37 +816,6 @@ export function ChatSidebar() {
             </SidebarGroup>
           )}
 
-          {/* Unorganized Image Sessions */}
-          {!collapsed && unorganizedImageSessions.length > 0 && (
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-3 text-xs text-sidebar-foreground/60 font-medium">
-                Image Sessions
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {unorganizedImageSessions.map((session) => (
-                    <SidebarMenuItem key={session.id}>
-                      <NavLink
-                        to={`/image/${session.id}`}
-                        className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                            isActive
-                              ? 'bg-sidebar-accent text-sidebar-foreground'
-                              : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                          }`
-                        }
-                      >
-                        <ImageIcon className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate max-w-[180px]" title={session.title}>
-                          {session.title}
-                        </span>
-                      </NavLink>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
         </SidebarContent>
 
         <SidebarFooter className="p-2 border-t border-sidebar-border">
