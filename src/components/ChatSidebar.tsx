@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -261,59 +261,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleChatSwitch = (chatId: string) => {
-    navigate(`/chat/${chatId}`);
-  };
-
-  const handleSaveEdit = (chatId: string) => {
-    if (editingTitle.trim()) {
-      handleRenameChat(chatId, editingTitle.trim());
-    } else {
-      setEditingChatId(null);
-      setEditingTitle('');
-    }
-  };
-
-  const handleRenameChat = async (chatId: string, newTitle: string) => {
-    if (!newTitle.trim()) {
-      setEditingChatId(null);
-      return;
-    }
-
-    try {
-      const { error } = await supabase
-        .from('chats')
-        .update({ title: newTitle.trim() })
-        .eq('id', chatId);
-
-      if (error) {
-        console.error('Error renaming chat:', error);
-        toast({
-          title: "Error renaming chat",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setChats(prev => prev.map(chat => 
-          chat.id === chatId ? { ...chat, title: newTitle.trim() } : chat
-        ));
-        toast({
-          title: "Chat renamed",
-          description: "Chat has been renamed successfully.",
-        });
-      }
-    } catch (error) {
-      console.error('Error in handleRenameChat:', error);
-      toast({
-        title: "Error renaming chat",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    } finally {
-      setEditingChatId(null);
-    }
-  };
-
   const handleDeleteChat = async (chatId: string) => {
     try {
       const { error } = await supabase
@@ -335,7 +282,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           description: "Chat has been deleted successfully.",
         });
         
-        if (chatId === chatId) {
+        if (window.location.pathname === `/chat/${chatId}`) {
           navigate('/');
         }
       }
@@ -501,167 +448,101 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {projects.map((project) => {
-                    const isExpanded = expandedProjects.has(project.id);
-                    const totalItems = (project.chats?.length || 0) + (project.imageSessions?.length || 0);
                     const IconComponent = iconMap[project.icon as keyof typeof iconMap] || Briefcase;
+                    const isExpanded = expandedProjects.has(project.id);
                     
                     return (
-                      <SidebarMenuItem key={project.id}>
-                        <div>
-                          <Button
-                            variant="ghost"
-                            onClick={() => navigate(`/${encodeURIComponent(project.title.toLowerCase().replace(/\s+/g, '-'))}/`)}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
+                      <div key={project.id} className="space-y-1">
+                        <SidebarMenuItem>
+                          <div 
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
+                            onClick={() => toggleProjectExpanded(project.id)}
                           >
-                            <div className="flex items-center gap-2">
-                              <div className="p-1 rounded" style={{ backgroundColor: `${project.color}20` }}>
-                                <IconComponent 
-                                  className="h-4 w-4" 
-                                  style={{ color: project.color }}
-                                />
+                            <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: project.color }} />
+                            <IconComponent className="h-4 w-4 text-sidebar-foreground" />
+                            <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
+                            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                          </div>
+                        </SidebarMenuItem>
+                        
+                        {isExpanded && (
+                          <div className="ml-6 space-y-1">
+                            {/* Project Chats */}
+                            {project.chats?.map((chat) => (
+                              <div key={chat.id} className="group/chat relative">
+                                <NavLink
+                                  to={`/chat/${chat.id}`}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                                      isActive
+                                        ? 'bg-sidebar-accent text-sidebar-foreground'
+                                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                                    }`
+                                  }
+                                >
+                                  <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                  <span className="flex-1 truncate">{chat.title}</span>
+                                </NavLink>
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                      <DropdownMenuItem
+                                        onClick={() => handleDeleteChat(chat.id)}
+                                        className="text-destructive"
+                                      >
+                                        <Trash2 className="mr-2 h-3 w-3" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
                               </div>
-                              <span className="font-medium text-sm truncate">{project.title}</span>
-                            </div>
-                            {totalItems > 0 && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-5 w-5 p-0 hover:bg-muted"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  toggleProjectExpanded(project.id);
-                                }}
-                              >
-                                {isExpanded ? (
-                                  <ChevronDown className="h-3 w-3" />
-                                ) : (
-                                  <ChevronRight className="h-3 w-3" />
-                                )}
-                              </Button>
-                            )}
-                          </Button>
-                          
-                          {/* Project Items */}
-                          {isExpanded && totalItems > 0 && (
-                            <div className="ml-6 space-y-1">
-                              {/* Project Chats */}
-                              {project.chats?.map((chat) => (
-                                <div key={chat.id} className="group/chat relative">
-                                  <NavLink
-                                    to={`/chat/${chat.id}`}
-                                    onClick={() => handleChatSwitch(chat.id)}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                                        isActive
-                                          ? 'bg-sidebar-accent text-sidebar-foreground'
-                                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                                      }`
-                                    }
-                                  >
-                                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
-                                    <span className="flex-1 truncate text-xs" title={chat.title}>
-                                      {chat.title}
-                                    </span>
-                                  </NavLink>
-                                  
-                                  {/* 3-dot menu for project chats */}
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                          }}
-                                        >
-                                          <span className="text-xs">⋯</span>
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingChatId(chat.id);
-                                            setEditingTitle(chat.title);
-                                          }}
-                                        >
-                                          <Edit2 className="mr-2 h-3 w-3" />
-                                          Rename
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteChat(chat.id);
-                                          }}
-                                          className="text-destructive"
-                                        >
-                                          <Trash2 className="mr-2 h-3 w-3" />
-                                          Delete
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
+                            ))}
+                            
+                            {/* Project Image Sessions */}
+                            {project.imageSessions?.map((session) => (
+                              <div key={session.id} className="group/session relative">
+                                <NavLink
+                                  to={`/image/${session.id}`}
+                                  className={({ isActive }) =>
+                                    `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                                      isActive
+                                        ? 'bg-sidebar-accent text-sidebar-foreground'
+                                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                                    }`
+                                  }
+                                >
+                                  <ImageIcon className="h-3 w-3 flex-shrink-0" />
+                                  <span className="flex-1 truncate">{session.title}</span>
+                                </NavLink>
+                                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 transition-opacity">
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                        <Edit2 className="h-3 w-3" />
+                                      </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent>
+                                      <DropdownMenuItem
+                                        onClick={() => handleDeleteImageSession(session.id)}
+                                        className="text-destructive"
+                                      >
+                                        <Trash2 className="mr-2 h-3 w-3" />
+                                        Delete
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
                                 </div>
-                              ))}
-                              
-                              {/* Project Image Sessions */}
-                              {project.imageSessions?.map((session) => (
-                                <div key={session.id} className="group/session relative">
-                                  <NavLink
-                                    to={`/image/${session.id}`}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                                        isActive
-                                          ? 'bg-sidebar-accent text-sidebar-foreground'
-                                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                                      }`
-                                    }
-                                  >
-                                    <ImageIcon className="h-3 w-3 flex-shrink-0" />
-                                    <span className="flex-1 truncate text-xs" title={session.title}>
-                                      {session.title}
-                                    </span>
-                                  </NavLink>
-                                  
-                                  {/* 3-dot menu for project image sessions */}
-                                  <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 transition-opacity">
-                                    <DropdownMenu>
-                                      <DropdownMenuTrigger asChild>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
-                                          onClick={(e) => {
-                                            e.preventDefault();
-                                            e.stopPropagation();
-                                          }}
-                                        >
-                                          <span className="text-xs">⋯</span>
-                                        </Button>
-                                      </DropdownMenuTrigger>
-                                      <DropdownMenuContent align="end">
-                                        <DropdownMenuItem
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            handleDeleteImageSession(session.id);
-                                          }}
-                                          className="text-destructive"
-                                        >
-                                          <Trash2 className="mr-2 h-3 w-3" />
-                                          Delete
-                                        </DropdownMenuItem>
-                                      </DropdownMenuContent>
-                                    </DropdownMenu>
-                                  </div>
-                                </div>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      </SidebarMenuItem>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     );
                   })}
                 </SidebarMenu>
@@ -669,123 +550,98 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             </SidebarGroup>
           )}
 
-          {/* Unorganized Chats and Image Sessions */}
-          {!collapsed && (unorganizedChats.length > 0 || unorganizedImageSessions.length > 0) && (
+          {/* Unorganized Chats */}
+          {!collapsed && unorganizedChats.length > 0 && (
             <SidebarGroup>
               <SidebarGroupLabel className="px-3 text-xs text-sidebar-foreground/60 font-medium">
-                Chats
+                Recent Chats
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {/* Mix chats and image sessions together, sorted by created_at */}
-                  {[
-                    ...unorganizedChats.map(chat => ({ ...chat, type: 'chat' as const })),
-                    ...unorganizedImageSessions.map(session => ({ ...session, type: 'image' as const }))
-                  ]
-                    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                    .map((item) => (
-                    <SidebarMenuItem key={`${item.type}-${item.id}`}>
-                      <div className="group/chat relative">
-                        <NavLink
-                          to={item.type === 'chat' ? `/chat/${item.id}` : `/image/${item.id}`}
-                          onClick={() => item.type === 'chat' && handleChatSwitch(item.id)}
-                          className={({ isActive }) =>
-                            `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                              isActive
-                                ? 'bg-sidebar-accent text-sidebar-foreground'
-                                : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                            }`
-                          }
-                        >
-                          {item.type === 'chat' ? (
-                            <>
-                              <MessageSquare className="h-3 w-3 flex-shrink-0" />
-                              {editingChatId === item.id ? (
-                                <input
-                                  type="text"
-                                  value={editingTitle}
-                                  onChange={(e) => setEditingTitle(e.target.value)}
-                                  onBlur={() => handleSaveEdit(item.id)}
-                                  onKeyPress={(e) => {
-                                    if (e.key === 'Enter') {
-                                      handleSaveEdit(item.id);
-                                    }
-                                  }}
-                                  className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-0 py-0"
-                                  autoFocus
-                                />
-                              ) : (
-                                <span className="flex-1 truncate max-w-[180px]" title={item.title}>{item.title}</span>
-                              )}
-                            </>
-                          ) : (
-                            <>
-                              <ImageIcon className="h-3 w-3 flex-shrink-0" />
-                              <span className="flex-1 truncate max-w-[180px]" title={item.title}>{item.title}</span>
-                            </>
-                          )}
-                        </NavLink>
-                        
-                        {/* 3-dot menu for unorganized items */}
-                        {editingChatId !== item.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                  }}
-                                >
-                                  <span className="text-xs">⋯</span>
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {item.type === 'chat' && (
-                                  <>
-                                    <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setEditingChatId(item.id);
-                                        setEditingTitle(item.title);
-                                      }}
-                                    >
-                                      <Edit2 className="mr-2 h-3 w-3" />
-                                      Rename
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        setAddToProjectModalOpen(item.id);
-                                      }}
-                                    >
-                                      <Plus className="mr-2 h-3 w-3" />
-                                      Add to project
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator />
-                                  </>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (item.type === 'chat') {
-                                      handleDeleteChat(item.id);
-                                    } else {
-                                      handleDeleteImageSession(item.id);
-                                    }
-                                  }}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="mr-2 h-3 w-3" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        )}
+                  {unorganizedChats.slice(0, 20).map((chat) => (
+                    <SidebarMenuItem key={chat.id} className="group/chat relative">
+                      <NavLink
+                        to={`/chat/${chat.id}`}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-foreground'
+                              : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                          }`
+                        }
+                      >
+                        <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1 truncate text-sm">{chat.title}</span>
+                      </NavLink>
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => setAddToProjectModalOpen(chat.id)}>
+                              <FolderPlus className="mr-2 h-3 w-3" />
+                              Add to Project
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteChat(chat.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3 w-3" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </SidebarMenuItem>
+                  ))}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          )}
+
+          {/* Unorganized Image Sessions */}
+          {!collapsed && unorganizedImageSessions.length > 0 && (
+            <SidebarGroup>
+              <SidebarGroupLabel className="px-3 text-xs text-sidebar-foreground/60 font-medium">
+                Recent Image Sessions
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {unorganizedImageSessions.slice(0, 20).map((session) => (
+                    <SidebarMenuItem key={session.id} className="group/session relative">
+                      <NavLink
+                        to={`/image/${session.id}`}
+                        className={({ isActive }) =>
+                          `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                            isActive
+                              ? 'bg-sidebar-accent text-sidebar-foreground'
+                              : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                          }`
+                        }
+                      >
+                        <ImageIcon className="h-4 w-4 flex-shrink-0" />
+                        <span className="flex-1 truncate text-sm">{session.title}</span>
+                      </NavLink>
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent>
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteImageSession(session.id)}
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-3 w-3" />
+                              Delete
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </SidebarMenuItem>
                   ))}
@@ -795,7 +651,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           )}
         </SidebarContent>
 
-        <SidebarFooter className="p-2 border-t border-sidebar-border">
+        <SidebarFooter>
           <SidebarMenu>
             <SidebarMenuItem>
               <DropdownMenu>
