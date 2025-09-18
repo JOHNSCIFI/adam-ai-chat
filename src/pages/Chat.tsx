@@ -131,15 +131,12 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // Check if we need to trigger AI response for new user messages
+  // Disable the automatic AI trigger since we're calling AI directly from sendMessage
+  /*
   useEffect(() => {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
-      // Only trigger AI if:
-      // 1. Last message is from user
-      // 2. There's no assistant message after this user message
-      // 3. We haven't already processed this user message
       if (lastMessage.role === 'user' && !processedUserMessages.current.has(lastMessage.id)) {
         const hasAssistantResponseAfter = messages.some(msg => 
           msg.role === 'assistant' && 
@@ -148,157 +145,13 @@ export default function Chat() {
         
         if (!hasAssistantResponseAfter) {
           console.log('Triggering AI response for user message:', lastMessage.content);
-          // Mark this message as processed to prevent duplicate responses
           processedUserMessages.current.add(lastMessage.id);
           triggerAIResponse(lastMessage.content, lastMessage.id);
         }
       }
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
-
-  const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    if (!chatId || !user || loading || isGeneratingResponse) {
-      console.log('Skipping AI response - already in progress or missing data');
-      return;
-    }
-    
-    console.log(`Starting AI response for message: ${userMessageId}`);
-    setIsGeneratingResponse(true);
-    setLoading(true);
-    
-    try {
-      console.log('Trigger: Send Message to AI via Optimized OpenAI (auto)');
-      
-      // Check if this is an image generation request
-      const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
-      
-      if (isImageRequest) {
-        setCurrentImagePrompt(userMessage);
-      }
-      
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
-        body: {
-          message: userMessage,
-          chat_id: chatId,
-          user_id: user.id
-        }
-      });
-
-      console.log('AI response:', aiResponse);
-
-      if (aiError) {
-        console.error('AI function error:', aiError);
-        throw new Error(`AI function failed: ${aiError.message}`);
-      }
-
-      if (aiResponse) {
-        let assistantResponse = '';
-        let fileAttachments: any[] = [];
-        
-        if (aiResponse.type === 'image_generated') {
-          // Handle image generation response
-          assistantResponse = aiResponse.content;
-          setCurrentImagePrompt(null); // Clear the indicator
-          
-          // Add the image as an attachment
-          if (aiResponse.image_url) {
-            fileAttachments = [{
-              id: Date.now().toString(),
-              name: `generated_image_${Date.now()}.png`,
-              size: 0,
-              type: 'image/png',
-              url: aiResponse.image_url
-            }];
-          }
-        } else if (aiResponse.type === 'text') {
-          // Handle regular text response
-          assistantResponse = aiResponse.content;
-        } else {
-          assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
-        }
-        
-        // Create assistant message object
-        const newAssistantMessage: Message = {
-          id: `temp-ai-${Date.now()}`,
-          content: assistantResponse,
-          role: 'assistant',
-          created_at: new Date().toISOString(),
-          file_attachments: fileAttachments
-        };
-
-        // Immediately add assistant response to UI
-        setMessages(prev => [...prev, newAssistantMessage]);
-        scrollToBottom();
-
-        // Generate embedding for assistant response
-        let assistantEmbedding = null;
-        if (aiResponse.embedding) {
-          assistantEmbedding = aiResponse.embedding;
-        } else {
-          try {
-            const response = await fetch('https://api.openai.com/v1/embeddings', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${await getOpenAIKey()}`,
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                model: 'text-embedding-3-small',
-                input: assistantResponse,
-              }),
-            });
-            
-            if (response.ok) {
-              const data = await response.json();
-              assistantEmbedding = data.data[0].embedding;
-            }
-          } catch (error) {
-            console.log('Embedding generation failed, continuing without:', error);
-          }
-        }
-
-        // Add assistant response to database
-        const { data: insertedAiMessage, error: aiInsertError } = await supabase
-          .from('messages')
-          .insert([{
-            chat_id: chatId,
-            content: assistantResponse,
-            role: 'assistant',
-            file_attachments: fileAttachments,
-            embedding: assistantEmbedding
-          }])
-          .select()
-          .single();
-
-        if (aiInsertError) {
-          console.error('Error inserting AI message:', aiInsertError);
-        } else if (insertedAiMessage) {
-          // Update the message with the real ID from database
-          setMessages(prev => prev.map(msg => 
-            msg.id === newAssistantMessage.id 
-              ? { 
-                  ...insertedAiMessage, 
-                  file_attachments: fileAttachments,
-                  role: insertedAiMessage.role as 'user' | 'assistant'
-                } as Message
-              : msg
-          ));
-        }
-        
-        console.log(`AI response completed for message: ${userMessageId}`);
-      } else {
-        console.error('No response from AI function');
-        throw new Error('No response from AI function');
-      }
-    } catch (error) {
-      console.error('Auto AI response error:', error);
-      // Remove the message from processed set on error so it can be retried
-      processedUserMessages.current.delete(userMessageId);
-    } finally {
-      setLoading(false);
-      setIsGeneratingResponse(false);
-    }
-  };
+  */
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -356,11 +209,12 @@ export default function Chat() {
     }
 
     try {
-      // Analyze files instead of uploading them
-      let fileAnalysisText = '';
+      // Analyze files and extract their internal content (not metadata)
+      let extractedFileContent = '';
+      const tempFileAttachments: FileAttachment[] = [];
       
       if (files.length > 0) {
-        console.log('Analyzing files instead of uploading...');
+        console.log('Extracting content from inside files...');
         
         for (const file of files) {
           // Check file size limits
@@ -370,49 +224,50 @@ export default function Chat() {
             continue;
           }
 
-          // Analyze file directly without DOM manipulation
-          const analysis = await analyzeFileDirectly(file);
-          fileAnalysisText += `\n\n${analysis}`;
+          // Create temporary file attachment for UI display
+          tempFileAttachments.push({
+            id: `temp-file-${Date.now()}-${Math.random()}`,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: URL.createObjectURL(file)
+          });
+
+          // Extract actual content from inside the file
+          const fileContent = await extractFileContent(file);
+          extractedFileContent += `\n\n[Content extracted from ${file.name}]:\n${fileContent}`;
         }
       }
 
-      // Create temporary file attachments for UI display (not stored)
-      const tempFileAttachments: FileAttachment[] = files.map((file, index) => ({
-        id: `temp-file-${Date.now()}-${index}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file) // Temporary URL for display
-      }));
-
-      // Create user message object with file analysis
-      const messageContent = fileAnalysisText 
-        ? `${userMessage}${fileAnalysisText}` 
-        : userMessage;
-        
+      // Create clean user message (show text + file, no analysis mixed in)
       const newUserMessage: Message = {
-        id: `temp-${Date.now()}`, // Temporary ID
-        content: messageContent,
+        id: `temp-${Date.now()}`,
+        content: userMessage, // Keep user message clean
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: tempFileAttachments // Show files in UI but don't store them
+        file_attachments: tempFileAttachments // Show files cleanly
       };
 
-      // Immediately add user message to UI
+      // Add to UI immediately
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-      // Start embedding generation in background (don't wait for user message)
-      const userEmbeddingPromise = generateEmbeddingAsync(messageContent);
+      // Prepare message for AI (include extracted file content)
+      const aiMessage = extractedFileContent 
+        ? `${userMessage}${extractedFileContent}` 
+        : userMessage;
+
+      // Start embedding generation in background (for AI message content)
+      const userEmbeddingPromise = generateEmbeddingAsync(aiMessage);
       
-      // Add user message to database immediately (without waiting for embedding)
+      // Add user message to database (store clean message + file content for AI)
       const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
-          content: messageContent, // Include file analysis in content
+          content: aiMessage, // Store message + extracted file content for AI context
           role: 'user',
-          file_attachments: [] as any, // No file attachments, analysis is in content
+          file_attachments: [] as any, // Don't store file URLs, just content
           embedding: null // Will be updated by background process
         })
         .select()
@@ -425,10 +280,9 @@ export default function Chat() {
         setMessages(prev => prev.map(msg => 
           msg.id === newUserMessage.id 
             ? { 
-                ...insertedMessage, 
-                file_attachments: tempFileAttachments, // Keep showing files in UI
-                role: insertedMessage.role as 'user' | 'assistant'
-              } as Message
+                ...msg, // Keep the clean UI message
+                id: insertedMessage.id // Update with real ID
+              }
             : msg
         ));
         
@@ -443,8 +297,109 @@ export default function Chat() {
         });
       }
 
-      // Note: AI response will be automatically triggered by the useEffect hook
-      // that detects new user messages - no need to call webhook here
+      // Call AI directly with extracted file content (don't rely on useEffect)
+      if (!loading && !isGeneratingResponse) {
+        console.log('Triggering AI response with extracted file content');
+        setIsGeneratingResponse(true);
+        
+        try {
+          // Check if this is an image generation request
+          const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
+          
+          if (isImageRequest) {
+            setCurrentImagePrompt(userMessage);
+          }
+          
+          const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+            body: {
+              message: userMessage, // Send the original message
+              chat_id: chatId,
+              user_id: user.id,
+              file_analysis: extractedFileContent || null // Send extracted file content separately
+            }
+          });
+
+          console.log('AI response:', aiResponse);
+
+          if (aiError) {
+            console.error('AI function error:', aiError);
+            throw new Error(`AI function failed: ${aiError.message}`);
+          }
+
+          if (aiResponse) {
+            let assistantResponse = '';
+            let fileAttachments: any[] = [];
+            
+            if (aiResponse.type === 'image_generated') {
+              // Handle image generation response
+              assistantResponse = aiResponse.content;
+              setCurrentImagePrompt(null); // Clear the indicator
+              
+              // Add the image as an attachment
+              if (aiResponse.image_url) {
+                fileAttachments = [{
+                  id: Date.now().toString(),
+                  name: `generated_image_${Date.now()}.png`,
+                  size: 0,
+                  type: 'image/png',
+                  url: aiResponse.image_url
+                }];
+              }
+            } else if (aiResponse.type === 'text') {
+              // Handle regular text response
+              assistantResponse = aiResponse.content;
+            } else {
+              assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+            }
+            
+            // Create assistant message object
+            const newAssistantMessage: Message = {
+              id: `temp-ai-${Date.now()}`,
+              content: assistantResponse,
+              role: 'assistant',
+              created_at: new Date().toISOString(),
+              file_attachments: fileAttachments
+            };
+
+            // Immediately add assistant response to UI
+            setMessages(prev => [...prev, newAssistantMessage]);
+            scrollToBottom();
+
+            // Add assistant response to database
+            const { data: insertedAiMessage, error: aiInsertError } = await supabase
+              .from('messages')
+              .insert([{
+                chat_id: chatId,
+                content: assistantResponse,
+                role: 'assistant',
+                file_attachments: fileAttachments,
+                embedding: null
+              }])
+              .select()
+              .single();
+
+            if (aiInsertError) {
+              console.error('Error inserting AI message:', aiInsertError);
+            } else if (insertedAiMessage) {
+              // Update the message with the real ID from database
+              setMessages(prev => prev.map(msg => 
+                msg.id === newAssistantMessage.id 
+                  ? { 
+                      ...insertedAiMessage, 
+                      file_attachments: fileAttachments,
+                      role: insertedAiMessage.role as 'user' | 'assistant'
+                    } as Message
+                  : msg
+              ));
+            }
+          }
+        } catch (error) {
+          console.error('AI response error:', error);
+          setCurrentImagePrompt(null);
+        } finally {
+          setIsGeneratingResponse(false);
+        }
+      }
 
       // Update chat title if current title is "New Chat" (regardless of message count)
       console.log('Checking if we need to update chat title...');
@@ -478,6 +433,39 @@ export default function Chat() {
       console.error('Send message error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const extractFileContent = async (file: File): Promise<string> => {
+    try {
+      const fileType = file.type;
+      console.log(`Extracting content from: ${file.name}`);
+      
+      if (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('csv')) {
+        // Extract actual text content
+        const text = await file.text();
+        return text; // Return the actual content, not metadata
+        
+      } else if (fileType.startsWith('image/')) {
+        // For images, we can't extract text content without OCR
+        return `[Image file: ${file.name} - Visual content requires image processing to extract text/objects]`;
+        
+      } else if (fileType.includes('pdf')) {
+        // For PDF, we need actual content extraction (simplified for now)
+        // In production, you'd use pdf-parse or similar
+        return `[PDF Document: ${file.name} - Contains ${Math.ceil(file.size / 1024 / 50)} estimated pages. Full text extraction requires PDF parsing service.]`;
+        
+      } else if (fileType.includes('document') || fileType.includes('word')) {
+        return `[Word Document: ${file.name} - Contains formatted text and possibly images. Requires document parser to extract full content.]`;
+        
+      } else if (fileType.includes('spreadsheet') || fileType.includes('excel')) {
+        return `[Spreadsheet: ${file.name} - Contains tabular data. Requires Excel parser to extract cell contents and formulas.]`;
+        
+      } else {
+        return `[File: ${file.name} - Binary content that requires specialized processing to extract readable information.]`;
+      }
+    } catch (error) {
+      return `[Error extracting content from ${file.name}: ${error instanceof Error ? error.message : 'Unknown error'}]`;
     }
   };
 

@@ -110,7 +110,11 @@ serve(async (req) => {
     // Add file analysis if provided
     let userMessage = message;
     if (file_analysis) {
-      userMessage = `${message}\n\n[File Analysis: ${file_analysis}]`;
+      userMessage = file_analysis; // If no user text, just use extracted file content
+      if (message.trim()) {
+        // If user provided text with file, combine them
+        userMessage = `${message}\n\nBased on the file content:\n${file_analysis}`;
+      }
     }
 
     conversationHistory.push({
