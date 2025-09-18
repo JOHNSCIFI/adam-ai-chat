@@ -72,13 +72,10 @@ export default function ProjectPage() {
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
     const sidebarWidth = collapsed ? 56 : 280;
-    const contentWidth = 768;
-    const availableWidth = `100vw - ${sidebarWidth}px`;
     
     return { 
-      marginLeft: `calc(${sidebarWidth}px + (${availableWidth} - ${contentWidth}px) / 2)`, 
-      marginRight: `calc((${availableWidth} - ${contentWidth}px) / 2)`,
-      width: `${contentWidth}px`,
+      marginLeft: `${sidebarWidth}px`,
+      width: `calc(100vw - ${sidebarWidth}px)`,
       maxWidth: 'none'
     };
   };
@@ -332,11 +329,11 @@ export default function ProjectPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-background overflow-hidden">
       <div className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-auto pb-32">
-          <div className="min-h-screen flex flex-col justify-center pb-32">
-            <div style={getContainerStyle()}>
+        <div className="flex-1 overflow-y-auto overflow-x-hidden">
+          <div className="min-h-screen flex flex-col justify-center items-center px-4" style={getContainerStyle()}>
+            <div className="w-full max-w-2xl">
               {/* Header */}
               <div className="flex flex-col items-center justify-center mb-8">
                 <div 
@@ -360,12 +357,11 @@ export default function ProjectPage() {
 
               {/* Chat List */}
               {chats.length > 0 && (
-                <div className="space-y-3 mb-8 flex flex-col items-center">
+                <div className="space-y-3 mb-8 w-full">
                   {chats.map((chat) => (
                     <div
                       key={chat.id}
                       className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group w-full"
-                      style={{ width: '768px' }}
                     >
                       <div 
                         className="flex-1 cursor-pointer"
@@ -435,8 +431,8 @@ export default function ProjectPage() {
         </div>
 
         {/* Input area - fixed at bottom like ChatGPT */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background">
-          <div className="px-4 py-4" style={getContainerStyle()}>
+        <div className="fixed bottom-0 bg-background flex justify-center" style={getContainerStyle()}>
+          <div className="w-full max-w-2xl px-4 py-4">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
