@@ -543,6 +543,11 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                             onBlur={() => handleRenameChat(chat.id, editingTitle)}
                             className="flex-1 bg-transparent border-none outline-none text-sm"
                             autoFocus
+                            onFocus={(e) => {
+                              // Position cursor at the end and make it blink
+                              const length = e.target.value.length;
+                              e.target.setSelectionRange(length, length);
+                            }}
                           />
                         </div>
                       ) : (
@@ -563,7 +568,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <Edit2 className="h-3 w-3" />
+                              <MoreHorizontal className="h-3 w-3" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>

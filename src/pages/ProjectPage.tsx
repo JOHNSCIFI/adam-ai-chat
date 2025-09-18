@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -71,19 +71,16 @@ export default function ProjectPage() {
 
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
-    if (collapsed) {
-      return { 
-        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    } else {
-      return { 
-        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    }
+    const sidebarWidth = collapsed ? 56 : 280;
+    const contentWidth = 768;
+    const availableWidth = `100vw - ${sidebarWidth}px`;
+    
+    return { 
+      marginLeft: `calc(${sidebarWidth}px + (${availableWidth} - ${contentWidth}px) / 2)`, 
+      marginRight: `calc((${availableWidth} - ${contentWidth}px) / 2)`,
+      width: `${contentWidth}px`,
+      maxWidth: 'none'
+    };
   };
 
   useEffect(() => {
@@ -367,7 +364,8 @@ export default function ProjectPage() {
                   {chats.map((chat) => (
                     <div
                       key={chat.id}
-                      className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group w-full max-w-2xl"
+                      className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group w-full"
+                      style={{ width: '768px' }}
                     >
                       <div 
                         className="flex-1 cursor-pointer"
@@ -388,6 +386,11 @@ export default function ProjectPage() {
                               }}
                               className="font-medium text-foreground bg-transparent border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                               autoFocus
+                              onFocus={(e) => {
+                                // Position cursor at the end
+                                const length = e.target.value.length;
+                                e.target.setSelectionRange(length, length);
+                              }}
                             />
                           ) : (
                             <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>
@@ -409,7 +412,7 @@ export default function ProjectPage() {
                             startRenameChat(chat);
                           }}
                         >
-                          <Edit2 className="h-3 w-3" />
+                          <MoreHorizontal className="h-3 w-3" />
                         </Button>
                         <Button
                           variant="ghost"
