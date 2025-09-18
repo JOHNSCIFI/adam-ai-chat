@@ -52,13 +52,13 @@ function App() {
                     </MainLayout>
                   </ProtectedRoute>
                 } />
-          <Route path="/project/:projectName" element={
-            <ProtectedRoute>
-              <MainLayout>
-                <ProjectPage />
-              </MainLayout>
-            </ProtectedRoute>
-          } />
+                <Route path="/project/:projectId" element={
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <ProjectPage />
+                    </MainLayout>
+                  </ProtectedRoute>
+                } />
                 <Route path="/profile" element={
                   <ProtectedRoute>
                     <MainLayout>

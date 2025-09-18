@@ -349,41 +349,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleDeleteImageSession = async (sessionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('image_sessions')
-        .delete()
-        .eq('id', sessionId);
-
-      if (error) {
-        console.error('Error deleting image session:', error);
-        toast({
-          title: "Error deleting image session",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setImageSessions(prev => prev.filter(session => session.id !== sessionId));
-        toast({
-          title: "Image session deleted",
-          description: "Image session has been deleted successfully.",
-        });
-        
-        if (location.pathname === `/image/${sessionId}`) {
-          navigate('/');
-        }
-      }
-    } catch (error) {
-      console.error('Error in handleDeleteImageSession:', error);
-      toast({
-        title: "Error deleting image session",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const toggleProjectExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects);
     if (newExpanded.has(projectId)) {
@@ -510,7 +475,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                         <div>
                           <Button
                             variant="ghost"
-                            onClick={() => navigate(`/project/${project.title.toLowerCase().replace(/\s+/g, '-')}`)}
+                            onClick={() => navigate(`/project/${project.id}`)}
                             className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div className="flex items-center gap-2">
@@ -654,66 +619,47 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                           )}
                         </NavLink>
                         
-                        {/* Edit/Delete buttons - only show for chats and image sessions */}
-                        {editingChatId !== item.id && (
+                        {/* Edit/Delete buttons - only show for chats */}
+                        {item.type === 'chat' && editingChatId !== item.id && (
                           <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex items-center gap-1">
-                            {item.type === 'chat' && (
-                              <>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setEditingChatId(item.id);
-                                    setEditingTitle(item.title);
-                                  }}
-                                >
-                                  <Edit2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    handleDeleteChat(item.id);
-                                  }}
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
-                                  onClick={(e) => {
-                                    e.preventDefault();
-                                    e.stopPropagation();
-                                    setAddToProjectModalOpen(item.id);
-                                  }}
-                                  title="Add to project"
-                                >
-                                  <Plus className="h-3 w-3" />
-                                </Button>
-                              </>
-                            )}
-                            {item.type === 'image' && (
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  handleDeleteImageSession(item.id);
-                                }}
-                                title="Delete image session"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            )}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setEditingChatId(item.id);
+                                setEditingTitle(item.title);
+                              }}
+                            >
+                              <Edit2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleDeleteChat(item.id);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setAddToProjectModalOpen(item.id);
+                              }}
+                              title="Add to project"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
                           </div>
                         )}
                       </div>
