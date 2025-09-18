@@ -88,7 +88,22 @@ export default function ProjectPage() {
       position: 'fixed' as const,
       left: centerOffset,
       transform: 'translateX(-50%)',
+      top: '100px',
       zIndex: 10
+    };
+  };
+
+  const getChatListStyle = () => {
+    const sidebarWidth = collapsed ? 56 : 280;
+    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
+    
+    return {
+      position: 'absolute' as const,
+      left: centerOffset,
+      transform: 'translateX(-50%)',
+      top: '200px',
+      width: '100%',
+      maxWidth: '48rem'
     };
   };
 
@@ -370,12 +385,11 @@ export default function ProjectPage() {
 
                 {/* Chat List */}
                 {chats.length > 0 && (
-                  <div className="space-y-3 mb-8" style={getCenterStyle()}>
+                  <div className="space-y-3 mb-8" style={getChatListStyle()}>
                     {chats.map((chat) => (
                       <div
                         key={chat.id}
-                        className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group max-w-2xl"
-                        style={{ width: '100%', maxWidth: '48rem' }}
+                        className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group"
                       >
                       <div 
                         className="flex-1 cursor-pointer"
