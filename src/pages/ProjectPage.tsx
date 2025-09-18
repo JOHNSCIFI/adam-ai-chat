@@ -41,21 +41,20 @@ export default function ProjectPage() {
   const [isEditingProject, setIsEditingProject] = useState(false);
   const [editedProject, setEditedProject] = useState<{ title: string; description: string }>({ title: '', description: '' });
 
-  // Calculate proper centering based on sidebar state
+  // Calculate proper centering based on sidebar state - center content in available space
   const getContainerStyle = () => {
-    if (collapsed) {
-      return { 
-        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    } else {
-      return { 
-        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    }
+    const sidebarWidth = collapsed ? 56 : 280;
+    const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
+    
+    return {
+      width: availableWidth,
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'flex-start',
+      paddingLeft: '2rem',
+      paddingRight: '2rem'
+    };
   };
 
   useEffect(() => {
@@ -250,7 +249,7 @@ export default function ProjectPage() {
     <div className="flex h-screen bg-background">
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-hidden">
-          <div style={getContainerStyle()} className="h-full flex flex-col">
+          <div style={getContainerStyle()} className="h-full max-w-4xl mx-auto">
             {/* Header */}
             <div className="text-center py-8">
               <div className="flex items-center justify-center gap-2 mb-4">

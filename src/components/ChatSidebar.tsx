@@ -177,6 +177,20 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     };
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (expandedProjects.size > 0 && !(event.target as Element)?.closest('.project-dropdown')) {
+        setExpandedProjects(new Set());
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [expandedProjects]);
+
   const handleNewChat = async () => {
     if (!user) return;
 
@@ -421,28 +435,31 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                     const isExpanded = expandedProjects.has(project.id);
                     
                     return (
-                      <div key={project.id} className="space-y-1">
+                      <div key={project.id} className="relative project-dropdown">
                         <SidebarMenuItem>
                           <div 
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
-                            onClick={() => navigate(`/project/${project.id}`)}
-                            onMouseEnter={() => setExpandedProjects(prev => new Set(prev).add(project.id))}
-                            onMouseLeave={() => setExpandedProjects(prev => {
-                              const newSet = new Set(prev);
-                              newSet.delete(project.id);
-                              return newSet;
-                            })}
+                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors group"
+                            onClick={() => toggleProjectExpanded(project.id)}
+                            onDoubleClick={() => navigate(`/project/${project.id}`)}
                           >
                             <IconComponent className="h-4 w-4 text-sidebar-foreground" />
                             <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
-                            
+                            {project.chats && project.chats.length > 0 && (
+                              <div className="flex items-center gap-1">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-3 w-3 text-sidebar-foreground/60" />
+                                ) : (
+                                  <ChevronRight className="h-3 w-3 text-sidebar-foreground/60" />
+                                )}
+                              </div>
+                            )}
                           </div>
                         </SidebarMenuItem>
                         
-                        {isExpanded && (
-                          <div className="ml-6 space-y-1">
+                        {isExpanded && project.chats && project.chats.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 bg-sidebar border border-sidebar-border rounded-lg shadow-lg z-50 p-2 space-y-1">
                             {/* Project Chats */}
-                            {project.chats?.map((chat) => (
+                            {project.chats.map((chat) => (
                               <div key={chat.id} className="group/chat relative">
                                 {editingChatId === chat.id ? (
                                   <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sidebar-accent">
@@ -461,12 +478,13 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                                   <NavLink
                                     to={`/chat/${chat.id}`}
                                     className={({ isActive }) =>
-                                      `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                                      `flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-sm ${
                                         isActive
                                           ? 'bg-sidebar-accent text-sidebar-foreground'
                                           : 'text-sidebar-foreground hover:bg-sidebar-accent'
                                       }`
                                     }
+                                    onClick={() => setExpandedProjects(new Set())}
                                   >
                                     <MessageSquare className="h-3 w-3 flex-shrink-0" />
                                     <span className="flex-1 truncate">{chat.title}</span>
