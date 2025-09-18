@@ -35,7 +35,7 @@ export default function Chat() {
   const { chatId } = useParams();
   const { user, userProfile } = useAuth();
   const { actualTheme } = useTheme();
-  const { toast } = useToast();
+  // Remove toast hook since we're not using toasts
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
@@ -322,11 +322,7 @@ export default function Chat() {
         // Check file size limits
         const maxSize = getMaxFileSize(file.type);
         if (file.size > maxSize) {
-          toast({
-            title: "File too large",
-            description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${getFileTypeCategory(file.type)} files.`,
-            variant: "destructive",
-          });
+          console.error(`File ${file.name} exceeds size limit`);
           continue;
         }
 
@@ -339,11 +335,6 @@ export default function Chat() {
 
         if (uploadError) {
           console.error('File upload error:', uploadError);
-          toast({
-            title: "Upload failed",
-            description: `Failed to upload ${file.name}`,
-            variant: "destructive",
-          });
           continue;
         }
 
@@ -434,11 +425,6 @@ export default function Chat() {
 
     } catch (error: any) {
       console.error('Send message error:', error);
-      toast({
-        title: "Error sending message",
-        description: "Unable to send message. Please try again.",
-        variant: "destructive",
-      });
     } finally {
       setLoading(false);
     }
@@ -466,11 +452,7 @@ export default function Chat() {
       const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
       
       if (totalSize > maxTotalSize) {
-        toast({
-          title: "Total file size too large",
-          description: `Total file size cannot exceed ${formatFileSize(maxTotalSize)} per message.`,
-          variant: "destructive",
-        });
+        console.error('Total file size too large');
         return;
       }
       
@@ -523,11 +505,7 @@ export default function Chat() {
       setMediaRecorder(recorder);
       setIsRecording(true);
     } catch (error) {
-      toast({
-        title: "Recording failed",
-        description: "Could not access microphone. Please check permissions.",
-        variant: "destructive",
-      });
+      console.error('Recording failed:', error);
     }
   };
 
@@ -563,19 +541,9 @@ export default function Chat() {
         if (textareaRef.current) {
           textareaRef.current.focus();
         }
-
-        toast({
-          title: "Transcription complete",
-          description: "Speech converted to text successfully.",
-        });
       }
     } catch (error: any) {
       console.error('Transcription error:', error);
-      toast({
-        title: "Transcription failed",
-        description: "Could not convert speech to text. Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -695,34 +663,16 @@ export default function Chat() {
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
       }, 100);
-      
-      toast({
-        title: "Success",
-        description: "Image downloaded successfully",
-      });
     } catch (error) {
       console.error('Download failed:', error);
       // Fallback to opening in new tab
       try {
         const newWindow = window.open(imageUrl, '_blank');
-        if (newWindow) {
-          toast({
-            title: "Info",
-            description: "Image opened in new tab - right-click to save",
-          });
-        } else {
-          toast({
-            title: "Error", 
-            description: "Please allow popups to download images",
-            variant: "destructive",
-          });
+        if (!newWindow) {
+          console.error('Could not open image in new tab');
         }
       } catch (fallbackError) {
-        toast({
-          title: "Error",
-          description: "Failed to download image. Please try right-clicking the image to save.",
-          variant: "destructive",
-        });
+        console.error('Failed to download or open image:', fallbackError);
       }
     }
   };

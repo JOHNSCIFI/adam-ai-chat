@@ -56,7 +56,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
+import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
@@ -117,7 +117,12 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
   
   const { user, signOut, userProfile } = useAuth();
-  const { toast } = useToast();
+  const [confirmDialog, setConfirmDialog] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: '', description: '', onConfirm: () => {} });
   const navigate = useNavigate();
   const { chatId } = useParams();
   const location = useLocation();
@@ -207,11 +212,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       if (error) {
         console.error('Error creating chat:', error);
-        toast({
-          title: "Error creating chat",
-          description: error.message,
-          variant: "destructive",
-        });
+      console.error('Error creating chat:', error);
         return;
       }
 
@@ -220,11 +221,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       navigate(`/chat/${newChat.id}`);
     } catch (error) {
       console.error('Error in handleNewChat:', error);
-      toast({
-        title: "Error creating chat",
-        description: "Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -241,18 +237,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       if (error) {
         console.error('Error deleting chat:', error);
-        toast({
-          title: "Error deleting chat",
-          description: error.message,
-          variant: "destructive",
-        });
       } else {
         fetchChats();
         fetchProjects();
-        toast({
-          title: "Chat deleted",
-          description: "Chat has been deleted successfully.",
-        });
         
         if (window.location.pathname === `/chat/${chatId}`) {
           navigate('/');
@@ -260,11 +247,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       }
     } catch (error) {
       console.error('Error in handleDeleteChat:', error);
-      toast({
-        title: "Error deleting chat",
-        description: "Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -277,27 +259,13 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       if (error) {
         console.error('Error renaming chat:', error);
-        toast({
-          title: "Error renaming chat",
-          description: error.message,
-          variant: "destructive",
-        });
       } else {
         fetchChats();
         fetchProjects();
         setEditingChatId(null);
-        toast({
-          title: "Chat renamed",
-          description: "Chat has been renamed successfully.",
-        });
       }
     } catch (error) {
       console.error('Error in handleRenameChat:', error);
-      toast({
-        title: "Error renaming chat",
-        description: "Please try again.",
-        variant: "destructive",
-      });
     }
   };
 
@@ -321,7 +289,15 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   };
 
   const handleDeleteProject = async (projectId: string) => {
-    if (!confirm('Are you sure you want to delete this project? All chats in this project will be moved to unorganized chats.')) return;
+    setConfirmDialog({
+      isOpen: true,
+      title: 'Delete Project',
+      description: 'Are you sure you want to delete this project? All chats in this project will be moved to unorganized chats.',
+      onConfirm: () => executeDeleteProject(projectId)
+    });
+  };
+
+  const executeDeleteProject = async (projectId: string) => {
 
     try {
       const { error } = await supabase
@@ -333,16 +309,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       fetchProjects();
       fetchChats();
-      toast({
-        title: "Project deleted",
-        description: "Project has been deleted successfully.",
-      });
     } catch (error: any) {
-      toast({
-        title: "Error deleting project",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error deleting project:', error);
     }
   };
 
@@ -360,16 +328,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       fetchProjects();
       setEditingProjectId(null);
       setEditingProjectTitle('');
-      toast({
-        title: "Project renamed",
-        description: "Project has been renamed successfully.",
-      });
     } catch (error: any) {
-      toast({
-        title: "Error renaming project",
-        description: error.message || "Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error renaming project:', error);
     }
   };
 
@@ -378,11 +338,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       await signOut();
       navigate('/auth');
     } catch (error) {
-      toast({
-        title: "Error signing out",
-        description: "Please try again.",
-        variant: "destructive",
-      });
+      console.error('Error signing out:', error);
     }
   };
 
@@ -706,6 +662,17 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       <ImageGenerationModal 
         isOpen={showImageGeneration}
         onClose={() => setShowImageGeneration(false)}
+      />
+
+      {/* Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={confirmDialog.isOpen}
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmDialog.onConfirm}
+        title={confirmDialog.title}
+        description={confirmDialog.description}
+        variant="destructive"
+        confirmText="Delete"
       />
     </>
   );
