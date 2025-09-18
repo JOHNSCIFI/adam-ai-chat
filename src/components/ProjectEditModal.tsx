@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { X, Settings } from 'lucide-react';
+import { X, Settings, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -22,7 +22,24 @@ interface ProjectEditModalProps {
   onProjectUpdated: () => void;
 }
 
-const iconOptions = ['📁', '💡', '🎯', '📊', '🚀', '💼', '📝', '🔬', '🎨', '⚡', '🏆', '🌟', '🔥', '💎', '🎪'];
+const iconOptions = [
+  { key: 'folder', component: FolderOpen },
+  { key: 'lightbulb', component: Lightbulb },
+  { key: 'target', component: Target },
+  { key: 'briefcase', component: Briefcase },
+  { key: 'rocket', component: Rocket },
+  { key: 'palette', component: Palette },
+  { key: 'filetext', component: FileText },
+  { key: 'code', component: Code },
+  { key: 'zap', component: Zap },
+  { key: 'trophy', component: Trophy },
+  { key: 'heart', component: Heart },
+  { key: 'star', component: Star },
+  { key: 'flame', component: Flame },
+  { key: 'gem', component: Gem },
+  { key: 'sparkles', component: Sparkles },
+];
+
 const colorOptions = [
   '#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444', 
   '#06b6d4', '#84cc16', '#f97316', '#ec4899', '#6366f1',
@@ -34,7 +51,7 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
   const { toast } = useToast();
   
   const [title, setTitle] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState('📁');
+  const [selectedIcon, setSelectedIcon] = useState('folder');
   const [selectedColor, setSelectedColor] = useState('#10b981');
   const [showIconSelector, setShowIconSelector] = useState(false);
   const [showColorSelector, setShowColorSelector] = useState(false);
@@ -83,67 +100,65 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
     }
   };
 
+  const SelectedIconComponent = iconOptions.find(icon => icon.key === selectedIcon)?.component || FolderOpen;
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md bg-background border-border">
-        <DialogHeader className="flex flex-row items-center justify-between pb-4">
-          <DialogTitle className="text-lg font-medium">Edit project</DialogTitle>
-          <div className="flex items-center gap-2">
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <Settings className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={onClose}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      <DialogContent className="max-w-sm bg-background border shadow-xl">
+        <DialogHeader className="text-center pb-6">
+          <DialogTitle className="text-xl font-semibold">Edit Project</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* Project Icon and Name Row */}
-          <div 
-            className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg border border-border cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => setShowIconSelector(!showIconSelector)}
-          >
+          {/* Project Icon and Name */}
+          <div className="text-center space-y-4">
             <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center text-white text-lg"
+              className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
               style={{ backgroundColor: selectedColor }}
+              onClick={() => setShowIconSelector(!showIconSelector)}
             >
-              {selectedIcon}
+              <SelectedIconComponent className="w-8 h-8 text-white" />
             </div>
+            
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="flex-1 border-0 bg-transparent text-base font-medium focus-visible:ring-0 px-0"
+              className="text-center text-lg font-medium border-0 bg-transparent focus-visible:ring-0 px-0"
               placeholder="Project name"
             />
           </div>
 
           {/* Icon Selector */}
           {showIconSelector && (
-            <div className="space-y-3">
+            <div className="p-4 bg-muted/20 rounded-lg">
+              <h3 className="text-sm font-medium mb-3 text-center">Choose Icon</h3>
               <div className="grid grid-cols-5 gap-2">
-                {iconOptions.map((icon) => (
-                  <Button
-                    key={icon}
-                    variant={selectedIcon === icon ? "default" : "ghost"}
-                    size="sm"
-                    className="h-10 w-10 p-0 text-lg"
-                    onClick={() => {
-                      setSelectedIcon(icon);
-                      setShowColorSelector(true);
-                      setShowIconSelector(false);
-                    }}
-                  >
-                    {icon}
-                  </Button>
-                ))}
+                {iconOptions.map((icon) => {
+                  const IconComponent = icon.component;
+                  return (
+                    <Button
+                      key={icon.key}
+                      variant={selectedIcon === icon.key ? "default" : "ghost"}
+                      size="sm"
+                      className="h-10 w-10 p-0"
+                      onClick={() => {
+                        setSelectedIcon(icon.key);
+                        setShowColorSelector(true);
+                        setShowIconSelector(false);
+                      }}
+                    >
+                      <IconComponent className="w-4 h-4" />
+                    </Button>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {/* Color Selector */}
           {showColorSelector && (
-            <div className="space-y-3">
+            <div className="p-4 bg-muted/20 rounded-lg">
+              <h3 className="text-sm font-medium mb-3 text-center">Choose Color</h3>
               <div className="grid grid-cols-5 gap-2">
                 {colorOptions.map((color) => (
                   <Button
@@ -165,14 +180,21 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
             </div>
           )}
 
-          {/* Save Button */}
-          <div className="flex justify-end pt-4">
+          {/* Action Buttons */}
+          <div className="flex gap-3 pt-4">
+            <Button 
+              variant="outline" 
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
             <Button 
               onClick={handleSave}
               disabled={!title.trim() || loading}
-              className="px-8 py-2 rounded-full bg-white text-black hover:bg-gray-100"
+              className="flex-1"
             >
-              {loading ? 'Saving...' : 'Save'}
+              {loading ? 'Updating...' : 'Update'}
             </Button>
           </div>
         </div>

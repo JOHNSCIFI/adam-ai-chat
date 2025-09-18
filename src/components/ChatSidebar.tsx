@@ -45,7 +45,15 @@ import {
   Target, 
   Heart,
   Star,
-  Rocket
+  Rocket,
+  MoreHorizontal,
+  FolderOpen,
+  FileText,
+  Zap,
+  Trophy,
+  Flame,
+  Gem,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -75,15 +83,21 @@ interface Project {
 }
 
 const iconMap = {
-  briefcase: Briefcase,
-  book: BookOpen,
-  code: Code,
-  palette: Palette,
+  folder: FolderOpen,
   lightbulb: Lightbulb,
   target: Target,
+  briefcase: Briefcase,
+  rocket: Rocket,
+  palette: Palette,
+  filetext: FileText,
+  code: Code,
+  zap: Zap,
+  trophy: Trophy,
   heart: Heart,
   star: Star,
-  rocket: Rocket,
+  flame: Flame,
+  gem: Gem,
+  sparkles: Sparkles,
 };
 
 interface ChatSidebarProps {
@@ -99,6 +113,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [showSettings, setShowSettings] = useState(false);
   const [showImageGeneration, setShowImageGeneration] = useState(false);
   const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
+  const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [editingProjectTitle, setEditingProjectTitle] = useState('');
   
   const { user, signOut, userProfile } = useAuth();
   const { toast } = useToast();
@@ -304,6 +320,59 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     fetchProjects();
   };
 
+  const handleDeleteProject = async (projectId: string) => {
+    if (!confirm('Are you sure you want to delete this project? All chats in this project will be moved to unorganized chats.')) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .delete()
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      fetchProjects();
+      fetchChats();
+      toast({
+        title: "Project deleted",
+        description: "Project has been deleted successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting project",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRenameProject = async (projectId: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ title: newTitle.trim() })
+        .eq('id', projectId);
+
+      if (error) throw error;
+
+      fetchProjects();
+      setEditingProjectId(null);
+      setEditingProjectTitle('');
+      toast({
+        title: "Project renamed",
+        description: "Project has been renamed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error renaming project",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const handleSignOut = async () => {
     try {
       await signOut();
@@ -405,22 +474,50 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {projects.map((project) => (
-                    <SidebarMenuItem key={project.id}>
-                      <div 
-                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
-                        onClick={() => navigate(`/project/${project.id}`)}
-                      >
+                  {projects.map((project) => {
+                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                    return (
+                      <SidebarMenuItem key={project.id} className="group/project relative">
                         <div 
-                          className="w-4 h-4 rounded-sm flex items-center justify-center text-xs text-white"
-                          style={{ backgroundColor: project.color }}
+                          className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
+                          onClick={() => navigate(`/project/${project.id}`)}
                         >
-                          {project.icon}
+                          <IconComponent 
+                            className="w-4 h-4 flex-shrink-0"
+                            style={{ color: project.color }}
+                          />
+                          <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
                         </div>
-                        <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
-                      </div>
-                    </SidebarMenuItem>
-                  ))}
+                        
+                        {/* Project Actions */}
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/project:opacity-100 transition-opacity">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
+                                <MoreHorizontal className="h-3 w-3" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent>
+                              <DropdownMenuItem onClick={() => {
+                                setEditingProjectId(project.id);
+                                setEditingProjectTitle(project.title);
+                              }}>
+                                <Edit2 className="mr-2 h-3 w-3" />
+                                Rename
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteProject(project.id)}
+                                className="text-destructive"
+                              >
+                                <Trash2 className="mr-2 h-3 w-3" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </SidebarMenuItem>
+                    );
+                  })}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -438,7 +535,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                     <SidebarMenuItem key={chat.id} className="group/chat relative">
                       {editingChatId === chat.id ? (
                         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent">
-                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
                           <input
                             type="text"
                             value={editingTitle}
@@ -460,7 +556,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                             }`
                           }
                         >
-                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
                           <span className="flex-1 truncate text-sm">{chat.title}</span>
                         </NavLink>
                       )}

@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2 } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -26,6 +26,24 @@ interface Project {
   color: string;
   description?: string;
 }
+
+const iconMap = {
+  folder: FolderOpen,
+  lightbulb: Lightbulb,
+  target: Target,
+  briefcase: Briefcase,
+  rocket: Rocket,
+  palette: Palette,
+  filetext: FileText,
+  code: Code,
+  zap: Zap,
+  trophy: Trophy,
+  heart: Heart,
+  star: Star,
+  flame: Flame,
+  gem: Gem,
+  sparkles: Sparkles,
+};
 
 export default function ProjectPage() {
   const { projectId } = useParams();
@@ -327,12 +345,17 @@ export default function ProjectPage() {
                 className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setIsEditingProject(true)}
               >
-                <div 
-                  className="w-8 h-8 rounded-full text-white flex items-center justify-center text-lg"
-                  style={{ backgroundColor: project.color }}
-                >
-                  {project.icon}
-                </div>
+                {(() => {
+                  const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                  return (
+                    <div 
+                      className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                      style={{ backgroundColor: project.color }}
+                    >
+                      <IconComponent className="w-6 h-6 text-white" />
+                    </div>
+                  );
+                })()}
                 <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
               </div>
             </div>
