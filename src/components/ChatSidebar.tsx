@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { NavLink, useNavigate, useParams } from 'react-router-dom';
+import React, { useState, useEffect, useRef } from 'react';
+import { NavLink, useNavigate, useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { 
@@ -19,7 +19,6 @@ import {
   SidebarHeader, 
   SidebarMenu, 
   SidebarMenuItem, 
-  SidebarSeparator,
   SidebarTrigger,
   useSidebar 
 } from '@/components/ui/sidebar';
@@ -30,25 +29,14 @@ import {
   Trash2, 
   Settings, 
   LogOut,
-  Search,
-  Library,
+  User,
+  HelpCircle,
   Bot,
-  Folder,
-  MessageCircle,
-  Edit3,
   Menu,
-  X,
   ImageIcon,
   FolderPlus,
   ChevronDown,
-  ChevronRight
-} from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from '@/hooks/use-toast';
-import { supabase } from '@/integrations/supabase/client';
-import { ProjectModal } from '@/components/ProjectModal';
-import { AddToProjectModal } from '@/components/AddToProjectModal';
-import { 
+  ChevronRight,
   Briefcase, 
   BookOpen, 
   Code, 
@@ -60,15 +48,17 @@ import {
   Rocket
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { ProjectModal } from '@/components/ProjectModal';
+import { AddToProjectModal } from '@/components/AddToProjectModal';
 import SettingsModal from './SettingsModal';
-import { ProjectModal } from './ProjectModal';
 
 interface Chat {
   id: string;
   title: string;
   created_at: string;
+  updated_at: string;
   project_id?: string;
 }
 
@@ -76,6 +66,7 @@ interface ImageSession {
   id: string;
   title: string;
   created_at: string;
+  updated_at: string;
   project_id?: string;
 }
 
@@ -84,12 +75,13 @@ interface Project {
   title: string;
   icon: string;
   color: string;
+  description?: string;
+  created_at: string;
   chats?: Chat[];
   imageSessions?: ImageSession[];
 }
 
 const iconMap = {
-  folder: Folder,
   briefcase: Briefcase,
   book: BookOpen,
   code: Code,
@@ -101,7 +93,12 @@ const iconMap = {
   rocket: Rocket,
 };
 
-export function ChatSidebar() {
+interface ChatSidebarProps {
+  isOpen: boolean;
+  onClose: () => void;
+}
+
+export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [imageSessions, setImageSessions] = useState<ImageSession[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
@@ -109,11 +106,13 @@ export function ChatSidebar() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
   
   const { user, signOut, userProfile } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { chatId } = useParams();
+  const location = useLocation();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
@@ -126,7 +125,7 @@ export function ChatSidebar() {
         .from('chats')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching chats:', error);
@@ -147,7 +146,7 @@ export function ChatSidebar() {
         .from('image_sessions')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('updated_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching image sessions:', error);
@@ -164,133 +163,38 @@ export function ChatSidebar() {
     if (!user) return;
     
     try {
-      // First get projects
-      const { data: projectsData, error: projectsError } = await supabase
+      const { data: projectsData, error } = await supabase
         .from('projects')
-        .select('*')
+        .select(`
+          *,
+          chats:chats!chats_project_id_fkey(id, title, created_at, updated_at),
+          imageSessions:image_sessions!image_sessions_project_id_fkey(id, title, created_at, updated_at)
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (projectsError) {
-        console.error('Error fetching projects:', projectsError);
+      if (error) {
+        console.error('Error fetching projects:', error);
         return;
       }
 
-      // Then get chats and image sessions for each project
-      const processedProjects = await Promise.all((projectsData || []).map(async (project) => {
-        const [{ data: chats }, { data: imageSessions }] = await Promise.all([
-          supabase
-            .from('chats')
-            .select('*')
-            .eq('project_id', project.id)
-            .order('created_at', { ascending: false }),
-          supabase
-            .from('image_sessions')
-            .select('*')
-            .eq('project_id', project.id)
-            .order('created_at', { ascending: false })
-        ]);
-
-        return {
-          ...project,
-          chats: chats || [],
-          imageSessions: imageSessions || []
-        };
-      }));
-
-      setProjects(processedProjects);
+      setProjects(projectsData || []);
     } catch (error) {
       console.error('Error in fetchProjects:', error);
     }
   };
 
+  // Load data on mount and user change
   useEffect(() => {
     if (user) {
       fetchChats();
       fetchImageSessions();
       fetchProjects();
-      
-      // Set up real-time subscription for chats
-      const chatSubscription = supabase
-        .channel('chats-changes')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'chats',
-            filter: `user_id=eq.${user.id}`
-          }, 
-          (payload) => {
-            console.log('ChatSidebar: Received chat real-time update:', payload);
-            fetchChats();
-            fetchProjects(); // Refresh to update project chat counts
-          }
-        )
-        .subscribe();
-
-      // Set up real-time subscription for image sessions
-      const imageSubscription = supabase
-        .channel('image-sessions-changes')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'image_sessions',
-            filter: `user_id=eq.${user.id}`
-          }, 
-          (payload) => {
-            console.log('ChatSidebar: Received image session real-time update:', payload);
-            fetchImageSessions();
-            fetchProjects(); // Refresh to update project image counts
-          }
-        )
-        .subscribe();
-
-      // Set up real-time subscription for projects
-      const projectSubscription = supabase
-        .channel('projects-changes')
-        .on('postgres_changes', 
-          { 
-            event: '*', 
-            schema: 'public', 
-            table: 'projects',
-            filter: `user_id=eq.${user.id}`
-          }, 
-          (payload) => {
-            console.log('ChatSidebar: Received project real-time update:', payload);
-            fetchProjects();
-          }
-        )
-        .subscribe();
-
-      // Listen for forced refresh events from main page
-      const handleForceRefresh = () => {
-        console.log('ChatSidebar: Forcing refresh due to new chat creation');
-        fetchChats();
-        fetchImageSessions();
-        fetchProjects();
-      };
-      
-      window.addEventListener('force-chat-refresh', handleForceRefresh);
-
-      return () => {
-        chatSubscription.unsubscribe();
-        imageSubscription.unsubscribe();
-        projectSubscription.unsubscribe();
-        window.removeEventListener('force-chat-refresh', handleForceRefresh);
-      };
     }
   }, [user]);
 
   const handleNewChat = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to create a new chat.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!user) return;
 
     try {
       const { data: newChat, error } = await supabase
@@ -324,14 +228,7 @@ export function ChatSidebar() {
   };
 
   const handleNewImageSession = async () => {
-    if (!user) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to create an image session.",
-        variant: "destructive",
-      });
-      return;
-    }
+    if (!user) return;
 
     try {
       const { data: newSession, error } = await supabase
@@ -364,6 +261,19 @@ export function ChatSidebar() {
     }
   };
 
+  const handleChatSwitch = (chatId: string) => {
+    navigate(`/chat/${chatId}`);
+  };
+
+  const handleSaveEdit = (chatId: string) => {
+    if (editingTitle.trim()) {
+      handleRenameChat(chatId, editingTitle.trim());
+    } else {
+      setEditingChatId(null);
+      setEditingTitle('');
+    }
+  };
+
   const handleRenameChat = async (chatId: string, newTitle: string) => {
     if (!newTitle.trim()) {
       setEditingChatId(null);
@@ -384,7 +294,6 @@ export function ChatSidebar() {
           variant: "destructive",
         });
       } else {
-        // Update local state immediately
         setChats(prev => prev.map(chat => 
           chat.id === chatId ? { ...chat, title: newTitle.trim() } : chat
         ));
@@ -420,14 +329,12 @@ export function ChatSidebar() {
           variant: "destructive",
         });
       } else {
-        // Update local state immediately
         setChats(prev => prev.filter(chat => chat.id !== chatId));
         toast({
           title: "Chat deleted",
           description: "Chat has been deleted successfully.",
         });
         
-        // Navigate away if we're currently viewing this chat
         if (chatId === chatId) {
           navigate('/');
         }
@@ -442,62 +349,7 @@ export function ChatSidebar() {
     }
   };
 
-  const handleChatSwitch = async (newChatId: string) => {
-    if (chatId && chatId !== newChatId) {
-      // Check if current chat has messages before switching
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('id')
-        .eq('chat_id', chatId)
-        .limit(1);
-      
-      // If current chat has no messages, delete it
-      if (messages && messages.length === 0) {
-        await supabase
-          .from('chats')
-          .delete()
-          .eq('id', chatId);
-        
-        // Update local state
-        setChats(prev => prev.filter(chat => chat.id !== chatId));
-      }
-    }
-  };
-
-  // Function to clean up empty chats
-  const cleanupEmptyChats = async () => {
-    if (!user) return;
-
-    // Get all chats for the user
-    const { data: userChats } = await supabase
-      .from('chats')
-      .select('id')
-      .eq('user_id', user.id);
-
-    if (userChats) {
-      for (const chat of userChats) {
-        // Check if chat has any messages
-        const { data: messages } = await supabase
-          .from('messages')
-          .select('id')
-          .eq('chat_id', chat.id)
-          .limit(1);
-
-        // If no messages, delete the chat
-        if (messages && messages.length === 0) {
-          await supabase
-            .from('chats')
-            .delete()
-            .eq('id', chat.id);
-        }
-      }
-      
-      // Refresh the chats list
-      fetchChats();
-    }
-  };
-
-  const toggleProject = (projectId: string) => {
+  const toggleProjectExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects);
     if (newExpanded.has(projectId)) {
       newExpanded.delete(projectId);
@@ -510,13 +362,6 @@ export function ChatSidebar() {
   const handleProjectCreated = () => {
     fetchProjects();
   };
-
-  // Clean up empty chats on component mount
-  useEffect(() => {
-    if (user) {
-      cleanupEmptyChats();
-    }
-  }, [user]);
 
   const handleSignOut = async () => {
     try {
@@ -539,7 +384,6 @@ export function ChatSidebar() {
     <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
-          {/* Sidebar Toggle Button - always at the same position */}
           <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
             <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
               <Bot className="h-5 w-5 group-hover:hidden" />
@@ -548,7 +392,6 @@ export function ChatSidebar() {
           </div>
 
           {collapsed ? (
-            // Collapsed state: center buttons vertically
             <div className="flex flex-col gap-2 items-center">
               <Button 
                 onClick={handleNewChat}
@@ -580,7 +423,6 @@ export function ChatSidebar() {
               </ProjectModal>
             </div>
           ) : (
-            // Expanded state: buttons with text
             <div className="mt-1 space-y-2">
               <Button 
                 onClick={handleNewChat}
@@ -614,7 +456,7 @@ export function ChatSidebar() {
           )}
         </SidebarHeader>
 
-        <SidebarContent className="px-2">
+        <SidebarContent>
           {/* Projects */}
           {!collapsed && projects.length > 0 && (
             <SidebarGroup>
@@ -624,33 +466,43 @@ export function ChatSidebar() {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {projects.map((project) => {
-                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || Folder;
                     const isExpanded = expandedProjects.has(project.id);
                     const totalItems = (project.chats?.length || 0) + (project.imageSessions?.length || 0);
+                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || Briefcase;
                     
                     return (
                       <SidebarMenuItem key={project.id}>
-                        <div className="space-y-1">
-                          {/* Project Header */}
+                        <div>
                           <Button
                             variant="ghost"
-                            className="w-full justify-start gap-2 px-3 py-1.5 h-auto text-sm hover:bg-sidebar-accent"
-                            onClick={() => toggleProject(project.id)}
+                            onClick={() => navigate(`/project/${project.id}`)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg hover:bg-muted/50 transition-colors"
                           >
-                            <div className="flex items-center gap-2 flex-1">
+                            <div className="flex items-center gap-2">
                               <div className="p-1 rounded" style={{ backgroundColor: `${project.color}20` }}>
                                 <IconComponent 
                                   className="h-4 w-4" 
                                   style={{ color: project.color }}
                                 />
                               </div>
-                              <span className="font-medium truncate">{project.title}</span>
-                              {totalItems > 0 && (
-                                <span className="text-xs text-muted-foreground">({totalItems})</span>
-                              )}
+                              <span className="font-medium text-sm truncate">{project.title}</span>
                             </div>
                             {totalItems > 0 && (
-                              isExpanded ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0 hover:bg-muted"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  toggleProjectExpanded(project.id);
+                                }}
+                              >
+                                {isExpanded ? (
+                                  <ChevronDown className="h-3 w-3" />
+                                ) : (
+                                  <ChevronRight className="h-3 w-3" />
+                                )}
+                              </Button>
                             )}
                           </Button>
                           
@@ -718,7 +570,7 @@ export function ChatSidebar() {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {/* Mix chats and image sessions together, sorted by updated_at */}
+                  {/* Mix chats and image sessions together, sorted by created_at */}
                   {[
                     ...unorganizedChats.map(chat => ({ ...chat, type: 'chat' as const })),
                     ...unorganizedImageSessions.map(session => ({ ...session, type: 'image' as const }))
@@ -740,73 +592,75 @@ export function ChatSidebar() {
                         >
                           {item.type === 'chat' ? (
                             <>
+                              <MessageSquare className="h-3 w-3 flex-shrink-0" />
                               {editingChatId === item.id ? (
                                 <input
                                   type="text"
                                   value={editingTitle}
                                   onChange={(e) => setEditingTitle(e.target.value)}
-                                  onBlur={() => handleRenameChat(item.id, editingTitle)}
+                                  onBlur={() => handleSaveEdit(item.id)}
                                   onKeyPress={(e) => {
                                     if (e.key === 'Enter') {
-                                      handleRenameChat(item.id, editingTitle);
+                                      handleSaveEdit(item.id);
                                     }
                                   }}
-                                  className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-3 py-1.5"
+                                  className="flex-1 bg-transparent border-none outline-none text-sidebar-foreground px-0 py-0"
                                   autoFocus
                                 />
                               ) : (
-                                <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={item.title}>{item.title}</span>
+                                <span className="flex-1 truncate max-w-[180px]" title={item.title}>{item.title}</span>
                               )}
                             </>
                           ) : (
                             <>
                               <ImageIcon className="h-3 w-3 flex-shrink-0" />
-                              <span className="flex-1 truncate px-3 py-1.5 max-w-[180px]" title={item.title}>{item.title}</span>
+                              <span className="flex-1 truncate max-w-[180px]" title={item.title}>{item.title}</span>
                             </>
                           )}
                         </NavLink>
                         
                         {/* Edit/Delete buttons - only show for chats */}
                         {item.type === 'chat' && editingChatId !== item.id && (
-                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex gap-1">
+                          <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity flex items-center gap-1">
                             <Button
-                              size="sm"
                               variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 setEditingChatId(item.id);
                                 setEditingTitle(item.title);
                               }}
-                              className="h-6 w-6 p-0 hover:bg-sidebar-accent"
                             >
                               <Edit2 className="h-3 w-3" />
                             </Button>
                             <Button
-                              size="sm"
                               variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent text-destructive"
                               onClick={(e) => {
                                 e.preventDefault();
                                 e.stopPropagation();
                                 handleDeleteChat(item.id);
                               }}
-                              className="h-6 w-6 p-0 hover:bg-sidebar-accent text-red-500 hover:text-red-600"
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 bg-sidebar-accent hover:bg-sidebar-accent"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setAddToProjectModalOpen(item.id);
+                              }}
+                              title="Add to project"
+                            >
+                              <Plus className="h-3 w-3" />
+                            </Button>
                           </div>
-                        )}
-
-                        {/* Add to Project button - only show for chats */}
-                        {item.type === 'chat' && (
-                          <AddToProjectModal 
-                            chatId={item.id} 
-                            projects={projects} 
-                            onProjectAssigned={() => {
-                              fetchChats();
-                              fetchProjects();
-                            }}
-                          />
                         )}
                       </div>
                     </SidebarMenuItem>
@@ -815,7 +669,6 @@ export function ChatSidebar() {
               </SidebarGroupContent>
             </SidebarGroup>
           )}
-
         </SidebarContent>
 
         <SidebarFooter className="p-2 border-t border-sidebar-border">
@@ -827,7 +680,6 @@ export function ChatSidebar() {
                     collapsed ? 'justify-center' : ''
                   }`}>
                     <Avatar className="h-6 w-6">
-                      {/* Show Google profile image if available */}
                       {userProfile?.avatar_url ? (
                         <img 
                           src={userProfile.avatar_url} 
@@ -850,15 +702,23 @@ export function ChatSidebar() {
                     )}
                   </div>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent side="top" align="start" className="w-56 bg-popover border-border">
-                  <DropdownMenuItem onClick={() => setShowSettings(true)} className="cursor-pointer">
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuItem onClick={() => navigate('/profile')}>
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setShowSettings(true)}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/help')}>
+                    <HelpCircle className="mr-2 h-4 w-4" />
+                    Help
+                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-destructive">
+                  <DropdownMenuItem onClick={handleSignOut}>
                     <LogOut className="mr-2 h-4 w-4" />
-                    Log out
+                    Sign Out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -867,9 +727,24 @@ export function ChatSidebar() {
         </SidebarFooter>
       </Sidebar>
 
+      {/* Add to Project Modal */}
+      {addToProjectModalOpen && (
+        <AddToProjectModal 
+          isOpen={!!addToProjectModalOpen}
+          onClose={() => setAddToProjectModalOpen(null)}
+          chatId={addToProjectModalOpen}
+          onChatAddedToProject={() => {
+            fetchChats();
+            fetchProjects();
+            setAddToProjectModalOpen(null);
+          }}
+        />
+      )}
+
+      {/* Settings Modal */}
       <SettingsModal 
         open={showSettings} 
-        onOpenChange={setShowSettings}
+        onOpenChange={setShowSettings} 
       />
     </>
   );

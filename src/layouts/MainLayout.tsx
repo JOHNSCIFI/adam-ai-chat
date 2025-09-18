@@ -1,6 +1,6 @@
 import React from 'react';
 import { SidebarProvider } from "@/components/ui/sidebar";
-import { ChatSidebar } from "@/components/ChatSidebar";
+import ChatSidebar from "@/components/ChatSidebar";
 
 function MainContent({ children }: { children: React.ReactNode }) {
   return (
@@ -20,7 +20,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   return (
     <SidebarProvider defaultOpen={window.innerWidth >= 1024}>
       <div className="flex min-h-screen w-full bg-background">
-        <ChatSidebar />
+        <ChatSidebar isOpen={true} onClose={() => {}} />
         <MainContent>{children}</MainContent>
       </div>
     </SidebarProvider>
