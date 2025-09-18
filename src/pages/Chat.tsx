@@ -14,7 +14,6 @@ import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
-import { TypewriterText } from '@/components/TypewriterText';
 
 interface Message {
   id: string;
@@ -164,23 +163,8 @@ export default function Chat() {
     setLoading(true);
     
     try {
-      console.log('Trigger: Send Message to AI via OpenAI (fast)');
-      
-      // Create placeholder assistant message immediately
-      const tempAssistantMessage: Message = {
-        id: `temp-ai-${Date.now()}`,
-        content: '',
-        role: 'assistant',
-        created_at: new Date().toISOString(),
-        file_attachments: []
-      };
-
-      // Add placeholder message to UI
-      setMessages(prev => [...prev, tempAssistantMessage]);
-      scrollToBottom();
-
-      // Call the fast AI function
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-fast', {
+      console.log('Trigger: Send Message to AI via OpenAI (auto)');
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai', {
         body: {
           message: userMessage,
           chat_id: chatId,
@@ -188,7 +172,7 @@ export default function Chat() {
         }
       });
 
-      console.log('AI response received:', aiResponse);
+      console.log('AI response:', aiResponse);
 
       if (aiError) {
         console.error('AI function error:', aiError);
@@ -220,18 +204,74 @@ export default function Chat() {
           assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
         }
         
-        // Update the placeholder message with actual content
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempAssistantMessage.id 
-            ? { 
-                ...msg, 
-                content: assistantResponse,
-                file_attachments: fileAttachments
-              }
-            : msg
-        ));
-        
+        // Create assistant message object
+        const newAssistantMessage: Message = {
+          id: `temp-ai-${Date.now()}`,
+          content: assistantResponse,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: fileAttachments
+        };
+
+        // Immediately add assistant response to UI
+        setMessages(prev => [...prev, newAssistantMessage]);
         scrollToBottom();
+
+        // Generate embedding for assistant response
+        let assistantEmbedding = null;
+        if (aiResponse.embedding) {
+          assistantEmbedding = aiResponse.embedding;
+        } else {
+          try {
+            const response = await fetch('https://api.openai.com/v1/embeddings', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${await getOpenAIKey()}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'text-embedding-3-small',
+                input: assistantResponse,
+              }),
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              assistantEmbedding = data.data[0].embedding;
+            }
+          } catch (error) {
+            console.log('Embedding generation failed, continuing without:', error);
+          }
+        }
+
+        // Add assistant response to database
+        const { data: insertedAiMessage, error: aiInsertError } = await supabase
+          .from('messages')
+          .insert([{
+            chat_id: chatId,
+            content: assistantResponse,
+            role: 'assistant',
+            file_attachments: fileAttachments,
+            embedding: assistantEmbedding
+          }])
+          .select()
+          .single();
+
+        if (aiInsertError) {
+          console.error('Error inserting AI message:', aiInsertError);
+        } else if (insertedAiMessage) {
+          // Update the message with the real ID from database
+          setMessages(prev => prev.map(msg => 
+            msg.id === newAssistantMessage.id 
+              ? { 
+                  ...insertedAiMessage, 
+                  file_attachments: fileAttachments,
+                  role: insertedAiMessage.role as 'user' | 'assistant'
+                } as Message
+              : msg
+          ));
+        }
+        
         console.log(`AI response completed for message: ${userMessageId}`);
       } else {
         console.error('No response from AI function');
@@ -241,9 +281,6 @@ export default function Chat() {
       console.error('Auto AI response error:', error);
       // Remove the message from processed set on error so it can be retried
       processedUserMessages.current.delete(userMessageId);
-      
-      // Remove placeholder message on error
-      setMessages(prev => prev.filter(msg => !msg.id.startsWith('temp-ai-')));
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
@@ -356,67 +393,56 @@ export default function Chat() {
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-  // Helper function to generate embeddings in background
-  const generateEmbeddingBackground = async (text: string, messageId: string) => {
-    try {
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${await getOpenAIKey()}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: text,
-        }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        const embedding = data.data[0].embedding;
+      // Generate embedding for user message
+      let userEmbedding = null;
+      try {
+        const response = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${await getOpenAIKey()}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'text-embedding-3-small',
+            input: userMessage,
+          }),
+        });
         
-        // Update the message with the embedding in background
-        await supabase
-          .from('messages')
-          .update({ embedding })
-          .eq('id', messageId);
+        if (response.ok) {
+          const data = await response.json();
+          userEmbedding = data.data[0].embedding;
+        }
+      } catch (error) {
+        console.log('Embedding generation failed, continuing without:', error);
       }
-    } catch (error) {
-      console.log('Background embedding generation failed:', error);
-    }
-  };
 
-  // Add user message to database with file attachments
-  const { data: insertedMessage, error: userError } = await supabase
-    .from('messages')
-    .insert({
-      chat_id: chatId,
-      content: userMessage,
-      role: 'user',
-      file_attachments: uploadedFiles as any // Cast to Json type for database
-    })
-    .select()
-    .single();
+      // Add user message to database with file attachments and embedding
+      const { data: insertedMessage, error: userError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatId,
+          content: userMessage,
+          role: 'user',
+          file_attachments: uploadedFiles as any, // Cast to Json type for database
+          embedding: userEmbedding
+        })
+        .select()
+        .single();
 
-  if (userError) throw userError;
+      if (userError) throw userError;
 
-  // Generate embedding for user message (in background, don't wait)
-  if (userMessage.trim() && insertedMessage) {
-    generateEmbeddingBackground(userMessage, insertedMessage.id);
-  }
-
-  // Update the message with the real ID from database
-  if (insertedMessage) {
-    setMessages(prev => prev.map(msg => 
-      msg.id === newUserMessage.id 
-        ? { 
-            ...insertedMessage, 
-            file_attachments: uploadedFiles,
-            role: insertedMessage.role as 'user' | 'assistant'
-          } as Message
-        : msg
-    ));
-  }
+        // Update the message with the real ID from database
+        if (insertedMessage) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === newUserMessage.id 
+              ? { 
+                  ...insertedMessage, 
+                  file_attachments: uploadedFiles,
+                  role: insertedMessage.role as 'user' | 'assistant'
+                } as Message
+              : msg
+          ));
+        }
 
       // Note: AI response will be automatically triggered by the useEffect hook
       // that detects new user messages - no need to call webhook here
@@ -862,15 +888,6 @@ export default function Chat() {
                                     <p className="text-xs text-muted-foreground">This may take a few moments</p>
                                   </div>
                                 </div>
-                              ) : message.role === 'assistant' ? (
-                                // Use TypewriterText for assistant messages
-                                <TypewriterText
-                                  text={message.content}
-                                  typeSpeed={50}
-                                  backSpeed={30}
-                                  className="break-words overflow-wrap-anywhere"
-                                  onComplete={() => scrollToBottom()}
-                                />
                               ) : (
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
