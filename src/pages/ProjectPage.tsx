@@ -338,7 +338,7 @@ export default function ProjectPage() {
     <div className="flex h-screen bg-background">
       <div className="flex-1 flex flex-col">
         <div className="flex-1 overflow-auto pb-32">
-          <div style={getContainerStyle()} className="min-h-screen py-8">
+          <div style={getContainerStyle()} className="min-h-screen flex flex-col justify-center pb-32">
             {/* Header */}
             <div className="flex flex-col items-center justify-center mb-8">
               <div 
