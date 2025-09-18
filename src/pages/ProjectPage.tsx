@@ -74,9 +74,7 @@ export default function ProjectPage() {
     const sidebarWidth = collapsed ? 56 : 280;
     
     return { 
-      marginLeft: `${sidebarWidth}px`,
-      width: `calc(100vw - ${sidebarWidth}px)`,
-      maxWidth: 'none'
+      marginLeft: `${sidebarWidth}px`
     };
   };
 
@@ -329,8 +327,8 @@ export default function ProjectPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <div className="flex-1 flex flex-col">
+    <div className="flex h-screen bg-background overflow-hidden w-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="min-h-screen flex flex-col justify-center items-center px-4" style={getContainerStyle()}>
             <div className="w-full max-w-2xl">
@@ -431,101 +429,103 @@ export default function ProjectPage() {
         </div>
 
         {/* Input area - fixed at bottom like ChatGPT */}
-        <div className="fixed bottom-0 bg-background flex justify-center" style={getContainerStyle()}>
-          <div className="w-full max-w-2xl px-4 py-4">
-            {/* File attachments preview */}
-            {selectedFiles.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
-                    <span className="truncate max-w-32">{file.name}</span>
-                    <button 
-                      onClick={() => removeFile(index)}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            <div className="relative">
-              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-                {/* Attachment button */}
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
+        <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
+          <div className="flex justify-center px-4 py-4" style={getContainerStyle()}>
+            <div className="w-full max-w-2xl">
+              {/* File attachments preview */}
+              {selectedFiles.length > 0 && (
+                <div className="mb-4 flex flex-wrap gap-2">
+                  {selectedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                      <span className="truncate max-w-32">{file.name}</span>
+                      <button 
+                        onClick={() => removeFile(index)}
+                        className="text-muted-foreground hover:text-foreground"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              <div className="relative">
+                <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+                  {/* Attachment button */}
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+                      >
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleFileUpload}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        Attach files
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                  
+                  <Textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyDown}
+                    placeholder={`New chat in ${project.title}`}
+                    className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                    style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                    disabled={loading}
+                    rows={1}
+                  />
+                  
+                  <div className="flex items-center gap-1 ml-2 pb-1">
+                    {/* Dictation button */}
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+                      className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                      disabled={loading}
                     >
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    
+                    {/* Send button */}
                     <Button
-                      variant="ghost"
+                      type="button"
+                      onClick={sendMessage}
+                      disabled={(!input.trim() && selectedFiles.length === 0) || loading}
                       size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={handleFileUpload}
+                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                      style={{ 
+                        backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
+                          ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                          : 'hsl(var(--muted))',
+                        color: (input.trim() || selectedFiles.length > 0) && !loading
+                          ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
+                          : 'hsl(var(--muted-foreground))'
+                      }}
                     >
-                      <Paperclip className="h-4 w-4" />
-                      Attach files
+                      <SendHorizontalIcon className="h-4 w-4" />
                     </Button>
-                  </PopoverContent>
-                </Popover>
-                
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={handleInputChange}
-                  onKeyDown={handleKeyDown}
-                  placeholder={`New chat in ${project.title}`}
-                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
-                  style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
-                  disabled={loading}
-                  rows={1}
-                />
-                
-                <div className="flex items-center gap-1 ml-2 pb-1">
-                  {/* Dictation button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                    disabled={loading}
-                  >
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                  
-                  {/* Send button */}
-                  <Button
-                    type="button"
-                    onClick={sendMessage}
-                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    size="sm"
-                    className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-                    style={{ 
-                      backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
-                        ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
-                        : 'hsl(var(--muted))',
-                      color: (input.trim() || selectedFiles.length > 0) && !loading
-                        ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
-                        : 'hsl(var(--muted-foreground))'
-                    }}
-                  >
-                    <SendHorizontalIcon className="h-4 w-4" />
-                  </Button>
+                  </div>
                 </div>
               </div>
+              
+              <p className="text-xs text-muted-foreground text-center mt-3">
+                AdamGPT can make mistakes. Check important info.
+              </p>
             </div>
-            
-            <p className="text-xs text-muted-foreground text-center mt-3">
-              AdamGPT can make mistakes. Check important info.
-            </p>
           </div>
         </div>
 
