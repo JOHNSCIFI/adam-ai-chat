@@ -164,6 +164,19 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   }, [user]);
 
+  // Listen for chat refresh events
+  useEffect(() => {
+    const handleChatRefresh = () => {
+      fetchChats();
+      fetchProjects();
+    };
+
+    window.addEventListener('force-chat-refresh', handleChatRefresh);
+    return () => {
+      window.removeEventListener('force-chat-refresh', handleChatRefresh);
+    };
+  }, []);
+
   const handleNewChat = async () => {
     if (!user) return;
 
@@ -187,6 +200,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         return;
       }
 
+      // Refresh the sidebar immediately
+      fetchChats();
       navigate(`/chat/${newChat.id}`);
     } catch (error) {
       console.error('Error in handleNewChat:', error);
@@ -217,7 +232,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           variant: "destructive",
         });
       } else {
-        setChats(prev => prev.filter(chat => chat.id !== chatId));
+        fetchChats();
+        fetchProjects();
         toast({
           title: "Chat deleted",
           description: "Chat has been deleted successfully.",
@@ -234,6 +250,53 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         description: "Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleRenameChat = async (chatId: string, newTitle: string) => {
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .update({ title: newTitle })
+        .eq('id', chatId);
+
+      if (error) {
+        console.error('Error renaming chat:', error);
+        toast({
+          title: "Error renaming chat",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        fetchChats();
+        fetchProjects();
+        setEditingChatId(null);
+        toast({
+          title: "Chat renamed",
+          description: "Chat has been renamed successfully.",
+        });
+      }
+    } catch (error) {
+      console.error('Error in handleRenameChat:', error);
+      toast({
+        title: "Error renaming chat",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditing = (chatId: string, currentTitle: string) => {
+    setEditingChatId(chatId);
+    setEditingTitle(currentTitle);
+  };
+
+  const handleEditKeyDown = (e: React.KeyboardEvent, chatId: string) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleRenameChat(chatId, editingTitle);
+    } else if (e.key === 'Escape') {
+      setEditingChatId(null);
     }
   };
 
@@ -362,7 +425,15 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                         <SidebarMenuItem>
                           <div 
                             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
-                            onClick={() => toggleProjectExpanded(project.id)}
+                            onClick={(e) => {
+                              if (e.detail === 1) {
+                                // Single click - expand/collapse
+                                toggleProjectExpanded(project.id);
+                              } else if (e.detail === 2) {
+                                // Double click - navigate to project
+                                navigate(`/${project.title.toLowerCase().replace(/\s+/g, '-')}`);
+                              }
+                            }}
                           >
                             <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: project.color }} />
                             <IconComponent className="h-4 w-4 text-sidebar-foreground" />
@@ -376,19 +447,34 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                             {/* Project Chats */}
                             {project.chats?.map((chat) => (
                               <div key={chat.id} className="group/chat relative">
-                                <NavLink
-                                  to={`/chat/${chat.id}`}
-                                  className={({ isActive }) =>
-                                    `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                                      isActive
-                                        ? 'bg-sidebar-accent text-sidebar-foreground'
-                                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                                    }`
-                                  }
-                                >
-                                  <MessageSquare className="h-3 w-3 flex-shrink-0" />
-                                  <span className="flex-1 truncate">{chat.title}</span>
-                                </NavLink>
+                                {editingChatId === chat.id ? (
+                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sidebar-accent">
+                                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                    <input
+                                      type="text"
+                                      value={editingTitle}
+                                      onChange={(e) => setEditingTitle(e.target.value)}
+                                      onKeyDown={(e) => handleEditKeyDown(e, chat.id)}
+                                      onBlur={() => handleRenameChat(chat.id, editingTitle)}
+                                      className="flex-1 bg-transparent border-none outline-none text-sm"
+                                      autoFocus
+                                    />
+                                  </div>
+                                ) : (
+                                  <NavLink
+                                    to={`/chat/${chat.id}`}
+                                    className={({ isActive }) =>
+                                      `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
+                                        isActive
+                                          ? 'bg-sidebar-accent text-sidebar-foreground'
+                                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                                      }`
+                                    }
+                                  >
+                                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
+                                    <span className="flex-1 truncate">{chat.title}</span>
+                                  </NavLink>
+                                )}
                                 <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
                                   <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
@@ -397,6 +483,12 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                                       </Button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent>
+                                      <DropdownMenuItem
+                                        onClick={() => startEditing(chat.id, chat.title)}
+                                      >
+                                        <Edit2 className="mr-2 h-3 w-3" />
+                                        Rename
+                                      </DropdownMenuItem>
                                       <DropdownMenuItem
                                         onClick={() => handleDeleteChat(chat.id)}
                                         className="text-destructive"
@@ -430,19 +522,34 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <SidebarMenu>
                   {unorganizedChats.slice(0, 20).map((chat) => (
                     <SidebarMenuItem key={chat.id} className="group/chat relative">
-                      <NavLink
-                        to={`/chat/${chat.id}`}
-                        className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                            isActive
-                              ? 'bg-sidebar-accent text-sidebar-foreground'
-                              : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                          }`
-                        }
-                      >
-                        <MessageSquare className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate text-sm">{chat.title}</span>
-                      </NavLink>
+                      {editingChatId === chat.id ? (
+                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-sidebar-accent">
+                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                          <input
+                            type="text"
+                            value={editingTitle}
+                            onChange={(e) => setEditingTitle(e.target.value)}
+                            onKeyDown={(e) => handleEditKeyDown(e, chat.id)}
+                            onBlur={() => handleRenameChat(chat.id, editingTitle)}
+                            className="flex-1 bg-transparent border-none outline-none text-sm"
+                            autoFocus
+                          />
+                        </div>
+                      ) : (
+                        <NavLink
+                          to={`/chat/${chat.id}`}
+                          className={({ isActive }) =>
+                            `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                              isActive
+                                ? 'bg-sidebar-accent text-sidebar-foreground'
+                                : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                            }`
+                          }
+                        >
+                          <MessageSquare className="h-4 w-4 flex-shrink-0" />
+                          <span className="flex-1 truncate text-sm">{chat.title}</span>
+                        </NavLink>
+                      )}
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -451,6 +558,10 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent>
+                            <DropdownMenuItem onClick={() => startEditing(chat.id, chat.title)}>
+                              <Edit2 className="mr-2 h-3 w-3" />
+                              Rename
+                            </DropdownMenuItem>
                             <DropdownMenuItem onClick={() => setAddToProjectModalOpen(chat.id)}>
                               <FolderPlus className="mr-2 h-3 w-3" />
                               Add to Project

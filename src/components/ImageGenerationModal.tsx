@@ -117,30 +117,23 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
           role: 'user'
         });
 
-      // Generate image
-      const { data: imageData, error: apiError } = await supabase.functions.invoke('generate-image', {
-        body: { prompt: promptText }
+      // Send image generation request to webhook (AI will handle generation)
+      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          message: promptText,
+          chat_id: newChat.id,
+          user_id: user.id,
+          type: 'image_generation'
+        }),
       });
 
-      if (apiError || !imageData?.imageUrl) {
+      if (!webhookResponse.ok) {
         throw new Error('Failed to generate image');
       }
-
-      // Add assistant message with image
-      await supabase
-        .from('messages')
-        .insert({
-          chat_id: newChat.id,
-          content: `I've generated an image for: "${promptText}"`,
-          role: 'assistant',
-          file_attachments: [{
-            id: Date.now().toString(),
-            name: 'generated-image.jpg',
-            type: 'image/jpeg',
-            url: imageData.imageUrl,
-            size: 0
-          }]
-        });
 
       // Close modal and navigate to the new chat
       onClose();

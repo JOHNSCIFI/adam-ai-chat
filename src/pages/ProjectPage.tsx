@@ -2,17 +2,18 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, MessageSquare, ImageIcon } from 'lucide-react';
+import { MessageSquare, Plus, Edit2, Save, X } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
 
 interface Chat {
   id: string;
   title: string;
-  created_at: string;
   updated_at: string;
   project_id?: string;
 }
@@ -23,20 +24,21 @@ interface Project {
   icon: string;
   color: string;
   description?: string;
-  created_at: string;
 }
 
 export default function ProjectPage() {
   const { projectName } = useParams();
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
-  const navigate = useNavigate();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
-
+  
   const [project, setProject] = useState<Project | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [newPrompt, setNewPrompt] = useState('');
+  const [isEditingProject, setIsEditingProject] = useState(false);
+  const [editedProject, setEditedProject] = useState<{ title: string; description: string }>({ title: '', description: '' });
 
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
@@ -70,33 +72,46 @@ export default function ProjectPage() {
   const fetchProject = async () => {
     if (!projectName || !user) return;
 
-    // Decode the project name from URL
-    const decodedProjectName = decodeURIComponent(projectName).replace(/-/g, ' ');
-    
-    const { data, error } = await supabase
-      .from('projects')
-      .select('*')
-      .ilike('title', decodedProjectName)
-      .eq('user_id', user.id)
-      .single();
+    try {
+      const projectTitle = projectName.replace(/-/g, ' ');
+      
+      const { data: projectData, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .ilike('title', projectTitle)
+        .single();
 
-    if (data) {
-      setProject(data);
+      if (error) {
+        console.error('Error fetching project:', error);
+        return;
+      }
+
+      setProject(projectData);
+    } catch (error) {
+      console.error('Error in fetchProject:', error);
     }
   };
 
   const fetchProjectChats = async () => {
     if (!project || !user) return;
 
-    const { data, error } = await supabase
-      .from('chats')
-      .select('*')
-      .eq('project_id', project.id)
-      .eq('user_id', user.id)
-      .order('updated_at', { ascending: false });
+    try {
+      const { data: chatsData, error } = await supabase
+        .from('chats')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('project_id', project.id)
+        .order('updated_at', { ascending: false });
 
-    if (data) {
-      setChats(data);
+      if (error) {
+        console.error('Error fetching project chats:', error);
+        return;
+      }
+
+      setChats(chatsData || []);
+    } catch (error) {
+      console.error('Error in fetchProjectChats:', error);
     }
   };
 
@@ -104,7 +119,7 @@ export default function ProjectPage() {
     if (!user || !project) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: newChat, error } = await supabase
         .from('chats')
         .insert({
           user_id: user.id,
@@ -114,13 +129,22 @@ export default function ProjectPage() {
         .select()
         .single();
 
-      if (error) throw error;
-      navigate(`/chat/${data.id}`);
+      if (error) {
+        console.error('Error creating chat:', error);
+        toast({
+          title: "Error creating chat",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      navigate(`/chat/${newChat.id}`);
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('Error in createNewChat:', error);
       toast({
-        title: "Error",
-        description: "Failed to create new chat",
+        title: "Error creating chat",
+        description: "Please try again.",
         variant: "destructive",
       });
     }
@@ -130,7 +154,7 @@ export default function ProjectPage() {
     if (!newPrompt.trim() || !user || !project) return;
 
     try {
-      const { data, error } = await supabase
+      const { data: newChat, error } = await supabase
         .from('chats')
         .insert({
           user_id: user.id,
@@ -140,25 +164,82 @@ export default function ProjectPage() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error creating chat:', error);
+        toast({
+          title: "Error creating chat",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
 
-      // Add the initial message
+      // Add initial message
       await supabase
         .from('messages')
         .insert({
-          chat_id: data.id,
-          role: 'user',
-          content: newPrompt
+          chat_id: newChat.id,
+          content: newPrompt,
+          role: 'user'
         });
 
-      navigate(`/chat/${data.id}`);
+      setNewPrompt('');
+      navigate(`/chat/${newChat.id}`);
     } catch (error) {
-      console.error('Error creating chat:', error);
+      console.error('Error in startChatFromPrompt:', error);
       toast({
-        title: "Error",
-        description: "Failed to start chat",
+        title: "Error creating chat",
+        description: "Please try again.",
         variant: "destructive",
       });
+    }
+  };
+
+  const handleUpdateProject = async () => {
+    if (!project || !user) return;
+
+    try {
+      const { error } = await supabase
+        .from('projects')
+        .update({ 
+          title: editedProject.title,
+          description: editedProject.description
+        })
+        .eq('id', project.id);
+
+      if (error) {
+        console.error('Error updating project:', error);
+        toast({
+          title: "Error updating project",
+          description: error.message,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setProject(prev => prev ? { ...prev, title: editedProject.title, description: editedProject.description } : null);
+      setIsEditingProject(false);
+      toast({
+        title: "Project updated",
+        description: "Project has been updated successfully.",
+      });
+
+      // Refresh sidebar to show updated project title
+      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+    } catch (error) {
+      console.error('Error in handleUpdateProject:', error);
+      toast({
+        title: "Error updating project",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const startEditingProject = () => {
+    if (project) {
+      setEditedProject({ title: project.title, description: project.description || '' });
+      setIsEditingProject(true);
     }
   };
 
@@ -173,19 +254,30 @@ export default function ProjectPage() {
           <div style={getContainerStyle()} className="h-full flex flex-col">
             {/* Header */}
             <div className="border-b border-border/40 p-4">
-              <div className="flex items-center gap-3">
-                <div 
-                  className="p-3 rounded-lg text-white flex items-center justify-center"
-                  style={{ backgroundColor: project.color }}
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div 
+                    className="p-3 rounded-lg text-white flex items-center justify-center"
+                    style={{ backgroundColor: project.color }}
+                  >
+                    <span className="text-lg">{project.icon}</span>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+                    {project.description && (
+                      <p className="text-sm text-muted-foreground">{project.description}</p>
+                    )}
+                  </div>
+                </div>
+                <Button 
+                  onClick={startEditingProject}
+                  size="sm"
+                  variant="outline"
+                  className="flex items-center gap-2"
                 >
-                  <span className="text-lg">{project.icon}</span>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
-                  {project.description && (
-                    <p className="text-sm text-muted-foreground">{project.description}</p>
-                  )}
-                </div>
+                  <Edit2 className="h-4 w-4" />
+                  Edit Project
+                </Button>
               </div>
             </div>
 
@@ -270,6 +362,52 @@ export default function ProjectPage() {
           </div>
         </div>
       </div>
+
+      {/* Edit Project Modal */}
+      <Dialog open={isEditingProject} onOpenChange={setIsEditingProject}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Project</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Project Name</label>
+              <Input
+                value={editedProject.title}
+                onChange={(e) => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
+                placeholder="Enter project name"
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium">Description</label>
+              <Textarea
+                value={editedProject.description}
+                onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Enter project description"
+                className="mt-1"
+                rows={3}
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={() => setIsEditingProject(false)}
+              >
+                <X className="h-4 w-4 mr-2" />
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleUpdateProject}
+                disabled={!editedProject.title.trim()}
+              >
+                <Save className="h-4 w-4 mr-2" />
+                Save Changes
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
