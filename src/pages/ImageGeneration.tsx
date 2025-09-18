@@ -6,9 +6,9 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ImageIcon, Plus, Copy, Check, Download, Sparkles } from 'lucide-react';
+import { ImageIcon, Plus, Download, Sparkles } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 
 interface ImageGeneration {
@@ -23,14 +23,12 @@ export default function ImageGeneration() {
   const { sessionId } = useParams();
   const { user } = useAuth();
   const { actualTheme } = useTheme();
-  const { toast } = useToast();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
   const [generations, setGenerations] = useState<ImageGeneration[]>([]);
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [copiedImageId, setCopiedImageId] = useState<string | null>(null);
   const [sessionTitle, setSessionTitle] = useState('New Image Session');
   const [selectedImage, setSelectedImage] = useState<{url: string, prompt: string} | null>(null);
   
@@ -141,24 +139,6 @@ export default function ImageGeneration() {
     }
   };
 
-  const copyImageUrl = async (imageUrl: string, imageId: string) => {
-    try {
-      await navigator.clipboard.writeText(imageUrl);
-      setCopiedImageId(imageId);
-      setTimeout(() => setCopiedImageId(null), 2000);
-      toast({
-        title: "Copied!",
-        description: "Image URL copied to clipboard",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy image URL",
-        variant: "destructive",
-      });
-    }
-  };
-
   const downloadImage = async (imageUrl: string, prompt: string) => {
     try {
       const response = await fetch(imageUrl);
@@ -166,17 +146,15 @@ export default function ImageGeneration() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `generated-image-${prompt.substring(0, 20)}.jpg`;
+      a.download = `image-${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
+      toast.success('Image downloaded successfully');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to download image",
-        variant: "destructive",
-      });
+      console.error('Download failed:', error);
+      toast.error('Failed to download image');
     }
   };
 
@@ -247,22 +225,7 @@ export default function ImageGeneration() {
                                 className="w-full max-w-md rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setSelectedImage({url: generation.image_url!, prompt: generation.prompt})}
                               />
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="h-8 w-8 p-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    copyImageUrl(generation.image_url!, generation.id);
-                                  }}
-                                >
-                                  {copiedImageId === generation.id ? (
-                                    <Check className="h-4 w-4" />
-                                  ) : (
-                                    <Copy className="h-4 w-4" />
-                                  )}
-                                </Button>
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
                                   size="sm"
                                   variant="secondary"
