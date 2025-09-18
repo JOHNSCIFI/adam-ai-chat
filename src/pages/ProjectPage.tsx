@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Edit2, Save, X } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2 } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
-import { ProjectModal } from '@/components/ProjectModal';
+import ProjectEditModal from '@/components/ProjectEditModal';
 
 interface Chat {
   id: string;
@@ -31,30 +31,41 @@ export default function ProjectPage() {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { actualTheme } = useTheme();
   const { toast } = useToast();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
   
   const [project, setProject] = useState<Project | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
-  const [newPrompt, setNewPrompt] = useState('');
+  const [input, setInput] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isEditingProject, setIsEditingProject] = useState(false);
-  const [editedProject, setEditedProject] = useState<{ title: string; description: string }>({ title: '', description: '' });
+  const [editingChatId, setEditingChatId] = useState<string | null>(null);
+  const [editingChatTitle, setEditingChatTitle] = useState('');
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Calculate proper centering based on sidebar state - center content in available space
+  // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
-    const sidebarWidth = collapsed ? 56 : 280;
-    const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
-    
-    return {
-      width: availableWidth,
-      display: 'flex',
-      flexDirection: 'column' as const,
-      alignItems: 'center',
-      justifyContent: 'flex-start',
-      paddingLeft: '2rem',
-      paddingRight: '2rem'
-    };
+    if (collapsed) {
+      return { 
+        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
+      };
+    } else {
+      return { 
+        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
+        marginRight: 'auto',
+        maxWidth: '768px'
+      };
+    }
   };
 
   useEffect(() => {
@@ -148,96 +159,156 @@ export default function ProjectPage() {
     }
   };
 
-  const startChatFromPrompt = async () => {
-    if (!newPrompt.trim() || !user || !project) return;
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+    
+    // Auto-resize textarea
+    const textarea = e.target;
+    textarea.style.height = 'auto';
+    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  };
+
+  const sendMessage = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if ((!input.trim() && selectedFiles.length === 0) || !user || !project || loading) return;
+
+    setLoading(true);
+    const userMessage = input.trim();
+    const files = [...selectedFiles];
+    setInput('');
+    setSelectedFiles([]);
+    
+    // Reset textarea height
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+    }
 
     try {
+      // Create new chat
       const { data: newChat, error } = await supabase
         .from('chats')
         .insert({
           user_id: user.id,
-          title: newPrompt.length > 50 ? newPrompt.substring(0, 50) + '...' : newPrompt,
+          title: userMessage.length > 50 ? userMessage.substring(0, 50) + '...' : userMessage,
           project_id: project.id
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('Error creating chat:', error);
-        toast({
-          title: "Error creating chat",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
       // Add initial message
       await supabase
         .from('messages')
         .insert({
           chat_id: newChat.id,
-          content: newPrompt,
+          content: userMessage,
           role: 'user'
         });
 
-      setNewPrompt('');
+      // Refresh chats and navigate
+      fetchProjectChats();
       navigate(`/chat/${newChat.id}`);
-    } catch (error) {
-      console.error('Error in startChatFromPrompt:', error);
+    } catch (error: any) {
+      console.error('Send message error:', error);
       toast({
         title: "Error creating chat",
         description: "Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleUpdateProject = async () => {
-    if (!project || !user) return;
+  const handleFileUpload = () => {
+    fileInputRef.current?.click();
+    setIsPopoverOpen(false);
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (files && files.length > 0) {
+      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      event.target.value = '';
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const startRenameChat = (chat: Chat) => {
+    setEditingChatId(chat.id);
+    setEditingChatTitle(chat.title);
+  };
+
+  const saveRename = async (chatId: string) => {
+    if (!editingChatTitle.trim()) return;
 
     try {
       const { error } = await supabase
-        .from('projects')
-        .update({ 
-          title: editedProject.title,
-          description: editedProject.description
-        })
-        .eq('id', project.id);
+        .from('chats')
+        .update({ title: editingChatTitle.trim() })
+        .eq('id', chatId);
 
-      if (error) {
-        console.error('Error updating project:', error);
-        toast({
-          title: "Error updating project",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
+      if (error) throw error;
 
-      setProject(prev => prev ? { ...prev, title: editedProject.title, description: editedProject.description } : null);
-      setIsEditingProject(false);
-      toast({
-        title: "Project updated",
-        description: "Project has been updated successfully.",
-      });
-
-      // Refresh sidebar to show updated project title
+      setChats(prev => prev.map(chat => 
+        chat.id === chatId ? { ...chat, title: editingChatTitle.trim() } : chat
+      ));
+      setEditingChatId(null);
+      setEditingChatTitle('');
+      
+      // Refresh sidebar
       window.dispatchEvent(new CustomEvent('force-chat-refresh'));
-    } catch (error) {
-      console.error('Error in handleUpdateProject:', error);
+      
       toast({
-        title: "Error updating project",
-        description: "Please try again.",
+        title: "Chat renamed",
+        description: "Chat has been renamed successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error renaming chat",
+        description: error.message || "Please try again.",
         variant: "destructive",
       });
     }
   };
 
-  const startEditingProject = () => {
-    if (project) {
-      setEditedProject({ title: project.title, description: project.description || '' });
-      setIsEditingProject(true);
+  const deleteChat = async (chatId: string) => {
+    if (!confirm('Are you sure you want to delete this chat?')) return;
+
+    try {
+      const { error } = await supabase
+        .from('chats')
+        .delete()
+        .eq('id', chatId);
+
+      if (error) throw error;
+
+      setChats(prev => prev.filter(chat => chat.id !== chatId));
+      
+      // Refresh sidebar
+      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+      
+      toast({
+        title: "Chat deleted",
+        description: "Chat has been deleted successfully.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error deleting chat",
+        description: error.message || "Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -248,159 +319,213 @@ export default function ProjectPage() {
   return (
     <div className="flex h-screen bg-background">
       <div className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-hidden">
-          <div style={getContainerStyle()} className="h-full max-w-4xl mx-auto">
+        <div className="flex-1 overflow-auto pb-32">
+          <div style={getContainerStyle()} className="min-h-screen py-8">
             {/* Header */}
-            <div className="text-center py-8">
-              <div className="flex items-center justify-center gap-2 mb-4">
+            <div className="text-center mb-8">
+              <div 
+                className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                onClick={() => setIsEditingProject(true)}
+              >
                 <div 
-                  className="p-2 rounded-lg text-white flex items-center justify-center"
+                  className="w-8 h-8 rounded-full text-white flex items-center justify-center text-lg"
                   style={{ backgroundColor: project.color }}
                 >
-                  <span className="text-base">{project.icon}</span>
+                  {project.icon}
                 </div>
                 <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
               </div>
             </div>
 
-              <div className="text-center">
-                <Button 
-                  onClick={startEditingProject}
-                  size="sm"
-                  variant="outline"
-                  className="inline-flex items-center gap-2 px-4 py-2"
-                >
-                  <Edit2 className="h-4 w-4" />
-                  Edit this project
-                </Button>
-              </div>
-
-              {chats.length > 0 && (
-                <div className="space-y-4 mt-8">
-                  <div className="space-y-3">
-                    {chats.map((chat) => (
-                      <div
-                        key={chat.id}
-                        onClick={() => navigate(`/chat/${chat.id}`)}
-                        className="text-left p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-foreground truncate text-sm">{chat.title}</h4>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
+            {/* Chat List */}
+            {chats.length > 0 && (
+              <div className="space-y-3 mb-8">
+                {chats.map((chat) => (
+                  <div
+                    key={chat.id}
+                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group"
+                  >
+                    <div 
+                      className="flex-1 cursor-pointer"
+                      onClick={() => navigate(`/chat/${chat.id}`)}
+                    >
+                      <div className="flex flex-col gap-1">
+                        {editingChatId === chat.id ? (
+                          <input
+                            value={editingChatTitle}
+                            onChange={(e) => setEditingChatTitle(e.target.value)}
+                            onBlur={() => saveRename(chat.id)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') saveRename(chat.id);
+                              if (e.key === 'Escape') {
+                                setEditingChatId(null);
+                                setEditingChatTitle('');
+                              }
+                            }}
+                            className="font-medium text-foreground bg-transparent border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                            autoFocus
+                          />
+                        ) : (
+                          <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>
+                        )}
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </p>
                       </div>
-                    ))}
+                    </div>
+                    
+                    {/* Chat Actions */}
+                    <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          startRenameChat(chat);
+                        }}
+                      >
+                        <Edit2 className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          deleteChat(chat.id);
+                        }}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-              )}
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
 
-            {/* Input area */}
-            <div className="p-6">
-              <div className="relative">
-                <div className="flex-1 flex items-center border rounded-3xl px-4 py-3 bg-white dark:bg-[hsl(var(--input))] border-gray-200 dark:border-border">
-                  <div className="flex items-center gap-2 mr-3">
-                    <Plus className="h-5 w-5 text-muted-foreground" />
+        {/* Input area - fixed at bottom like ChatGPT */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background">
+          <div className="px-4 py-4" style={getContainerStyle()}>
+            {/* File attachments preview */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                    <span className="truncate max-w-32">{file.name}</span>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="text-muted-foreground hover:text-foreground"
+                    >
+                      ×
+                    </button>
                   </div>
-                  <Textarea
-                    placeholder={`New chat in ${project.title}`}
-                    value={newPrompt}
-                    onChange={(e) => setNewPrompt(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        startChatFromPrompt();
-                      }
-                    }}
-                    className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
-                    style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
-                    rows={1}
-                  />
-                  
-                  <div className="flex items-center gap-1 ml-2 pb-1">
+                ))}
+              </div>
+            )}
+            
+            <div className="relative">
+              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+                {/* Attachment button */}
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
                     <Button
                       type="button"
-                      onClick={startChatFromPrompt}
-                      disabled={!newPrompt.trim()}
+                      variant="ghost"
                       size="sm"
-                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-                      style={{ 
-                        backgroundColor: newPrompt.trim()
-                          ? 'hsl(var(--primary))'
-                          : 'hsl(var(--muted))',
-                        color: newPrompt.trim()
-                          ? 'hsl(var(--primary-foreground))'
-                          : 'hsl(var(--muted-foreground))'
-                      }}
+                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
                     >
-                      <SendHorizontalIcon className="h-4 w-4" />
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
                     </Button>
-                  </div>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={handleFileUpload}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      Attach files
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+                
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={handleKeyDown}
+                  placeholder={`New chat in ${project.title}`}
+                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                  style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                  disabled={loading}
+                  rows={1}
+                />
+                
+                <div className="flex items-center gap-1 ml-2 pb-1">
+                  {/* Dictation button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                    disabled={loading}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                  
+                  {/* Send button */}
+                  <Button
+                    type="button"
+                    onClick={sendMessage}
+                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                    size="sm"
+                    className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                    style={{ 
+                      backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
+                        ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                        : 'hsl(var(--muted))',
+                      color: (input.trim() || selectedFiles.length > 0) && !loading
+                        ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
+                        : 'hsl(var(--muted-foreground))'
+                    }}
+                  >
+                    <SendHorizontalIcon className="h-4 w-4" />
+                  </Button>
                 </div>
               </div>
             </div>
+            
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              AdamGPT can make mistakes. Check important info.
+            </p>
           </div>
         </div>
+
+        {/* Hidden file input */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          onChange={handleFileChange}
+          className="hidden"
+          accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md"
+        />
       </div>
 
       {/* Edit Project Modal */}
-      <ProjectModal
+      <ProjectEditModal
         project={project}
-        isEditing={true}
+        isOpen={isEditingProject}
+        onClose={() => setIsEditingProject(false)}
         onProjectUpdated={() => {
           fetchProject();
-          setIsEditingProject(false);
           window.dispatchEvent(new CustomEvent('force-chat-refresh'));
         }}
-      >
-        <Dialog open={isEditingProject} onOpenChange={setIsEditingProject}>
-          <DialogContent className="max-w-md">
-            <DialogHeader>
-              <DialogTitle>Edit Project</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Project Name</label>
-                <Input
-                  value={editedProject.title}
-                  onChange={(e) => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Enter project name"
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Description</label>
-                <Textarea
-                  value={editedProject.description}
-                  onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
-                  placeholder="Enter project description"
-                  className="mt-1"
-                  rows={3}
-                />
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button 
-                  variant="outline" 
-                  onClick={() => setIsEditingProject(false)}
-                >
-                  <X className="h-4 w-4 mr-2" />
-                  Cancel
-                </Button>
-                <Button 
-                  onClick={handleUpdateProject}
-                  disabled={!editedProject.title.trim()}
-                >
-                  <Save className="h-4 w-4 mr-2" />
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      </ProjectModal>
+      />
     </div>
   );
 }

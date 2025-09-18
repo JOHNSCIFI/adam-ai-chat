@@ -94,7 +94,6 @@ interface ChatSidebarProps {
 export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
-  const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [showSettings, setShowSettings] = useState(false);
@@ -176,20 +175,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       window.removeEventListener('force-chat-refresh', handleChatRefresh);
     };
   }, []);
-
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (expandedProjects.size > 0 && !(event.target as Element)?.closest('.project-dropdown')) {
-        setExpandedProjects(new Set());
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [expandedProjects]);
 
   const handleNewChat = async () => {
     if (!user) return;
@@ -315,16 +300,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   };
 
 
-  const toggleProjectExpanded = (projectId: string) => {
-    const newExpanded = new Set(expandedProjects);
-    if (newExpanded.has(projectId)) {
-      newExpanded.delete(projectId);
-    } else {
-      newExpanded.add(projectId);
-    }
-    setExpandedProjects(newExpanded);
-  };
-
   const handleProjectCreated = () => {
     fetchProjects();
   };
@@ -430,98 +405,22 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               </SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {projects.map((project) => {
-                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || Briefcase;
-                    const isExpanded = expandedProjects.has(project.id);
-                    
-                    return (
-                      <div key={project.id} className="relative project-dropdown">
-                        <SidebarMenuItem>
-                          <div 
-                            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors group"
-                            onClick={() => toggleProjectExpanded(project.id)}
-                            onDoubleClick={() => navigate(`/project/${project.id}`)}
-                          >
-                            <IconComponent className="h-4 w-4 text-sidebar-foreground" />
-                            <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
-                            {project.chats && project.chats.length > 0 && (
-                              <div className="flex items-center gap-1">
-                                {isExpanded ? (
-                                  <ChevronDown className="h-3 w-3 text-sidebar-foreground/60" />
-                                ) : (
-                                  <ChevronRight className="h-3 w-3 text-sidebar-foreground/60" />
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </SidebarMenuItem>
-                        
-                        {isExpanded && project.chats && project.chats.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 bg-sidebar border border-sidebar-border rounded-lg shadow-lg z-50 p-2 space-y-1">
-                            {/* Project Chats */}
-                            {project.chats.map((chat) => (
-                              <div key={chat.id} className="group/chat relative">
-                                {editingChatId === chat.id ? (
-                                  <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-sidebar-accent">
-                                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
-                                    <input
-                                      type="text"
-                                      value={editingTitle}
-                                      onChange={(e) => setEditingTitle(e.target.value)}
-                                      onKeyDown={(e) => handleEditKeyDown(e, chat.id)}
-                                      onBlur={() => handleRenameChat(chat.id, editingTitle)}
-                                      className="flex-1 bg-transparent border-none outline-none text-sm"
-                                      autoFocus
-                                    />
-                                  </div>
-                                ) : (
-                                  <NavLink
-                                    to={`/chat/${chat.id}`}
-                                    className={({ isActive }) =>
-                                      `flex items-center gap-2 px-2 py-1.5 rounded-md transition-colors text-sm ${
-                                        isActive
-                                          ? 'bg-sidebar-accent text-sidebar-foreground'
-                                          : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                                      }`
-                                    }
-                                    onClick={() => setExpandedProjects(new Set())}
-                                  >
-                                    <MessageSquare className="h-3 w-3 flex-shrink-0" />
-                                    <span className="flex-1 truncate">{chat.title}</span>
-                                  </NavLink>
-                                )}
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                      <DropdownMenuItem
-                                        onClick={() => startEditing(chat.id, chat.title)}
-                                      >
-                                        <Edit2 className="mr-2 h-3 w-3" />
-                                        Rename
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() => handleDeleteChat(chat.id)}
-                                        className="text-destructive"
-                                      >
-                                        <Trash2 className="mr-2 h-3 w-3" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                            ))}
-                            
-                          </div>
-                        )}
+                  {projects.map((project) => (
+                    <SidebarMenuItem key={project.id}>
+                      <div 
+                        className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
+                        onClick={() => navigate(`/project/${project.id}`)}
+                      >
+                        <div 
+                          className="w-4 h-4 rounded-sm flex items-center justify-center text-xs text-white"
+                          style={{ backgroundColor: project.color }}
+                        >
+                          {project.icon}
+                        </div>
+                        <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
                       </div>
-                    );
-                  })}
+                    </SidebarMenuItem>
+                  ))}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
