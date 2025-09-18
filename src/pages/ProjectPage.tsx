@@ -72,9 +72,23 @@ export default function ProjectPage() {
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
     const sidebarWidth = collapsed ? 56 : 280;
+    const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
+    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
     
     return { 
       paddingLeft: `${sidebarWidth}px`
+    };
+  };
+
+  const getCenterStyle = () => {
+    const sidebarWidth = collapsed ? 56 : 280;
+    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
+    
+    return {
+      position: 'fixed' as const,
+      left: centerOffset,
+      transform: 'translateX(-50%)',
+      zIndex: 10
     };
   };
 
@@ -334,9 +348,9 @@ export default function ProjectPage() {
             <div className="flex justify-center w-full">
               <div className="w-full max-w-2xl">
                 {/* Header */}
-                <div className="flex flex-col items-center justify-center mb-8 text-center w-full">
+                <div className="flex flex-col items-center justify-center mb-8 text-center" style={getCenterStyle()}>
                   <div 
-                    className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                    className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap"
                     onClick={() => setIsEditingProject(true)}
                   >
                     {(() => {
@@ -356,11 +370,12 @@ export default function ProjectPage() {
 
                 {/* Chat List */}
                 {chats.length > 0 && (
-                  <div className="space-y-3 mb-8 w-full">
+                  <div className="space-y-3 mb-8" style={getCenterStyle()}>
                     {chats.map((chat) => (
                       <div
                         key={chat.id}
-                        className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group w-full"
+                        className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group max-w-2xl"
+                        style={{ width: '100%', maxWidth: '48rem' }}
                       >
                       <div 
                         className="flex-1 cursor-pointer"
