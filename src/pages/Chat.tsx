@@ -151,51 +151,45 @@ export default function Chat() {
     setLoading(true);
     
     try {
-      console.log('Trigger: Send Message to AI (auto)');
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      console.log('Trigger: Send Message to AI via OpenAI (auto)');
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai', {
+        body: {
           message: userMessage,
           chat_id: chatId,
           user_id: user.id
-        }),
+        }
       });
 
-      console.log('Webhook response status:', webhookResponse.status);
+      console.log('AI response:', aiResponse);
 
-      if (webhookResponse.ok) {
-        const responseData = await webhookResponse.json();
-        console.log('Webhook response data:', responseData);
+      if (aiError) {
+        console.error('AI function error:', aiError);
+        throw new Error(`AI function failed: ${aiError.message}`);
+      }
 
+      if (aiResponse) {
         let assistantResponse = '';
-        let isImageGeneration = false;
+        let fileAttachments: any[] = [];
         
-        // Check if this is an image generation response
-        if (Array.isArray(responseData)) {
-          const firstItem = responseData[0];
-          if (firstItem?.mimeType && firstItem?.fileType === 'image') {
-            isImageGeneration = true;
-            assistantResponse = "🎨 Generating your image... This may take a few moments.";
-            // Add this message to pending image generations
-            setPendingImageGenerations(prev => new Set(prev).add(userMessageId));
-          } else {
-            assistantResponse = firstItem?.output || firstItem?.value || firstItem?.message || '';
+        if (aiResponse.type === 'image_generated') {
+          // Handle image generation response
+          assistantResponse = aiResponse.content;
+          
+          // Add the image as an attachment
+          if (aiResponse.image_url) {
+            fileAttachments = [{
+              id: Date.now().toString(),
+              name: `generated_image_${Date.now()}.png`,
+              size: 0,
+              type: 'image/png',
+              url: aiResponse.image_url
+            }];
           }
+        } else if (aiResponse.type === 'text') {
+          // Handle regular text response
+          assistantResponse = aiResponse.content;
         } else {
-          if (responseData?.mimeType && responseData?.fileType === 'image') {
-            isImageGeneration = true;
-            assistantResponse = "🎨 Generating your image... This may take a few moments.";
-            setPendingImageGenerations(prev => new Set(prev).add(userMessageId));
-          } else {
-            assistantResponse = responseData.output || responseData.value || responseData.message || responseData.response || '';
-          }
-        }
-        
-        if (!assistantResponse) {
-          assistantResponse = "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
+          assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
         }
         
         // Add assistant response to database
@@ -204,13 +198,14 @@ export default function Chat() {
           .insert([{
             chat_id: chatId,
             content: assistantResponse,
-            role: 'assistant'
+            role: 'assistant',
+            file_attachments: fileAttachments
           }]);
         
         console.log(`AI response completed for message: ${userMessageId}`);
       } else {
-        console.error('Webhook failed with status:', webhookResponse.status);
-        throw new Error(`Webhook failed: ${webhookResponse.status}`);
+        console.error('No response from AI function');
+        throw new Error('No response from AI function');
       }
     } catch (error) {
       console.error('Auto AI response error:', error);
