@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
+import { FileAnalyzer } from '@/components/FileAnalyzer';
+import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 
 interface Message {
   id: string;
@@ -70,6 +72,8 @@ export default function Chat() {
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
+  const [fileAnalyses, setFileAnalyses] = useState<Map<string, string>>(new Map());
+  const [currentImagePrompt, setCurrentImagePrompt] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -163,8 +167,16 @@ export default function Chat() {
     setLoading(true);
     
     try {
-      console.log('Trigger: Send Message to AI via OpenAI (auto)');
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai', {
+      console.log('Trigger: Send Message to AI via Optimized OpenAI (auto)');
+      
+      // Check if this is an image generation request
+      const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
+      
+      if (isImageRequest) {
+        setCurrentImagePrompt(userMessage);
+      }
+      
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userMessage,
           chat_id: chatId,
@@ -186,6 +198,7 @@ export default function Chat() {
         if (aiResponse.type === 'image_generated') {
           // Handle image generation response
           assistantResponse = aiResponse.content;
+          setCurrentImagePrompt(null); // Clear the indicator
           
           // Add the image as an attachment
           if (aiResponse.image_url) {
@@ -343,106 +356,83 @@ export default function Chat() {
     }
 
     try {
-      // Upload files to Supabase storage first
-      const uploadedFiles: FileAttachment[] = [];
+      // Analyze files instead of uploading them
+      let fileAnalysisText = '';
       
-      for (const file of files) {
-        // Check file size limits
-        const maxSize = getMaxFileSize(file.type);
-        if (file.size > maxSize) {
-          console.error(`File ${file.name} exceeds size limit`);
-          continue;
-        }
-
-        const fileExtension = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+      if (files.length > 0) {
+        console.log('Analyzing files instead of uploading...');
         
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('chat-files')
-          .upload(fileName, file);
+        for (const file of files) {
+          // Check file size limits
+          const maxSize = getMaxFileSize(file.type);
+          if (file.size > maxSize) {
+            console.error(`File ${file.name} exceeds size limit`);
+            continue;
+          }
 
-        if (uploadError) {
-          console.error('File upload error:', uploadError);
-          continue;
+          // Analyze file directly without DOM manipulation
+          const analysis = await analyzeFileDirectly(file);
+          fileAnalysisText += `\n\n${analysis}`;
         }
-
-        // Get public URL for the uploaded file
-        const { data: urlData } = supabase.storage
-          .from('chat-files')
-          .getPublicUrl(fileName);
-
-        uploadedFiles.push({
-          id: uploadData.id || Date.now().toString(),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: urlData.publicUrl
-        });
       }
 
-      // Create user message object
+      // Create user message object with file analysis
+      const messageContent = fileAnalysisText 
+        ? `${userMessage}${fileAnalysisText}` 
+        : userMessage;
+        
       const newUserMessage: Message = {
         id: `temp-${Date.now()}`, // Temporary ID
-        content: userMessage,
+        content: messageContent,
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: uploadedFiles
+        file_attachments: [] // No file attachments, just analysis
       };
 
       // Immediately add user message to UI
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-      // Generate embedding for user message
-      let userEmbedding = null;
-      try {
-        const response = await fetch('https://api.openai.com/v1/embeddings', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${await getOpenAIKey()}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'text-embedding-3-small',
-            input: userMessage,
-          }),
-        });
-        
-        if (response.ok) {
-          const data = await response.json();
-          userEmbedding = data.data[0].embedding;
-        }
-      } catch (error) {
-        console.log('Embedding generation failed, continuing without:', error);
-      }
-
-      // Add user message to database with file attachments and embedding
+      // Start embedding generation in background (don't wait for user message)
+      const userEmbeddingPromise = generateEmbeddingAsync(messageContent);
+      
+      // Add user message to database immediately (without waiting for embedding)
       const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
-          content: userMessage,
+          content: messageContent, // Include file analysis in content
           role: 'user',
-          file_attachments: uploadedFiles as any, // Cast to Json type for database
-          embedding: userEmbedding
+          file_attachments: [] as any, // No file attachments, analysis is in content
+          embedding: null // Will be updated by background process
         })
         .select()
         .single();
 
       if (userError) throw userError;
 
-        // Update the message with the real ID from database
-        if (insertedMessage) {
-          setMessages(prev => prev.map(msg => 
-            msg.id === newUserMessage.id 
-              ? { 
-                  ...insertedMessage, 
-                  file_attachments: uploadedFiles,
-                  role: insertedMessage.role as 'user' | 'assistant'
-                } as Message
-              : msg
-          ));
-        }
+      // Update the message with the real ID from database
+      if (insertedMessage) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === newUserMessage.id 
+            ? { 
+                ...insertedMessage, 
+                file_attachments: [],
+                role: insertedMessage.role as 'user' | 'assistant'
+              } as Message
+            : msg
+        ));
+        
+        // Update with embedding when ready (background)
+        userEmbeddingPromise.then((embedding) => {
+          if (embedding.length > 0) {
+            supabase
+              .from('messages')
+              .update({ embedding: embedding as any })
+              .eq('id', insertedMessage.id);
+          }
+        });
+      }
 
       // Note: AI response will be automatically triggered by the useEffect hook
       // that detects new user messages - no need to call webhook here
@@ -479,6 +469,81 @@ export default function Chat() {
       console.error('Send message error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateEmbeddingAsync = async (text: string): Promise<number[]> => {
+    try {
+      const openAIKey = await getOpenAIKey();
+      const response = await fetch('https://api.openai.com/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAIKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'text-embedding-3-small',
+          input: text,
+        }),
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        return data.data[0].embedding;
+      }
+    } catch (error) {
+      console.log('Embedding generation failed:', error);
+    }
+    return [];
+  };
+
+  const analyzeFileDirectly = async (file: File): Promise<string> => {
+    try {
+      const fileType = file.type;
+      
+      if (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('csv')) {
+        const text = await file.text();
+        return `Text File Analysis:
+File Name: ${file.name}
+File Size: ${(file.size / 1024).toFixed(2)} KB
+Content Length: ${text.length} characters
+Word Count: ${text.split(/\s+/).length} words
+
+Content Preview:
+${text.substring(0, 1500)}${text.length > 1500 ? '...[truncated]' : ''}`;
+        
+      } else if (fileType.startsWith('image/')) {
+        return new Promise((resolve) => {
+          const img = document.createElement('img');
+          const imageUrl = URL.createObjectURL(file);
+          
+          img.onload = () => {
+            URL.revokeObjectURL(imageUrl);
+            resolve(`Image Analysis:
+File Name: ${file.name}
+File Size: ${(file.size / 1024).toFixed(2)} KB
+Dimensions: ${img.width} × ${img.height} pixels
+Aspect Ratio: ${(img.width / img.height).toFixed(2)}:1
+Quality: ${img.width > 1920 ? 'High' : img.width > 720 ? 'Medium' : 'Standard'} resolution`);
+          };
+          
+          img.onerror = () => {
+            URL.revokeObjectURL(imageUrl);
+            resolve(`Image Analysis Error: Unable to load image ${file.name}`);
+          };
+          
+          img.src = imageUrl;
+        });
+      } else {
+        return `File Analysis:
+File Name: ${file.name}
+File Size: ${(file.size / 1024).toFixed(2)} KB
+File Type: ${fileType || 'Unknown'}
+
+This file has been analyzed and its metadata captured.`;
+      }
+    } catch (error) {
+      return `File Analysis Error: Unable to analyze ${file.name}`;
     }
   };
 
@@ -878,17 +943,17 @@ export default function Chat() {
                            </div>
                          )}
                         
-                          {message.content && (
-                            <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
-                              {message.content.includes("🎨 Generating your image") ? (
-                                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
-                                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                  <div>
-                                    <p className="text-sm font-medium">Generating your image...</p>
-                                    <p className="text-xs text-muted-foreground">This may take a few moments</p>
-                                  </div>
-                                </div>
-                              ) : (
+                           {message.content && (
+                             <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                               {message.content.includes("🎨 Generating your image") ? (
+                                 <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
+                                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                   <div>
+                                     <p className="text-sm font-medium">Generating your image...</p>
+                                     <p className="text-xs text-muted-foreground">This may take a few moments</p>
+                                   </div>
+                                 </div>
+                               ) : (
                              <ReactMarkdown
                                remarkPlugins={[remarkGfm]}
                                components={{
@@ -990,7 +1055,19 @@ export default function Chat() {
                 </div>
               ))}
               
-              {loading && (
+              {/* Show image processing indicator when generating images */}
+              {currentImagePrompt && (
+                <div className="flex justify-start">
+                  <div className="flex flex-col items-start max-w-[80%]">
+                    <ImageProcessingIndicator 
+                      prompt={currentImagePrompt}
+                      onComplete={() => setCurrentImagePrompt(null)}
+                    />
+                  </div>
+                </div>
+              )}
+              
+              {loading && !currentImagePrompt && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted text-foreground rounded-3xl rounded-bl-lg px-5 py-3.5 shadow-sm">
