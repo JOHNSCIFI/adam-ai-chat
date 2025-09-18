@@ -211,44 +211,46 @@ export default function ImageGeneration() {
   };
 
   return (
-    <div className="flex h-screen bg-background">
-      <div className="flex-1 flex flex-col">
-        <div className="flex-1 overflow-hidden">
-          <div style={getContainerStyle()} className="h-full flex flex-col">
-            {/* Header */}
-            <div className="border-b border-border/40 p-4">
-              <div className="flex items-center gap-2">
-                <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
-                  <ImageIcon className="h-5 w-5 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold text-foreground">{sessionTitle}</h1>
-                  <p className="text-sm text-muted-foreground">AI Image Generation</p>
-                </div>
+    <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Messages area - takes all available space above input */}
+      <div className="flex-1 overflow-y-auto pb-24">
+        <div className="w-full px-4 py-6" style={getContainerStyle()}>
+          {/* Header */}
+          <div className="border-b border-border/40 p-4 mb-6 -mx-4">
+            <div className="flex items-center gap-2">
+              <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
+                <ImageIcon className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold text-foreground">{sessionTitle}</h1>
+                <p className="text-sm text-muted-foreground">AI Image Generation</p>
               </div>
             </div>
-
-            {/* Messages area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-6">
-              {generations.length === 0 ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center space-y-4">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center">
-                      <Sparkles className="h-8 w-8 text-white" />
-                    </div>
-                    <div className="space-y-2">
-                      <h2 className="text-xl font-semibold text-foreground">Create Amazing Images</h2>
-                      <p className="text-muted-foreground max-w-md">
-                        Describe what you want to see and I'll create it for you using AI image generation.
-                      </p>
-                    </div>
-                  </div>
+          </div>
+          {generations.length === 0 ? (
+            <div className="flex items-center justify-center h-full min-h-[70vh]">
+              <div className="text-center max-w-md">
+                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                  <Sparkles className="h-8 w-8 text-white" />
                 </div>
-              ) : (
-                generations.map((generation) => (
-                  <div key={generation.id} className="space-y-4">
+                <h3 className="text-2xl font-normal mb-6 text-foreground">
+                  What would you like me to create?
+                </h3>
+                <p className="text-muted-foreground">
+                  Describe any image and I'll generate it for you using AI.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {generations.map((generation) => (
+                <div 
+                  key={generation.id} 
+                  className="group mb-4"
+                >
+                  <div className="space-y-4">
                     {/* User prompt */}
-                    <div className="flex justify-end">
+                    <div className="flex justify-end mr-3">
                       <div className="max-w-[80%]">
                         <div className="text-black dark:text-white bg-[#DEE7F4] dark:bg-[hsl(var(--user-message-bg))] rounded-2xl px-3.5 py-2.5 break-words whitespace-pre-wrap">
                           {generation.prompt}
@@ -257,13 +259,13 @@ export default function ImageGeneration() {
                     </div>
 
                     {/* Generated image */}
-                    <div className="flex justify-start">
+                    <div className="flex justify-start ml-3">
                       <div className="max-w-[80%] space-y-2">
                         {generation.status === 'generating' ? (
                           <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center">
                             <div className="text-center space-y-2">
                               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                              <p className="text-sm text-muted-foreground">Generating...</p>
+                              <p className="text-sm text-muted-foreground">Generating image...</p>
                             </div>
                           </div>
                         ) : generation.image_url ? (
@@ -275,7 +277,7 @@ export default function ImageGeneration() {
                                 className="w-full max-w-md rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setSelectedImage({url: generation.image_url!, prompt: generation.prompt})}
                               />
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity space-x-1">
+                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex gap-1">
                                 <Button
                                   size="sm"
                                   variant="secondary"
@@ -307,38 +309,40 @@ export default function ImageGeneration() {
                           </div>
                         ) : (
                           <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center">
-                            <p className="text-sm text-muted-foreground">Failed to generate</p>
+                            <p className="text-sm text-muted-foreground">Failed to generate image</p>
                           </div>
                         )}
                       </div>
                     </div>
                   </div>
-                ))
-              )}
-              <div ref={messagesEndRef} />
+                </div>
+              ))}
             </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+      </div>
 
-            {/* Input area */}
-            <div className="border-t border-border/40 p-4">
-              <div className="relative">
-                <Textarea
-                  ref={textareaRef}
-                  placeholder="Describe the image you want to generate..."
-                  value={newPrompt}
-                  onChange={(e) => setNewPrompt(e.target.value)}
-                  onKeyDown={handleKeyDown}
-                  className="min-h-[60px] max-h-[200px] resize-none pr-12 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
-                />
-                <Button 
-                  onClick={handleGenerate}
-                  disabled={!newPrompt.trim() || isGenerating}
-                  size="sm"
-                  className="absolute bottom-2 right-2 h-8 w-8 p-0"
-                >
-                  <SendHorizontalIcon className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
+      {/* Fixed input area at bottom */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/40">
+        <div className="w-full px-4 py-4" style={getContainerStyle()}>
+          <div className="relative">
+            <Textarea
+              ref={textareaRef}
+              placeholder="Describe the image you want to generate..."
+              value={newPrompt}
+              onChange={(e) => setNewPrompt(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="min-h-[60px] max-h-[200px] resize-none pr-12 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600"
+            />
+            <Button 
+              onClick={handleGenerate}
+              disabled={!newPrompt.trim() || isGenerating}
+              size="sm"
+              className="absolute bottom-2 right-2 h-8 w-8 p-0"
+            >
+              <SendHorizontalIcon className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
