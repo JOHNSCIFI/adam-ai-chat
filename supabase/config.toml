@@ -1,1 +1,40 @@
 project_id = "lciaiunzacgvvbvcshdh"
+
+[api]
+enabled = true
+port = 50321
+schemas = []
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 50322
+
+[studio]
+enabled = true
+port = 50323
+
+[inbucket]
+enabled = true
+port = 50324
+
+[functions.generate-image]
+verify_jwt = false
+
+[functions.chat-with-ai]
+verify_jwt = false
+
+[functions.chat-with-ai-optimized]
+verify_jwt = false
+
+[functions.speech-to-text]
+verify_jwt = false
+
+[functions.delete-account]
+verify_jwt = false
+
+[functions.analyze-image]
+verify_jwt = false
+
+[functions.save-image]
+verify_jwt = false

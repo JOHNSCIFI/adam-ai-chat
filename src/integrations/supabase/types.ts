@@ -49,6 +49,44 @@ export type Database = {
           },
         ]
       }
+      image_analyses: {
+        Row: {
+          analysis: string
+          chat_id: string | null
+          created_at: string
+          file_name: string
+          id: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          analysis: string
+          chat_id?: string | null
+          created_at?: string
+          file_name: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          analysis?: string
+          chat_id?: string | null
+          created_at?: string
+          file_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "image_analyses_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "chats"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       messages: {
         Row: {
           chat_id: string
