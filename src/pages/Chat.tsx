@@ -217,6 +217,33 @@ export default function Chat() {
         setMessages(prev => [...prev, newAssistantMessage]);
         scrollToBottom();
 
+        // Generate embedding for assistant response
+        let assistantEmbedding = null;
+        if (aiResponse.embedding) {
+          assistantEmbedding = aiResponse.embedding;
+        } else {
+          try {
+            const response = await fetch('https://api.openai.com/v1/embeddings', {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${await getOpenAIKey()}`,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                model: 'text-embedding-3-small',
+                input: assistantResponse,
+              }),
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              assistantEmbedding = data.data[0].embedding;
+            }
+          } catch (error) {
+            console.log('Embedding generation failed, continuing without:', error);
+          }
+        }
+
         // Add assistant response to database
         const { data: insertedAiMessage, error: aiInsertError } = await supabase
           .from('messages')
@@ -224,7 +251,8 @@ export default function Chat() {
             chat_id: chatId,
             content: assistantResponse,
             role: 'assistant',
-            file_attachments: fileAttachments
+            file_attachments: fileAttachments,
+            embedding: assistantEmbedding
           }])
           .select()
           .single();
@@ -365,14 +393,38 @@ export default function Chat() {
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-      // Add user message to database with file attachments
+      // Generate embedding for user message
+      let userEmbedding = null;
+      try {
+        const response = await fetch('https://api.openai.com/v1/embeddings', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${await getOpenAIKey()}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'text-embedding-3-small',
+            input: userMessage,
+          }),
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          userEmbedding = data.data[0].embedding;
+        }
+      } catch (error) {
+        console.log('Embedding generation failed, continuing without:', error);
+      }
+
+      // Add user message to database with file attachments and embedding
       const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           content: userMessage,
           role: 'user',
-          file_attachments: uploadedFiles as any // Cast to Json type for database
+          file_attachments: uploadedFiles as any, // Cast to Json type for database
+          embedding: userEmbedding
         })
         .select()
         .single();
@@ -464,6 +516,13 @@ export default function Chat() {
 
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  // Helper function to get OpenAI API key (placeholder for actual implementation)
+  const getOpenAIKey = async () => {
+    // In production, this should be retrieved from your secure backend
+    // For now, using a placeholder that will be handled by the edge function
+    return 'demo-key';
   };
 
   const formatFileSize = (bytes: number) => {

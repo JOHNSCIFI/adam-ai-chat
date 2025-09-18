@@ -12,6 +12,79 @@ const supabase = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
 );
 
+// Function to generate embeddings for text
+async function generateEmbedding(text: string): Promise<number[]> {
+  const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+  if (!openAIApiKey) {
+    console.warn('OpenAI API key not available for embeddings');
+    return [];
+  }
+
+  try {
+    const response = await fetch('https://api.openai.com/v1/embeddings', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: 'text-embedding-3-small',
+        input: text,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Embedding generation failed:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.data[0].embedding;
+  } catch (error) {
+    console.error('Error generating embedding:', error);
+    return [];
+  }
+}
+
+// Function to save image to Supabase storage
+async function saveImageToStorage(imageUrl: string, userId: string, prompt: string): Promise<string | null> {
+  try {
+    // Download the image from OpenAI
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      console.error('Failed to download image from OpenAI');
+      return null;
+    }
+
+    const imageBlob = await imageResponse.blob();
+    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2)}.png`;
+    
+    // Upload to Supabase storage
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('generated-images')
+      .upload(fileName, imageBlob, {
+        contentType: 'image/png',
+        upsert: false
+      });
+
+    if (uploadError) {
+      console.error('Failed to upload image to storage:', uploadError);
+      return null;
+    }
+
+    // Get public URL
+    const { data: { publicUrl } } = supabase.storage
+      .from('generated-images')
+      .getPublicUrl(fileName);
+
+    console.log('Image saved to storage:', publicUrl);
+    return publicUrl;
+  } catch (error) {
+    console.error('Error saving image to storage:', error);
+    return null;
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -102,6 +175,7 @@ serve(async (req) => {
     console.log('OpenAI response:', data);
 
     const assistantMessage = data.choices[0].message;
+    let responseContent = assistantMessage.content || '';
 
     // Check if OpenAI wants to call the image generation function
     if (assistantMessage.function_call && assistantMessage.function_call.name === 'generate_image') {
@@ -136,15 +210,21 @@ serve(async (req) => {
         }
 
         const imageData = await imageResponse.json();
-        const imageUrl = imageData.data[0].url;
+        const temporaryImageUrl = imageData.data[0].url;
         
-        console.log('Image generated successfully:', imageUrl);
+        console.log('Image generated successfully:', temporaryImageUrl);
 
-        // Return response indicating image generation with the image URL
+        // Save image permanently to Supabase storage
+        const permanentImageUrl = await saveImageToStorage(temporaryImageUrl, user_id, imagePrompt);
+        const finalImageUrl = permanentImageUrl || temporaryImageUrl;
+
+        responseContent = `I've generated an image for you: "${imagePrompt}"`;
+
+        // Return response indicating image generation with the permanent image URL
         return new Response(JSON.stringify({
           type: 'image_generated',
-          content: `I've generated an image for you: "${imagePrompt}"`,
-          image_url: imageUrl,
+          content: responseContent,
+          image_url: finalImageUrl,
           prompt: imagePrompt
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -153,23 +233,22 @@ serve(async (req) => {
       } catch (error) {
         console.error('Error in image generation:', error);
         // Fallback to text response if image generation fails
-        return new Response(JSON.stringify({
-          type: 'text',
-          content: 'I apologize, but I encountered an error while generating the image. Please try again with a different prompt.'
-        }), {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        });
+        responseContent = 'I apologize, but I encountered an error while generating the image. Please try again with a different prompt.';
       }
-    } else {
-      // Regular text response
-      console.log('Text response');
-      return new Response(JSON.stringify({
-        type: 'text',
-        content: assistantMessage.content || 'I apologize, but I could not generate a response.'
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      });
     }
+
+    // Generate embedding for the response (for semantic search)
+    const embedding = await generateEmbedding(responseContent);
+
+    // Regular text response
+    console.log('Text response');
+    return new Response(JSON.stringify({
+      type: 'text',
+      content: responseContent,
+      embedding: embedding.length > 0 ? embedding : null
+    }), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
 
   } catch (error) {
     console.error('Error in chat-with-ai function:', error);
