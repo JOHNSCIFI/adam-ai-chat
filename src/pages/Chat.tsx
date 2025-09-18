@@ -13,6 +13,7 @@ import { StopIcon } from '@/components/ui/stop-icon';
 import { useToast } from '@/hooks/use-toast';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ImagePopupModal } from '@/components/ImagePopupModal';
 
 interface Message {
   id: string;
@@ -68,6 +69,7 @@ export default function Chat() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
+  const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -677,38 +679,40 @@ export default function Chat() {
                          {message.file_attachments && message.file_attachments.length > 0 && (
                            <div className="mb-3 space-y-2">
                              {message.file_attachments.map((file, index) => (
-                               <div 
-                                 key={index} 
-                                 className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${
-                                   message.role === 'user' 
-                                     ? 'bg-black/10 border-white/20' 
-                                     : 'bg-accent border-border'
-                                 }`}
-                                 onClick={() => openFile(file.url, file.name)}
-                               >
+                               <div key={index}>
                                  {isImageFile(file.type) && file.url ? (
                                    <img 
                                      src={file.url} 
-                                     alt={file.name} 
-                                     className="w-12 h-12 object-cover rounded-lg flex-shrink-0"
+                                     alt="Generated image" 
+                                     className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
+                                     onClick={() => setSelectedImage({ url: file.url, name: file.name })}
                                    />
                                  ) : (
-                                   <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
-                                     message.role === 'user' 
-                                       ? 'bg-white/20' 
-                                       : 'bg-muted'
-                                   }`}>
-                                     {getFileIcon(file.type)}
+                                   <div 
+                                     className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${
+                                       message.role === 'user' 
+                                         ? 'bg-black/10 border-white/20' 
+                                         : 'bg-accent border-border'
+                                     }`}
+                                     onClick={() => openFile(file.url, file.name)}
+                                   >
+                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
+                                       message.role === 'user' 
+                                         ? 'bg-white/20' 
+                                         : 'bg-muted'
+                                     }`}>
+                                       {getFileIcon(file.type)}
+                                     </div>
+                                     <div className="flex-1 min-w-0">
+                                       <p className="text-sm font-medium truncate text-foreground">
+                                         {file.name}
+                                       </p>
+                                       <p className="text-xs text-muted-foreground">
+                                         {formatFileSize(file.size)} • Click to open
+                                       </p>
+                                     </div>
                                    </div>
                                  )}
-                                 <div className="flex-1 min-w-0">
-                                   <p className="text-sm font-medium truncate text-foreground">
-                                     {file.name}
-                                   </p>
-                                   <p className="text-xs text-muted-foreground">
-                                     {formatFileSize(file.size)} • Click to open
-                                   </p>
-                                 </div>
                                </div>
                              ))}
                            </div>
@@ -955,6 +959,16 @@ export default function Chat() {
         className="hidden"
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md"
       />
+
+      {/* Image popup modal */}
+      {selectedImage && (
+        <ImagePopupModal
+          isOpen={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          imageUrl={selectedImage.url}
+          prompt={selectedImage.name}
+        />
+      )}
     </div>
   );
 }

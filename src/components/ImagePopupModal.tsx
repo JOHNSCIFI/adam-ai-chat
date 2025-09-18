@@ -8,10 +8,10 @@ interface ImagePopupModalProps {
   isOpen: boolean;
   onClose: () => void;
   imageUrl: string;
-  prompt: string;
+  prompt?: string;
 }
 
-export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt }: ImagePopupModalProps) {
+export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: ImagePopupModalProps) {
   const [zoom, setZoom] = useState(1);
   const [copied, setCopied] = useState(false);
   const { toast } = useToast();
@@ -44,7 +44,7 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt }: ImagePopu
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `generated-image-${prompt.substring(0, 20)}.png`;
+      a.download = `image-${Date.now()}.png`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
