@@ -141,20 +141,44 @@ export default function ImageGeneration() {
 
   const downloadImage = async (imageUrl: string, prompt: string) => {
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `image-${Date.now()}.png`;
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
       toast.success('Image downloaded successfully');
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error('Failed to download image');
+      // Fallback: open image in new tab
+      try {
+        const newWindow = window.open(imageUrl, '_blank');
+        if (newWindow) {
+          toast.success('Image opened in new tab - right-click to save');
+        } else {
+          toast.error('Please allow popups to download images');
+        }
+      } catch (fallbackError) {
+        toast.error('Failed to download image. Please try right-clicking the image to save.');
+      }
     }
   };
 
@@ -225,19 +249,17 @@ export default function ImageGeneration() {
                                 className="w-full max-w-md rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
                                 onClick={() => setSelectedImage({url: generation.image_url!, prompt: generation.prompt})}
                               />
-                              <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button
-                                  size="sm"
-                                  variant="secondary"
-                                  className="h-8 w-8 p-0"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    downloadImage(generation.image_url!, generation.prompt);
-                                  }}
-                                >
-                                  <Download className="h-4 w-4" />
-                                </Button>
-                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 px-2 text-xs"
+                                onClick={() => downloadImage(generation.image_url!, generation.prompt)}
+                              >
+                                <Download className="h-3 w-3 mr-1" />
+                                Download
+                              </Button>
                             </div>
                           </div>
                         ) : (

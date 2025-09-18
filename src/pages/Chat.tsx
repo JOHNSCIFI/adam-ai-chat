@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, MoreHorizontal } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { useToast } from '@/hooks/use-toast';
@@ -589,6 +589,63 @@ export default function Chat() {
     window.open(url, '_blank', 'noopener,noreferrer');
   };
 
+  const downloadImageFromChat = async (imageUrl: string, fileName: string) => {
+    try {
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName || `image-${Date.now()}.png`;
+      a.style.display = 'none';
+      document.body.appendChild(a);
+      a.click();
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
+      toast({
+        title: "Success",
+        description: "Image downloaded successfully",
+      });
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open image in new tab
+      try {
+        const newWindow = window.open(imageUrl, '_blank');
+        if (newWindow) {
+          toast({
+            title: "Info",
+            description: "Image opened in new tab - right-click to save",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Please allow popups to download images",
+            variant: "destructive",
+          });
+        }
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to download image. Please try right-clicking the image to save.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
@@ -677,16 +734,29 @@ export default function Chat() {
                         
                          {/* File attachments */}
                          {message.file_attachments && message.file_attachments.length > 0 && (
-                           <div className="mb-3 space-y-2">
+                           <div className="mb-3 space-y-3">
                              {message.file_attachments.map((file, index) => (
                                <div key={index}>
                                  {isImageFile(file.type) && file.url ? (
-                                   <img 
-                                     src={file.url} 
-                                     alt="Generated image" 
-                                     className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
-                                     onClick={() => setSelectedImage({ url: file.url, name: file.name })}
-                                   />
+                                   <div className="space-y-2">
+                                     <img 
+                                       src={file.url} 
+                                       alt="Generated image" 
+                                       className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
+                                       onClick={() => setSelectedImage({ url: file.url, name: file.name })}
+                                     />
+                                     <div className="flex gap-2">
+                                       <Button
+                                         variant="ghost"
+                                         size="sm"
+                                         className="h-7 px-2 text-xs"
+                                         onClick={() => downloadImageFromChat(file.url, file.name)}
+                                       >
+                                         <Download className="h-3 w-3 mr-1" />
+                                         Download
+                                       </Button>
+                                     </div>
+                                   </div>
                                  ) : (
                                    <div 
                                      className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${

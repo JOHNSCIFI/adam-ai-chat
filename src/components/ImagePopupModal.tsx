@@ -62,20 +62,45 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: Imag
 
   const downloadImage = async () => {
     try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
+      // Create a proxy URL to avoid CORS issues
+      const proxyResponse = await fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+      });
+      
+      if (!proxyResponse.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
+      const blob = await proxyResponse.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `image-${Date.now()}.png`;
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
       toast.success('Image downloaded successfully');
     } catch (error) {
       console.error('Download failed:', error);
-      toast.error('Failed to download image');
+      // Fallback: open image in new tab
+      try {
+        const newWindow = window.open(imageUrl, '_blank');
+        if (newWindow) {
+          toast.success('Image opened in new tab - right-click to save');
+        } else {
+          toast.error('Please allow popups to download images');
+        }
+      } catch (fallbackError) {
+        toast.error('Failed to download image. Please try right-clicking the image to save.');
+      }
     }
   };
 
@@ -151,16 +176,17 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: Imag
 
           {/* Image container */}
           <div 
-            className="flex-1 overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center relative select-none"
+            className="flex-1 overflow-hidden bg-black/5 dark:bg-black/20 flex items-center justify-center relative select-none cursor-default"
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
             onWheel={handleWheel}
+            style={{ touchAction: 'none' }}
           >
             <img
               src={imageUrl}
               alt={prompt || 'Image'}
-              className={`max-w-none transition-transform origin-center ${
+              className={`max-w-none origin-center select-none ${
                 zoom > 1 
                   ? isDragging 
                     ? 'cursor-grabbing' 
@@ -170,11 +196,17 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: Imag
               style={{
                 transform: `scale(${zoom}) translate(${position.x / zoom}px, ${position.y / zoom}px)`,
                 maxHeight: 'calc(95vh - 60px)',
-                maxWidth: '95vw'
+                maxWidth: '95vw',
+                transition: isDragging ? 'none' : 'transform 0.15s cubic-bezier(0.4, 0, 0.2, 1)',
+                willChange: 'transform'
               }}
               onMouseDown={handleMouseDown}
               onDragStart={(e) => e.preventDefault()}
               draggable={false}
+              onLoad={() => {
+                setPosition({ x: 0, y: 0 });
+                setZoom(1);
+              }}
             />
           </div>
         </div>
