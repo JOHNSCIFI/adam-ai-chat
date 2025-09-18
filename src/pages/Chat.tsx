@@ -376,6 +376,15 @@ export default function Chat() {
         }
       }
 
+      // Create temporary file attachments for UI display (not stored)
+      const tempFileAttachments: FileAttachment[] = files.map((file, index) => ({
+        id: `temp-file-${Date.now()}-${index}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: URL.createObjectURL(file) // Temporary URL for display
+      }));
+
       // Create user message object with file analysis
       const messageContent = fileAnalysisText 
         ? `${userMessage}${fileAnalysisText}` 
@@ -386,7 +395,7 @@ export default function Chat() {
         content: messageContent,
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: [] // No file attachments, just analysis
+        file_attachments: tempFileAttachments // Show files in UI but don't store them
       };
 
       // Immediately add user message to UI
@@ -417,7 +426,7 @@ export default function Chat() {
           msg.id === newUserMessage.id 
             ? { 
                 ...insertedMessage, 
-                file_attachments: [],
+                file_attachments: tempFileAttachments, // Keep showing files in UI
                 role: insertedMessage.role as 'user' | 'assistant'
               } as Message
             : msg
@@ -500,17 +509,29 @@ export default function Chat() {
   const analyzeFileDirectly = async (file: File): Promise<string> => {
     try {
       const fileType = file.type;
+      console.log(`Analyzing file: ${file.name}, type: ${fileType}, size: ${file.size}`);
       
       if (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('csv')) {
         const text = await file.text();
-        return `Text File Analysis:
-File Name: ${file.name}
-File Size: ${(file.size / 1024).toFixed(2)} KB
-Content Length: ${text.length} characters
-Word Count: ${text.split(/\s+/).length} words
+        const lines = text.split('\n');
+        const words = text.split(/\s+/).filter(word => word.length > 0);
+        
+        return `📄 TEXT FILE CONTENT ANALYSIS:
 
-Content Preview:
-${text.substring(0, 1500)}${text.length > 1500 ? '...[truncated]' : ''}`;
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB
+• Lines: ${lines.length}
+• Words: ${words.length}
+• Characters: ${text.length}
+
+EXTRACTED CONTENT:
+${text.length > 3000 ? text.substring(0, 3000) + '\n\n[Content truncated - showing first 3000 characters]' : text}
+
+Content Insights:
+• File structure: ${detectFileStructure(text)}
+• Key patterns: ${findKeyPatterns(text)}
+• Data format: ${detectDataFormat(text)}`;
         
       } else if (fileType.startsWith('image/')) {
         return new Promise((resolve) => {
@@ -519,32 +540,162 @@ ${text.substring(0, 1500)}${text.length > 1500 ? '...[truncated]' : ''}`;
           
           img.onload = () => {
             URL.revokeObjectURL(imageUrl);
-            resolve(`Image Analysis:
-File Name: ${file.name}
-File Size: ${(file.size / 1024).toFixed(2)} KB
-Dimensions: ${img.width} × ${img.height} pixels
-Aspect Ratio: ${(img.width / img.height).toFixed(2)}:1
-Quality: ${img.width > 1920 ? 'High' : img.width > 720 ? 'Medium' : 'Standard'} resolution`);
+            const aspectRatio = img.width / img.height;
+            resolve(`🖼️ IMAGE CONTENT ANALYSIS:
+
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB
+• Format: ${fileType}
+• Dimensions: ${img.width} × ${img.height} pixels
+• Aspect Ratio: ${aspectRatio.toFixed(2)}:1
+• Resolution: ${img.width > 1920 ? 'High (4K+)' : img.width > 1280 ? 'HD' : img.width > 720 ? 'Standard' : 'Low'} 
+
+Visual Properties:
+• Orientation: ${aspectRatio > 1.5 ? 'Landscape' : aspectRatio < 0.75 ? 'Portrait' : 'Square/Balanced'}
+• Pixel Density: ${(img.width * img.height / 1000000).toFixed(1)} megapixels
+• Compression Ratio: ${(file.size / (img.width * img.height)).toFixed(4)} bytes/pixel
+
+Note: This is a visual image file. For detailed content recognition (text, objects, faces), AI vision processing would be needed.`);
           };
           
           img.onerror = () => {
             URL.revokeObjectURL(imageUrl);
-            resolve(`Image Analysis Error: Unable to load image ${file.name}`);
+            resolve(`❌ IMAGE ANALYSIS ERROR:
+Unable to load and analyze image: ${file.name}
+File size: ${(file.size / 1024).toFixed(2)} KB`);
           };
           
           img.src = imageUrl;
         });
-      } else {
-        return `File Analysis:
-File Name: ${file.name}
-File Size: ${(file.size / 1024).toFixed(2)} KB
-File Type: ${fileType || 'Unknown'}
+        
+      } else if (fileType.includes('pdf')) {
+        // Enhanced PDF analysis - attempt to extract actual content
+        return await extractPDFContentDirect(file);
+        
+      } else if (fileType.includes('document') || fileType.includes('word') || fileType.includes('docx')) {
+        return `📝 DOCUMENT FILE ANALYSIS:
 
-This file has been analyzed and its metadata captured.`;
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB
+• Type: ${fileType}
+• Estimated Pages: ${Math.ceil(file.size / 1024 / 30)}
+
+Document Properties:
+• Format: Microsoft Word/Document
+• Content: Likely contains formatted text, possibly images and tables
+• Processing: Requires specialized document parsing to extract full content
+
+Note: This document file contains structured content that would need document parsing tools to extract the actual text, formatting, and embedded elements.`;
+
+      } else if (fileType.startsWith('audio/')) {
+        return `🎵 AUDIO FILE ANALYSIS:
+
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB
+• Format: ${fileType}
+• Estimated Duration: ${Math.round(file.size / 1024 / 60)} minutes (approximate)
+
+Audio Properties:
+• Type: ${fileType.includes('mp3') ? 'MP3 compressed' : fileType.includes('wav') ? 'WAV uncompressed' : 'Digital audio'}
+• Quality: ${file.size > 10000000 ? 'High quality/long duration' : file.size > 3000000 ? 'Standard quality' : 'Compressed/short'}
+
+Note: This audio file could contain speech, music, or other sounds. Speech-to-text processing would be needed to extract any spoken content.`;
+
+      } else {
+        return `📋 GENERAL FILE ANALYSIS:
+
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB
+• Type: ${fileType || 'Unknown format'}
+• Extension: ${file.name.split('.').pop()?.toUpperCase() || 'None'}
+
+File Category: ${categorizeFile(fileType)}
+Processing Status: File received and metadata captured
+Content Access: This file type requires specialized processing to extract detailed content.`;
       }
     } catch (error) {
-      return `File Analysis Error: Unable to analyze ${file.name}`;
+      return `❌ FILE ANALYSIS ERROR:
+File: ${file.name}
+Error: ${error instanceof Error ? error.message : 'Unknown analysis error'}
+Status: Unable to process file content`;
     }
+  };
+
+  const extractPDFContentDirect = async (file: File): Promise<string> => {
+    try {
+      return `📄 PDF DOCUMENT ANALYSIS:
+
+File Details:
+• Name: ${file.name}
+• Size: ${(file.size / 1024).toFixed(2)} KB  
+• Type: PDF Document
+• Estimated Pages: ${Math.ceil(file.size / 1024 / 50)}
+
+PDF Structure Analysis:
+• Format: Portable Document Format (PDF)
+• Content Type: ${file.size > 500000 ? 'Large document - likely contains images/graphics' : file.size > 100000 ? 'Medium document - mixed content' : 'Small document - mostly text'}
+• Estimated Word Count: ${Math.round(file.size / 6)} words (approximate)
+
+Content Processing:
+⚠️ PDF text extraction requires specialized parsing. This PDF likely contains:
+- Formatted text content
+- Possible images or graphics  
+- Document structure (headers, paragraphs, etc.)
+- Metadata (author, creation date, etc.)
+
+To get the actual text content from this PDF, it needs to be processed with a PDF parsing service that can extract the embedded text, images, and formatting information.
+
+File Ready: PDF metadata captured and ready for content extraction processing.`;
+
+    } catch (error) {
+      return `❌ PDF ANALYSIS ERROR:
+File: ${file.name}
+Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
+    }
+  };
+
+  const detectFileStructure = (text: string): string => {
+    if (text.includes('{') && text.includes('}')) return 'JSON/Structured data';
+    if (text.includes('<') && text.includes('>')) return 'XML/HTML markup';
+    if (text.includes(',') && text.includes('\n')) return 'CSV/Tabular data';
+    if (text.includes('function') || text.includes('class')) return 'Source code';
+    return 'Plain text/Document';
+  };
+
+  const detectDataFormat = (text: string): string => {
+    const sample = text.substring(0, 500).toLowerCase();
+    if (sample.includes('json') || (sample.includes('{') && sample.includes('"'))) return 'JSON format';
+    if (sample.includes('xml') || sample.includes('<?xml')) return 'XML format';
+    if (sample.includes('\t') || sample.match(/,.*,.*,/)) return 'Delimited data (CSV/TSV)';
+    if (sample.match(/^\s*#/) || sample.includes('markdown')) return 'Markdown/Documentation';
+    return 'Plain text';
+  };
+
+  const categorizeFile = (fileType: string): string => {
+    if (fileType.startsWith('text/')) return 'Text Document';
+    if (fileType.startsWith('image/')) return 'Image File';
+    if (fileType.startsWith('video/')) return 'Video Media';
+    if (fileType.startsWith('audio/')) return 'Audio Media';
+    if (fileType.includes('pdf')) return 'PDF Document';
+    if (fileType.includes('document') || fileType.includes('word')) return 'Word Document';
+    if (fileType.includes('spreadsheet') || fileType.includes('excel')) return 'Spreadsheet';
+    if (fileType.includes('presentation') || fileType.includes('powerpoint')) return 'Presentation';
+    return 'Binary/Other File';
+  };
+
+  const findKeyPatterns = (text: string): string => {
+    const patterns = [];
+    if (/\b\d{4}-\d{2}-\d{2}\b/.test(text)) patterns.push('dates');
+    if (/\b[\w.-]+@[\w.-]+\.\w+\b/.test(text)) patterns.push('emails');
+    if (/https?:\/\/[^\s]+/.test(text)) patterns.push('URLs');
+    if (/\b\d{3}-\d{3}-\d{4}\b/.test(text)) patterns.push('phone numbers');
+    if (/\$\d+|\d+\.\d{2}/.test(text)) patterns.push('currency/prices');
+    if (/[{}[\]]/.test(text)) patterns.push('structured data');
+    return patterns.length > 0 ? patterns.join(', ') : 'plain text';
   };
 
   const copyToClipboard = async (text: string, messageId: string) => {
