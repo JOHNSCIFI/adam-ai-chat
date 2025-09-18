@@ -367,22 +367,41 @@ export default function Chat() {
           // Handle image editing request
           assistantResponse = aiResponse.content;
           
-          // Automatically open image editor for the most recent image
+          // Automatically trigger image editing for the most recent image
           if (imageAnalysisResults.size > 0) {
             const recentImage = Array.from(imageAnalysisResults.values()).pop();
             if (recentImage) {
-              setTimeout(() => {
-                fetch(recentImage.url)
-                  .then(response => response.blob())
-                  .then(blob => {
-                    const file = new File([blob], recentImage.fileName, { type: 'image/png' });
-                    setImageToEdit(file);
-                    setShowImageEditModal(true);
-                  })
-                  .catch(error => {
-                    console.error('Failed to prepare image for editing:', error);
-                    toast.error('Failed to prepare image for editing');
-                  });
+              // Save edited image to Supabase in background
+              setTimeout(async () => {
+                try {
+                  const response = await fetch(recentImage.url);
+                  const blob = await response.blob();
+                  
+                  // Convert to base64
+                  const reader = new FileReader(); 
+                  reader.onload = async () => {
+                    const base64 = (reader.result as string).split(',')[1];
+                    
+                    // Save to Supabase
+                    await supabase.functions.invoke('save-image', {
+                      body: {
+                        imageBase64: base64,
+                        fileName: recentImage.fileName,
+                        chatId: chatId,
+                        userId: user?.id,
+                        imageType: 'original'
+                      }
+                    });
+                  };
+                  reader.readAsDataURL(blob);
+                  
+                  const file = new File([blob], recentImage.fileName, { type: 'image/png' });
+                  setImageToEdit(file);
+                  setShowImageEditModal(true);
+                } catch (error) {
+                  console.error('Failed to prepare image for editing:', error);
+                  toast.error('Failed to prepare image for editing');
+                }
               }, 1000);
             }
           }
@@ -1499,10 +1518,63 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             setImageToEdit(null);
           }}
           imageFile={imageToEdit}
-          onSaveImage={(editedBlob) => {
-            // Handle saving the edited image
-            console.log('Edited image saved:', editedBlob);
-            toast.success('Image edited successfully!');
+          onSaveImage={async (editedBlob) => {
+            try {
+              // Convert blob to base64
+              const reader = new FileReader();
+              reader.onload = async () => {
+                const base64 = (reader.result as string).split(',')[1];
+                
+                // Save edited image to Supabase
+                const response = await supabase.functions.invoke('save-image', {
+                  body: {
+                    imageBase64: base64,
+                    fileName: `edited_${imageToEdit?.name || 'image.png'}`,
+                    chatId: chatId,
+                    userId: user?.id,
+                    imageType: 'edited'
+                  }
+                });
+                
+                if (response.data?.success) {
+                  toast.success('Image edited and saved successfully!');
+                  
+                  // Add edited image to chat as assistant message
+                  const editedImageMessage: Message = {
+                    id: `temp-edited-${Date.now()}`,
+                    content: 'Here is your edited image:',
+                    role: 'assistant',
+                    created_at: new Date().toISOString(),
+                    file_attachments: [{
+                      id: Date.now().toString(),
+                      name: `edited_${imageToEdit?.name || 'image.png'}`,
+                      size: editedBlob.size,
+                      type: 'image/png',
+                      url: response.data.url
+                    }]
+                  };
+                  
+                  setMessages(prev => [...prev, editedImageMessage]);
+                  
+                  // Save to database
+                  await supabase
+                    .from('messages')
+                    .insert({
+                      chat_id: chatId,
+                      content: 'Here is your edited image:',
+                      role: 'assistant',
+                      file_attachments: editedImageMessage.file_attachments as any,
+                      embedding: null
+                    });
+                } else {
+                  toast.error('Failed to save edited image');
+                }
+              };
+              reader.readAsDataURL(editedBlob);
+            } catch (error) {
+              console.error('Error saving edited image:', error);
+              toast.error('Failed to save edited image');
+            }
           }}
         />
       )}
