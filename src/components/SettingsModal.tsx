@@ -263,8 +263,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     try {
       // Delete all user data except profile (cascading will handle messages)
       const deleteOperations = [
-        supabase.from('image_generations').delete().eq('user_id', user.id),
-        supabase.from('image_sessions').delete().eq('user_id', user.id),
         supabase.from('projects').delete().eq('user_id', user.id),
         supabase.from('chats').delete().eq('user_id', user.id),
       ];

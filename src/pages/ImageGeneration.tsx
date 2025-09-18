@@ -1,36 +1,23 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { useSidebar } from '@/components/ui/sidebar';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { ImageIcon, Plus, Download, Sparkles } from 'lucide-react';
+import { Sparkles, ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
+import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { useSidebar } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
-import { ImagePopupModal } from '@/components/ImagePopupModal';
-
-interface ImageGeneration {
-  id: string;
-  prompt: string;
-  image_url: string | null;
-  status: string;
-  created_at: string;
-}
 
 export default function ImageGeneration() {
-  const { sessionId } = useParams();
   const { user } = useAuth();
   const { actualTheme } = useTheme();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
-  const [generations, setGenerations] = useState<ImageGeneration[]>([]);
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [sessionTitle, setSessionTitle] = useState('New Image Session');
-  const [selectedImage, setSelectedImage] = useState<{url: string, prompt: string} | null>(null);
+  const [sessionTitle] = useState('AI Image Generation');
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -53,45 +40,36 @@ export default function ImageGeneration() {
   };
 
   useEffect(() => {
-    if (sessionId && user) {
-      fetchGenerations();
-      fetchSessionTitle();
-    }
-  }, [sessionId, user]);
+    // No longer fetching generations since tables were removed
+    // This page now focuses on creating new image generation requests
+  }, [user]);
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [generations]);
+  // No longer needed since tables were removed
+  // const fetchSessionTitle = async () => {
+  //   if (!sessionId || !user) return;
+  //   const { data, error } = await supabase
+  //     .from('image_sessions')
+  //     .select('title')
+  //     .eq('id', sessionId)
+  //     .eq('user_id', user.id)
+  //     .single();
+  //   if (data) {
+  //     setSessionTitle(data.title);
+  //   }
+  // };
 
-  const fetchSessionTitle = async () => {
-    if (!sessionId || !user) return;
-
-    const { data, error } = await supabase
-      .from('image_sessions')
-      .select('title')
-      .eq('id', sessionId)
-      .eq('user_id', user.id)
-      .single();
-
-    if (data) {
-      setSessionTitle(data.title);
-    }
-  };
-
-  const fetchGenerations = async () => {
-    if (!sessionId || !user) return;
-
-    const { data, error } = await supabase
-      .from('image_generations')
-      .select('*')
-      .eq('image_session_id', sessionId)
-      .eq('user_id', user.id)
-      .order('created_at', { ascending: true });
-
-    if (data) {
-      setGenerations(data);
-    }
-  };
+  // const fetchGenerations = async () => {
+  //   if (!sessionId || !user) return;
+  //   const { data, error } = await supabase
+  //     .from('image_generations')
+  //     .select('*')
+  //     .eq('image_session_id', sessionId)
+  //     .eq('user_id', user.id)
+  //     .order('created_at', { ascending: true });
+  //   if (data) {
+  //     setGenerations(data);
+  //   }
+  // };
 
   const handleGenerate = async () => {
     if (!newPrompt.trim() || isGenerating) return;
@@ -212,81 +190,20 @@ export default function ImageGeneration() {
               </div>
             </div>
           </div>
-          {generations.length === 0 ? (
-            <div className="flex items-center justify-center h-full min-h-[70vh]">
-              <div className="text-center max-w-md">
-                <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
-                  <Sparkles className="h-8 w-8 text-white" />
-                </div>
-                <h3 className="text-2xl font-normal mb-6 text-foreground">
-                  What would you like me to create?
-                </h3>
-                <p className="text-muted-foreground">
-                  Describe any image and I'll generate it for you using AI.
-                </p>
+          {/* Always show the empty state since we removed the generations table */}
+          <div className="flex items-center justify-center h-full min-h-[70vh]">
+            <div className="text-center max-w-md">
+              <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center mb-6">
+                <Sparkles className="h-8 w-8 text-white" />
               </div>
+              <h3 className="text-2xl font-normal mb-6 text-foreground">
+                What would you like me to create?
+              </h3>
+              <p className="text-muted-foreground">
+                Describe any image and I'll generate it for you using AI.
+              </p>
             </div>
-          ) : (
-            <div className="space-y-6">
-              {generations.map((generation) => (
-                <div 
-                  key={generation.id} 
-                  className="group mb-4"
-                >
-                  <div className="space-y-4">
-                    {/* User prompt */}
-                    <div className="flex justify-end mr-3">
-                      <div className="max-w-[80%]">
-                        <div className="text-black dark:text-white bg-[#DEE7F4] dark:bg-[hsl(var(--user-message-bg))] rounded-2xl px-3.5 py-2.5 break-words whitespace-pre-wrap">
-                          {generation.prompt}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Generated image */}
-                    <div className="flex justify-start ml-3">
-                      <div className="max-w-[80%] space-y-2">
-                        {generation.status === 'generating' ? (
-                          <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center">
-                            <div className="text-center space-y-2">
-                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
-                              <p className="text-sm text-muted-foreground">Generating image...</p>
-                            </div>
-                          </div>
-                        ) : generation.image_url ? (
-                          <div className="space-y-2">
-                            <div className="relative group">
-                              <img 
-                                src={generation.image_url} 
-                                alt={generation.prompt}
-                                className="w-full max-w-md rounded-lg shadow-sm cursor-pointer hover:opacity-90 transition-opacity"
-                                onClick={() => setSelectedImage({url: generation.image_url!, prompt: generation.prompt})}
-                              />
-                            </div>
-                            <div className="flex gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-7 px-2 text-xs"
-                                onClick={() => downloadImage(generation.image_url!, generation.prompt)}
-                              >
-                                <Download className="h-3 w-3 mr-1" />
-                                Download
-                              </Button>
-                            </div>
-                          </div>
-                        ) : (
-                          <div className="w-64 h-64 bg-muted rounded-lg flex items-center justify-center">
-                            <p className="text-sm text-muted-foreground">Failed to generate image</p>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+          </div>
           <div ref={messagesEndRef} />
         </div>
       </div>
@@ -336,16 +253,6 @@ export default function ImageGeneration() {
           </p>
         </div>
       </div>
-      
-      {/* Image Popup Modal */}
-      {selectedImage && (
-        <ImagePopupModal
-          isOpen={!!selectedImage}
-          onClose={() => setSelectedImage(null)}
-          imageUrl={selectedImage.url}
-          prompt={selectedImage.prompt}
-        />
-      )}
     </div>
   );
 }
