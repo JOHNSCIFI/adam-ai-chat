@@ -74,7 +74,7 @@ export default function ProjectPage() {
     const sidebarWidth = collapsed ? 56 : 280;
     
     return { 
-      marginLeft: `${sidebarWidth}px`
+      paddingLeft: `${sidebarWidth}px`
     };
   };
 
@@ -331,10 +331,10 @@ export default function ProjectPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
           <div className="min-h-screen flex flex-col justify-center px-4 py-4" style={getContainerStyle()}>
-            <div className="flex justify-center">
+            <div className="flex justify-center w-full">
               <div className="w-full max-w-2xl">
                 {/* Header */}
-                <div className="flex flex-col items-center justify-center mb-8">
+                <div className="flex flex-col items-center justify-center mb-8 text-center">
                   <div 
                     className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
                     onClick={() => setIsEditingProject(true)}
@@ -432,7 +432,7 @@ export default function ProjectPage() {
 
         {/* Input area - fixed at bottom like ChatGPT */}
         <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-          <div className="flex justify-center px-4 py-4" style={getContainerStyle()}>
+          <div className="flex justify-center px-4 py-4 w-full" style={getContainerStyle()}>
             <div className="w-full max-w-2xl">
               {/* File attachments preview */}
               {selectedFiles.length > 0 && (

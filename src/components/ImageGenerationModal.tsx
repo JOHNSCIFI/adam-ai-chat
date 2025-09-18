@@ -182,20 +182,33 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
 
   const downloadImage = async (imageUrl: string, prompt: string) => {
     try {
-      const response = await fetch(imageUrl, {
-        method: 'GET',
-        mode: 'cors',
-      });
+      let response;
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch image');
+      // Check if it's a Supabase storage URL
+      if (imageUrl.includes('supabase') || imageUrl.includes('storage')) {
+        // Use Supabase client for authenticated requests
+        const { data, error } = await supabase.storage
+          .from('chat-files')
+          .download(imageUrl.split('/').pop() || `image-${Date.now()}`);
+          
+        if (error) throw error;
+        response = { blob: () => Promise.resolve(data) };
+      } else {
+        // For external URLs, try direct fetch
+        response = await fetch(imageUrl, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache',
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch image');
       }
       
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `image-${Date.now()}.png`;
+      a.download = `${prompt.slice(0, 30)}-${Date.now()}.png`;
       a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
@@ -212,7 +225,7 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
       });
     } catch (error) {
       console.error('Download failed:', error);
-      // Fallback: open image in new tab
+      // Fallback to opening in new tab
       try {
         const newWindow = window.open(imageUrl, '_blank');
         if (newWindow) {

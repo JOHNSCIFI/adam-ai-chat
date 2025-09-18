@@ -659,13 +659,26 @@ export default function Chat() {
 
   const downloadImageFromChat = async (imageUrl: string, fileName: string) => {
     try {
-      const response = await fetch(imageUrl, {
-        method: 'GET',
-        mode: 'cors',
-      });
+      let response;
       
-      if (!response.ok) {
-        throw new Error('Failed to fetch image');
+      // Check if it's a Supabase storage URL
+      if (imageUrl.includes('supabase') || imageUrl.includes('storage')) {
+        // Use Supabase client for authenticated requests
+        const { data, error } = await supabase.storage
+          .from('chat-files')
+          .download(imageUrl.split('/').pop() || fileName || `image-${Date.now()}`);
+          
+        if (error) throw error;
+        response = { blob: () => Promise.resolve(data) };
+      } else {
+        // For external URLs, try direct fetch
+        response = await fetch(imageUrl, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache',
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch image');
       }
       
       const blob = await response.blob();
@@ -689,7 +702,7 @@ export default function Chat() {
       });
     } catch (error) {
       console.error('Download failed:', error);
-      // Fallback: open image in new tab
+      // Fallback to opening in new tab
       try {
         const newWindow = window.open(imageUrl, '_blank');
         if (newWindow) {
@@ -699,7 +712,7 @@ export default function Chat() {
           });
         } else {
           toast({
-            title: "Error",
+            title: "Error", 
             description: "Please allow popups to download images",
             variant: "destructive",
           });

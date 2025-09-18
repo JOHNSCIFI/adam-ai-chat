@@ -3,6 +3,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ImagePopupModalProps {
   isOpen: boolean;
@@ -62,17 +63,29 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: Imag
 
   const downloadImage = async () => {
     try {
-      // Create a proxy URL to avoid CORS issues
-      const proxyResponse = await fetch(imageUrl, {
-        method: 'GET',
-        mode: 'cors',
-      });
+      let response;
       
-      if (!proxyResponse.ok) {
-        throw new Error('Failed to fetch image');
+      // Check if it's a Supabase storage URL
+      if (imageUrl.includes('supabase') || imageUrl.includes('storage')) {
+        // Use Supabase client for authenticated requests
+        const { data, error } = await supabase.storage
+          .from('chat-files')
+          .download(imageUrl.split('/').pop() || `image-${Date.now()}`);
+          
+        if (error) throw error;
+        response = { blob: () => Promise.resolve(data) };
+      } else {
+        // For external URLs, try direct fetch
+        response = await fetch(imageUrl, {
+          method: 'GET',
+          mode: 'cors',
+          cache: 'no-cache',
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch image');
       }
       
-      const blob = await proxyResponse.blob();
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;

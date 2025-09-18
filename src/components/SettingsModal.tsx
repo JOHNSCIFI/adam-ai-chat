@@ -261,24 +261,34 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     if (!user) return;
     
     try {
-      const { error } = await supabase
-        .from('chats')
-        .delete()
-        .eq('user_id', user.id);
+      // Delete all user data except profile (cascading will handle messages)
+      const deleteOperations = [
+        supabase.from('image_generations').delete().eq('user_id', user.id),
+        supabase.from('image_sessions').delete().eq('user_id', user.id),
+        supabase.from('projects').delete().eq('user_id', user.id),
+        supabase.from('chats').delete().eq('user_id', user.id),
+      ];
 
-      if (error) throw error;
+      const results = await Promise.all(deleteOperations);
+      
+      // Check for any errors
+      const errors = results.filter(result => result.error);
+      if (errors.length > 0) {
+        throw new Error('Failed to delete some data');
+      }
 
       toast({
-        title: "Chats deleted",
-        description: "All your chats have been permanently deleted.",
+        title: "All data deleted",
+        description: "All your chats, projects, and images have been permanently deleted.",
       });
 
       // Redirect to home page but keep settings modal open
       window.history.pushState({}, '', '/');
     } catch (error: any) {
+      console.error('Delete all chats error:', error);
       toast({
-        title: "Error deleting chats",
-        description: "Unable to delete chats. Please try again.",
+        title: "Error deleting data",
+        description: "Unable to delete all data. Please try again.",
         variant: "destructive",
       });
     }
@@ -576,8 +586,8 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-semibold mb-1">Delete All Chats</h3>
-                      <p className="text-sm text-muted-foreground">Permanently delete all your conversations</p>
+                      <h3 className="font-semibold mb-1">Delete All Data</h3>
+                      <p className="text-sm text-muted-foreground">Permanently delete all conversations, projects, and images</p>
                     </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
@@ -588,15 +598,15 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete all chats?</AlertDialogTitle>
+                          <AlertDialogTitle>Delete all data?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            This action cannot be undone. All your conversations will be permanently deleted.
+                            This action cannot be undone. All your conversations, projects, and images will be permanently deleted.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancel</AlertDialogCancel>
                           <AlertDialogAction onClick={handleDeleteAllChats} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Delete All Chats
+                            Delete All Data
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
