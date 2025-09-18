@@ -334,23 +334,25 @@ export default function ProjectPage() {
             <div className="flex justify-center w-full">
               <div className="w-full max-w-2xl">
                 {/* Header */}
-                <div className="flex flex-col items-center justify-center mb-8 text-center">
-                  <div 
-                    className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={() => setIsEditingProject(true)}
-                  >
-                    {(() => {
-                      const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                      return (
-                        <div 
-                          className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                          style={{ backgroundColor: project.color }}
-                        >
-                          <IconComponent className="w-6 h-6 text-white" />
-                        </div>
-                      );
-                    })()}
-                    <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+                <div className="relative flex flex-col items-center justify-center mb-8 text-center">
+                  <div className="fixed left-1/2 transform -translate-x-1/2 z-10">
+                    <div 
+                      className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                      onClick={() => setIsEditingProject(true)}
+                    >
+                      {(() => {
+                        const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                        return (
+                          <div 
+                            className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                            style={{ backgroundColor: project.color }}
+                          >
+                            <IconComponent className="w-6 h-6 text-white" />
+                          </div>
+                        );
+                      })()}
+                      <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+                    </div>
                   </div>
                 </div>
 
