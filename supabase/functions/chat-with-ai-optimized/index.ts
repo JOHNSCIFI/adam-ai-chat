@@ -77,8 +77,14 @@ serve(async (req) => {
   }
 
   try {
-    const { message, chat_id, user_id, file_analysis } = await req.json();
-    console.log('Optimized chat request:', { message, chat_id, user_id, has_file_analysis: !!file_analysis });
+    const { message, chat_id, user_id, file_analysis, image_context } = await req.json();
+    console.log('Optimized chat request:', { 
+      message, 
+      chat_id, 
+      user_id, 
+      has_file_analysis: !!file_analysis,
+      image_count: image_context?.length || 0
+    });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
@@ -107,7 +113,7 @@ serve(async (req) => {
       content: msg.content
     }));
 
-    // Add file analysis if provided
+    // Add file analysis and image context if provided
     let userMessage = message;
     if (file_analysis) {
       userMessage = file_analysis; // If no user text, just use extracted file content
@@ -115,6 +121,15 @@ serve(async (req) => {
         // If user provided text with file, combine them
         userMessage = `${message}\n\nBased on the file content:\n${file_analysis}`;
       }
+    }
+
+    // Add image context for AI awareness
+    if (image_context && image_context.length > 0) {
+      const imageContext = image_context.map(img => 
+        `Previously analyzed image "${img.fileName}": ${img.aiDescription}`
+      ).join('\n\n');
+      
+      userMessage += `\n\n[AVAILABLE IMAGES FOR REFERENCE/EDITING]:\n${imageContext}`;
     }
 
     conversationHistory.push({
@@ -136,7 +151,7 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'You are AdamGPT, a helpful AI assistant. If the user asks you to generate, create, make, or draw an image, use the generate_image function. Always be helpful and provide detailed responses. When analyzing files, provide comprehensive insights.'
+            content: 'You are AdamGPT, a helpful AI assistant with advanced image analysis and editing capabilities. You can:\n\n1. ANALYZE IMAGES: When users send images, they are automatically analyzed and you have access to detailed visual information.\n\n2. ANSWER IMAGE QUESTIONS: Use the provided image analysis to answer questions about images that were previously shared.\n\n3. EDIT IMAGES: When users request image editing (like "edit the image", "make it brighter", "remove background", "add text"), provide specific editing instructions.\n\n4. GENERATE IMAGES: Use the generate_image function when users ask to create new images.\n\nAlways be helpful and provide detailed responses. For image editing requests, provide clear step-by-step instructions.'
           },
           ...conversationHistory
         ],
@@ -153,6 +168,29 @@ serve(async (req) => {
                 }
               },
               required: ['prompt']
+            }
+          },
+          {
+            name: 'edit_image',
+            description: 'Edit an existing image that was previously shared. Use this when user asks to edit, modify, adjust, enhance, or change an image.',
+            parameters: {
+              type: 'object',
+              properties: {
+                image_id: {
+                  type: 'string',
+                  description: 'ID of the image to edit (from available images)'
+                },
+                edit_type: {
+                  type: 'string',
+                  description: 'Type of edit requested',
+                  enum: ['brightness', 'contrast', 'saturation', 'rotate', 'flip', 'crop', 'remove_background', 'add_text', 'general']
+                },
+                edit_instructions: {
+                  type: 'string',
+                  description: 'Specific instructions for the edit'
+                }
+              },
+              required: ['image_id', 'edit_type', 'edit_instructions']
             }
           }
         ],

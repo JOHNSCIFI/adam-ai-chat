@@ -10,12 +10,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
+
+import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 
 interface Message {
   id: string;
@@ -23,6 +25,7 @@ interface Message {
   role: 'user' | 'assistant';
   created_at: string;
   file_attachments?: FileAttachment[];
+  image_analysis?: ImageAnalysisResult[]; // Store image analysis results
 }
 
 interface FileAttachment {
@@ -32,6 +35,8 @@ interface FileAttachment {
   type: string;
   url: string;
 }
+
+import { ImageEditModal } from '@/components/ImageEditModal';
 
 export default function Chat() {
   const { chatId } = useParams();
@@ -74,6 +79,9 @@ export default function Chat() {
   const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
   const [fileAnalyses, setFileAnalyses] = useState<Map<string, string>>(new Map());
   const [currentImagePrompt, setCurrentImagePrompt] = useState<string | null>(null);
+  const [imageAnalysisResults, setImageAnalysisResults] = useState<Map<string, ImageAnalysisResult>>(new Map());
+  const [showImageEditModal, setShowImageEditModal] = useState(false);
+  const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -233,9 +241,15 @@ export default function Chat() {
             url: URL.createObjectURL(file)
           });
 
-          // Extract actual content from inside the file
+          // Extract actual content from inside the file (with image analysis)
           const fileContent = await extractFileContent(file);
           extractedFileContent += `\n\n[Content extracted from ${file.name}]:\n${fileContent}`;
+          
+          // For images, also store the analysis result in the message
+          if (file.type.startsWith('image/')) {
+            // The analysis is already stored in imageAnalysisResults by extractFileContent
+            console.log('Image analysis stored for future reference');
+          }
         }
       }
 
@@ -311,12 +325,13 @@ export default function Chat() {
           }
           
           const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
-            body: {
-              message: userMessage, // Send the original message
-              chat_id: chatId,
-              user_id: user.id,
-              file_analysis: extractedFileContent || null // Send extracted file content separately
-            }
+        body: {
+          message: userMessage, // Send the original message
+          chat_id: chatId,
+          user_id: user.id,
+          file_analysis: extractedFileContent || null, // Send extracted file content separately
+          image_context: Array.from(imageAnalysisResults.values()) // Send all image analysis for context
+        }
           });
 
           console.log('AI response:', aiResponse);
@@ -330,24 +345,74 @@ export default function Chat() {
             let assistantResponse = '';
             let fileAttachments: any[] = [];
             
-            if (aiResponse.type === 'image_generated') {
-              // Handle image generation response
-              assistantResponse = aiResponse.content;
-              setCurrentImagePrompt(null); // Clear the indicator
-              
-              // Add the image as an attachment
-              if (aiResponse.image_url) {
-                fileAttachments = [{
-                  id: Date.now().toString(),
-                  name: `generated_image_${Date.now()}.png`,
-                  size: 0,
-                  type: 'image/png',
-                  url: aiResponse.image_url
-                }];
-              }
-            } else if (aiResponse.type === 'text') {
+        if (aiResponse.type === 'image_generated') {
+          // Handle image generation response
+          assistantResponse = aiResponse.content;
+          setCurrentImagePrompt(null); // Clear the indicator
+          
+          // Add the image as an attachment
+          if (aiResponse.image_url) {
+            fileAttachments = [{
+              id: Date.now().toString(),
+              name: `generated_image_${Date.now()}.png`,
+              size: 0,
+              type: 'image/png',
+              url: aiResponse.image_url
+            }];
+          }
+        } else if (aiResponse.type === 'image_edit_request') {
+          // Handle image editing request
+          assistantResponse = aiResponse.content;
+          
+          // Automatically open image editor for the most recent image
+          if (imageAnalysisResults.size > 0) {
+            const recentImage = Array.from(imageAnalysisResults.values()).pop();
+            if (recentImage) {
+              setTimeout(() => {
+                fetch(recentImage.url)
+                  .then(response => response.blob())
+                  .then(blob => {
+                    const file = new File([blob], recentImage.fileName, { type: 'image/png' });
+                    setImageToEdit(file);
+                    setShowImageEditModal(true);
+                  })
+                  .catch(error => {
+                    console.error('Failed to prepare image for editing:', error);
+                    toast.error('Failed to prepare image for editing');
+                  });
+              }, 1000);
+            }
+          }
+        } else if (aiResponse.type === 'text') {
               // Handle regular text response
               assistantResponse = aiResponse.content;
+              
+              // Check if this is an image editing request
+              const isImageEditRequest = /\b(edit|modify|adjust|change|enhance)\s+(?:the\s+)?image\b/i.test(userMessage);
+              
+              if (isImageEditRequest && imageAnalysisResults.size > 0) {
+                // Find the most recent image for editing
+                const recentImage = Array.from(imageAnalysisResults.values()).pop();
+                if (recentImage) {
+                  assistantResponse += `\n\n🎨 **Image Editing Available**: I can help you edit "${recentImage.fileName}". Click the edit button that will appear to open the image editor.`;
+                  
+                  // Trigger image editing modal after a brief delay
+                  setTimeout(() => {
+                    // Convert blob URL back to file for editing
+                    fetch(recentImage.url)
+                      .then(response => response.blob())
+                      .then(blob => {
+                        const file = new File([blob], recentImage.fileName, { type: 'image/png' });
+                        setImageToEdit(file);
+                        setShowImageEditModal(true);
+                      })
+                      .catch(error => {
+                        console.error('Failed to prepare image for editing:', error);
+                        toast.error('Failed to prepare image for editing');
+                      });
+                  }, 1000);
+                }
+              }
             } else {
               assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
             }
@@ -447,8 +512,24 @@ export default function Chat() {
         return text; // Return the actual content, not metadata
         
       } else if (fileType.startsWith('image/')) {
-        // For images, we can't extract text content without OCR
-        return `[Image file: ${file.name} - Visual content requires image processing to extract text/objects]`;
+        // For images, do comprehensive analysis
+        console.log('Performing comprehensive image analysis...');
+        
+        try {
+          const analysisResult = await analyzeImageComprehensively(file);
+          
+          // Store the analysis result for future reference
+          setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
+          
+          console.log('Image analysis completed:', analysisResult);
+          
+          // Return the AI description as content
+          return analysisResult.aiDescription;
+          
+        } catch (error) {
+          console.error('Image analysis failed:', error);
+          return `[Image file: ${file.name} - Visual analysis failed, but image is available for editing and questions]`;
+        }
         
       } else if (fileType.includes('pdf')) {
         // For PDF, we need actual content extraction (simplified for now)
@@ -1343,6 +1424,23 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           onClose={() => setSelectedImage(null)}
           imageUrl={selectedImage.url}
           prompt={selectedImage.name}
+        />
+      )}
+
+      {/* Image edit modal */}
+      {showImageEditModal && imageToEdit && (
+        <ImageEditModal
+          isOpen={showImageEditModal}
+          onClose={() => {
+            setShowImageEditModal(false);
+            setImageToEdit(null);
+          }}
+          imageFile={imageToEdit}
+          onSaveImage={(editedBlob) => {
+            // Handle saving the edited image
+            console.log('Edited image saved:', editedBlob);
+            toast.success('Image edited successfully!');
+          }}
         />
       )}
     </div>
