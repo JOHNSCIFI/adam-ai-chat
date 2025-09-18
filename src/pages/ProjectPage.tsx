@@ -27,7 +27,7 @@ interface Project {
 }
 
 export default function ProjectPage() {
-  const { projectId } = useParams();
+  const { projectName } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -56,19 +56,27 @@ export default function ProjectPage() {
   };
 
   useEffect(() => {
-    if (projectId && user) {
+    if (projectName && user) {
       fetchProject();
+    }
+  }, [projectName, user]);
+
+  useEffect(() => {
+    if (project && user) {
       fetchProjectChats();
     }
-  }, [projectId, user]);
+  }, [project, user]);
 
   const fetchProject = async () => {
-    if (!projectId || !user) return;
+    if (!projectName || !user) return;
 
+    // Decode the project name from URL
+    const decodedProjectName = decodeURIComponent(projectName).replace(/-/g, ' ');
+    
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('id', projectId)
+      .ilike('title', decodedProjectName)
       .eq('user_id', user.id)
       .single();
 
@@ -78,12 +86,12 @@ export default function ProjectPage() {
   };
 
   const fetchProjectChats = async () => {
-    if (!projectId || !user) return;
+    if (!project || !user) return;
 
     const { data, error } = await supabase
       .from('chats')
       .select('*')
-      .eq('project_id', projectId)
+      .eq('project_id', project.id)
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -93,7 +101,7 @@ export default function ProjectPage() {
   };
 
   const createNewChat = async () => {
-    if (!user || !projectId) return;
+    if (!user || !project) return;
 
     try {
       const { data, error } = await supabase
@@ -101,7 +109,7 @@ export default function ProjectPage() {
         .insert({
           user_id: user.id,
           title: 'New Chat',
-          project_id: projectId
+          project_id: project.id
         })
         .select()
         .single();
@@ -119,7 +127,7 @@ export default function ProjectPage() {
   };
 
   const startChatFromPrompt = async () => {
-    if (!newPrompt.trim() || !user || !projectId) return;
+    if (!newPrompt.trim() || !user || !project) return;
 
     try {
       const { data, error } = await supabase
@@ -127,7 +135,7 @@ export default function ProjectPage() {
         .insert({
           user_id: user.id,
           title: newPrompt.length > 50 ? newPrompt.substring(0, 50) + '...' : newPrompt,
-          project_id: projectId
+          project_id: project.id
         })
         .select()
         .single();
