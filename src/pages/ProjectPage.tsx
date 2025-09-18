@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { MessageSquare, Plus, Edit2, Save, X } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { useToast } from '@/hooks/use-toast';
+import { ProjectModal } from '@/components/ProjectModal';
 
 interface Chat {
   id: string;
@@ -27,7 +28,7 @@ interface Project {
 }
 
 export default function ProjectPage() {
-  const { projectName } = useParams();
+  const { projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -58,10 +59,10 @@ export default function ProjectPage() {
   };
 
   useEffect(() => {
-    if (projectName && user) {
+    if (projectId && user) {
       fetchProject();
     }
-  }, [projectName, user]);
+  }, [projectId, user]);
 
   useEffect(() => {
     if (project && user) {
@@ -70,16 +71,14 @@ export default function ProjectPage() {
   }, [project, user]);
 
   const fetchProject = async () => {
-    if (!projectName || !user) return;
+    if (!projectId || !user) return;
 
     try {
-      const projectTitle = projectName.replace(/-/g, ' ');
-      
       const { data: projectData, error } = await supabase
         .from('projects')
         .select('*')
         .eq('user_id', user.id)
-        .ilike('title', projectTitle)
+        .eq('id', projectId) // Use project ID instead of name
         .single();
 
       if (error) {
@@ -253,77 +252,44 @@ export default function ProjectPage() {
         <div className="flex-1 overflow-hidden">
           <div style={getContainerStyle()} className="h-full flex flex-col">
             {/* Header */}
-            <div className="border-b border-border/40 p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div 
-                    className="p-3 rounded-lg text-white flex items-center justify-center"
-                    style={{ backgroundColor: project.color }}
-                  >
-                    <span className="text-lg">{project.icon}</span>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
-                    {project.description && (
-                      <p className="text-sm text-muted-foreground">{project.description}</p>
-                    )}
-                  </div>
+            <div className="text-center py-8">
+              <div className="flex items-center justify-center gap-2 mb-4">
+                <div 
+                  className="p-2 rounded-lg text-white flex items-center justify-center"
+                  style={{ backgroundColor: project.color }}
+                >
+                  <span className="text-base">{project.icon}</span>
                 </div>
+                <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+              </div>
+            </div>
+
+              <div className="text-center">
                 <Button 
                   onClick={startEditingProject}
                   size="sm"
                   variant="outline"
-                  className="flex items-center gap-2"
+                  className="inline-flex items-center gap-2 px-4 py-2"
                 >
                   <Edit2 className="h-4 w-4" />
-                  Edit Project
+                  Edit this project
                 </Button>
               </div>
-            </div>
 
-            {/* Content */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {chats.length === 0 ? (
-                <div className="h-full flex items-center justify-center">
-                  <div className="text-center space-y-6 max-w-md">
-                    <div className="mx-auto w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                      <MessageSquare className="h-8 w-8 text-white" />
-                    </div>
-                    <div className="space-y-2">
-                      <h2 className="text-xl font-semibold text-foreground">Start your first chat</h2>
-                      <p className="text-muted-foreground">
-                        Create a new conversation in your {project.title} project.
-                      </p>
-                    </div>
-                    <Button onClick={createNewChat} className="w-full">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New chat in {project.title}
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-lg font-medium text-foreground">Recent conversations</h3>
-                    <Button onClick={createNewChat} size="sm">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New chat
-                    </Button>
-                  </div>
-                  
+              {chats.length > 0 && (
+                <div className="space-y-4 mt-8">
                   <div className="space-y-3">
                     {chats.map((chat) => (
                       <div
                         key={chat.id}
                         onClick={() => navigate(`/chat/${chat.id}`)}
-                        className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        className="text-left p-3 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
                       >
                         <div className="flex items-start gap-3">
-                          <MessageSquare className="h-5 w-5 text-muted-foreground mt-1" />
                           <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-foreground truncate">{chat.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(chat.updated_at).toLocaleDateString()} • Last activity
+                            <h4 className="font-medium text-foreground truncate text-sm">{chat.title}</h4>
+                            <p className="text-xs text-muted-foreground">
+                              {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </p>
                           </div>
                         </div>
@@ -332,31 +298,49 @@ export default function ProjectPage() {
                   </div>
                 </div>
               )}
-            </div>
 
             {/* Input area */}
-            <div className="border-t border-border/40 p-4">
+            <div className="p-6">
               <div className="relative">
-                <Textarea
-                  placeholder={`Message ${project.title}...`}
-                  value={newPrompt}
-                  onChange={(e) => setNewPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      startChatFromPrompt();
-                    }
-                  }}
-                  className="min-h-[60px] max-h-[200px] resize-none pr-12"
-                />
-                <Button 
-                  onClick={startChatFromPrompt}
-                  disabled={!newPrompt.trim()}
-                  size="sm"
-                  className="absolute bottom-2 right-2 h-8 w-8 p-0"
-                >
-                  <SendHorizontalIcon className="h-4 w-4" />
-                </Button>
+                <div className="flex-1 flex items-center border rounded-3xl px-4 py-3 bg-white dark:bg-[hsl(var(--input))] border-gray-200 dark:border-border">
+                  <div className="flex items-center gap-2 mr-3">
+                    <Plus className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <Textarea
+                    placeholder={`New chat in ${project.title}`}
+                    value={newPrompt}
+                    onChange={(e) => setNewPrompt(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && !e.shiftKey) {
+                        e.preventDefault();
+                        startChatFromPrompt();
+                      }
+                    }}
+                    className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                    style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                    rows={1}
+                  />
+                  
+                  <div className="flex items-center gap-1 ml-2 pb-1">
+                    <Button
+                      type="button"
+                      onClick={startChatFromPrompt}
+                      disabled={!newPrompt.trim()}
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                      style={{ 
+                        backgroundColor: newPrompt.trim()
+                          ? 'hsl(var(--primary))'
+                          : 'hsl(var(--muted))',
+                        color: newPrompt.trim()
+                          ? 'hsl(var(--primary-foreground))'
+                          : 'hsl(var(--muted-foreground))'
+                      }}
+                    >
+                      <SendHorizontalIcon className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -364,50 +348,60 @@ export default function ProjectPage() {
       </div>
 
       {/* Edit Project Modal */}
-      <Dialog open={isEditingProject} onOpenChange={setIsEditingProject}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Project</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium">Project Name</label>
-              <Input
-                value={editedProject.title}
-                onChange={(e) => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
-                placeholder="Enter project name"
-                className="mt-1"
-              />
+      <ProjectModal
+        project={project}
+        isEditing={true}
+        onProjectUpdated={() => {
+          fetchProject();
+          setIsEditingProject(false);
+          window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+        }}
+      >
+        <Dialog open={isEditingProject} onOpenChange={setIsEditingProject}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>Edit Project</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div>
+                <label className="text-sm font-medium">Project Name</label>
+                <Input
+                  value={editedProject.title}
+                  onChange={(e) => setEditedProject(prev => ({ ...prev, title: e.target.value }))}
+                  placeholder="Enter project name"
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-sm font-medium">Description</label>
+                <Textarea
+                  value={editedProject.description}
+                  onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
+                  placeholder="Enter project description"
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsEditingProject(false)}
+                >
+                  <X className="h-4 w-4 mr-2" />
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={handleUpdateProject}
+                  disabled={!editedProject.title.trim()}
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Save Changes
+                </Button>
+              </div>
             </div>
-            <div>
-              <label className="text-sm font-medium">Description</label>
-              <Textarea
-                value={editedProject.description}
-                onChange={(e) => setEditedProject(prev => ({ ...prev, description: e.target.value }))}
-                placeholder="Enter project description"
-                className="mt-1"
-                rows={3}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button 
-                variant="outline" 
-                onClick={() => setIsEditingProject(false)}
-              >
-                <X className="h-4 w-4 mr-2" />
-                Cancel
-              </Button>
-              <Button 
-                onClick={handleUpdateProject}
-                disabled={!editedProject.title.trim()}
-              >
-                <Save className="h-4 w-4 mr-2" />
-                Save Changes
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </DialogContent>
+        </Dialog>
+      </ProjectModal>
     </div>
   );
 }

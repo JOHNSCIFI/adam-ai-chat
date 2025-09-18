@@ -2,13 +2,12 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { 
-  Folder, 
   Briefcase, 
   BookOpen, 
   Code, 
@@ -17,60 +16,110 @@ import {
   Target, 
   Heart,
   Star,
-  Rocket
+  Rocket,
+  Settings
 } from 'lucide-react';
 
 const iconOptions = [
-  { icon: Folder, name: 'folder', color: '#10b981' },
-  { icon: Briefcase, name: 'briefcase', color: '#3b82f6' },
-  { icon: BookOpen, name: 'book', color: '#8b5cf6' },
-  { icon: Code, name: 'code', color: '#ef4444' },
-  { icon: Palette, name: 'palette', color: '#f59e0b' },
-  { icon: Lightbulb, name: 'lightbulb', color: '#eab308' },
-  { icon: Target, name: 'target', color: '#06b6d4' },
-  { icon: Heart, name: 'heart', color: '#ec4899' },
-  { icon: Star, name: 'star', color: '#f97316' },
-  { icon: Rocket, name: 'rocket', color: '#6366f1' },
+  { icon: Briefcase, name: 'briefcase', color: '#10b981', label: 'Investing' },
+  { icon: BookOpen, name: 'book', color: '#3b82f6', label: 'Homework' },
+  { icon: Code, name: 'code', color: '#8b5cf6', label: 'Writing' },
+  { icon: Heart, name: 'heart', color: '#ef4444', label: 'Health' },
+  { icon: Target, name: 'target', color: '#f59e0b', label: 'Travel' },
 ];
 
 interface ProjectModalProps {
   children: React.ReactNode;
+  project?: {
+    id: string;
+    title: string;
+    description?: string;
+    icon: string;
+    color: string;
+  };
+  isEditing?: boolean;
   onProjectCreated?: () => void;
+  onProjectUpdated?: () => void;
 }
 
-export function ProjectModal({ children, onProjectCreated }: ProjectModalProps) {
+export function ProjectModal({ 
+  children, 
+  project, 
+  isEditing = false, 
+  onProjectCreated, 
+  onProjectUpdated 
+}: ProjectModalProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [selectedIcon, setSelectedIcon] = useState(iconOptions[0]);
-  const [isCreating, setIsCreating] = useState(false);
+  const [title, setTitle] = useState(project?.title || '');
+  const [description, setDescription] = useState(project?.description || '');
+  const [selectedIcon, setSelectedIcon] = useState(
+    iconOptions.find(opt => opt.name === project?.icon) || iconOptions[0]
+  );
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
-  const handleCreateProject = async () => {
+  React.useEffect(() => {
+    if (project) {
+      setTitle(project.title);
+      setDescription(project.description || '');
+      setSelectedIcon(iconOptions.find(opt => opt.name === project.icon) || iconOptions[0]);
+    }
+  }, [project]);
+
+  const handleSubmit = async () => {
     if (!title.trim() || !user) return;
 
-    setIsCreating(true);
+    setIsSubmitting(true);
     try {
-      const { data, error } = await supabase
-        .from('projects')
-        .insert({
-          user_id: user.id,
-          title: title.trim(),
-          description: description.trim() || null,
-          icon: selectedIcon.name,
-          color: selectedIcon.color,
-        })
-        .select()
-        .single();
+      if (isEditing && project) {
+        // Update existing project
+        const { error } = await supabase
+          .from('projects')
+          .update({
+            title: title.trim(),
+            description: description.trim() || null,
+            icon: selectedIcon.name,
+            color: selectedIcon.color,
+          })
+          .eq('id', project.id);
 
-      if (error) throw error;
+        if (error) throw error;
 
-      toast({
-        title: "Project created",
-        description: `"${title}" has been created successfully.`,
-      });
+        toast({
+          title: "Project updated",
+          description: `"${title}" has been updated successfully.`,
+        });
+
+        onProjectUpdated?.();
+      } else {
+        // Create new project
+        const { data, error } = await supabase
+          .from('projects')
+          .insert({
+            user_id: user.id,
+            title: title.trim(),
+            description: description.trim() || null,
+            icon: selectedIcon.name,
+            color: selectedIcon.color,
+          })
+          .select()
+          .single();
+
+        if (error) throw error;
+
+        toast({
+          title: "Project created",
+          description: `"${title}" has been created successfully.`,
+        });
+
+        onProjectCreated?.();
+        
+        // Navigate to the new project page
+        navigate(`/project/${data.id}`);
+      }
 
       // Reset form
       setTitle('');
@@ -78,24 +127,15 @@ export function ProjectModal({ children, onProjectCreated }: ProjectModalProps) 
       setSelectedIcon(iconOptions[0]);
       setIsOpen(false);
       
-      // Notify parent
-      onProjectCreated?.();
-      
     } catch (error) {
-      console.error('Error creating project:', error);
+      console.error('Error with project:', error);
       toast({
         title: "Error",
-        description: "Failed to create project. Please try again.",
+        description: `Failed to ${isEditing ? 'update' : 'create'} project. Please try again.`,
         variant: "destructive",
       });
     } finally {
-      setIsCreating(false);
-    }
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      handleCreateProject();
+      setIsSubmitting(false);
     }
   };
 
@@ -104,36 +144,27 @@ export function ProjectModal({ children, onProjectCreated }: ProjectModalProps) 
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create New Project</DialogTitle>
+      <DialogContent className="sm:max-w-[500px] bg-background">
+        <DialogHeader className="text-center pb-2">
+          <DialogTitle className="text-xl font-normal">
+            {isEditing ? 'Edit Project' : 'Project name'}
+          </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        
+        <div className="space-y-6">
+          {/* Project Name Input */}
           <div className="space-y-2">
-            <Label htmlFor="title">Project Name</Label>
             <Input
-              id="title"
-              placeholder="Enter project name..."
+              placeholder="Copenhagen Trip"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              onKeyDown={handleKeyDown}
+              className="text-center text-lg font-medium border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Description (optional)</Label>
-            <Textarea
-              id="description"
-              placeholder="Describe your project..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[80px]"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Icon & Color</Label>
-            <div className="grid grid-cols-5 gap-2">
+          {/* Icon Selection */}
+          <div className="space-y-4">
+            <div className="flex justify-center gap-2">
               {iconOptions.map((option) => {
                 const IconComponent = option.icon;
                 const isSelected = selectedIcon.name === option.name;
@@ -141,35 +172,51 @@ export function ProjectModal({ children, onProjectCreated }: ProjectModalProps) 
                   <button
                     key={option.name}
                     onClick={() => setSelectedIcon(option)}
-                    className={`p-3 rounded-lg border-2 transition-colors ${
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                       isSelected 
-                        ? 'border-primary bg-primary/10' 
-                        : 'border-border hover:border-border/80 hover:bg-accent/50'
+                        ? 'bg-green-500 text-white' 
+                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
                     }`}
                   >
-                    <IconComponent 
-                      className="h-5 w-5 mx-auto" 
-                      style={{ color: option.color }}
-                    />
+                    <IconComponent className="h-4 w-4" />
+                    {option.label}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          <div className="flex justify-end space-x-2 pt-4">
+          {/* Description */}
+          <div className="text-center space-y-3">
+            <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+              <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
+                <Settings className="h-3 w-3 mt-0.5 flex-shrink-0" />
+                <span>
+                  Projects keep chats, files, and custom instructions in one place.
+                  Use them for ongoing work, or just to keep things tidy.
+                </span>
+              </div>
+            </div>
+            
+            <Textarea
+              placeholder="Add a description (optional)"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="min-h-[80px] resize-none text-center"
+            />
+          </div>
+
+          {/* Create Button */}
+          <div className="flex justify-center pt-4">
             <Button 
-              variant="outline" 
-              onClick={() => setIsOpen(false)}
-              disabled={isCreating}
+              onClick={handleSubmit}
+              disabled={!title.trim() || isSubmitting}
+              className="px-8 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
             >
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleCreateProject}
-              disabled={!title.trim() || isCreating}
-            >
-              {isCreating ? 'Creating...' : 'Create Project'}
+              {isSubmitting 
+                ? (isEditing ? 'Updating...' : 'Creating...') 
+                : (isEditing ? 'Update project' : 'Create project')
+              }
             </Button>
           </div>
         </div>

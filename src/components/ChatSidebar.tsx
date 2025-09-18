@@ -425,20 +425,17 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                         <SidebarMenuItem>
                           <div 
                             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground cursor-pointer transition-colors"
-                            onClick={(e) => {
-                              if (e.detail === 1) {
-                                // Single click - expand/collapse
-                                toggleProjectExpanded(project.id);
-                              } else if (e.detail === 2) {
-                                // Double click - navigate to project
-                                navigate(`/${project.title.toLowerCase().replace(/\s+/g, '-')}`);
-                              }
-                            }}
+                            onClick={() => navigate(`/project/${project.id}`)}
+                            onMouseEnter={() => setExpandedProjects(prev => new Set(prev).add(project.id))}
+                            onMouseLeave={() => setExpandedProjects(prev => {
+                              const newSet = new Set(prev);
+                              newSet.delete(project.id);
+                              return newSet;
+                            })}
                           >
-                            <div className={`w-2 h-2 rounded-full`} style={{ backgroundColor: project.color }} />
                             <IconComponent className="h-4 w-4 text-sidebar-foreground" />
                             <span className="text-sm font-medium flex-1 truncate">{project.title}</span>
-                            {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                            
                           </div>
                         </SidebarMenuItem>
                         

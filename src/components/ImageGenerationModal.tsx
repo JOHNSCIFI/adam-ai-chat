@@ -135,8 +135,7 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
         throw new Error('Failed to generate image');
       }
 
-      // Close modal and navigate to the new chat
-      onClose();
+      // Navigate to the new chat
       navigate(`/chat/${newChat.id}`);
 
       toast({
