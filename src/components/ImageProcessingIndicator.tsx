@@ -20,14 +20,7 @@ export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> =
 
   useEffect(() => {
     const stageInterval = setInterval(() => {
-      setStage(prev => {
-        const next = (prev + 1) % stages.length;
-        if (next === 0 && onComplete) {
-          // Completed a full cycle
-          setTimeout(onComplete, 1000);
-        }
-        return next;
-      });
+      setStage(prev => (prev + 1) % stages.length);
     }, 2000);
 
     const dotsInterval = setInterval(() => {
@@ -41,7 +34,7 @@ export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> =
       clearInterval(stageInterval);
       clearInterval(dotsInterval);
     };
-  }, [onComplete]);
+  }, []);
 
   return (
     <div className="flex flex-col gap-3 p-4 rounded-lg bg-muted/50 border">

@@ -1414,7 +1414,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   <div className="flex flex-col items-start max-w-[80%]">
                     <ImageProcessingIndicator 
                       prompt={currentImagePrompt}
-                      onComplete={() => setCurrentImagePrompt(null)}
                     />
                   </div>
                 </div>

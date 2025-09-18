@@ -86,7 +86,18 @@ All colors MUST be HSL.
     --chat-ai-bg: 0 0% 8%; /* AI message background */
     --chat-input-bg: 0 0% 12%; /* Input field */
     --chat-hover: 0 0% 15%; /* Hover states */
-    --user-message-bg: 0 0% 18%; /* Default dark user message bg */
+    --user-message-bg: 0 0% 19%; /* #303030 - Consistent dark user message bg */
+  }
+
+  /* Dark theme user message background override for all accent colors */
+  .dark.accent-blue,
+  .dark.accent-indigo,
+  .dark.accent-purple,
+  .dark.accent-green,
+  .dark.accent-orange,
+  .dark.accent-red,
+  .dark.accent-gray {
+    --user-message-bg: 0 0% 19%; /* #303030 - Consistent dark user message bg */
   }
 
   /* Accent color variants - comprehensive theming */
