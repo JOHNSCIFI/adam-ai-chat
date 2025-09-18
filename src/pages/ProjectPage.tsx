@@ -103,7 +103,7 @@ export default function ProjectPage() {
       transform: 'translateX(-50%)',
       top: '200px',
       width: '100%',
-      maxWidth: '48rem'
+      maxWidth: '32rem'
     };
   };
 
