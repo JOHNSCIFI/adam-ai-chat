@@ -330,37 +330,38 @@ export default function ProjectPage() {
     <div className="flex h-screen bg-background overflow-hidden w-full">
       <div className="flex-1 flex flex-col overflow-hidden">
         <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="min-h-screen flex flex-col justify-center items-center px-4" style={getContainerStyle()}>
-            <div className="w-full max-w-2xl">
-              {/* Header */}
-              <div className="flex flex-col items-center justify-center mb-8">
-                <div 
-                  className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => setIsEditingProject(true)}
-                >
-                  {(() => {
-                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                    return (
-                      <div 
-                        className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                        style={{ backgroundColor: project.color }}
-                      >
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>
-                    );
-                  })()}
-                  <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+          <div className="min-h-screen flex flex-col justify-center px-4 py-4" style={getContainerStyle()}>
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                {/* Header */}
+                <div className="flex flex-col items-center justify-center mb-8">
+                  <div 
+                    className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setIsEditingProject(true)}
+                  >
+                    {(() => {
+                      const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                      return (
+                        <div 
+                          className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                          style={{ backgroundColor: project.color }}
+                        >
+                          <IconComponent className="w-6 h-6 text-white" />
+                        </div>
+                      );
+                    })()}
+                    <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+                  </div>
                 </div>
-              </div>
 
-              {/* Chat List */}
-              {chats.length > 0 && (
-                <div className="space-y-3 mb-8 w-full">
-                  {chats.map((chat) => (
-                    <div
-                      key={chat.id}
-                      className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group w-full"
-                    >
+                {/* Chat List */}
+                {chats.length > 0 && (
+                  <div className="space-y-3 mb-8 w-full">
+                    {chats.map((chat) => (
+                      <div
+                        key={chat.id}
+                        className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group w-full"
+                      >
                       <div 
                         className="flex-1 cursor-pointer"
                         onClick={() => navigate(`/chat/${chat.id}`)}
@@ -424,6 +425,7 @@ export default function ProjectPage() {
                   ))}
                 </div>
               )}
+              </div>
             </div>
           </div>
         </div>
