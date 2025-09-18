@@ -12,7 +12,7 @@ import AuthPage from '@/pages/AuthPage';
 import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
-import ImageGeneration from '@/pages/ImageGeneration';
+
 import ProjectPage from '@/pages/ProjectPage';
 import Profile from '@/pages/Profile';
 import Settings from '@/pages/Settings';
@@ -42,13 +42,6 @@ function App() {
                   <ProtectedRoute>
                     <MainLayout>
                       <Chat />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/image/:sessionId" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <ImageGeneration />
                     </MainLayout>
                   </ProtectedRoute>
                 } />

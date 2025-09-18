@@ -52,6 +52,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
+import { ImageGenerationModal } from '@/components/ImageGenerationModal';
 import SettingsModal from './SettingsModal';
 
 interface Chat {
@@ -62,13 +63,6 @@ interface Chat {
   project_id?: string;
 }
 
-interface ImageSession {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
-  project_id?: string;
-}
 
 interface Project {
   id: string;
@@ -78,7 +72,6 @@ interface Project {
   description?: string;
   created_at: string;
   chats?: Chat[];
-  imageSessions?: ImageSession[];
 }
 
 const iconMap = {
@@ -100,12 +93,12 @@ interface ChatSidebarProps {
 
 export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [chats, setChats] = useState<Chat[]>([]);
-  const [imageSessions, setImageSessions] = useState<ImageSession[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [expandedProjects, setExpandedProjects] = useState<Set<string>>(new Set());
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [showSettings, setShowSettings] = useState(false);
+  const [showImageGeneration, setShowImageGeneration] = useState(false);
   const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
   
   const { user, signOut, userProfile } = useAuth();
@@ -138,26 +131,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const fetchImageSessions = async () => {
-    if (!user) return;
-    
-    try {
-      const { data: sessionsData, error } = await supabase
-        .from('image_sessions')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('updated_at', { ascending: false });
-
-      if (error) {
-        console.error('Error fetching image sessions:', error);
-        return;
-      }
-
-      setImageSessions(sessionsData || []);
-    } catch (error) {
-      console.error('Error in fetchImageSessions:', error);
-    }
-  };
 
   const fetchProjects = async () => {
     if (!user) return;
@@ -167,8 +140,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         .from('projects')
         .select(`
           *,
-          chats:chats!chats_project_id_fkey(id, title, created_at, updated_at),
-          imageSessions:image_sessions!image_sessions_project_id_fkey(id, title, created_at, updated_at)
+          chats:chats!chats_project_id_fkey(id, title, created_at, updated_at)
         `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -188,7 +160,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   useEffect(() => {
     if (user) {
       fetchChats();
-      fetchImageSessions();
       fetchProjects();
     }
   }, [user]);
@@ -227,38 +198,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleNewImageSession = async () => {
-    if (!user) return;
-
-    try {
-      const { data: newSession, error } = await supabase
-        .from('image_sessions')
-        .insert({
-          user_id: user.id,
-          title: 'New Image Session'
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating image session:', error);
-        toast({
-          title: "Error creating image session",
-          description: error.message,
-          variant: "destructive",
-        });
-        return;
-      }
-
-      navigate(`/image/${newSession.id}`);
-    } catch (error) {
-      console.error('Error in handleNewImageSession:', error);
-      toast({
-        title: "Error creating image session",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleImageGeneration = () => {
+    setShowImageGeneration(true);
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -296,40 +237,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleDeleteImageSession = async (sessionId: string) => {
-    try {
-      const { error } = await supabase
-        .from('image_sessions')
-        .delete()
-        .eq('id', sessionId);
-
-      if (error) {
-        console.error('Error deleting image session:', error);
-        toast({
-          title: "Error deleting image session",
-          description: error.message,
-          variant: "destructive",
-        });
-      } else {
-        setImageSessions(prev => prev.filter(session => session.id !== sessionId));
-        toast({
-          title: "Image session deleted",
-          description: "Image session has been deleted successfully.",
-        });
-        
-        if (window.location.pathname === `/image/${sessionId}`) {
-          navigate('/');
-        }
-      }
-    } catch (error) {
-      console.error('Error in handleDeleteImageSession:', error);
-      toast({
-        title: "Error deleting image session",
-        description: "Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
 
   const toggleProjectExpanded = (projectId: string) => {
     const newExpanded = new Set(expandedProjects);
@@ -358,9 +265,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  // Get chats and image sessions that are not in any project
+  // Get chats that are not in any project
   const unorganizedChats = chats.filter(chat => !chat.project_id);
-  const unorganizedImageSessions = imageSessions.filter(session => !session.project_id);
 
   return (
     <>
@@ -385,7 +291,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
               <Button 
-                onClick={handleNewImageSession}
+                onClick={handleImageGeneration}
                 className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                 size="sm"
                 variant="ghost"
@@ -416,7 +322,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <span className="font-medium">New Chat</span>
               </Button>
               <Button 
-                onClick={handleNewImageSession}
+                onClick={handleImageGeneration}
                 className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                 size="sm"
                 variant="ghost"
@@ -504,42 +410,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                               </div>
                             ))}
                             
-                            {/* Project Image Sessions */}
-                            {project.imageSessions?.map((session) => (
-                              <div key={session.id} className="group/session relative">
-                                <NavLink
-                                  to={`/image/${session.id}`}
-                                  className={({ isActive }) =>
-                                    `flex items-center gap-2 px-3 py-1.5 rounded-lg transition-colors text-sm ${
-                                      isActive
-                                        ? 'bg-sidebar-accent text-sidebar-foreground'
-                                        : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                                    }`
-                                  }
-                                >
-                                  <ImageIcon className="h-3 w-3 flex-shrink-0" />
-                                  <span className="flex-1 truncate">{session.title}</span>
-                                </NavLink>
-                                <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 transition-opacity">
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                                        <Edit2 className="h-3 w-3" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent>
-                                      <DropdownMenuItem
-                                        onClick={() => handleDeleteImageSession(session.id)}
-                                        className="text-destructive"
-                                      >
-                                        <Trash2 className="mr-2 h-3 w-3" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                </div>
-                              </div>
-                            ))}
                           </div>
                         )}
                       </div>
@@ -602,53 +472,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             </SidebarGroup>
           )}
 
-          {/* Unorganized Image Sessions */}
-          {!collapsed && unorganizedImageSessions.length > 0 && (
-            <SidebarGroup>
-              <SidebarGroupLabel className="px-3 text-xs text-sidebar-foreground/60 font-medium">
-                Recent Image Sessions
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {unorganizedImageSessions.slice(0, 20).map((session) => (
-                    <SidebarMenuItem key={session.id} className="group/session relative">
-                      <NavLink
-                        to={`/image/${session.id}`}
-                        className={({ isActive }) =>
-                          `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                            isActive
-                              ? 'bg-sidebar-accent text-sidebar-foreground'
-                              : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                          }`
-                        }
-                      >
-                        <ImageIcon className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate text-sm">{session.title}</span>
-                      </NavLink>
-                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/session:opacity-100 transition-opacity">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
-                              <Edit2 className="h-3 w-3" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent>
-                            <DropdownMenuItem
-                              onClick={() => handleDeleteImageSession(session.id)}
-                              className="text-destructive"
-                            >
-                              <Trash2 className="mr-2 h-3 w-3" />
-                              Delete
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          )}
         </SidebarContent>
 
         <SidebarFooter>
@@ -725,6 +548,12 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       <SettingsModal 
         open={showSettings} 
         onOpenChange={setShowSettings} 
+      />
+
+      {/* Image Generation Modal */}
+      <ImageGenerationModal 
+        isOpen={showImageGeneration}
+        onClose={() => setShowImageGeneration(false)}
       />
     </>
   );
