@@ -137,60 +137,66 @@ export function ProjectModal({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px] bg-background">
-        <DialogHeader className="text-center pb-2">
-          <DialogTitle className="text-xl font-normal">
-            {isEditing ? 'Edit Project' : 'Project name'}
+      <DialogContent className="sm:max-w-[600px] max-w-[90vw] bg-background border shadow-lg">
+        <DialogHeader className="text-center pb-6">
+          <DialogTitle className="text-2xl font-semibold text-foreground">
+            {isEditing ? 'Edit Project' : 'Create New Project'}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-6">
+        <div className="space-y-8 px-2">
           {/* Project Name Input */}
-          <div className="space-y-2">
-            <Input
-              placeholder="Enter project name"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              className="text-center text-lg font-medium border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
-            />
+          <div className="flex justify-center">
+            <div className="w-full max-w-md">
+              <Input
+                placeholder="Enter project name"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                className="text-center text-lg font-medium border border-border rounded-lg px-4 py-3 bg-background hover:border-primary/50 focus:border-primary transition-colors"
+              />
+            </div>
           </div>
 
           {/* Icon Selection */}
           <div className="space-y-4">
+            <h3 className="text-center text-sm font-medium text-muted-foreground">Choose an icon</h3>
             <div className="flex justify-center">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-full px-2">
-                {iconOptions.map((option) => {
-                  const IconComponent = option.icon;
-                  const isSelected = selectedIcon.name === option.name;
-                  return (
-                    <button
-                      key={option.name}
-                      onClick={() => setSelectedIcon(option)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all whitespace-nowrap flex-shrink-0 ${
-                        isSelected 
-                          ? 'bg-green-500 text-white' 
-                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                      }`}
-                    >
-                      <IconComponent className="h-4 w-4" />
-                      {option.label}
-                    </button>
-                  );
-                })}
+              <div className="w-full max-w-lg overflow-hidden">
+                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
+                  {iconOptions.map((option) => {
+                    const IconComponent = option.icon;
+                    const isSelected = selectedIcon.name === option.name;
+                    return (
+                      <button
+                        key={option.name}
+                        onClick={() => setSelectedIcon(option)}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-w-fit ${
+                          isSelected 
+                            ? 'bg-primary text-primary-foreground shadow-md scale-105' 
+                            : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border hover:border-primary/30'
+                        }`}
+                      >
+                        <IconComponent className="h-4 w-4" />
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             </div>
           </div>
 
           {/* Create Button */}
-          <div className="flex justify-center pt-4">
+          <div className="flex justify-center pt-6 pb-2">
             <Button 
               onClick={handleSubmit}
               disabled={!title.trim() || isSubmitting}
-              className="px-8 py-2 rounded-lg bg-black dark:bg-white text-white dark:text-black hover:bg-gray-800 dark:hover:bg-gray-200"
+              size="lg"
+              className="px-12 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
             >
               {isSubmitting 
                 ? (isEditing ? 'Updating...' : 'Creating...') 
-                : (isEditing ? 'Update project' : 'Create project')
+                : (isEditing ? 'Update Project' : 'Create Project')
               }
             </Button>
           </div>
