@@ -115,23 +115,36 @@ serve(async (req) => {
 
     // Add file analysis and image context if provided
     let userMessage = message;
-    if (file_analysis) {
-      userMessage = file_analysis; // If no user text, just use extracted file content
-      if (message.trim()) {
-        // If user provided text with file, combine them
+    
+    // Handle image context specially
+    if (image_context && image_context.length > 0) {
+      const imageDescriptions = image_context.map(img => img.aiDescription).join('\n\n');
+      
+      if (!message.trim()) {
+        // Image only - ask what they'd like to know
+        userMessage = `I've uploaded an image. Here's what I can see: ${imageDescriptions}`;
+      } else {
+        // Text with image - add image context
+        userMessage = `${message}\n\n[IMAGE CONTEXT]: ${imageDescriptions}`;
+      }
+    } else if (file_analysis && file_analysis.trim()) {
+      // Handle other file types
+      if (!message.trim()) {
+        userMessage = file_analysis;
+      } else {
         userMessage = `${message}\n\nBased on the file content:\n${file_analysis}`;
       }
     }
 
-    // Add image context for AI awareness
-    if (image_context && image_context.length > 0) {
-      const imageContext = image_context.map(img => 
-        `Previously analyzed image "${img.fileName}": ${img.aiDescription}`
-      ).join('\n\n');
-      
-      userMessage += `\n\n[AVAILABLE IMAGES FOR REFERENCE/EDITING]:\n${imageContext}`;
+    // Add current message with special handling for image-only messages
+    if (image_context && image_context.length > 0 && !message.trim()) {
+      // Image-only message - add system context for better response
+      conversationHistory.push({
+        role: 'system',
+        content: 'The user has just uploaded an image without any text. Respond with curiosity and engagement - ask what they would like to know about the image, or provide some interesting observations about what you can see. Be conversational and helpful.'
+      });
     }
-
+    
     conversationHistory.push({
       role: 'user',
       content: userMessage

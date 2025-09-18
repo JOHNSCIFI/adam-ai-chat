@@ -253,38 +253,91 @@ export default function Chat() {
         }
       }
 
-      // Create clean user message (show text + file, no analysis mixed in)
+      // Create clean user message (show text + file, but save images to storage for persistence)
       const newUserMessage: Message = {
         id: `temp-${Date.now()}`,
         content: userMessage, // Keep user message clean
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: tempFileAttachments.map(file => ({
-          ...file,
-          url: file.url // Ensure URL is preserved for display
-        }))
+        file_attachments: [] // Will be populated after saving to storage
       };
+
+      // Save image files to Supabase storage for persistence
+      const persistentFileAttachments: FileAttachment[] = [];
+      
+      for (const file of tempFileAttachments) {
+        if (isImageFile(file.type)) {
+          try {
+            // Convert file to base64 and save to storage
+            const response = await fetch(file.url);
+            const blob = await response.blob();
+            const reader = new FileReader();
+            
+            const base64 = await new Promise<string>((resolve) => {
+              reader.onload = () => {
+                const result = reader.result as string;
+                resolve(result.split(',')[1]);
+              };
+              reader.readAsDataURL(blob);
+            });
+            
+            // Save to Supabase storage
+            const saveResponse = await supabase.functions.invoke('save-image', {
+              body: {
+                imageBase64: base64,
+                fileName: file.name,
+                chatId: chatId,
+                userId: user?.id,
+                imageType: 'uploaded'
+              }
+            });
+            
+            if (saveResponse.data?.success) {
+              persistentFileAttachments.push({
+                ...file,
+                url: saveResponse.data.url // Use persistent URL from storage
+              });
+            } else {
+              // Fallback to blob URL if storage fails
+              persistentFileAttachments.push(file);
+            }
+          } catch (error) {
+            console.error('Error saving image to storage:', error);
+            // Fallback to blob URL if storage fails
+            persistentFileAttachments.push(file);
+          }
+        } else {
+          // Non-image files keep blob URL for now
+          persistentFileAttachments.push(file);
+        }
+      }
+      
+      // Update message with persistent file attachments
+      newUserMessage.file_attachments = persistentFileAttachments;
 
       // Add to UI immediately
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-      // Prepare message for AI (include extracted file content)
-      const aiMessage = extractedFileContent 
-        ? `${userMessage}${extractedFileContent}` 
-        : userMessage;
+      // Prepare message for AI (include extracted file content only if no image context)
+      let aiMessage = userMessage;
+      if (!imageAnalysisResults.size && extractedFileContent) {
+        aiMessage = extractedFileContent 
+          ? `${userMessage}${extractedFileContent}` 
+          : userMessage;
+      }
 
       // Start embedding generation in background (for AI message content)
       const userEmbeddingPromise = generateEmbeddingAsync(aiMessage);
       
-      // Add user message to database (store clean message + file content for AI)
+      // Add user message to database (store original message for UI, analysis for AI context)
       const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
-          content: aiMessage, // Store message + extracted file content for AI context
+          content: userMessage, // Store clean user message for UI
           role: 'user',
-          file_attachments: [] as any, // Don't store file URLs, just content
+          file_attachments: newUserMessage.file_attachments as any, // Store persistent file attachments
           embedding: null // Will be updated by background process
         })
         .select()
