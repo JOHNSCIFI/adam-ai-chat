@@ -93,13 +93,23 @@ export default function Chat() {
             filter: `chat_id=eq.${chatId}`
           }, 
           (payload) => {
-            console.log('New message received:', payload);
+            console.log('New message received via realtime:', payload);
             const newMessage = payload.new as Message;
             setMessages(prev => {
-              // Check if message already exists to prevent duplicates
-              if (prev.find(msg => msg.id === newMessage.id)) {
+              // Check if message already exists (by real ID or temp ID) to prevent duplicates
+              const existsById = prev.find(msg => msg.id === newMessage.id);
+              const existsByContent = prev.find(msg => 
+                msg.content === newMessage.content && 
+                msg.role === newMessage.role &&
+                Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
+              );
+              
+              if (existsById || existsByContent) {
+                console.log('Message already exists, skipping realtime update');
                 return prev;
               }
+              
+              console.log('Adding new message from realtime');
               return [...prev, newMessage];
             });
             scrollToBottom();
@@ -194,15 +204,45 @@ export default function Chat() {
           assistantResponse = aiResponse.content || "I apologize, but I'm having trouble connecting right now. Please try again in a moment.";
         }
         
+        // Create assistant message object
+        const newAssistantMessage: Message = {
+          id: `temp-ai-${Date.now()}`,
+          content: assistantResponse,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: fileAttachments
+        };
+
+        // Immediately add assistant response to UI
+        setMessages(prev => [...prev, newAssistantMessage]);
+        scrollToBottom();
+
         // Add assistant response to database
-        await supabase
+        const { data: insertedAiMessage, error: aiInsertError } = await supabase
           .from('messages')
           .insert([{
             chat_id: chatId,
             content: assistantResponse,
             role: 'assistant',
             file_attachments: fileAttachments
-          }]);
+          }])
+          .select()
+          .single();
+
+        if (aiInsertError) {
+          console.error('Error inserting AI message:', aiInsertError);
+        } else if (insertedAiMessage) {
+          // Update the message with the real ID from database
+          setMessages(prev => prev.map(msg => 
+            msg.id === newAssistantMessage.id 
+              ? { 
+                  ...insertedAiMessage, 
+                  file_attachments: fileAttachments,
+                  role: insertedAiMessage.role as 'user' | 'assistant'
+                } as Message
+              : msg
+          ));
+        }
         
         console.log(`AI response completed for message: ${userMessageId}`);
       } else {
@@ -321,17 +361,45 @@ export default function Chat() {
         });
       }
 
+      // Create user message object
+      const newUserMessage: Message = {
+        id: `temp-${Date.now()}`, // Temporary ID
+        content: userMessage,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        file_attachments: uploadedFiles
+      };
+
+      // Immediately add user message to UI
+      setMessages(prev => [...prev, newUserMessage]);
+      scrollToBottom();
+
       // Add user message to database with file attachments
-      const { error: userError } = await supabase
+      const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
           content: userMessage,
           role: 'user',
           file_attachments: uploadedFiles as any // Cast to Json type for database
-        });
+        })
+        .select()
+        .single();
 
       if (userError) throw userError;
+
+        // Update the message with the real ID from database
+        if (insertedMessage) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === newUserMessage.id 
+              ? { 
+                  ...insertedMessage, 
+                  file_attachments: uploadedFiles,
+                  role: insertedMessage.role as 'user' | 'assistant'
+                } as Message
+              : msg
+          ));
+        }
 
       // Note: AI response will be automatically triggered by the useEffect hook
       // that detects new user messages - no need to call webhook here
