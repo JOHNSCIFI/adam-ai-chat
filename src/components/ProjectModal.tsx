@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -51,7 +50,6 @@ export function ProjectModal({
 }: ProjectModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [title, setTitle] = useState(project?.title || '');
-  const [description, setDescription] = useState(project?.description || '');
   const [selectedIcon, setSelectedIcon] = useState(
     iconOptions.find(opt => opt.name === project?.icon) || iconOptions[0]
   );
@@ -64,7 +62,6 @@ export function ProjectModal({
   React.useEffect(() => {
     if (project) {
       setTitle(project.title);
-      setDescription(project.description || '');
       setSelectedIcon(iconOptions.find(opt => opt.name === project.icon) || iconOptions[0]);
     }
   }, [project]);
@@ -80,7 +77,6 @@ export function ProjectModal({
           .from('projects')
           .update({
             title: title.trim(),
-            description: description.trim() || null,
             icon: selectedIcon.name,
             color: selectedIcon.color,
           })
@@ -101,7 +97,6 @@ export function ProjectModal({
           .insert({
             user_id: user.id,
             title: title.trim(),
-            description: description.trim() || null,
             icon: selectedIcon.name,
             color: selectedIcon.color,
           })
@@ -123,7 +118,6 @@ export function ProjectModal({
 
       // Reset form
       setTitle('');
-      setDescription('');
       setSelectedIcon(iconOptions[0]);
       setIsOpen(false);
       
@@ -186,8 +180,8 @@ export function ProjectModal({
             </div>
           </div>
 
-          {/* Description */}
-          <div className="text-center space-y-3">
+          {/* Info Box */}
+          <div className="text-center">
             <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
               <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
                 <Settings className="h-3 w-3 mt-0.5 flex-shrink-0" />
@@ -197,13 +191,6 @@ export function ProjectModal({
                 </span>
               </div>
             </div>
-            
-            <Textarea
-              placeholder="Add a description (optional)"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="min-h-[80px] resize-none text-center"
-            />
           </div>
 
           {/* Create Button */}
