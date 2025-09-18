@@ -15,8 +15,7 @@ import {
   Target, 
   Heart,
   Star,
-  Rocket,
-  Settings
+  Rocket
 } from 'lucide-react';
 
 const iconOptions = [
@@ -149,7 +148,7 @@ export function ProjectModal({
           {/* Project Name Input */}
           <div className="space-y-2">
             <Input
-              placeholder="Copenhagen Trip"
+              placeholder="Enter project name"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               className="text-center text-lg font-medium border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0"
@@ -158,37 +157,26 @@ export function ProjectModal({
 
           {/* Icon Selection */}
           <div className="space-y-4">
-            <div className="flex justify-center gap-2">
-              {iconOptions.map((option) => {
-                const IconComponent = option.icon;
-                const isSelected = selectedIcon.name === option.name;
-                return (
-                  <button
-                    key={option.name}
-                    onClick={() => setSelectedIcon(option)}
-                    className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
-                      isSelected 
-                        ? 'bg-green-500 text-white' 
-                        : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
-                    }`}
-                  >
-                    <IconComponent className="h-4 w-4" />
-                    {option.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Info Box */}
-          <div className="text-center">
-            <div className="p-4 rounded-lg bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-              <div className="flex items-start gap-2 text-xs text-gray-600 dark:text-gray-400">
-                <Settings className="h-3 w-3 mt-0.5 flex-shrink-0" />
-                <span>
-                  Projects keep chats, files, and custom instructions in one place.
-                  Use them for ongoing work, or just to keep things tidy.
-                </span>
+            <div className="flex justify-center">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide max-w-full px-2">
+                {iconOptions.map((option) => {
+                  const IconComponent = option.icon;
+                  const isSelected = selectedIcon.name === option.name;
+                  return (
+                    <button
+                      key={option.name}
+                      onClick={() => setSelectedIcon(option)}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all whitespace-nowrap flex-shrink-0 ${
+                        isSelected 
+                          ? 'bg-green-500 text-white' 
+                          : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'
+                      }`}
+                    >
+                      <IconComponent className="h-4 w-4" />
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>

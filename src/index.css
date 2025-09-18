@@ -218,3 +218,13 @@ All colors MUST be HSL.
     outline-offset: 2px;
   }
 }
+
+/* Scrollbar utilities */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}

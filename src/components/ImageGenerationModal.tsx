@@ -182,22 +182,58 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
 
   const downloadImage = async (imageUrl: string, prompt: string) => {
     try {
-      const response = await fetch(imageUrl);
+      const response = await fetch(imageUrl, {
+        method: 'GET',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch image');
+      }
+      
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `generated-image-${prompt.substring(0, 20)}.jpg`;
+      a.download = `image-${Date.now()}.png`;
+      a.style.display = 'none';
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-    } catch (error) {
+      
+      // Cleanup
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      }, 100);
+      
       toast({
-        title: "Error",
-        description: "Failed to download image",
-        variant: "destructive",
+        title: "Success",
+        description: "Image downloaded successfully",
       });
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open image in new tab
+      try {
+        const newWindow = window.open(imageUrl, '_blank');
+        if (newWindow) {
+          toast({
+            title: "Info", 
+            description: "Image opened in new tab - right-click to save",
+          });
+        } else {
+          toast({
+            title: "Error",
+            description: "Please allow popups to download images",
+            variant: "destructive",
+          });
+        }
+      } catch (fallbackError) {
+        toast({
+          title: "Error",
+          description: "Failed to download image. Please try right-clicking the image to save.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
