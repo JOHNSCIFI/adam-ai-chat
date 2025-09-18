@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,6 +17,14 @@ interface Chat {
   project_id?: string;
 }
 
+interface Message {
+  id: string;
+  content: string;
+  role: string;
+  created_at: string;
+  chat_id: string;
+}
+
 interface Project {
   id: string;
   title: string;
@@ -27,7 +35,7 @@ interface Project {
 }
 
 export default function ProjectPage() {
-  const { projectId } = useParams();
+  const { projectName } = useParams();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -37,6 +45,7 @@ export default function ProjectPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [newPrompt, setNewPrompt] = useState('');
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
@@ -56,34 +65,53 @@ export default function ProjectPage() {
   };
 
   useEffect(() => {
-    if (projectId && user) {
+    if (projectName && user) {
       fetchProject();
       fetchProjectChats();
     }
-  }, [projectId, user]);
+  }, [projectName, user]);
 
   const fetchProject = async () => {
-    if (!projectId || !user) return;
+    if (!projectName || !user) return;
 
+    const normalizedProjectName = projectName.toLowerCase().replace(/\s+/g, '-');
+    
     const { data, error } = await supabase
       .from('projects')
       .select('*')
-      .eq('id', projectId)
       .eq('user_id', user.id)
-      .single();
+      .ilike('title', `%${projectName.replace(/-/g, ' ')}%`)
+      .maybeSingle();
 
     if (data) {
       setProject(data);
+    } else if (error) {
+      console.error('Error fetching project:', error);
+      toast({
+        title: "Project not found",
+        description: "The requested project could not be found.",
+        variant: "destructive",
+      });
     }
   };
 
   const fetchProjectChats = async () => {
-    if (!projectId || !user) return;
+    if (!projectName || !user) return;
+
+    // First get the project
+    const { data: projectData } = await supabase
+      .from('projects')
+      .select('id')
+      .eq('user_id', user.id)
+      .ilike('title', `%${projectName.replace(/-/g, ' ')}%`)
+      .maybeSingle();
+
+    if (!projectData) return;
 
     const { data, error } = await supabase
       .from('chats')
       .select('*')
-      .eq('project_id', projectId)
+      .eq('project_id', projectData.id)
       .eq('user_id', user.id)
       .order('updated_at', { ascending: false });
 
@@ -93,7 +121,7 @@ export default function ProjectPage() {
   };
 
   const createNewChat = async () => {
-    if (!user || !projectId) return;
+    if (!user || !project) return;
 
     try {
       const { data, error } = await supabase
@@ -101,7 +129,7 @@ export default function ProjectPage() {
         .insert({
           user_id: user.id,
           title: 'New Chat',
-          project_id: projectId
+          project_id: project.id
         })
         .select()
         .single();
@@ -119,7 +147,7 @@ export default function ProjectPage() {
   };
 
   const startChatFromPrompt = async () => {
-    if (!newPrompt.trim() || !user || !projectId) return;
+    if (!newPrompt.trim() || !user || !project) return;
 
     try {
       const { data, error } = await supabase
@@ -127,7 +155,7 @@ export default function ProjectPage() {
         .insert({
           user_id: user.id,
           title: newPrompt.length > 50 ? newPrompt.substring(0, 50) + '...' : newPrompt,
-          project_id: projectId
+          project_id: project.id
         })
         .select()
         .single();
@@ -154,8 +182,41 @@ export default function ProjectPage() {
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      startChatFromPrompt();
+    }
+  };
+
+  const getLastMessage = async (chatId: string): Promise<string> => {
+    const { data } = await supabase
+      .from('messages')
+      .select('content')
+      .eq('chat_id', chatId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    return data?.content?.substring(0, 60) + '...' || '';
+  };
+
   if (!project) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-screen bg-background">
+        <div className="flex-1 flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            <div style={getContainerStyle()} className="h-full flex items-center justify-center">
+              <div className="text-center space-y-4">
+                <h2 className="text-xl font-semibold text-foreground">Project not found</h2>
+                <p className="text-muted-foreground">The requested project could not be found.</p>
+                <Button onClick={() => navigate('/')}>Go Home</Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -181,6 +242,28 @@ export default function ProjectPage() {
               </div>
             </div>
 
+            {/* Input area - moved to top */}
+            <div className="border-b border-border/40 p-4">
+              <div className="relative">
+                <Textarea
+                  ref={textareaRef}
+                  placeholder={`Message ${project.title}...`}
+                  value={newPrompt}
+                  onChange={(e) => setNewPrompt(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  className="min-h-[60px] max-h-[200px] resize-none pr-12"
+                />
+                <Button 
+                  onClick={startChatFromPrompt}
+                  disabled={!newPrompt.trim()}
+                  size="sm"
+                  className="absolute bottom-2 right-2 h-8 w-8 p-0"
+                >
+                  <SendHorizontalIcon className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
             {/* Content */}
             <div className="flex-1 overflow-y-auto p-4">
               {chats.length === 0 ? (
@@ -192,13 +275,9 @@ export default function ProjectPage() {
                     <div className="space-y-2">
                       <h2 className="text-xl font-semibold text-foreground">Start your first chat</h2>
                       <p className="text-muted-foreground">
-                        Create a new conversation in your {project.title} project.
+                        Create a new conversation in your {project.title} project by typing a message above.
                       </p>
                     </div>
-                    <Button onClick={createNewChat} className="w-full">
-                      <Plus className="h-4 w-4 mr-2" />
-                      New chat in {project.title}
-                    </Button>
                   </div>
                 </div>
               ) : (
@@ -212,52 +291,37 @@ export default function ProjectPage() {
                   </div>
                   
                   <div className="space-y-3">
-                    {chats.map((chat) => (
-                      <div
-                        key={chat.id}
-                        onClick={() => navigate(`/chat/${chat.id}`)}
-                        className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-start gap-3">
-                          <MessageSquare className="h-5 w-5 text-muted-foreground mt-1" />
-                          <div className="flex-1 min-w-0">
-                            <h4 className="font-medium text-foreground truncate">{chat.title}</h4>
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(chat.updated_at).toLocaleDateString()} • Last activity
-                            </p>
+                    {chats.map((chat) => {
+                      const [lastMessage, setLastMessage] = useState('');
+                      
+                      useEffect(() => {
+                        getLastMessage(chat.id).then(setLastMessage);
+                      }, [chat.id]);
+
+                      return (
+                        <div
+                          key={chat.id}
+                          onClick={() => navigate(`/chat/${chat.id}`)}
+                          className="p-4 border border-border rounded-lg hover:bg-muted/50 cursor-pointer transition-colors"
+                        >
+                          <div className="flex items-start gap-3">
+                            <MessageSquare className="h-5 w-5 text-muted-foreground mt-1 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <h4 className="font-medium text-foreground truncate mb-1">{chat.title}</h4>
+                              {lastMessage && (
+                                <p className="text-sm text-muted-foreground truncate mb-1">{lastMessage}</p>
+                              )}
+                              <p className="text-xs text-muted-foreground">
+                                {new Date(chat.updated_at).toLocaleDateString()} • Last activity
+                              </p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Input area */}
-            <div className="border-t border-border/40 p-4">
-              <div className="relative">
-                <Textarea
-                  placeholder={`Message ${project.title}...`}
-                  value={newPrompt}
-                  onChange={(e) => setNewPrompt(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      startChatFromPrompt();
-                    }
-                  }}
-                  className="min-h-[60px] max-h-[200px] resize-none pr-12"
-                />
-                <Button 
-                  onClick={startChatFromPrompt}
-                  disabled={!newPrompt.trim()}
-                  size="sm"
-                  className="absolute bottom-2 right-2 h-8 w-8 p-0"
-                >
-                  <SendHorizontalIcon className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
           </div>
         </div>
