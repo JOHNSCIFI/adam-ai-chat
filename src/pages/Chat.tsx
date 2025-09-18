@@ -550,63 +550,61 @@ export default function Chat() {
             reader.readAsDataURL(file);
           });
 
-          // Call OpenAI image analysis
-          const response = await supabase.functions.invoke('analyze-image', {
+          // Call OpenAI image analysis in background
+          supabase.functions.invoke('analyze-image', {
             body: {
               imageBase64,
               fileName: file.name,
               chatId: chatId,
               userId: user?.id
             }
+          }).then((response) => {
+            if (response.data?.analysis) {
+              // Store the analysis result for future reference (background)
+              const analysisResult = {
+                id: `img-${Date.now()}`,
+                fileName: file.name,
+                url: URL.createObjectURL(file),
+                basicInfo: {
+                  width: 0,
+                  height: 0,
+                  size: file.size,
+                  format: file.type,
+                  aspectRatio: 1
+                },
+                visualAnalysis: {
+                  dominantColors: [],
+                  brightness: 0,
+                  contrast: 0,
+                  colorfulness: 0,
+                  composition: 'unknown',
+                  quality: 'unknown'
+                },
+                detectedElements: {
+                  hasText: false,
+                  textAreas: 0,
+                  hasFaces: false,
+                  faceCount: 0,
+                  hasObjects: false,
+                  objectTypes: []
+                },
+                aiDescription: response.data.analysis,
+                timestamp: new Date().toISOString()
+              };
+              
+              setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
+              console.log('OpenAI image analysis completed and saved');
+            }
+          }).catch(error => {
+            console.error('Background image analysis failed:', error);
           });
 
-          if (response.error) {
-            console.error('Image analysis error:', response.error);
-            return `[Image file: ${file.name} - OpenAI analysis failed, but image is available for editing and questions]`;
-          }
-
-          // Store the analysis result for future reference
-          const analysisResult = {
-            id: `img-${Date.now()}`,
-            fileName: file.name,
-            url: URL.createObjectURL(file),
-            basicInfo: {
-              width: 0,
-              height: 0,
-              size: file.size,
-              format: file.type,
-              aspectRatio: 1
-            },
-            visualAnalysis: {
-              dominantColors: [],
-              brightness: 0,
-              contrast: 0,
-              colorfulness: 0,
-              composition: 'unknown',
-              quality: 'unknown'
-            },
-            detectedElements: {
-              hasText: false,
-              textAreas: 0,
-              hasFaces: false,
-              faceCount: 0,
-              hasObjects: false,
-              objectTypes: []
-            },
-            aiDescription: response.data.analysis,
-            timestamp: new Date().toISOString()
-          };
-          
-          setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
-          
-          console.log('OpenAI image analysis completed');
-          
-          // Return the OpenAI analysis as content
-          return response.data.analysis;
+          // Return empty string - don't show analysis to user
+          return '';
           
         } catch (error) {
           console.error('Image analysis failed:', error);
-          return `[Image file: ${file.name} - Visual analysis failed, but image is available for editing and questions]`;
+          return '';
         }
         
       } else if (fileType.includes('pdf')) {
@@ -1176,7 +1174,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
-                            ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[hsl(var(--user-message-bg))] rounded-2xl' 
+                            ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' 
                             : 'text-black dark:text-white rounded-2xl bg-transparent border-none'
                         } px-3.5 py-2.5 relative break-words whitespace-pre-wrap`} style={{ 
                           padding: '10px 14px',
