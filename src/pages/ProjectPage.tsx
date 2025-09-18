@@ -340,7 +340,7 @@ export default function ProjectPage() {
         <div className="flex-1 overflow-auto pb-32">
           <div style={getContainerStyle()} className="min-h-screen py-8">
             {/* Header */}
-            <div className="text-center mb-8">
+            <div className="flex flex-col items-center justify-center mb-8">
               <div 
                 className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={() => setIsEditingProject(true)}
@@ -362,11 +362,11 @@ export default function ProjectPage() {
 
             {/* Chat List */}
             {chats.length > 0 && (
-              <div className="space-y-3 mb-8">
+              <div className="space-y-3 mb-8 flex flex-col items-center">
                 {chats.map((chat) => (
                   <div
                     key={chat.id}
-                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group"
+                    className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/20 transition-colors group w-full max-w-2xl"
                   >
                     <div 
                       className="flex-1 cursor-pointer"
