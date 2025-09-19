@@ -31,7 +31,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const currentSegmentChunksRef = useRef<Blob[]>([]);
   const { user } = useAuth();
 
-  // Continuous Voice Activity Detection
+  // Enhanced Voice Activity Detection for Speech
   const checkAudioLevel = useCallback(() => {
     if (!analyserRef.current || !isVoiceModeActive) return;
     
@@ -39,37 +39,53 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
     
-    // Calculate RMS (Root Mean Square) for volume level
+    // Calculate RMS for overall volume
     let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
       sum += dataArray[i] * dataArray[i];
     }
     const rms = Math.sqrt(sum / bufferLength);
-    const volume = rms / 255; // Normalize to 0-1
+    const volume = rms / 255;
     
-    const threshold = 0.02; // Increased threshold for better detection
+    // Enhanced speech detection - focus on human voice frequencies (300Hz-3400Hz)
+    // These correspond roughly to bins 6-170 at 24kHz sample rate with 2048 FFT size
+    let speechSum = 0;
+    const speechStart = Math.floor((300 / 12000) * bufferLength); // ~6
+    const speechEnd = Math.floor((3400 / 12000) * bufferLength); // ~170
     
-    console.log('🎵 Audio level:', volume.toFixed(4), 'threshold:', threshold, 'listening:', isListening, 'processing:', isProcessing);
+    for (let i = speechStart; i < speechEnd && i < bufferLength; i++) {
+      speechSum += dataArray[i] * dataArray[i];
+    }
+    const speechRms = Math.sqrt(speechSum / (speechEnd - speechStart));
+    const speechVolume = speechRms / 255;
     
-    if (volume > threshold) {
-      // Voice detected - clear silence timer and mark as listening
+    // Use lower threshold but focus on speech frequencies
+    const volumeThreshold = 0.008; // Much lower for sensitivity
+    const speechThreshold = 0.015; // Speech-specific threshold
+    
+    const isSpeechDetected = volume > volumeThreshold && speechVolume > speechThreshold;
+    
+    console.log('🎵 Audio - Total:', volume.toFixed(4), 'Speech:', speechVolume.toFixed(4), 'Detected:', isSpeechDetected, 'Listening:', isListening);
+    
+    if (isSpeechDetected) {
+      // Speech detected - clear silence timer and mark as listening
       if (!isListening) {
-        console.log('🗣️ Voice detected! Starting to listen...');
+        console.log('🗣️ Speech detected! Starting to listen...');
         setIsListening(true);
       }
       if (silenceTimerRef.current) {
-        console.log('🔇 Clearing silence timer - voice detected');
+        console.log('🔇 Clearing silence timer - speech detected');
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
     } else {
-      // Silence detected - start/continue timer if we were listening
+      // Silence detected - start timer if we were listening
       if (!silenceTimerRef.current && isListening && !isProcessing && !isPlaying) {
-        console.log('🔇 Starting 2-second silence timer... (listening:', isListening, 'processing:', isProcessing, 'playing:', isPlaying, ')');
+        console.log('🔇 Starting 1-second silence timer...');
         silenceTimerRef.current = setTimeout(() => {
-          console.log('🔇 2 seconds of silence detected - processing current segment');
+          console.log('🔇 1 second of silence detected - processing current segment');
           processCurrentSegment();
-        }, 2000); // 2 seconds of silence
+        }, 1000); // 1 second of silence
       }
     }
     
@@ -530,8 +546,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
         isVoiceModeActive ? 'ring-2 ring-primary ring-offset-2' : ''
       } ${
-        isListening && isVoiceModeActive ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse' : 'hover:scale-105'
-      } ${isProcessing || isPlaying ? 'animate-pulse' : ''}`}
+        isListening && isVoiceModeActive ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse bg-green-500 ring-green-400' : 'hover:scale-105'
+      } ${isProcessing ? 'animate-spin' : ''} ${isPlaying ? 'animate-pulse bg-blue-500' : ''}`}
       title={isVoiceModeActive ? 'Stop Continuous Voice Mode' : 'Start Continuous Voice Mode'}
     >
       {getButtonIcon()}
