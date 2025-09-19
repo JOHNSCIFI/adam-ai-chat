@@ -29,6 +29,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const currentSegmentChunksRef = useRef<Blob[]>([]);
+  
+  // Refs for immediate state access in callbacks
+  const isListeningRef = useRef<boolean>(false);
+  const isProcessingRef = useRef<boolean>(false);
+  const isPlayingRef = useRef<boolean>(false);
+  const isVoiceModeActiveRef = useRef<boolean>(false);
+  
   const { user } = useAuth();
 
   // Enhanced Voice Activity Detection with proper frequency analysis
@@ -99,6 +106,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         if (!isListening) {
           console.log('🗣️ SPEECH DETECTED! Starting to listen...');
           setIsListening(true);
+          isListeningRef.current = true;
         }
         if (silenceTimerRef.current) {
           console.log('🔇 Clearing silence timer - speech continues');
@@ -230,6 +238,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       mediaRecorder.start(200); // 200ms chunks for better responsiveness
       setIsRecording(true);
       setIsListening(false); // Will be set to true when voice is detected
+      isListeningRef.current = false;
       console.log('🔴 Continuous recording started');
       
       // Start voice activity detection
@@ -257,6 +266,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
       console.log('⚠️ No audio to process - chunks:', currentSegmentChunksRef.current.length);
       setIsListening(false);
+      isListeningRef.current = false;
       return;
     }
 
@@ -267,7 +277,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     });
     
     setIsListening(false);
+    isListeningRef.current = false;
     setIsProcessing(true);
+    isProcessingRef.current = true;
     
     try {
       // Create blob from current chunks
@@ -295,10 +307,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       } else {
         console.warn('⚠️ Audio blob too small, resuming listening...', audioBlob.size, 'bytes');
         setIsProcessing(false);
+        isProcessingRef.current = false;
       }
     } catch (error) {
       console.error('❌ Error in processCurrentSegment:', error);
       setIsProcessing(false);
+      isProcessingRef.current = false;
     }
   };
 
@@ -330,6 +344,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     
     setIsRecording(false);
     setIsListening(false);
+    isListeningRef.current = false;
   };
 
   // Clean up on component unmount
@@ -347,6 +362,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
     setIsProcessing(true);
+    isProcessingRef.current = true;
     
     try {
       // Convert speech to text
@@ -373,6 +389,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       if (!userText || userText.trim() === '') {
         console.warn('⚠️ Empty transcription received, resuming listening');
         setIsProcessing(false);
+        isProcessingRef.current = false;
         return;
       }
       
@@ -495,6 +512,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       alert(`Voice processing error: ${error.message}`);
     } finally {
       setIsProcessing(false);
+      isProcessingRef.current = false;
       console.log('🔄 Processing finished, ready for next input');
     }
   };
@@ -502,6 +520,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const playAudio = async (base64Audio: string) => {
     try {
       setIsPlaying(true);
+      isPlayingRef.current = true;
       console.log('🔊 Converting base64 to audio blob...');
       
       // Convert base64 to blob
@@ -523,18 +542,21 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       audio.onended = () => {
         console.log('🔇 Audio playback ended');
         setIsPlaying(false);
+        isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
         // Resume listening after AI response
         console.log('🔄 Resuming listening after AI response...');
         setTimeout(() => {
           setIsListening(true);
+          isListeningRef.current = true;
         }, 300);
       };
 
       audio.onerror = (error) => {
         console.error('❌ Audio playback error:', error);
         setIsPlaying(false);
+        isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
       };
 
@@ -573,11 +595,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
               console.error('❌ Button play failed:', buttonPlayError);
               document.body.removeChild(playButton);
               setIsPlaying(false);
+              isPlayingRef.current = false;
               
               // If voice mode is active, continue to next cycle even if play failed
               if (isVoiceModeActive) {
                 setTimeout(() => {
                   setIsListening(true);
+                  isListeningRef.current = true;
                 }, 500);
               }
             }
@@ -590,11 +614,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
             if (document.body.contains(playButton)) {
               document.body.removeChild(playButton);
               setIsPlaying(false);
+              isPlayingRef.current = false;
               
               // If voice mode is active, continue to next cycle
               if (isVoiceModeActive) {
                 setTimeout(() => {
                   setIsListening(true);
+                  isListeningRef.current = true;
                 }, 500);
               }
             }
@@ -608,6 +634,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     } catch (error) {
       console.error('💥 Error playing audio:', error);
       setIsPlaying(false);
+      isPlayingRef.current = false;
     }
   };
 
@@ -642,6 +669,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     
     // Set voice mode active BEFORE starting recording
     setIsVoiceModeActive(true);
+    isVoiceModeActiveRef.current = true;
     console.log('🎤 Voice mode set to ACTIVE');
     
     await startContinuousRecording();
@@ -650,9 +678,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const stopVoiceMode = () => {
     console.log('🛑 Stopping continuous voice mode...');
     setIsVoiceModeActive(false);
+    isVoiceModeActiveRef.current = false;
     stopContinuousRecording();
     setIsProcessing(false);
+    isProcessingRef.current = false;
     setIsPlaying(false);
+    isPlayingRef.current = false;
   };
 
   const handleClick = () => {
