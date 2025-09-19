@@ -117,15 +117,23 @@ serve(async (req) => {
       // If chat belongs to a project, fetch messages from all chats in that project for context
       console.log('Fetching project-wide context for project:', currentChat.project_id);
       
+      // First get all chat IDs for this project
+      const { data: projectChats, error: chatsError } = await supabase
+        .from('chats')
+        .select('id')
+        .eq('project_id', currentChat.project_id);
+
+      if (chatsError) {
+        console.error('Error fetching project chats:', chatsError);
+        throw new Error('Failed to fetch project chats');
+      }
+
+      const chatIds = projectChats?.map(chat => chat.id) || [];
+      
       const { data: projectMessages, error: projectMessagesError } = await supabase
         .from('messages')
         .select('content, role, created_at, chat_id')
-        .in('chat_id', 
-          supabase
-            .from('chats')
-            .select('id')
-            .eq('project_id', currentChat.project_id)
-        )
+        .in('chat_id', chatIds)
         .order('created_at', { ascending: false })
         .limit(20); // More messages for project context
 
