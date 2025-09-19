@@ -98,13 +98,53 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    // Fetch only last 10 messages for speed (instead of full history)
-    const { data: messages, error: messagesError } = await supabase
-      .from('messages')
-      .select('content, role, created_at')
-      .eq('chat_id', chat_id)
-      .order('created_at', { ascending: false })
-      .limit(10);
+    // First, get the current chat to check if it belongs to a project
+    const { data: currentChat, error: chatError } = await supabase
+      .from('chats')
+      .select('project_id')
+      .eq('id', chat_id)
+      .single();
+
+    if (chatError) {
+      console.error('Error fetching chat:', chatError);
+      throw new Error('Failed to fetch chat information');
+    }
+
+    let messages;
+    let messagesError;
+
+    if (currentChat?.project_id) {
+      // If chat belongs to a project, fetch messages from all chats in that project for context
+      console.log('Fetching project-wide context for project:', currentChat.project_id);
+      
+      const { data: projectMessages, error: projectMessagesError } = await supabase
+        .from('messages')
+        .select('content, role, created_at, chat_id')
+        .in('chat_id', 
+          supabase
+            .from('chats')
+            .select('id')
+            .eq('project_id', currentChat.project_id)
+        )
+        .order('created_at', { ascending: false })
+        .limit(20); // More messages for project context
+
+      messages = projectMessages;
+      messagesError = projectMessagesError;
+    } else {
+      // Regular chat - fetch only from current chat
+      console.log('Fetching chat-specific context for chat:', chat_id);
+      
+      const { data: chatMessages, error: chatMessagesError } = await supabase
+        .from('messages')
+        .select('content, role, created_at')
+        .eq('chat_id', chat_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      messages = chatMessages;
+      messagesError = chatMessagesError;
+    }
 
     if (messagesError) {
       console.error('Error fetching messages:', messagesError);

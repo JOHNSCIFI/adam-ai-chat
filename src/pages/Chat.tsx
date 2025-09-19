@@ -141,6 +141,14 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
+    console.log('Auto-trigger effect:', { 
+      messagesLength: messages.length, 
+      loading, 
+      isGeneratingResponse, 
+      chatId,
+      lastMessage: messages[messages.length - 1]
+    });
+    
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
@@ -153,21 +161,35 @@ export default function Chat() {
         if (!hasAssistantResponseAfter) {
           console.log('Triggering AI response for user message:', lastMessage.content);
           processedUserMessages.current.add(lastMessage.id);
-          // Add a small delay to ensure proper state management
+          // Add a longer delay to ensure proper state management and avoid race conditions
           setTimeout(() => {
+            console.log('Executing AI response trigger...');
             triggerAIResponse(lastMessage.content, lastMessage.id);
-          }, 100);
+          }, 300);
+        } else {
+          console.log('Assistant response already exists for user message');
         }
+      } else {
+        console.log('Message already processed or not a user message');
       }
+    } else {
+      console.log('Conditions not met for auto-trigger');
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
 
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    if (isGeneratingResponse || loading) return;
+    console.log('triggerAIResponse called:', { userMessage, userMessageId, isGeneratingResponse, loading });
+    
+    if (isGeneratingResponse || loading) {
+      console.log('Skipping AI response - already in progress');
+      return;
+    }
     
     setIsGeneratingResponse(true);
     
     try {
+      console.log('Starting AI response generation...');
+      
       // Check if this is an image generation request
       const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
       
@@ -175,6 +197,7 @@ export default function Chat() {
         setCurrentImagePrompt(userMessage);
       }
       
+      console.log('Invoking chat-with-ai-optimized function...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userMessage,
@@ -185,12 +208,17 @@ export default function Chat() {
         }
       });
 
+      console.log('AI response received:', { aiResponse, aiError });
+
       if (aiError) throw aiError;
 
-      if (aiResponse?.response) {
+      if (aiResponse?.response || aiResponse?.content) {
+        const responseContent = aiResponse.response || aiResponse.content;
+        console.log('Processing AI response content:', responseContent);
+        
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
-          content: aiResponse.response,
+          content: responseContent,
           role: 'assistant',
           created_at: new Date().toISOString(),
           file_attachments: []
@@ -200,20 +228,40 @@ export default function Chat() {
         scrollToBottom();
         
         // Save to database
+        console.log('Saving AI message to database...');
         const { error: saveError } = await supabase
           .from('messages')
           .insert({
             chat_id: chatId,
-            content: aiResponse.response,
+            content: responseContent,
             role: 'assistant',
             file_attachments: []
           });
           
-        if (saveError) console.error('Error saving AI message:', saveError);
+        if (saveError) {
+          console.error('Error saving AI message:', saveError);
+        } else {
+          console.log('AI message saved successfully');
+        }
+      } else {
+        console.log('No response content received from AI');
       }
     } catch (error) {
       console.error('Error triggering AI response:', error);
+      
+      // Add error message to chat
+      const errorMessage: Message = {
+        id: crypto.randomUUID(),
+        content: 'I apologize, but I encountered an error. Please try again.',
+        role: 'assistant',
+        created_at: new Date().toISOString(),
+        file_attachments: []
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+      scrollToBottom();
     } finally {
+      console.log('AI response generation completed');
       setIsGeneratingResponse(false);
     }
   };
