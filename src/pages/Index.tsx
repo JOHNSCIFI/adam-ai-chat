@@ -168,6 +168,12 @@ export default function Index() {
           .from('chat-files')
           .getPublicUrl(fileName);
 
+        console.log('File uploaded successfully:', {
+          fileName,
+          originalName: file.name,
+          publicUrl: urlData.publicUrl
+        });
+
         uploadedFiles.push({
           id: uploadData.id || Date.now().toString(),
           name: file.name,

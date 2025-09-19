@@ -1402,17 +1402,31 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     try {
       let response;
       
+      console.log('Downloading image:', { imageUrl, fileName });
+      
       // Check if it's a Supabase storage URL
-      if (imageUrl.includes('supabase') || imageUrl.includes('storage')) {
-        // Use Supabase client for authenticated requests
-        const { data, error } = await supabase.storage
-          .from('chat-files')
-          .download(imageUrl.split('/').pop() || fileName || `image-${Date.now()}`);
+      if (imageUrl.includes('lciaiunzacgvvbvcshdh.supabase.co/storage')) {
+        // Extract the file path from the public URL
+        const urlParts = imageUrl.split('/storage/v1/object/public/chat-files/');
+        if (urlParts.length > 1) {
+          const filePath = urlParts[1];
+          console.log('Downloading from Supabase storage:', filePath);
           
-        if (error) throw error;
-        response = { blob: () => Promise.resolve(data) };
+          // Download using Supabase storage API
+          const { data, error } = await supabase.storage
+            .from('chat-files')
+            .download(filePath);
+            
+          if (error) {
+            console.error('Supabase storage download error:', error);
+            throw error;
+          }
+          response = { blob: () => Promise.resolve(data) };
+        } else {
+          throw new Error('Invalid Supabase storage URL');
+        }
       } else {
-        // For external URLs, try direct fetch
+        // For external URLs or other cases, try direct fetch
         response = await fetch(imageUrl, {
           method: 'GET',
           mode: 'cors',
