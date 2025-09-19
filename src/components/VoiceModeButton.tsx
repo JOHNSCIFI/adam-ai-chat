@@ -64,7 +64,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      console.log('🎤 Starting voice recording...');
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 16000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+      console.log('✅ Microphone access granted');
       
       // Set up audio analysis for silence detection
       audioContextRef.current = new AudioContext();
@@ -73,19 +83,29 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       analyserRef.current.fftSize = 256;
       source.connect(analyserRef.current);
 
-      const mediaRecorder = new MediaRecorder(stream);
+      const mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
+        console.log('📊 Audio data chunk received:', event.data.size, 'bytes');
         if (event.data.size > 0) {
           audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        await processVoiceInput(audioBlob);
+        console.log('⏹️ Recording stopped, processing audio...');
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        console.log('📦 Created audio blob:', audioBlob.size, 'bytes');
+        
+        if (audioBlob.size > 0) {
+          await processVoiceInput(audioBlob);
+        } else {
+          console.warn('⚠️ Audio blob is empty, skipping processing');
+        }
         
         // Clean up
         stream.getTracks().forEach(track => track.stop());
@@ -99,13 +119,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       };
 
-      mediaRecorder.start();
+      mediaRecorder.start(1000); // Record in 1-second chunks
       setIsRecording(true);
+      console.log('🔴 Recording started');
       
       // Start silence detection
       detectSilence();
     } catch (error) {
-      console.error('Error starting recording:', error);
+      console.error('❌ Error starting recording:', error);
+      alert(`Microphone access error: ${error.message}`);
     }
   };
 
@@ -118,39 +140,51 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const processVoiceInput = async (audioBlob: Blob) => {
     setIsProcessing(true);
+    console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
     try {
       // Convert speech to text
       const formData = new FormData();
       formData.append('audio', audioBlob);
+      console.log('🔊 Sending audio to speech-to-text function...');
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
 
+      console.log('📝 Transcription response:', { transcriptionData, transcriptionError });
+
       if (transcriptionError) {
+        console.error('❌ Transcription error:', transcriptionError);
         throw new Error(transcriptionError.message);
       }
 
-      const userText = transcriptionData.text;
+      const userText = transcriptionData?.text;
+      console.log('✅ User said:', userText);
       
-      // Save user message
+      if (!userText || userText.trim() === '') {
+        console.warn('⚠️ Empty transcription received');
+        return;
+      }
+      
+      // Save user message (removed user_id field)
       const userMessageId = uuidv4();
+      console.log('💾 Saving user message to database...');
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert({
           id: userMessageId,
           chat_id: chatId,
           content: userText,
-          role: 'user',
-          user_id: user?.id
+          role: 'user'
         });
 
       if (userMessageError) {
-        console.error('Database error saving user message:', userMessageError);
+        console.error('❌ Database error saving user message:', userMessageError);
         throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
 
+      console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, userText, 'user');
 
       // Get AI response with special instruction to not generate images
@@ -158,6 +192,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         ? `Please respond with text only. The user said: "${userText}". Do not generate any images, just provide a helpful text response.`
         : userText;
 
+      console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: aiPrompt,
@@ -168,32 +203,43 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
 
+      console.log('🤖 AI response:', { aiResponse, aiError });
+
       if (aiError) {
+        console.error('❌ AI error:', aiError);
         throw new Error(aiError.message);
       }
 
-      const aiText = aiResponse.response;
+      const aiText = aiResponse?.response;
+      console.log('✅ AI said:', aiText);
 
-      // Save AI message
+      if (!aiText) {
+        console.error('❌ No AI response received');
+        throw new Error('No AI response received');
+      }
+
+      // Save AI message (removed user_id field)
       const aiMessageId = uuidv4();
+      console.log('💾 Saving AI message to database...');
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert({
           id: aiMessageId,
           chat_id: chatId,
           content: aiText,
-          role: 'assistant',
-          user_id: user?.id
+          role: 'assistant'
         });
 
       if (aiMessageError) {
-        console.error('Database error saving AI message:', aiMessageError);
+        console.error('❌ Database error saving AI message:', aiMessageError);
         throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
       }
 
+      console.log('✅ AI message saved successfully');
       onMessageSent(aiMessageId, aiText, 'assistant');
 
       // Convert AI response to speech
+      console.log('🗣️ Converting AI response to speech...');
       const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
         body: {
           text: aiText,
@@ -201,15 +247,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
 
+      console.log('🗣️ Speech response:', { speechData, speechError });
+
       if (speechError) {
+        console.error('❌ Speech error:', speechError);
         throw new Error(speechError.message);
       }
 
       // Play the audio
+      console.log('🔊 Playing audio response...');
       await playAudio(speechData.audioContent);
+      console.log('✅ Audio playback completed');
 
     } catch (error) {
-      console.error('Error processing voice input:', error);
+      console.error('💥 Error processing voice input:', error);
+      // Show user-friendly error message
+      alert(`Voice processing error: ${error.message}`);
     } finally {
       setIsProcessing(false);
     }
