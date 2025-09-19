@@ -185,6 +185,27 @@ export default function Index() {
 
         if (messageError) throw messageError;
         console.log('Initial message added');
+
+        // Send to webhook if files are present
+        if (uploadedFiles.length > 0) {
+          try {
+            const webhookUrl = 'https://webhook.site/aa46c7d7-e1a6-424b-982a-7e3b0b38c66b';
+            await fetch(webhookUrl, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                message: initialMessage,
+                files: uploadedFiles,
+                chatId: chatData.id,
+                userId: user.id
+              })
+            });
+          } catch (webhookError) {
+            console.error('Webhook error:', webhookError);
+          }
+        }
       }
 
       // Navigate to the new chat immediately for smooth experience

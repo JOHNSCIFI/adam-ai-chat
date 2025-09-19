@@ -232,7 +232,7 @@ export default function ProjectPage() {
         .from('chats')
         .insert({
           user_id: user.id,
-          title: userMessage.length > 50 ? userMessage.substring(0, 50) + '...' : userMessage,
+          title: userMessage.length > 50 ? userMessage.substring(0, 50) + '...' : userMessage || 'New Chat',
           project_id: project.id
         })
         .select()
@@ -240,18 +240,72 @@ export default function ProjectPage() {
 
       if (error) throw error;
 
-      // Add initial message
+      // Upload files if any
+      const uploadedFiles = [];
+      for (const file of files) {
+        const fileExtension = file.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('chat-files')
+          .upload(fileName, file);
+
+        if (!uploadError) {
+          const { data: urlData } = supabase.storage
+            .from('chat-files')
+            .getPublicUrl(fileName);
+
+          uploadedFiles.push({
+            id: uploadData.id || Date.now().toString(),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: urlData.publicUrl
+          });
+        }
+      }
+
+      // Add initial message with files
       await supabase
         .from('messages')
         .insert({
           chat_id: newChat.id,
           content: userMessage,
-          role: 'user'
+          role: 'user',
+          file_attachments: uploadedFiles
         });
+
+      // Send to webhook if files are present
+      if (uploadedFiles.length > 0) {
+        try {
+          const webhookUrl = 'https://webhook.site/aa46c7d7-e1a6-424b-982a-7e3b0b38c66b';
+          await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: userMessage,
+              files: uploadedFiles,
+              chatId: newChat.id,
+              userId: user.id,
+              projectId: project.id
+            })
+          });
+        } catch (webhookError) {
+          console.error('Webhook error:', webhookError);
+        }
+      }
 
       // Refresh chats and navigate
       fetchProjectChats();
       navigate(`/chat/${newChat.id}`);
+      
+      // Force sidebar update
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+      }, 100);
+      
     } catch (error: any) {
       console.error('Send message error:', error);
     } finally {
