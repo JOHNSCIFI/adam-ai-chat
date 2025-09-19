@@ -398,19 +398,37 @@ export default function Chat() {
               console.log('Webhook response:', analysisResult);
               
               // Handle array response format from webhook
+              let rawContent = '';
               if (Array.isArray(analysisResult) && analysisResult.length > 0) {
                 const analysisTexts = analysisResult.map(item => item.text || item.content || '').filter(text => text);
                 if (analysisTexts.length > 0) {
-                  aiAnalysisResponse += `\n\n${analysisTexts.join('\n\n')}`;
+                  rawContent = analysisTexts.join('\n\n');
                 } else {
-                  aiAnalysisResponse += `\n\nFile analyzed successfully`;
+                  rawContent = 'File analyzed successfully';
                 }
               } else if (analysisResult.text) {
-                aiAnalysisResponse += `\n\n${analysisResult.text}`;
+                rawContent = analysisResult.text;
               } else if (analysisResult.analysis || analysisResult.content) {
-                aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content}`;
+                rawContent = analysisResult.analysis || analysisResult.content;
               } else {
-                aiAnalysisResponse += `\n\nFile analyzed successfully`;
+                rawContent = 'File analyzed successfully';
+              }
+
+              // Send raw content to OpenAI to improve formatting
+              try {
+                const { data: aiData, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+                  body: {
+                    message: `show better: ${rawContent}`,
+                    chat_id: chatId,
+                    user_id: user.id
+                  }
+                });
+
+                const enhancedContent = (!aiError && aiData?.content) ? aiData.content : rawContent;
+                aiAnalysisResponse += `\n\n${enhancedContent}`;
+              } catch (enhanceError) {
+                console.error('Error enhancing webhook response:', enhanceError);
+                aiAnalysisResponse += `\n\n${rawContent}`;
               }
             } else {
               aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;

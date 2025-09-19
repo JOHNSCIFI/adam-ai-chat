@@ -335,14 +335,37 @@ export default function ProjectPage() {
               responseContent = 'File processed successfully';
             }
             
-            // Save actual webhook response as AI message
-            await supabase
-              .from('messages')
-              .insert({
-                chat_id: newChat.id,
-                content: responseContent,
-                role: 'assistant'
+            // Send raw content to OpenAI to improve formatting
+            try {
+              const { data: aiData, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+                body: {
+                  message: `show better: ${responseContent}`,
+                  chatId: newChat.id,
+                  userId: user.id
+                }
               });
+
+              const finalContent = (!aiError && aiData?.content) ? aiData.content : responseContent;
+
+              // Save enhanced response as AI message
+              await supabase
+                .from('messages')
+                .insert({
+                  chat_id: newChat.id,
+                  content: finalContent,
+                  role: 'assistant'
+                });
+            } catch (enhanceError) {
+              console.error('Error enhancing webhook response:', enhanceError);
+              // Fallback to original content
+              await supabase
+                .from('messages')
+                .insert({
+                  chat_id: newChat.id,
+                  content: responseContent,
+                  role: 'assistant'
+                });
+            }
           }
         } catch (webhookError) {
           console.error('Webhook error:', webhookError);
