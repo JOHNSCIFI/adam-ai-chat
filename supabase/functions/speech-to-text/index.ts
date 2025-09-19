@@ -50,14 +50,21 @@ serve(async (req) => {
           throw new Error('Audio file too small (min 100 bytes)');
         }
 
-        // Use the file directly as a blob
-        audioBlob = audioFile;
+        // Create a new blob with a clean MIME type (OpenAI doesn't like codec specifications)
+        const cleanMimeType = audioFile.type.split(';')[0]; // Remove codec info
+        audioBlob = new Blob([audioFile], { type: cleanMimeType });
         filename = audioFile.name || 'audio.webm';
         
-        // Ensure we have a proper extension
+        // Ensure we have a proper extension and handle OpenAI-compatible formats
         if (!filename.includes('.') && audioFile.type) {
           const extension = audioFile.type.split('/')[1]?.split(';')[0] || 'webm';
           filename = `audio.${extension}`;
+        }
+        
+        // For webm files with opus codec, rename to .ogg which OpenAI accepts better
+        if (audioFile.type.includes('webm') && audioFile.type.includes('opus')) {
+          filename = filename.replace('.webm', '.ogg');
+          audioBlob = new Blob([audioFile], { type: 'audio/ogg' });
         }
         
         console.log('✅ FormData processing complete');
