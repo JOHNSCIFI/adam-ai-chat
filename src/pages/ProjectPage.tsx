@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -330,6 +330,15 @@ export default function ProjectPage() {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) return <FileImage className="h-4 w-4 text-blue-500" />;
+    if (fileType.startsWith('video/')) return <FileVideo className="h-4 w-4 text-purple-500" />;
+    if (fileType.startsWith('audio/')) return <FileAudio className="h-4 w-4 text-green-500" />;
+    if (fileType.includes('pdf') || fileType.includes('document') || fileType.includes('text')) 
+      return <FileText className="h-4 w-4 text-red-500" />;
+    return <FileIcon className="h-4 w-4 text-gray-500" />;
+  };
+
   const startRenameChat = (chat: Chat) => {
     setEditingChatId(chat.id);
     setEditingChatTitle(chat.title);
@@ -513,12 +522,13 @@ export default function ProjectPage() {
                 <div className="mb-4 flex flex-wrap gap-2">
                   {selectedFiles.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                      {getFileIcon(file.type)}
                       <span className="truncate max-w-32">{file.name}</span>
                       <button 
                         onClick={() => removeFile(index)}
                         className="text-muted-foreground hover:text-foreground"
                       >
-                        ×
+                        <X className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
