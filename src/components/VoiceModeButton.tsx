@@ -19,6 +19,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isRecording, setIsRecording] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
@@ -352,6 +353,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         console.log('🔇 Audio playback ended');
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
+        
+        // If voice mode is active, start listening again
+        if (isVoiceModeActive) {
+          console.log('🔄 Voice mode active - starting new recording cycle...');
+          setTimeout(() => {
+            startRecording();
+          }, 500); // Small delay before starting next recording
+        }
       };
 
       audio.onerror = (error) => {
@@ -395,6 +404,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
               console.error('❌ Button play failed:', buttonPlayError);
               document.body.removeChild(playButton);
               setIsPlaying(false);
+              
+              // If voice mode is active, continue to next cycle even if play failed
+              if (isVoiceModeActive) {
+                setTimeout(() => {
+                  startRecording();
+                }, 500);
+              }
             }
           };
           
@@ -405,6 +421,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
             if (document.body.contains(playButton)) {
               document.body.removeChild(playButton);
               setIsPlaying(false);
+              
+              // If voice mode is active, continue to next cycle
+              if (isVoiceModeActive) {
+                setTimeout(() => {
+                  startRecording();
+                }, 500);
+              }
             }
           }, 10000);
         }
@@ -427,18 +450,41 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const getButtonVariant = () => {
+    if (isVoiceModeActive && isRecording) return 'destructive';
+    if (isVoiceModeActive && (isProcessing || isPlaying)) return 'secondary';
+    if (isVoiceModeActive) return 'default';
     if (isRecording) return 'destructive';
     if (isProcessing || isPlaying) return 'secondary';
     return 'default';
   };
 
-  const handleClick = () => {
-    if (isProcessing || isPlaying) return;
+  const startVoiceMode = () => {
+    console.log('🎤 Starting continuous voice mode...');
+    setIsVoiceModeActive(true);
+    startRecording();
+  };
+
+  const stopVoiceMode = () => {
+    console.log('🛑 Stopping continuous voice mode...');
+    setIsVoiceModeActive(false);
     
+    // Stop current recording if active
     if (isRecording) {
       stopRecording();
+    }
+    
+    // Clear any pending audio if playing
+    setIsPlaying(false);
+    setIsProcessing(false);
+  };
+
+  const handleClick = () => {
+    if (!isVoiceModeActive) {
+      // Start voice mode
+      startVoiceMode();
     } else {
-      startRecording();
+      // Stop voice mode
+      stopVoiceMode();
     }
   };
 
@@ -446,12 +492,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     <Button
       type="button"
       onClick={handleClick}
-      disabled={isProcessing || isPlaying}
+      disabled={false}
       variant={getButtonVariant()}
       size="icon"
       className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
+        isVoiceModeActive ? 'ring-2 ring-primary ring-offset-2' : ''
+      } ${
         isRecording ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse' : 'hover:scale-105'
       } ${isProcessing || isPlaying ? 'animate-pulse' : ''}`}
+      title={isVoiceModeActive ? 'Stop Voice Mode' : 'Start Voice Mode'}
     >
       {getButtonIcon()}
     </Button>
