@@ -96,6 +96,12 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
     setNewPrompt('');
 
     try {
+      // Show user feedback
+      toast({
+        title: "Creating new chat...",
+        description: "Setting up your image generation chat",
+      });
+
       // Create a new chat
       const { data: newChat, error: chatError } = await supabase
         .from('chats')
@@ -117,34 +123,48 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
           role: 'user'
         });
 
-      // Send image generation request to Supabase edge function
-      const { data, error } = await supabase.functions.invoke('chat-with-ai-optimized', {
-        body: {
-          message: promptText,
-          chat_id: newChat.id,
-          user_id: user.id
-        }
+      // Show progress feedback
+      toast({
+        title: "Opening chat...",
+        description: "Redirecting to your new conversation",
       });
 
-      if (error) {
-        throw new Error('Failed to generate image');
-      }
-
-      // Navigate to the new chat and close modal
+      // Close modal first, then navigate
       onClose();
-      navigate(`/chat/${newChat.id}`);
-
-      // Trigger sidebar refresh instead of page reload
-      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+      
+      // Small delay to ensure modal closes before navigation
+      setTimeout(() => {
+        navigate(`/chat/${newChat.id}`);
+        
+        // Trigger sidebar refresh
+        window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+        
+        // Send image generation request after navigation
+        setTimeout(() => {
+          supabase.functions.invoke('chat-with-ai-optimized', {
+            body: {
+              message: promptText,
+              chat_id: newChat.id,
+              user_id: user.id
+            }
+          }).catch(error => {
+            console.error('Error generating image:', error);
+            toast({
+              title: "Image Generation Error",
+              description: "Failed to generate image. Please try again.",
+              variant: "destructive",
+            });
+          });
+        }, 500);
+      }, 100);
 
     } catch (error) {
-      console.error('Error generating image:', error);
+      console.error('Error creating chat:', error);
       toast({
-        title: "Image Generation Error",
-        description: error instanceof Error ? error.message : "Failed to generate image. Please try again.",
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to create new chat. Please try again.",
         variant: "destructive",
       });
-    } finally {
       setIsGenerating(false);
     }
   };
