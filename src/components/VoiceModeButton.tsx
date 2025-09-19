@@ -38,60 +38,42 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   
   const { user } = useAuth();
   
-  // Process current audio segment
   const processCurrentSegment = useCallback(async () => {
     if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
-      console.log('⚠️ No audio to process - chunks:', currentSegmentChunksRef.current.length);
       setIsListening(false);
       isListeningRef.current = false;
       return;
     }
 
-    console.log('🔄 Processing current audio segment...', {
-      chunks: currentSegmentChunksRef.current.length,
-      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0),
-      recorderState: mediaRecorderRef.current.state
-    });
+    console.log('🔄 Processing speech segment...');
     
+    // STOP listening and audio analysis immediately
     setIsListening(false);
     isListeningRef.current = false;
     setIsProcessing(true);
     isProcessingRef.current = true;
     
     try {
-      // Create blob from current chunks
       const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
       const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
-      console.log('📦 Created segment blob:', {
-        size: audioBlob.size,
-        type: audioBlob.type,
-        chunks: currentSegmentChunksRef.current.length
-      });
       
-      // Clear current chunks for next segment
+      // Clear current chunks and timer
       currentSegmentChunksRef.current = [];
-      
-      // Clear silence timer
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
       
-      // Process the audio segment
-      if (audioBlob.size > 100) { // Minimum 100 bytes to avoid empty submissions
-        console.log('📤 Sending audio to OpenAI...');
+      // Process the audio segment (this will handle the entire AI cycle)
+      if (audioBlob.size > 100) {
         await processVoiceInput(audioBlob);
-      } else {
-        console.warn('⚠️ Audio blob too small, resuming listening...', audioBlob.size, 'bytes');
-        setIsProcessing(false);
-        isProcessingRef.current = false;
       }
     } catch (error) {
       console.error('❌ Error in processCurrentSegment:', error);
       setIsProcessing(false);
       isProcessingRef.current = false;
     }
-  }, [chatId, user?.id, onMessageSent]);
+  }, []);
 
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
@@ -270,12 +252,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       currentSegmentChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log('📊 Audio chunk received:', {
-          size: event.data.size,
-          type: event.data.type,
-          chunks: currentSegmentChunksRef.current.length
-        });
-        if (event.data.size > 0) {
+        if (event.data.size > 0 && isVoiceModeActiveRef.current) {
           currentSegmentChunksRef.current.push(event.data);
         }
       };
@@ -365,34 +342,23 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   }, []);
 
   const processVoiceInput = async (audioBlob: Blob) => {
-    console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
-    setIsProcessing(true);
-    isProcessingRef.current = true;
+    console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
     try {
       // Convert speech to text
       const formData = new FormData();
       formData.append('audio', audioBlob, `audio.${audioBlob.type.split('/')[1].split(';')[0]}`);
-      
-      console.log('📤 SENDING AUDIO TO OPENAI - Size:', audioBlob.size, 'bytes, Type:', audioBlob.type);
-      console.log('🔊 Sending to speech-to-text function...');
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
 
-      console.log('📝 Transcription response received:', { transcriptionData, transcriptionError });
-
       if (transcriptionError) {
-        console.error('❌ Transcription error:', transcriptionError);
         throw new Error(transcriptionError.message);
       }
 
       const userText = transcriptionData?.text;
-      console.log('✅ User said:', userText);
-      
       if (!userText || userText.trim() === '') {
-        console.warn('⚠️ Empty transcription received, resuming listening');
         setIsProcessing(false);
         isProcessingRef.current = false;
         return;
@@ -400,7 +366,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       // Save user message
       const userMessageId = uuidv4();
-      console.log('💾 Saving user message to database...');
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert({
@@ -411,15 +376,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (userMessageError) {
-        console.error('❌ Database error saving user message:', userMessageError);
         throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
 
-      console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, userText, 'user');
 
-      // Get AI response with comprehensive error handling
-      console.log('🤖 Getting AI response...');
+      // Get AI response
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userText,
@@ -430,87 +392,41 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
 
-      console.log('🤖 Raw AI response data:', aiResponse);
-      console.log('🤖 AI error object:', aiError);
-      
-      // Check for function invocation errors first
-      if (aiError) {
-        console.error('❌ Supabase function invocation error:', aiError);
-        throw new Error(`Function invocation failed: ${aiError.message || JSON.stringify(aiError)}`);
-      }
-
-      // Check if we got a response at all
-      if (!aiResponse) {
-        console.error('❌ No response data from function');
-        throw new Error('No response data received from AI function');
-      }
-
-      // Log the structure of the response to debug
-      console.log('🔍 Response structure:', {
-        type: typeof aiResponse,
-        keys: Object.keys(aiResponse || {}),
-        content: aiResponse?.content,
-        hasContent: !!aiResponse?.content
-      });
-
-      const aiText = aiResponse?.content;
-      console.log('✅ Extracted AI text:', aiText);
-
-      if (!aiText || aiText.trim() === '') {
-        console.error('❌ Empty or missing AI response content:', { 
-          aiResponse, 
-          contentExists: 'content' in (aiResponse || {}),
-          contentValue: aiResponse?.content 
-        });
-        throw new Error(`No valid AI response content received. Response: ${JSON.stringify(aiResponse)}`);
+      if (aiError || !aiResponse?.content) {
+        throw new Error(`AI response failed: ${aiError?.message || 'No content'}`);
       }
 
       // Save AI message
       const aiMessageId = uuidv4();
-      console.log('💾 Saving AI message to database...');
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert({
           id: aiMessageId,
           chat_id: chatId,
-          content: aiText,
+          content: aiResponse.content,
           role: 'assistant'
         });
 
       if (aiMessageError) {
-        console.error('❌ Database error saving AI message:', aiMessageError);
         throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
       }
 
-      console.log('✅ AI message saved successfully');
-      onMessageSent(aiMessageId, aiText, 'assistant');
+      onMessageSent(aiMessageId, aiResponse.content, 'assistant');
 
-      // Convert AI response to speech with better error handling
-      console.log('🗣️ Converting AI response to speech...');
+      // Convert AI response to speech
       const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
         body: {
-          text: aiText,
+          text: aiResponse.content,
           voice: 'alloy'
         }
       });
 
-      console.log('🗣️ Speech response:', { speechData, speechError });
-
-      if (speechError) {
-        console.error('❌ Speech error details:', speechError);
-        console.error('❌ Speech error message:', speechError.message);
-        throw new Error(`Text-to-speech failed: ${speechError.message}`);
+      if (speechError || !speechData?.audioContent) {
+        throw new Error(`Speech generation failed: ${speechError?.message || 'No audio'}`);
       }
 
-      if (!speechData || !speechData.audioContent) {
-        console.error('❌ No audio content received from TTS');
-        throw new Error('No audio content received from text-to-speech service');
-      }
-
-      // Play the audio
-      console.log('🔊 Playing audio response...');
+      // Play AI response
       await playAudio(speechData.audioContent);
-      console.log('✅ Audio playback completed');
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
@@ -518,16 +434,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     } finally {
       setIsProcessing(false);
       isProcessingRef.current = false;
-      console.log('🔄 Processing finished, ready for next input');
+      console.log('🔄 Processing finished');
       
-      // Add a small cooldown before allowing the next cycle
+      // Resume listening after a short delay
       setTimeout(() => {
-        // Only resume if voice mode is still active and not playing
         if (isVoiceModeActive && !isPlayingRef.current) {
-          console.log('💤 Cooldown finished, resuming audio analysis...');
-          checkAudioLevel(); // Resume audio analysis loop
+          console.log('🎤 Resuming voice detection');
+          checkAudioLevel(); // Resume the audio analysis loop
         }
-      }, 1000); // 1 second cooldown
+      }, 1000);
     }
   };
 
@@ -554,19 +469,18 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       audio.preload = 'auto';
       
       audio.onended = () => {
-        console.log('🔇 Audio playback ended');
+        console.log('✅ AI finished speaking');
         setIsPlaying(false);
         isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        // Resume listening after AI response with cooldown
-        console.log('🔄 Resuming listening after AI response...');
+        // Resume listening after AI response with delay
         setTimeout(() => {
           if (isVoiceModeActiveRef.current) {
-            console.log('💤 AI finished speaking, resuming audio analysis...');
+            console.log('🎤 Resuming listening after AI speech');
             checkAudioLevel(); // Resume audio analysis loop
           }
-        }, 500); // 500ms cooldown after AI finishes speaking
+        }, 500);
       };
 
       audio.onerror = (error) => {
