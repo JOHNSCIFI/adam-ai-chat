@@ -275,11 +275,12 @@ export default function ProjectPage() {
           file_attachments: uploadedFiles
         });
 
-      // Send to webhook if files are present
+      // Handle files vs text-only messages differently
       if (uploadedFiles.length > 0) {
+        // Send to webhook for file processing
         try {
           const webhookUrl = 'https://adsgbt.app.n8n.cloud/webhook/adamGPT';
-          await fetch(webhookUrl, {
+          const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -292,8 +293,60 @@ export default function ProjectPage() {
               projectId: project.id
             })
           });
+
+          if (response.ok) {
+            const webhookData = await response.json();
+            // Save webhook response as AI message
+            await supabase
+              .from('messages')
+              .insert({
+                chat_id: newChat.id,
+                content: webhookData.response || webhookData.message || 'File processed successfully.',
+                role: 'assistant'
+              });
+          }
         } catch (webhookError) {
           console.error('Webhook error:', webhookError);
+          // Add fallback message
+          await supabase
+            .from('messages')
+            .insert({
+              chat_id: newChat.id,
+              content: 'I received your file but encountered an error processing it. Please try again.',
+              role: 'assistant'
+            });
+        }
+      } else {
+        // Send text-only message to OpenAI via existing chat function
+        try {
+          const { data, error } = await supabase.functions.invoke('chat-with-ai-optimized', {
+            body: {
+              message: userMessage,
+              chatId: newChat.id,
+              userId: user.id
+            }
+          });
+
+          if (!error && data?.response) {
+            // Save OpenAI response
+            await supabase
+              .from('messages')
+              .insert({
+                chat_id: newChat.id,
+                content: data.response,
+                role: 'assistant'
+              });
+          }
+        } catch (aiError) {
+          console.error('AI response error:', aiError);
+          // Add fallback message
+          await supabase
+            .from('messages')
+            .insert({
+              chat_id: newChat.id,
+              content: 'I apologize, but I encountered an error processing your message. Please try again.',
+              role: 'assistant'
+            });
         }
       }
 
