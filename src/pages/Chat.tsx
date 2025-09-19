@@ -139,8 +139,7 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
-  // Disable the automatic AI trigger since we're calling AI directly from sendMessage
-  /*
+  // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
@@ -159,7 +158,62 @@ export default function Chat() {
       }
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
-  */
+
+  const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
+    if (isGeneratingResponse || loading) return;
+    
+    setIsGeneratingResponse(true);
+    
+    try {
+      // Check if this is an image generation request
+      const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
+      
+      if (isImageRequest) {
+        setCurrentImagePrompt(userMessage);
+      }
+      
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
+          message: userMessage,
+          chat_id: chatId,
+          user_id: user.id,
+          file_analysis: null,
+          image_context: []
+        }
+      });
+
+      if (aiError) throw aiError;
+
+      if (aiResponse?.response) {
+        const assistantMessage: Message = {
+          id: crypto.randomUUID(),
+          content: aiResponse.response,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: []
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        scrollToBottom();
+        
+        // Save to database
+        const { error: saveError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: aiResponse.response,
+            role: 'assistant',
+            file_attachments: []
+          });
+          
+        if (saveError) console.error('Error saving AI message:', saveError);
+      }
+    } catch (error) {
+      console.error('Error triggering AI response:', error);
+    } finally {
+      setIsGeneratingResponse(false);
+    }
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -1369,15 +1423,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </Button>
                       </div>
                     </div>
-                                 ) : (
-                                   <div 
-                                     className={`flex items-center gap-3 p-3 rounded-xl border cursor-pointer hover:opacity-80 transition-opacity ${
-                                       message.role === 'user' 
-                                         ? 'bg-black/10 border-white/20' 
-                                         : 'bg-accent border-border'
-                                     }`}
-                                     onClick={() => openFile(file.url, file.name)}
-                                   >
+                                  ) : (
+                                    <div 
+                                      className={`flex items-center gap-3 p-3 rounded-xl border ${
+                                        message.role === 'user' 
+                                          ? 'bg-black/10 border-white/20' 
+                                          : 'bg-accent border-border'
+                                      }`}
+                                    >
                                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${
                                        message.role === 'user' 
                                          ? 'bg-white/20' 
@@ -1401,7 +1454,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                          )}
                         
                            {message.content && (
-                             <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-2 [&>h2]:!my-1.5 [&>h3]:!my-1 [&>h4]:!my-0.5 [&>h5]:!my-0.5 [&>h6]:!my-0.5 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0.5 [&>pre]:!my-0.5 [&>table]:!my-0.5 [&>hr]:!my-0.5 [&>li]:!my-0 [&>br]:!my-0" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
+                             <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{ wordBreak: 'break-word', overflowWrap: 'anywhere' }}>
                                {message.content.includes("🎨 Generating your image") ? (
                                  <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
