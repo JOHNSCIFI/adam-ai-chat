@@ -68,23 +68,23 @@ serve(async (req) => {
           );
         }
 
-        // Create a new blob with a clean MIME type (OpenAI doesn't like codec specifications)
+        // Create a new blob with a clean MIME type (OpenAI supports webm directly)
         const cleanMimeType = audioFile.type.split(';')[0]; // Remove codec info
         audioBlob = new Blob([audioFile], { type: cleanMimeType });
         filename = audioFile.name || 'audio.webm';
         
-        // Ensure we have a proper extension and handle OpenAI-compatible formats
+        // Ensure we have a proper extension
         if (!filename.includes('.') && audioFile.type) {
           const extension = audioFile.type.split('/')[1]?.split(';')[0] || 'webm';
           filename = `audio.${extension}`;
         }
         
-        // For webm files with opus codec, rename to .ogg which OpenAI accepts better
-        if (audioFile.type.includes('webm')) {
-          filename = filename.replace('.webm', '.ogg');
-          audioBlob = new Blob([audioFile], { type: 'audio/ogg' });
-          console.log('🔄 Converted webm to ogg format for OpenAI compatibility');
-        }
+        console.log('✅ Audio processed for OpenAI:', {
+          originalType: audioFile.type,
+          cleanType: cleanMimeType,
+          filename: filename,
+          size: audioBlob.size
+        });
         
         console.log('✅ FormData processing complete');
         
@@ -112,13 +112,14 @@ serve(async (req) => {
 
         console.log('📊 Base64 audio length:', audio.length);
 
-        // Convert base64 to binary
+        // Convert base64 to binary and create proper webm blob
         const binaryString = atob(audio);
         const audioData = new Uint8Array(binaryString.length);
         for (let i = 0; i < binaryString.length; i++) {
           audioData[i] = binaryString.charCodeAt(i);
         }
         
+        // Keep original webm format - OpenAI supports it
         audioBlob = new Blob([audioData], { type: 'audio/webm' });
         filename = 'audio.webm';
         
