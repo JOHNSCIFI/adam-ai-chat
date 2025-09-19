@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Radio, Square, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,7 +21,51 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
   const { user } = useAuth();
+
+  // Voice Activity Detection
+  const checkAudioLevel = useCallback(() => {
+    if (!analyserRef.current) return;
+    
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyserRef.current.getByteFrequencyData(dataArray);
+    
+    // Calculate RMS (Root Mean Square) for volume level
+    let sum = 0;
+    for (let i = 0; i < bufferLength; i++) {
+      sum += dataArray[i] * dataArray[i];
+    }
+    const rms = Math.sqrt(sum / bufferLength);
+    const volume = rms / 255; // Normalize to 0-1
+    
+    const threshold = 0.01; // Silence threshold
+    
+    if (volume > threshold) {
+      // Voice detected - clear silence timer
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+    } else {
+      // Silence detected - start/continue timer
+      if (!silenceTimerRef.current && isRecording) {
+        silenceTimerRef.current = setTimeout(() => {
+          console.log('🔇 2 seconds of silence detected - auto-stopping recording');
+          stopRecording();
+        }, 2000); // 2 seconds of silence
+      }
+    }
+    
+    // Continue checking if still recording
+    if (isRecording) {
+      requestAnimationFrame(checkAudioLevel);
+    }
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
@@ -36,6 +80,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
       console.log('✅ Microphone access granted');
+      
+      // Set up audio context for voice activity detection
+      audioContextRef.current = new AudioContext({ sampleRate: 44100 });
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+      
+      analyserRef.current.fftSize = 2048;
+      analyserRef.current.smoothingTimeConstant = 0.3;
+      sourceRef.current.connect(analyserRef.current);
       
       // Try different formats for better compatibility
       let mimeType = 'audio/webm';
@@ -73,11 +126,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         
         // Clean up
         stream.getTracks().forEach(track => track.stop());
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
+        if (silenceTimerRef.current) {
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
       };
 
       mediaRecorder.start(1000); // Record in 1-second chunks
       setIsRecording(true);
       console.log('🔴 Recording started with format:', mimeType);
+      
+      // Start voice activity detection
+      checkAudioLevel();
       
     } catch (error) {
       console.error('❌ Error starting recording:', error);
@@ -88,10 +152,29 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
       console.log('🛑 Stopping recording...');
+      
+      // Clear silence timer
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
   };
+
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close();
+      }
+    };
+  }, []);
 
   const processVoiceInput = async (audioBlob: Blob) => {
     setIsProcessing(true);
@@ -142,7 +225,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, userText, 'user');
 
-      // Get AI response
+      // Get AI response with comprehensive error handling
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
@@ -209,7 +292,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ AI message saved successfully');
       onMessageSent(aiMessageId, aiText, 'assistant');
 
-      // Convert AI response to speech
+      // Convert AI response to speech with better error handling
       console.log('🗣️ Converting AI response to speech...');
       const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
         body: {
@@ -221,8 +304,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('🗣️ Speech response:', { speechData, speechError });
 
       if (speechError) {
-        console.error('❌ Speech error:', speechError);
-        throw new Error(speechError.message);
+        console.error('❌ Speech error details:', speechError);
+        console.error('❌ Speech error message:', speechError.message);
+        throw new Error(`Text-to-speech failed: ${speechError.message}`);
+      }
+
+      if (!speechData || !speechData.audioContent) {
+        console.error('❌ No audio content received from TTS');
+        throw new Error('No audio content received from text-to-speech service');
       }
 
       // Play the audio
@@ -241,6 +330,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const playAudio = async (base64Audio: string) => {
     try {
       setIsPlaying(true);
+      console.log('🔊 Converting base64 to audio blob...');
       
       // Convert base64 to blob
       const binaryString = atob(base64Audio);
@@ -252,17 +342,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const audioBlob = new Blob([bytes], { type: 'audio/mp3' });
       const audioUrl = URL.createObjectURL(audioBlob);
       
+      console.log('🎵 Creating audio element and playing...');
       const audio = new Audio(audioUrl);
       
       audio.onended = () => {
+        console.log('🔇 Audio playback ended');
+        setIsPlaying(false);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = (error) => {
+        console.error('❌ Audio playback error:', error);
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
       
       await audio.play();
+      console.log('▶️ Audio playback started');
       
     } catch (error) {
-      console.error('Error playing audio:', error);
+      console.error('💥 Error playing audio:', error);
       setIsPlaying(false);
     }
   };
