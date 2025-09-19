@@ -38,3 +38,9 @@ verify_jwt = false
 
 [functions.save-image]
 verify_jwt = false
+
+[functions.delete-chat-images]
+verify_jwt = false
+
+[functions.delete-all-user-images]
+verify_jwt = false

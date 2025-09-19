@@ -261,6 +261,16 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     if (!user) return;
     
     try {
+      // First delete all user images from storage
+      try {
+        await supabase.functions.invoke('delete-all-user-images', {
+          body: { userId: user.id }
+        });
+      } catch (imageError) {
+        console.error('Error deleting user images:', imageError);
+        // Continue with data deletion even if image deletion fails
+      }
+
       // Delete all user data except profile (cascading will handle messages)
       const deleteOperations = [
         supabase.from('projects').delete().eq('user_id', user.id),

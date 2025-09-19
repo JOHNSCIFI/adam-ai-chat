@@ -42,14 +42,20 @@ async function generateEmbeddingAsync(text: string): Promise<number[]> {
 // Function to save image to Supabase storage
 async function saveImageToStorage(imageUrl: string, userId: string, prompt: string): Promise<string | null> {
   try {
+    console.log('Fetching image from URL:', imageUrl);
     const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) return null;
+    if (!imageResponse.ok) {
+      console.error('Failed to fetch image:', imageResponse.status);
+      return null;
+    }
 
     const imageBlob = await imageResponse.blob();
-    const fileName = `${userId}/${Date.now()}-${Math.random().toString(36).substring(2)}.png`;
+    const timestamp = Date.now();
+    const fileName = `${userId}/generated_${timestamp}_${Math.random().toString(36).substring(2)}.png`;
     
+    console.log('Uploading image to storage:', fileName);
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('generated-images')
+      .from('chat-images') // Use chat-images bucket for consistency
       .upload(fileName, imageBlob, {
         contentType: 'image/png',
         upsert: false
@@ -61,9 +67,10 @@ async function saveImageToStorage(imageUrl: string, userId: string, prompt: stri
     }
 
     const { data: { publicUrl } } = supabase.storage
-      .from('generated-images')
+      .from('chat-images')
       .getPublicUrl(fileName);
 
+    console.log('Image successfully saved to storage:', publicUrl);
     return publicUrl;
   } catch (error) {
     console.error('Error saving image to storage:', error);
@@ -256,15 +263,16 @@ serve(async (req) => {
         const imageData = await imageResponse.json();
         const temporaryImageUrl = imageData.data[0].url;
         
-        // Save image to storage (async, but return temp URL immediately)
-        const savePromise = saveImageToStorage(temporaryImageUrl, user_id, imagePrompt);
+        // Save image to storage and wait for the permanent URL
+        console.log('Saving image to permanent storage...');
+        const permanentImageUrl = await saveImageToStorage(temporaryImageUrl, user_id, imagePrompt);
         
         responseContent = `I've generated an image for you: "${imagePrompt}"`;
 
         return new Response(JSON.stringify({
           type: 'image_generated',
           content: responseContent,
-          image_url: temporaryImageUrl, // Return immediately while saving
+          image_url: permanentImageUrl || temporaryImageUrl, // Use permanent URL if available, fallback to temp
           prompt: imagePrompt
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },

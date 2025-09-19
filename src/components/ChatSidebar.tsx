@@ -230,6 +230,19 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
   const handleDeleteChat = async (chatId: string) => {
     try {
+      // First delete associated images from storage
+      if (user) {
+        try {
+          await supabase.functions.invoke('delete-chat-images', {
+            body: { chatId, userId: user.id }
+          });
+        } catch (imageError) {
+          console.error('Error deleting chat images:', imageError);
+          // Continue with chat deletion even if image deletion fails
+        }
+      }
+
+      // Then delete the chat from database
       const { error } = await supabase
         .from('chats')
         .delete()
