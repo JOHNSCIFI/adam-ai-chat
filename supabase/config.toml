@@ -30,6 +30,12 @@ verify_jwt = false
 [functions.speech-to-text]
 verify_jwt = false
 
+[functions.speech-to-text-voice-mode]
+verify_jwt = false
+
+[functions.text-to-speech-voice-mode]
+verify_jwt = false
+
 [functions.delete-account]
 verify_jwt = false
 
