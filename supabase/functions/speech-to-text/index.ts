@@ -38,8 +38,18 @@ serve(async (req) => {
         console.log('📁 Audio file details:', {
           name: audioFile.name,
           size: audioFile.size,
-          type: audioFile.type
+          type: audioFile.type,
+          hasContent: audioFile.size > 0
         });
+        
+        // Additional validation for corrupted files
+        if (!audioFile.name || audioFile.name === 'undefined') {
+          console.error('❌ Invalid audio file name:', audioFile.name);
+          return new Response(
+            JSON.stringify({ error: 'Invalid audio file name' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
 
         // Validate file size (max 25MB for Whisper API)
         if (audioFile.size > 25 * 1024 * 1024) {
@@ -70,16 +80,21 @@ serve(async (req) => {
         }
         
         // For webm files with opus codec, rename to .ogg which OpenAI accepts better
-        if (audioFile.type.includes('webm') && audioFile.type.includes('opus')) {
+        if (audioFile.type.includes('webm')) {
           filename = filename.replace('.webm', '.ogg');
           audioBlob = new Blob([audioFile], { type: 'audio/ogg' });
+          console.log('🔄 Converted webm to ogg format for OpenAI compatibility');
         }
         
         console.log('✅ FormData processing complete');
         
       } catch (formDataError) {
         console.error('❌ FormData processing error:', formDataError);
-        throw new Error(`FormData processing failed: ${formDataError.message}`);
+        console.error('❌ FormData error details:', formDataError.stack);
+        return new Response(
+          JSON.stringify({ error: `FormData processing failed: ${formDataError.message}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
       
     } else {
@@ -111,7 +126,11 @@ serve(async (req) => {
         
       } catch (jsonError) {
         console.error('❌ JSON processing error:', jsonError);
-        throw new Error(`JSON processing failed: ${jsonError.message}`);
+        console.error('❌ JSON error details:', jsonError.stack);
+        return new Response(
+          JSON.stringify({ error: `JSON processing failed: ${jsonError.message}` }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
       }
     }
 

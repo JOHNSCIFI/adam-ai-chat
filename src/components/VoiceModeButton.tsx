@@ -340,9 +340,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
     try {
-      // Convert speech to text
+      // Convert speech to text with safer filename generation
       const formData = new FormData();
-      formData.append('audio', audioBlob, `audio.${audioBlob.type.split('/')[1].split(';')[0]}`);
+      
+      // Generate a safe filename
+      let extension = 'webm'; // default
+      if (audioBlob.type) {
+        const mimeType = audioBlob.type.split(';')[0]; // Remove codec info
+        if (mimeType === 'audio/webm') extension = 'webm';
+        else if (mimeType === 'audio/wav') extension = 'wav';
+        else if (mimeType === 'audio/mp4') extension = 'mp4';
+        else if (mimeType === 'audio/ogg') extension = 'ogg';
+      }
+      
+      console.log('🎤 Sending audio to speech-to-text:', {
+        size: audioBlob.size,
+        type: audioBlob.type,
+        extension: extension
+      });
+      
+      formData.append('audio', audioBlob, `audio.${extension}`);
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
