@@ -152,7 +152,9 @@ export default function Chat() {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
-      if (lastMessage.role === 'user' && !processedUserMessages.current.has(lastMessage.id)) {
+      // Don't auto-trigger AI for messages with file attachments - they should go to webhook only
+      if (lastMessage.role === 'user' && !processedUserMessages.current.has(lastMessage.id) && 
+          (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         const hasAssistantResponseAfter = messages.some(msg => 
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
@@ -170,7 +172,7 @@ export default function Chat() {
           console.log('Assistant response already exists for user message');
         }
       } else {
-        console.log('Message already processed or not a user message');
+        console.log('Message already processed, not a user message, or has file attachments (webhook handled)');
       }
     } else {
       console.log('Conditions not met for auto-trigger');
