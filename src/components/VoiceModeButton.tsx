@@ -31,7 +31,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const currentSegmentChunksRef = useRef<Blob[]>([]);
   const { user } = useAuth();
 
-  // Enhanced Voice Activity Detection for Speech
+  // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
     if (!analyserRef.current || !isVoiceModeActive) return;
     
@@ -39,7 +39,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const dataArray = new Uint8Array(bufferLength);
     analyserRef.current.getByteFrequencyData(dataArray);
     
-    // Calculate RMS for overall volume
+    // Calculate overall RMS volume
     let sum = 0;
     for (let i = 0; i < bufferLength; i++) {
       sum += dataArray[i] * dataArray[i];
@@ -47,45 +47,64 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const rms = Math.sqrt(sum / bufferLength);
     const volume = rms / 255;
     
-    // Enhanced speech detection - focus on human voice frequencies (300Hz-3400Hz)
-    // These correspond roughly to bins 6-170 at 24kHz sample rate with 2048 FFT size
-    let speechSum = 0;
-    const speechStart = Math.floor((300 / 12000) * bufferLength); // ~6
-    const speechEnd = Math.floor((3400 / 12000) * bufferLength); // ~170
+    // Human speech frequency analysis (85Hz - 4000Hz for better detection)
+    // With 24kHz sample rate and 2048 FFT: each bin = 24000/2048 = 11.72Hz
+    const binSize = 24000 / 2048; // ~11.72 Hz per bin
+    const speechStartBin = Math.floor(85 / binSize); // ~7
+    const speechEndBin = Math.floor(4000 / binSize); // ~341
     
-    for (let i = speechStart; i < speechEnd && i < bufferLength; i++) {
+    let speechSum = 0;
+    let speechBins = 0;
+    for (let i = speechStartBin; i < Math.min(speechEndBin, bufferLength); i++) {
       speechSum += dataArray[i] * dataArray[i];
+      speechBins++;
     }
-    const speechRms = Math.sqrt(speechSum / (speechEnd - speechStart));
+    
+    const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
     const speechVolume = speechRms / 255;
     
-    // Use lower threshold but focus on speech frequencies
-    const volumeThreshold = 0.008; // Much lower for sensitivity
-    const speechThreshold = 0.015; // Speech-specific threshold
+    // More sensitive thresholds for better detection
+    const generalThreshold = 0.005; // Very low for any sound
+    const speechThreshold = 0.01; // Low for speech detection
     
-    const isSpeechDetected = volume > volumeThreshold && speechVolume > speechThreshold;
+    // Consider it speech if we have both general audio and speech frequencies
+    const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
     
-    console.log('🎵 Audio - Total:', volume.toFixed(4), 'Speech:', speechVolume.toFixed(4), 'Detected:', isSpeechDetected, 'Listening:', isListening);
+    console.log('🎵 Audio Analysis:', {
+      volume: volume.toFixed(4),
+      speechVolume: speechVolume.toFixed(4),
+      detected: isSpeechDetected,
+      listening: isListening,
+      processing: isProcessing,
+      playing: isPlaying,
+      voiceModeActive: isVoiceModeActive,
+      bins: `${speechStartBin}-${speechEndBin}`,
+      binSize: binSize.toFixed(2)
+    });
     
-    if (isSpeechDetected) {
+    if (isSpeechDetected && !isProcessing && !isPlaying) {
       // Speech detected - clear silence timer and mark as listening
       if (!isListening) {
-        console.log('🗣️ Speech detected! Starting to listen...');
+        console.log('🗣️ SPEECH DETECTED! Starting to listen...');
         setIsListening(true);
       }
       if (silenceTimerRef.current) {
-        console.log('🔇 Clearing silence timer - speech detected');
+        console.log('🔇 Clearing silence timer - speech continues');
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
-    } else {
-      // Silence detected - start timer if we were listening
-      if (!silenceTimerRef.current && isListening && !isProcessing && !isPlaying) {
-        console.log('🔇 Starting 1-second silence timer...');
+    } else if (isListening && !isProcessing && !isPlaying) {
+      // Silence detected while we were listening - start timer
+      if (!silenceTimerRef.current) {
+        console.log('🔇 Starting 1-second silence timer...', {
+          wasListening: isListening,
+          isProcessing,
+          isPlaying
+        });
         silenceTimerRef.current = setTimeout(() => {
-          console.log('🔇 1 second of silence detected - processing current segment');
+          console.log('🔇 1 second of silence - processing segment');
           processCurrentSegment();
-        }, 1000); // 1 second of silence
+        }, 1000);
       }
     }
     
@@ -98,9 +117,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const startContinuousRecording = async () => {
     try {
       console.log('🎤 Starting continuous voice recording...');
+      
+      // Request microphone permission with specific constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 44100,
+          sampleRate: 24000,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -112,49 +133,91 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       streamRef.current = stream;
       
       // Set up audio context for voice activity detection
-      audioContextRef.current = new AudioContext({ sampleRate: 44100 });
+      audioContextRef.current = new AudioContext({ 
+        sampleRate: 24000,
+        latencyHint: 'interactive'
+      });
+      
+      // Resume audio context if suspended (browser requirement)
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+        console.log('🔊 Audio context resumed');
+      }
+      
       analyserRef.current = audioContextRef.current.createAnalyser();
       sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
       
+      // Configure analyser for better speech detection
       analyserRef.current.fftSize = 2048;
       analyserRef.current.smoothingTimeConstant = 0.3;
-      sourceRef.current.connect(analyserRef.current);
+      analyserRef.current.minDecibels = -90;
+      analyserRef.current.maxDecibels = -10;
       
-      // Try different formats for better compatibility
-      let mimeType = 'audio/webm';
-      if (MediaRecorder.isTypeSupported('audio/wav')) {
-        mimeType = 'audio/wav';
-      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-        mimeType = 'audio/webm;codecs=opus';
-      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-        mimeType = 'audio/mp4';
+      sourceRef.current.connect(analyserRef.current);
+      console.log('🔊 Audio analysis setup complete');
+      
+      // Try different audio formats for better compatibility
+      let mimeType = 'audio/webm;codecs=opus';
+      if (!MediaRecorder.isTypeSupported(mimeType)) {
+        if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/wav')) {
+          mimeType = 'audio/wav';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else {
+          console.warn('⚠️ No supported audio format found, using default');
+          mimeType = '';
+        }
       }
       
       console.log('🎵 Using audio format:', mimeType);
 
-      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
       mediaRecorderRef.current = mediaRecorder;
       currentSegmentChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
-        console.log('📊 Audio data chunk received:', event.data.size, 'bytes');
+        console.log('📊 Audio chunk received:', {
+          size: event.data.size,
+          type: event.data.type,
+          chunks: currentSegmentChunksRef.current.length
+        });
         if (event.data.size > 0) {
           currentSegmentChunksRef.current.push(event.data);
         }
       };
 
-      // Start continuous recording
-      mediaRecorder.start(100); // Very small chunks for responsiveness
+      mediaRecorder.onerror = (event) => {
+        console.error('❌ MediaRecorder error:', event);
+      };
+
+      mediaRecorder.onstart = () => {
+        console.log('🔴 MediaRecorder started');
+      };
+
+      mediaRecorder.onstop = () => {
+        console.log('⏹️ MediaRecorder stopped');
+      };
+
+      // Start continuous recording with small time slices
+      mediaRecorder.start(200); // 200ms chunks for better responsiveness
       setIsRecording(true);
       setIsListening(false); // Will be set to true when voice is detected
       console.log('🔴 Continuous recording started');
       
       // Start voice activity detection
-      checkAudioLevel();
+      requestAnimationFrame(checkAudioLevel);
       
     } catch (error) {
       console.error('❌ Error starting continuous recording:', error);
-      alert(`Microphone access error: ${error.message}`);
+      if (error.name === 'NotAllowedError') {
+        alert('Microphone access denied. Please allow microphone access and try again.');
+      } else if (error.name === 'NotFoundError') {
+        alert('No microphone found. Please connect a microphone and try again.');
+      } else {
+        alert(`Microphone error: ${error.message}`);
+      }
     }
   };
 
@@ -165,29 +228,44 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       return;
     }
 
-    console.log('🔄 Processing current audio segment... chunks:', currentSegmentChunksRef.current.length);
+    console.log('🔄 Processing current audio segment...', {
+      chunks: currentSegmentChunksRef.current.length,
+      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0),
+      recorderState: mediaRecorderRef.current.state
+    });
+    
     setIsListening(false);
     setIsProcessing(true);
     
-    // Create blob from current chunks
-    const mimeType = mediaRecorderRef.current.mimeType;
-    const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
-    console.log('📦 Created segment blob:', audioBlob.size, 'bytes', 'type:', audioBlob.type);
-    
-    // Clear current chunks for next segment
-    currentSegmentChunksRef.current = [];
-    
-    // Clear silence timer
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
-    }
-    
-    // Process the audio segment
-    if (audioBlob.size > 0) {
-      await processVoiceInput(audioBlob);
-    } else {
-      console.warn('⚠️ Empty audio blob, resuming listening...');
+    try {
+      // Create blob from current chunks
+      const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
+      const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
+      console.log('📦 Created segment blob:', {
+        size: audioBlob.size,
+        type: audioBlob.type,
+        chunks: currentSegmentChunksRef.current.length
+      });
+      
+      // Clear current chunks for next segment
+      currentSegmentChunksRef.current = [];
+      
+      // Clear silence timer
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      
+      // Process the audio segment
+      if (audioBlob.size > 100) { // Minimum 100 bytes to avoid empty submissions
+        console.log('📤 Sending audio to OpenAI...');
+        await processVoiceInput(audioBlob);
+      } else {
+        console.warn('⚠️ Audio blob too small, resuming listening...', audioBlob.size, 'bytes');
+        setIsProcessing(false);
+      }
+    } catch (error) {
+      console.error('❌ Error in processCurrentSegment:', error);
       setIsProcessing(false);
     }
   };
@@ -546,8 +624,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
         isVoiceModeActive ? 'ring-2 ring-primary ring-offset-2' : ''
       } ${
-        isListening && isVoiceModeActive ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse bg-green-500 ring-green-400' : 'hover:scale-105'
-      } ${isProcessing ? 'animate-spin' : ''} ${isPlaying ? 'animate-pulse bg-blue-500' : ''}`}
+        isListening && isVoiceModeActive ? 'scale-110 shadow-lg animate-pulse bg-secondary/80 ring-secondary border-secondary' : 'hover:scale-105'
+      } ${isProcessing ? 'animate-spin bg-primary/80' : ''} ${isPlaying ? 'animate-pulse bg-accent/80' : ''}`}
       title={isVoiceModeActive ? 'Stop Continuous Voice Mode' : 'Start Continuous Voice Mode'}
     >
       {getButtonIcon()}
