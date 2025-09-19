@@ -364,14 +364,20 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   }, []);
 
   const processVoiceInput = async (audioBlob: Blob) => {
+    // Prevent duplicate processing
+    if (isProcessingRef.current) {
+      console.log('⚠️ Already processing, skipping duplicate call');
+      return;
+    }
+
     console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
     setIsProcessing(true);
     isProcessingRef.current = true;
     
     try {
-      // Convert speech to text
+      // Convert speech to text - use webm format explicitly
       const formData = new FormData();
-      formData.append('audio', audioBlob, `audio.${audioBlob.type.split('/')[1].split(';')[0]}`);
+      formData.append('audio', audioBlob, 'audio.webm');
       
       console.log('📤 SENDING AUDIO TO OPENAI - Size:', audioBlob.size, 'bytes, Type:', audioBlob.type);
       console.log('🔊 Sending to speech-to-text function...');
@@ -392,8 +398,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       if (!userText || userText.trim() === '') {
         console.warn('⚠️ Empty transcription received, resuming listening');
-        setIsProcessing(false);
-        isProcessingRef.current = false;
         return;
       }
       
@@ -464,7 +468,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         throw new Error(`No valid AI response content received. Response: ${JSON.stringify(aiResponse)}`);
       }
 
-      // Save AI message
+      // Save AI message - only save once to prevent duplicates
       const aiMessageId = uuidv4();
       console.log('💾 Saving AI message to database...');
       const { error: aiMessageError } = await supabase
@@ -484,8 +488,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ AI message saved successfully');
       onMessageSent(aiMessageId, aiText, 'assistant');
 
-      // Convert AI response to speech with better error handling
-      console.log('🗣️ Converting AI response to speech...');
+      // Convert AI response to speech
+      console.log('🔊 Converting AI response to speech...');
       const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
         body: {
           text: aiText,
@@ -497,7 +501,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
       if (speechError) {
         console.error('❌ Speech error details:', speechError);
-        console.error('❌ Speech error message:', speechError.message);
         throw new Error(`Text-to-speech failed: ${speechError.message}`);
       }
 
@@ -513,11 +516,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
-      alert(`Voice processing error: ${error.message}`);
     } finally {
       setIsProcessing(false);
       isProcessingRef.current = false;
       console.log('🔄 Processing finished, ready for next input');
+      
+      // Resume listening if voice mode is still active and not playing
+      if (isVoiceModeActiveRef.current && !isPlayingRef.current) {
+        setTimeout(() => {
+          setIsListening(true);
+          isListeningRef.current = true;
+          console.log('🔄 Resumed listening after processing');
+        }, 500);
+      }
     }
   };
 
