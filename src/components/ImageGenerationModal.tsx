@@ -130,13 +130,14 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
         throw new Error('Failed to generate image');
       }
 
-      // Navigate to the new chat
+      // Navigate to the new chat and close modal
+      onClose();
       navigate(`/chat/${newChat.id}`);
 
-      toast({
-        title: "Image generated!",
-        description: "Opening your new chat with the generated image.",
-      });
+      // Refresh the page to update sidebar
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
 
     } catch (error) {
       console.error('Error generating image:', error);
