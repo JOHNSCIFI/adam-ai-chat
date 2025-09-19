@@ -47,19 +47,25 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const rms = Math.sqrt(sum / bufferLength);
     const volume = rms / 255; // Normalize to 0-1
     
-    const threshold = 0.01; // Silence threshold
+    const threshold = 0.02; // Increased threshold for better detection
+    
+    console.log('🎵 Audio level:', volume.toFixed(4), 'threshold:', threshold, 'listening:', isListening, 'processing:', isProcessing);
     
     if (volume > threshold) {
       // Voice detected - clear silence timer and mark as listening
-      setIsListening(true);
+      if (!isListening) {
+        console.log('🗣️ Voice detected! Starting to listen...');
+        setIsListening(true);
+      }
       if (silenceTimerRef.current) {
+        console.log('🔇 Clearing silence timer - voice detected');
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
     } else {
-      // Silence detected - start/continue timer
+      // Silence detected - start/continue timer if we were listening
       if (!silenceTimerRef.current && isListening && !isProcessing && !isPlaying) {
-        console.log('🔇 Starting 2-second silence timer...');
+        console.log('🔇 Starting 2-second silence timer... (listening:', isListening, 'processing:', isProcessing, 'playing:', isPlaying, ')');
         silenceTimerRef.current = setTimeout(() => {
           console.log('🔇 2 seconds of silence detected - processing current segment');
           processCurrentSegment();
@@ -124,7 +130,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       // Start continuous recording
       mediaRecorder.start(100); // Very small chunks for responsiveness
       setIsRecording(true);
-      setIsListening(true);
+      setIsListening(false); // Will be set to true when voice is detected
       console.log('🔴 Continuous recording started');
       
       // Start voice activity detection
@@ -138,18 +144,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const processCurrentSegment = async () => {
     if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
-      console.log('⚠️ No audio to process');
+      console.log('⚠️ No audio to process - chunks:', currentSegmentChunksRef.current.length);
       setIsListening(false);
       return;
     }
 
-    console.log('🔄 Processing current audio segment...');
+    console.log('🔄 Processing current audio segment... chunks:', currentSegmentChunksRef.current.length);
     setIsListening(false);
+    setIsProcessing(true);
     
     // Create blob from current chunks
     const mimeType = mediaRecorderRef.current.mimeType;
     const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
-    console.log('📦 Created segment blob:', audioBlob.size, 'bytes');
+    console.log('📦 Created segment blob:', audioBlob.size, 'bytes', 'type:', audioBlob.type);
     
     // Clear current chunks for next segment
     currentSegmentChunksRef.current = [];
@@ -163,6 +170,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     // Process the audio segment
     if (audioBlob.size > 0) {
       await processVoiceInput(audioBlob);
+    } else {
+      console.warn('⚠️ Empty audio blob, resuming listening...');
+      setIsProcessing(false);
     }
   };
 
