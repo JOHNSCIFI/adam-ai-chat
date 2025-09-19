@@ -314,12 +314,33 @@ export default function ProjectPage() {
 
           if (response.ok) {
             const webhookData = await response.json();
-            // Save webhook response as AI message
+            console.log('Webhook response:', webhookData);
+            
+            // Parse webhook response using same logic as Chat component
+            let responseContent = '';
+            if (Array.isArray(webhookData) && webhookData.length > 0) {
+              const analysisTexts = webhookData.map(item => item.text || item.content || '').filter(text => text);
+              if (analysisTexts.length > 0) {
+                responseContent = analysisTexts.join('\n\n');
+              } else {
+                responseContent = 'File analyzed successfully';
+              }
+            } else if (webhookData.text) {
+              responseContent = webhookData.text;
+            } else if (webhookData.analysis || webhookData.content) {
+              responseContent = webhookData.analysis || webhookData.content;
+            } else if (webhookData.response || webhookData.message) {
+              responseContent = webhookData.response || webhookData.message;
+            } else {
+              responseContent = 'File processed successfully';
+            }
+            
+            // Save actual webhook response as AI message
             await supabase
               .from('messages')
               .insert({
                 chat_id: newChat.id,
-                content: webhookData.response || webhookData.message || 'File processed successfully.',
+                content: responseContent,
                 role: 'assistant'
               });
           }
