@@ -1,6 +1,6 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { Radio, Square, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
@@ -21,11 +21,58 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
+
+  const detectSilence = useCallback(() => {
+    if (!analyserRef.current) return;
+
+    const bufferLength = analyserRef.current.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+    analyserRef.current.getByteFrequencyData(dataArray);
+
+    // Calculate average volume
+    const average = dataArray.reduce((a, b) => a + b) / bufferLength;
+    const silenceThreshold = 10; // Adjust this value as needed
+
+    if (average < silenceThreshold) {
+      // If silence detected, start/reset the timeout
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+      }
+      
+      silenceTimeoutRef.current = setTimeout(() => {
+        if (isRecording) {
+          stopRecording();
+        }
+      }, 2000); // 2 seconds of silence
+    } else {
+      // If sound detected, clear the timeout
+      if (silenceTimeoutRef.current) {
+        clearTimeout(silenceTimeoutRef.current);
+        silenceTimeoutRef.current = null;
+      }
+    }
+
+    // Continue monitoring if still recording
+    if (isRecording) {
+      requestAnimationFrame(detectSilence);
+    }
+  }, [isRecording]);
 
   const startRecording = async () => {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Set up audio analysis for silence detection
+      audioContextRef.current = new AudioContext();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      analyserRef.current = audioContextRef.current.createAnalyser();
+      analyserRef.current.fftSize = 256;
+      source.connect(analyserRef.current);
+
       const mediaRecorder = new MediaRecorder(stream);
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
@@ -40,12 +87,23 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
         await processVoiceInput(audioBlob);
         
-        // Stop all tracks to release microphone
+        // Clean up
         stream.getTracks().forEach(track => track.stop());
+        if (audioContextRef.current) {
+          audioContextRef.current.close();
+          audioContextRef.current = null;
+        }
+        if (silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current);
+          silenceTimeoutRef.current = null;
+        }
       };
 
       mediaRecorder.start();
       setIsRecording(true);
+      
+      // Start silence detection
+      detectSilence();
     } catch (error) {
       console.error('Error starting recording:', error);
     }
@@ -187,10 +245,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const getButtonIcon = () => {
-    if (isPlaying) return <Volume2 className="h-5 w-5" />;
-    if (isProcessing) return <div className="animate-spin h-5 w-5 border-2 border-current rounded-full border-t-transparent" />;
-    if (isRecording) return <MicOff className="h-5 w-5 animate-pulse" />;
-    return <Mic className="h-5 w-5" />;
+    if (isPlaying) return <Volume2 className="h-6 w-6" />;
+    if (isProcessing) return <div className="animate-spin h-6 w-6 border-2 border-current rounded-full border-t-transparent" />;
+    if (isRecording) return <Square className="h-6 w-6 animate-pulse" />;
+    return <Radio className="h-6 w-6" />;
   };
 
   const getButtonVariant = () => {
@@ -216,8 +274,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       disabled={isProcessing || isPlaying}
       variant={getButtonVariant()}
       size="icon"
-      className={`h-10 w-10 rounded-full flex-shrink-0 transition-all duration-200 ${
-        isRecording ? 'scale-110 shadow-lg shadow-destructive/25' : 'hover:scale-105'
+      className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
+        isRecording ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse' : 'hover:scale-105'
       } ${isProcessing || isPlaying ? 'animate-pulse' : ''}`}
     >
       {getButtonIcon()}
