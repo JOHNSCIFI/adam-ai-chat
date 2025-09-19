@@ -371,8 +371,21 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     }
 
     console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
+    
+    // Set processing state
     setIsProcessing(true);
     isProcessingRef.current = true;
+    
+    // Add timeout to prevent stuck processing
+    const processingTimeout = setTimeout(() => {
+      console.error('⏰ Processing timeout - resetting state');
+      setIsProcessing(false);
+      isProcessingRef.current = false;
+      if (isVoiceModeActiveRef.current) {
+        setIsListening(true);
+        isListeningRef.current = true;
+      }
+    }, 30000); // 30 second timeout
     
     try {
       // Convert speech to text - use webm format explicitly
@@ -398,6 +411,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       if (!userText || userText.trim() === '') {
         console.warn('⚠️ Empty transcription received, resuming listening');
+        // Clear processing state for empty transcription
+        clearTimeout(processingTimeout);
+        setIsProcessing(false);
+        isProcessingRef.current = false;
+        if (isVoiceModeActiveRef.current) {
+          setIsListening(true);
+          isListeningRef.current = true;
+        }
         return;
       }
       
@@ -517,6 +538,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
     } finally {
+      // Clear timeout and processing state
+      clearTimeout(processingTimeout);
       setIsProcessing(false);
       isProcessingRef.current = false;
       console.log('🔄 Processing finished, ready for next input');
@@ -527,7 +550,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           setIsListening(true);
           isListeningRef.current = true;
           console.log('🔄 Resumed listening after processing');
-        }, 500);
+        }, 1000);
       }
     }
   };
