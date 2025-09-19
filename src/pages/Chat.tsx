@@ -7,7 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { toast } from 'sonner';
@@ -72,6 +72,9 @@ export default function Chat() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isImageMode, setIsImageMode] = useState(false);
+  const [isStylesOpen, setIsStylesOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -323,6 +326,71 @@ export default function Chat() {
     if (type.startsWith('audio/')) return 'audio';
     if (type.includes('pdf') || type.includes('document') || type.includes('text')) return 'document';
     return 'file';
+  };
+
+  const imageStyles = [
+    {
+      name: 'Cyberpunk',
+      prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.',
+    },
+    {
+      name: 'Anime',
+      prompt: 'Create an image in a detailed anime aesthetic: expressive eyes, smooth cel-shaded coloring, and clean linework. Emphasize emotion and character presence, with a sense of motion or atmosphere typical of anime scenes.',
+    },
+    {
+      name: 'Dramatic Headshot',
+      prompt: 'Create an ultra-realistic high-contrast black-and-white headshot, close up, black shadow background, 35mm lens, 4K quality, aspect ratio 4:3.',
+    },
+    {
+      name: 'Coloring Book',
+      prompt: 'Create an image in a children\'s coloring book style: bold, even black outlines on white, no shading or tone. Simplify textures into playful, easily recognizable shapes.',
+    },
+    {
+      name: 'Photo Shoot',
+      prompt: 'Create an ultra-realistic professional photo shoot with soft lighting.',
+    },
+    {
+      name: 'Retro Cartoon',
+      prompt: 'Create a retro 1950s cartoon style image, minimal vector art, Art Deco inspired, clean flat colors, geometric shapes, mid-century modern design, elegant silhouettes, UPA style animation, smooth lines, limited color palette (black, red, beige, brown, white), grainy paper texture background, vintage jazz club atmosphere, subtle lighting, slightly exaggerated character proportions, classy and stylish mood.',
+    },
+    {
+      name: '80s Glam',
+      prompt: 'Create a selfie styled like a cheesy 1980s mall glamour shot, foggy soft lighting, teal and magenta lasers in the background, feathered hair, shoulder pads, portrait studio vibes, ironic \'glam 4 life\' caption.',
+    },
+    {
+      name: 'Art Nouveau',
+      prompt: 'Create an image in an Art Nouveau style: flowing lines, organic shapes, floral motifs, and soft, decorative elegance.',
+    },
+    {
+      name: 'Synthwave',
+      prompt: 'Create an image in a synthwave aesthetic: retro-futuristic 1980s vibe with neon grids, glowing sunset, vibrant magenta-and-cyan gradients, chrome highlights, and a nostalgic outrun atmosphere.',
+    },
+  ];
+
+  const handleStyleSelect = (style: typeof imageStyles[0]) => {
+    setInput(style.prompt);
+    setSelectedStyle(style.name);
+    setIsStylesOpen(false);
+    
+    // Focus the textarea after setting the style
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleCreateImageClick = () => {
+    setIsImageMode(true);
+    setIsPopoverOpen(false);
+    setInput('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleExitImageMode = () => {
+    setIsImageMode(false);
+    setSelectedStyle(null);
+    setInput('');
   };
 
   const sendMessage = async (e?: React.FormEvent) => {
@@ -1804,17 +1872,128 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     onClick={handleFileUpload}
                   >
                     <Paperclip className="h-4 w-4" />
-                    Attach files
+                    Add photos & files
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="w-full justify-start gap-2"
+                    onClick={handleCreateImageClick}
+                  >
+                    <ImageIcon2 className="h-4 w-4" />
+                    Create image
                   </Button>
                 </PopoverContent>
               </Popover>
+              
+              {/* Image mode indicator */}
+              {isImageMode && (
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    <ImageIcon className="h-3 w-3" />
+                    <span>Image</span>
+                    <button 
+                      onClick={handleExitImageMode}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Styles dropdown */}
+                  <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80"
+                      >
+                        <Palette className="h-3 w-3" />
+                        Styles
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                      <div className="grid grid-cols-3 gap-3">
+                        {imageStyles.map((style) => (
+                          <button
+                            key={style.name}
+                            onClick={() => handleStyleSelect(style)}
+                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                              <span className="text-xs font-medium">
+                                {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <span className="text-xs font-medium leading-tight">{style.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
+              
+              {/* Image mode indicator */}
+              {isImageMode && (
+                <div className="flex items-center gap-2 mb-2 flex-wrap">
+                  <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    <ImageIcon2 className="h-3 w-3" />
+                    <span>Image</span>
+                    <button 
+                      onClick={handleExitImageMode}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Styles dropdown */}
+                  <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80"
+                      >
+                        <Palette className="h-3 w-3" />
+                        Styles
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                      <div className="grid grid-cols-3 gap-3">
+                        {imageStyles.map((style) => (
+                          <button
+                            key={style.name}
+                            onClick={() => handleStyleSelect(style)}
+                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center"
+                          >
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
+                              <span className="text-xs font-medium">
+                                {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <span className="text-xs font-medium leading-tight">{style.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
               
               <Textarea
                 ref={textareaRef}
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Message AdamGPT..."
+                placeholder={isImageMode ? "Describe an image" : "Message AdamGPT..."}
                 className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
                 style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
                 disabled={false}
