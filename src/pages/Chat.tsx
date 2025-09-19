@@ -526,9 +526,9 @@ export default function Chat() {
         });
       }
 
-      // If files were analyzed, show AI analysis response
-      if (aiAnalysisResponse && !userMessage) {
-        // Create assistant message with analysis results
+      // If files were analyzed, show AI analysis response instead of regular AI
+      if (aiAnalysisResponse && files.length > 0) {
+        // Create assistant message with analysis results from webhook
         const analysisMessage: Message = {
           id: `temp-ai-${Date.now()}`,
           content: aiAnalysisResponse.trim(),
@@ -573,7 +573,7 @@ export default function Chat() {
             }
           });
         }
-      } else if (userMessage) {
+      } else if (userMessage && files.length === 0) {
         // Call AI for regular chat response
         if (!loading && !isGeneratingResponse) {
           console.log('Triggering AI response');
