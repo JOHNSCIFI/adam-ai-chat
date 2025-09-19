@@ -1862,16 +1862,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 {/* Voice Mode button */}
                 <VoiceModeButton
                   onMessageSent={(messageId, content, role) => {
-                    // For voice mode, don't refresh messages immediately
-                    // Let the voice response play first
-                    if (role === 'assistant') {
-                      // Only refresh messages after a delay to let audio play
+                    // Mark voice messages as processed to prevent auto-trigger duplicates
+                    if (role === 'user') {
+                      processedUserMessages.current.add(messageId);
+                      console.log('✅ Voice user message marked as processed:', messageId);
+                      // Refresh messages immediately for user voice input
+                      fetchMessages();
+                    } else if (role === 'assistant') {
+                      // For assistant messages, refresh after a delay to let audio play
                       setTimeout(() => {
                         fetchMessages();
                       }, 1000);
-                    } else {
-                      // For user messages, refresh immediately
-                      fetchMessages();
                     }
                   }}
                   chatId={chatId}
