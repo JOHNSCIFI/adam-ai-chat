@@ -356,7 +356,7 @@ export default function Index() {
           
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2 justify-center">
+            <div className="mb-4 flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
                 <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   {getFileIcon(file.type)}
