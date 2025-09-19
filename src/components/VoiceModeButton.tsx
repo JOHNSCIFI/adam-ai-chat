@@ -161,7 +161,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         throw new Error(aiError.message);
       }
 
-      const aiText = aiResponse?.response;
+      const aiText = aiResponse?.content;
       console.log('✅ AI said:', aiText);
 
       if (!aiText) {
