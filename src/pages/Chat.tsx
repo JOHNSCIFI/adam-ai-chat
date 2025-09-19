@@ -393,6 +393,31 @@ export default function Chat() {
     setInput('');
   };
 
+  const getStyleBackground = (styleName: string) => {
+    switch (styleName) {
+      case 'Cyberpunk':
+        return 'bg-gradient-to-br from-cyan-500/30 to-purple-600/40 border border-cyan-400/20';
+      case 'Anime':
+        return 'bg-gradient-to-br from-pink-400/30 to-orange-400/40 border border-pink-300/20';
+      case 'Dramatic Headshot':
+        return 'bg-gradient-to-br from-gray-800/50 to-gray-200/30 border border-gray-400/20';
+      case 'Coloring Book':
+        return 'bg-white border-2 border-black/60';
+      case 'Photo Shoot':
+        return 'bg-gradient-to-br from-amber-300/30 to-orange-300/40 border border-amber-200/30';
+      case 'Retro Cartoon':
+        return 'bg-gradient-to-br from-red-600/40 to-amber-600/30 border border-red-400/20';
+      case '80s Glam':
+        return 'bg-gradient-to-br from-teal-400/40 to-fuchsia-500/40 border border-teal-300/30';
+      case 'Art Nouveau':
+        return 'bg-gradient-to-br from-emerald-400/30 to-yellow-500/30 border border-emerald-300/20';
+      case 'Synthwave':
+        return 'bg-gradient-to-br from-fuchsia-500/40 to-cyan-400/40 border border-fuchsia-400/30';
+      default:
+        return 'bg-gradient-to-br from-primary/20 to-primary/40';
+    }
+  };
+
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if ((!input.trim() && selectedFiles.length === 0) || !chatId || !user || loading) return;
@@ -1899,8 +1924,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         onClick={() => handleStyleSelect(style)}
                         className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center"
                       >
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary/20 to-primary/40 flex items-center justify-center">
-                          <span className="text-xs font-medium">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                          <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
                             {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
                           </span>
                         </div>
