@@ -187,10 +187,24 @@ export default function Index() {
         console.log('Initial message added');
 
         // Handle files vs text-only messages differently
-        if (uploadedFiles.length > 0) {
-          // Send to webhook for file processing
+        if (files.length > 0) {
+          // Send files directly to webhook in base64 format
           try {
             const webhookUrl = 'https://adsgbt.app.n8n.cloud/webhook/adamGPT';
+            
+            // Convert first file to base64 for webhook
+            const file = files[0]; // Handle first file for now
+            const base64Data = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result as string;
+                // Remove data URL prefix to get pure base64
+                const base64 = result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(file);
+            });
+
             const response = await fetch(webhookUrl, {
               method: 'POST',
               headers: {
@@ -198,9 +212,13 @@ export default function Index() {
               },
               body: JSON.stringify({
                 message: initialMessage,
-                files: uploadedFiles,
                 chatId: chatData.id,
-                userId: user.id
+                userId: user.id,
+                type: file.type.split('/')[1] || 'file',
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                fileData: base64Data
               })
             });
 
