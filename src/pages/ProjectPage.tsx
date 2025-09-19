@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X } from 'lucide-react';
-import { VoiceModeButton } from '@/components/VoiceModeButton';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -498,59 +497,6 @@ export default function ProjectPage() {
     }
   };
 
-  // Handle voice message - create new chat and add user message
-  const handleVoiceMessage = async (message: string) => {
-    if (!user || !project) return;
-
-    try {
-      // Create a new chat for voice conversation
-      const { data: newChat, error: chatError } = await supabase
-        .from('chats')
-        .insert({
-          user_id: user.id,
-          title: message.length > 50 ? message.substring(0, 50) + '...' : message,
-          project_id: project.id
-        })
-        .select()
-        .single();
-
-      if (chatError) {
-        console.error('Error creating chat for voice message:', chatError);
-        return;
-      }
-
-      // Add user message to the new chat
-      const { error: messageError } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: newChat.id,
-          content: message,
-          role: 'user',
-          file_attachments: []
-        });
-
-      if (messageError) {
-        console.error('Error saving voice message:', messageError);
-        return;
-      }
-
-      // Navigate to the new chat
-      navigate(`/chat/${newChat.id}`);
-      
-      // Refresh chats list
-      fetchProjectChats();
-    } catch (error) {
-      console.error('Error handling voice message:', error);
-    }
-  };
-
-  // Handle AI response - add to current chat (will be handled by chat page)
-  const handleAIResponse = async (response: string) => {
-    // This is just for logging - the actual AI response will be handled
-    // by the chat page after navigation
-    console.log('AI response received:', response.substring(0, 100) + '...');
-  };
-
   if (!project) {
     return <div>Loading...</div>;
   }
@@ -732,15 +678,24 @@ export default function ProjectPage() {
                       {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </Button>
                     
-                     {/* Voice Mode button - replaces send button */}
-                     <VoiceModeButton
-                       onVoiceMessage={handleVoiceMessage}
-                       onAIResponse={handleAIResponse}
-                       disabled={loading}
-                       actualTheme={actualTheme}
-                       project={project}
-                       user={user}
-                     />
+                    {/* Send button */}
+                    <Button
+                      type="button"
+                      onClick={sendMessage}
+                      disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                      size="sm"
+                      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
+                      style={{ 
+                        backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
+                          ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
+                          : 'hsl(var(--muted))',
+                        color: (input.trim() || selectedFiles.length > 0) && !loading
+                          ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
+                          : 'hsl(var(--muted-foreground))'
+                      }}
+                    >
+                      <SendHorizontalIcon className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
               </div>
