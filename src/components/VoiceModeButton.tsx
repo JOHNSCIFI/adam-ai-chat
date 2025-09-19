@@ -132,17 +132,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       streamRef.current = stream;
       
-      // Set up audio context for voice activity detection
-      audioContextRef.current = new AudioContext({ 
-        sampleRate: 24000,
-        latencyHint: 'interactive'
-      });
+      // Use the pre-created AudioContext and resume it if needed
+      if (!audioContextRef.current) {
+        console.error('❌ AudioContext not created during click!');
+        return;
+      }
       
       // Resume audio context if suspended (browser requirement)
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
         console.log('🔊 Audio context resumed');
       }
+      
+      console.log('🔊 AudioContext state:', audioContextRef.current.state);
       
       analyserRef.current = audioContextRef.current.createAnalyser();
       sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
@@ -207,6 +209,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('🔴 Continuous recording started');
       
       // Start voice activity detection
+      console.log('🎵 Starting voice activity detection...');
       requestAnimationFrame(checkAudioLevel);
       
     } catch (error) {
@@ -590,10 +593,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     return 'default';
   };
 
-  const startVoiceMode = () => {
+  const startVoiceMode = async () => {
     console.log('🎤 Starting continuous voice mode...');
     setIsVoiceModeActive(true);
-    startContinuousRecording();
+    
+    // Create AudioContext immediately on user click (browser security requirement)
+    try {
+      audioContextRef.current = new AudioContext({ 
+        sampleRate: 24000,
+        latencyHint: 'interactive'
+      });
+      console.log('🔊 AudioContext created immediately on click');
+    } catch (error) {
+      console.error('❌ Failed to create AudioContext:', error);
+    }
+    
+    await startContinuousRecording();
   };
 
   const stopVoiceMode = () => {
