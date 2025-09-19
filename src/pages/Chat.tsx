@@ -2027,7 +2027,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 {/* Voice Mode button */}
                 <VoiceModeButton
                   onMessageSent={(messageId, content, role) => {
-                    fetchMessages();
+                    // For voice mode, don't refresh messages immediately
+                    // Let the voice response play first
+                    if (role === 'assistant') {
+                      // Only refresh messages after a delay to let audio play
+                      setTimeout(() => {
+                        fetchMessages();
+                      }, 1000);
+                    } else {
+                      // For user messages, refresh immediately
+                      fetchMessages();
+                    }
                   }}
                   chatId={chatId}
                   actualTheme={actualTheme}

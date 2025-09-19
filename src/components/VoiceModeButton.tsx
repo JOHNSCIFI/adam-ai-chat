@@ -345,6 +345,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('🎵 Creating audio element and playing...');
       const audio = new Audio(audioUrl);
       
+      // Handle browser autoplay restrictions
+      audio.preload = 'auto';
+      
       audio.onended = () => {
         console.log('🔇 Audio playback ended');
         setIsPlaying(false);
@@ -356,9 +359,59 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
       };
+
+      audio.oncanplaythrough = async () => {
+        try {
+          console.log('▶️ Audio ready to play, attempting playback...');
+          await audio.play();
+          console.log('✅ Audio playback started successfully');
+        } catch (playError) {
+          console.error('❌ Audio play failed:', playError);
+          
+          // Fallback: Create a user-activated play button
+          const playButton = document.createElement('button');
+          playButton.textContent = '🔊 Click to play AI response';
+          playButton.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            padding: 12px 24px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+          `;
+          
+          playButton.onclick = async () => {
+            try {
+              await audio.play();
+              document.body.removeChild(playButton);
+            } catch (buttonPlayError) {
+              console.error('❌ Button play failed:', buttonPlayError);
+              document.body.removeChild(playButton);
+              setIsPlaying(false);
+            }
+          };
+          
+          document.body.appendChild(playButton);
+          
+          // Auto-remove after 10 seconds if not clicked
+          setTimeout(() => {
+            if (document.body.contains(playButton)) {
+              document.body.removeChild(playButton);
+              setIsPlaying(false);
+            }
+          }, 10000);
+        }
+      };
       
-      await audio.play();
-      console.log('▶️ Audio playback started');
+      // Load the audio
+      audio.load();
       
     } catch (error) {
       console.error('💥 Error playing audio:', error);
