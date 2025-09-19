@@ -1539,21 +1539,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     // Auto-resize textarea
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.overflowY = 'hidden';
-      
       const scrollHeight = textareaRef.current.scrollHeight;
-      const maxHeight = 240; // Maximum height in pixels (matches CSS max-h-[240px])
-      const minHeight = 24; // Minimum height
-      
-      if (scrollHeight <= maxHeight) {
-        // If content fits, grow the textarea and hide scrollbar
-        textareaRef.current.style.height = `${Math.max(scrollHeight, minHeight)}px`;
-        textareaRef.current.style.overflowY = 'hidden';
-      } else {
-        // If content exceeds max height, set to max and show scrollbar
-        textareaRef.current.style.height = `${maxHeight}px`;
-        textareaRef.current.style.overflowY = 'auto';
-      }
+      const maxHeight = 200; // Maximum height in pixels
+      textareaRef.current.style.height = `${Math.min(scrollHeight, maxHeight)}px`;
     }
   };
 
@@ -1955,13 +1943,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={isImageMode ? "Describe an image" : "Message AdamGPT..."}
-                className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+                className="flex-1 min-h-[24px] max-h-[240px] overflow-y-auto border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
                 style={{ 
                   wordWrap: 'break-word', 
                   overflowWrap: 'break-word',
-                  lineHeight: '1.5rem',
-                  height: '24px',
-                  overflowY: 'hidden'
+                  lineHeight: '1.5rem'
                 }}
                 disabled={false}
                 rows={1}
