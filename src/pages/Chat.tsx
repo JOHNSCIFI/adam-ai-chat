@@ -217,12 +217,12 @@ export default function Chat() {
     }
 
     try {
-      // Analyze files and extract their internal content (not metadata)
-      let extractedFileContent = '';
+      let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
       
+      // Handle file analysis via webhook
       if (files.length > 0) {
-        console.log('Extracting content from inside files...');
+        console.log('Sending files to webhook for analysis...');
         
         for (const file of files) {
           // Check file size limits
@@ -241,25 +241,71 @@ export default function Chat() {
             url: URL.createObjectURL(file)
           });
 
-          // Extract actual content from inside the file (with image analysis)
-          const fileContent = await extractFileContent(file);
-          extractedFileContent += `\n\n[Content extracted from ${file.name}]:\n${fileContent}`;
-          
-          // For images, also store the analysis result in the message
+          // Convert file to base64 for webhook
+          const reader = new FileReader();
+          const base64 = await new Promise<string>((resolve, reject) => {
+            reader.onload = () => {
+              const result = reader.result as string;
+              resolve(result.split(',')[1]);
+            };
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+          });
+
+          // Determine file type for webhook
+          let webhookType = 'file';
           if (file.type.startsWith('image/')) {
-            // The analysis is already stored in imageAnalysisResults by extractFileContent
-            console.log('Image analysis stored for future reference');
+            webhookType = 'analyse_image';
+          } else if (file.type.includes('pdf')) {
+            webhookType = 'pdf';
+          } else if (file.type.includes('document') || file.type.includes('word')) {
+            webhookType = 'document';
+          } else if (file.type.startsWith('audio/')) {
+            webhookType = 'audio';
+          } else if (file.type.startsWith('video/')) {
+            webhookType = 'video';
+          } else if (file.type.startsWith('text/') || file.type.includes('json') || file.type.includes('csv')) {
+            webhookType = 'text';
+          }
+
+          // Send to webhook for analysis
+          try {
+            const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                type: webhookType,
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                fileData: base64,
+                userId: user.id,
+                chatId: chatId
+              }),
+            });
+
+            if (webhookResponse.ok) {
+              const analysisResult = await webhookResponse.json();
+              aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content || 'File analyzed successfully'}`;
+            } else {
+              aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
+            }
+          } catch (error) {
+            console.error('Webhook error:', error);
+            aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
           }
         }
       }
 
-      // Create clean user message (show text + file, but save images to storage for persistence)
+      // Create clean user message
       const newUserMessage: Message = {
         id: `temp-${Date.now()}`,
-        content: userMessage, // Keep user message clean
+        content: userMessage,
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: [] // Will be populated after saving to storage
+        file_attachments: tempFileAttachments
       };
 
       // Save image files to Supabase storage for persistence
@@ -319,25 +365,17 @@ export default function Chat() {
       setMessages(prev => [...prev, newUserMessage]);
       scrollToBottom();
 
-      // Prepare message for AI (include extracted file content only if no image context)
-      let aiMessage = userMessage;
-      if (!imageAnalysisResults.size && extractedFileContent) {
-        aiMessage = extractedFileContent 
-          ? `${userMessage}${extractedFileContent}` 
-          : userMessage;
-      }
-
-      // Start embedding generation in background (for AI message content)
-      const userEmbeddingPromise = generateEmbeddingAsync(aiMessage);
+      // Start embedding generation in background (for user message content)
+      const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
       
-      // Add user message to database (store original message for UI, analysis for AI context)
+      // Add user message to database
       const { data: insertedMessage, error: userError } = await supabase
         .from('messages')
         .insert({
           chat_id: chatId,
-          content: userMessage, // Store clean user message for UI
+          content: userMessage,
           role: 'user',
-          file_attachments: newUserMessage.file_attachments as any, // Store persistent file attachments
+          file_attachments: newUserMessage.file_attachments as any,
           embedding: null // Will be updated by background process
         })
         .select()
@@ -350,7 +388,7 @@ export default function Chat() {
         setMessages(prev => prev.map(msg => 
           msg.id === newUserMessage.id 
             ? { 
-                ...msg, // Keep the clean UI message
+                ...msg,
                 id: insertedMessage.id // Update with real ID
               }
             : msg
@@ -367,37 +405,85 @@ export default function Chat() {
         });
       }
 
-      // Call AI directly with extracted file content (don't rely on useEffect)
-      if (!loading && !isGeneratingResponse) {
-        console.log('Triggering AI response with extracted file content');
-        setIsGeneratingResponse(true);
+      // If files were analyzed, show AI analysis response
+      if (aiAnalysisResponse && !userMessage) {
+        // Create assistant message with analysis results
+        const analysisMessage: Message = {
+          id: `temp-ai-${Date.now()}`,
+          content: aiAnalysisResponse.trim(),
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: []
+        };
         
-        try {
-          // Check if this is an image generation request
-          const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
+        // Add to UI
+        setMessages(prev => [...prev, analysisMessage]);
+        scrollToBottom();
+        
+        // Start embedding generation for AI response
+        const aiEmbeddingPromise = generateEmbeddingAsync(aiAnalysisResponse);
+        
+        // Save to database
+        const { data: aiMessage, error: aiError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: aiAnalysisResponse.trim(),
+            role: 'assistant',
+            embedding: null
+          })
+          .select()
+          .single();
+        
+        if (aiMessage) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === analysisMessage.id 
+              ? { ...msg, id: aiMessage.id }
+              : msg
+          ));
           
-          if (isImageRequest) {
-            setCurrentImagePrompt(userMessage);
-          }
-          
-          const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
-        body: {
-          message: userMessage, // Send the original message
-          chat_id: chatId,
-          user_id: user.id,
-          file_analysis: extractedFileContent || null, // Send extracted file content separately
-          image_context: Array.from(imageAnalysisResults.values()) // Send all image analysis for context
-        }
+          // Update with embedding when ready
+          aiEmbeddingPromise.then((embedding) => {
+            if (embedding.length > 0) {
+              supabase
+                .from('messages')
+                .update({ embedding: embedding as any })
+                .eq('id', aiMessage.id);
+            }
           });
+        }
+      } else if (userMessage) {
+        // Call AI for regular chat response
+        if (!loading && !isGeneratingResponse) {
+          console.log('Triggering AI response');
+          setIsGeneratingResponse(true);
+          
+          try {
+            // Check if this is an image generation request
+            const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
+            
+            if (isImageRequest) {
+              setCurrentImagePrompt(userMessage);
+            }
+            
+            const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+              body: {
+                message: userMessage,
+                chat_id: chatId,
+                user_id: user.id,
+                file_analysis: null,
+                image_context: []
+              }
+            });
 
-          console.log('AI response:', aiResponse);
+            console.log('AI response:', aiResponse);
 
-          if (aiError) {
-            console.error('AI function error:', aiError);
-            throw new Error(`AI function failed: ${aiError.message}`);
-          }
+            if (aiError) {
+              console.error('AI function error:', aiError);
+              throw new Error(`AI function failed: ${aiError.message}`);
+            }
 
-          if (aiResponse) {
+            if (aiResponse) {
             let assistantResponse = '';
             let fileAttachments: any[] = [];
             
@@ -536,8 +622,8 @@ export default function Chat() {
         } catch (error) {
           console.error('AI response error:', error);
           setCurrentImagePrompt(null);
-        } finally {
-          setIsGeneratingResponse(false);
+            setIsGeneratingResponse(false);
+          }
         }
       }
 
@@ -573,6 +659,8 @@ export default function Chat() {
       console.error('Send message error:', error);
     } finally {
       setLoading(false);
+      setIsGeneratingResponse(false);
+      setCurrentImagePrompt(null);
     }
   };
 
@@ -1164,7 +1252,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !loading) {
       e.preventDefault();
       sendMessage();
     }
@@ -1494,7 +1582,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 placeholder="Message AdamGPT..."
                 className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
                 style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
-                disabled={loading}
+                disabled={false}
                 rows={1}
               />
               
