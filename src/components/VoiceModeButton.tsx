@@ -37,19 +37,74 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const isVoiceModeActiveRef = useRef<boolean>(false);
   
   const { user } = useAuth();
+  
+  // Process current audio segment
+  const processCurrentSegment = useCallback(async () => {
+    if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
+      console.log('⚠️ No audio to process - chunks:', currentSegmentChunksRef.current.length);
+      setIsListening(false);
+      isListeningRef.current = false;
+      return;
+    }
+
+    console.log('🔄 Processing current audio segment...', {
+      chunks: currentSegmentChunksRef.current.length,
+      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0),
+      recorderState: mediaRecorderRef.current.state
+    });
+    
+    setIsListening(false);
+    isListeningRef.current = false;
+    setIsProcessing(true);
+    isProcessingRef.current = true;
+    
+    try {
+      // Create blob from current chunks
+      const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
+      const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
+      console.log('📦 Created segment blob:', {
+        size: audioBlob.size,
+        type: audioBlob.type,
+        chunks: currentSegmentChunksRef.current.length
+      });
+      
+      // Clear current chunks for next segment
+      currentSegmentChunksRef.current = [];
+      
+      // Clear silence timer
+      if (silenceTimerRef.current) {
+        clearTimeout(silenceTimerRef.current);
+        silenceTimerRef.current = null;
+      }
+      
+      // Process the audio segment
+      if (audioBlob.size > 100) { // Minimum 100 bytes to avoid empty submissions
+        console.log('📤 Sending audio to OpenAI...');
+        await processVoiceInput(audioBlob);
+      } else {
+        console.warn('⚠️ Audio blob too small, resuming listening...', audioBlob.size, 'bytes');
+        setIsProcessing(false);
+        isProcessingRef.current = false;
+      }
+    } catch (error) {
+      console.error('❌ Error in processCurrentSegment:', error);
+      setIsProcessing(false);
+      isProcessingRef.current = false;
+    }
+  }, [chatId, user?.id, onMessageSent]);
 
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
-    // Always log the current state for debugging
-    console.log('🔍 checkAudioLevel called - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActive, 'listening:', isListening, 'processing:', isProcessing);
+    // Use refs for immediate state access to avoid stale closures
+    console.log('🔍 checkAudioLevel called - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActiveRef.current, 'listening:', isListeningRef.current, 'processing:', isProcessingRef.current);
     
     if (!analyserRef.current) {
-      console.log('❌ No analyser available, stopping audio level check');
+      console.log('🛑 Stopping audio analysis - no analyser');
       return;
     }
     
     // Continue even if voiceMode appears false - there might be a state race condition
-    if (!isVoiceModeActive) {
+    if (!isVoiceModeActiveRef.current) {
       console.log('⚠️ Voice mode appears inactive but continuing check...');
     }
     
@@ -93,58 +148,60 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         volume: volume.toFixed(4),
         speechVolume: speechVolume.toFixed(4),
         detected: isSpeechDetected,
-        listening: isListening,
-        processing: isProcessing,
-        playing: isPlaying,
-        voiceModeActive: isVoiceModeActive,
+        listening: isListeningRef.current,
+        processing: isProcessingRef.current,
+        playing: isPlayingRef.current,
+        voiceModeActive: isVoiceModeActiveRef.current,
         bufferLength,
         chunks: currentSegmentChunksRef.current?.length || 0
       });
       
-      if (isSpeechDetected && !isProcessing && !isPlaying) {
+      // Use refs for immediate state access
+      if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current) {
         // Speech detected - clear silence timer and mark as listening
-        if (!isListening) {
+        if (!isListeningRef.current) {
           console.log('🗣️ SPEECH DETECTED! Starting to listen...');
           setIsListening(true);
           isListeningRef.current = true;
+          console.log('✅ Listening state activated via ref');
         }
         if (silenceTimerRef.current) {
           console.log('🔇 Clearing silence timer - speech continues');
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
         }
-      } else if (isListening && !isProcessing && !isPlaying) {
+      } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
           console.log('🔇 Starting 1-second silence timer...', {
-            wasListening: isListening,
-            isProcessing,
-            isPlaying,
+            wasListening: isListeningRef.current,
+            isProcessing: isProcessingRef.current,
+            isPlaying: isPlayingRef.current,
             volume: volume.toFixed(4),
             speechVolume: speechVolume.toFixed(4),
             chunks: currentSegmentChunksRef.current?.length || 0
           });
           silenceTimerRef.current = setTimeout(() => {
-            console.log('🔇 1 second of silence - processing segment NOW');
+            console.log('⏰ 1 second of silence - processing segment NOW');
             processCurrentSegment();
           }, 1000);
         }
       }
       
-      // Continue checking regardless of voiceMode state to handle race conditions
-      if (analyserRef.current && streamRef.current) {
+      // Continue checking if we still have necessary components
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
         setTimeout(() => checkAudioLevel(), 50);
       } else {
-        console.log('🛑 Stopping audio analysis - no analyser or stream');
+        console.log('🛑 Stopping audio analysis - missing components or voice mode inactive');
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
       // Retry after error if we still have the necessary components
-      if (analyserRef.current && streamRef.current) {
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
         setTimeout(() => checkAudioLevel(), 100);
       }
     }
-  }, [isVoiceModeActive, isListening, isProcessing, isPlaying]);
+  }, [processCurrentSegment]);
 
   const startContinuousRecording = async () => {
     try {
@@ -262,59 +319,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     }
   };
 
-  const processCurrentSegment = async () => {
-    if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
-      console.log('⚠️ No audio to process - chunks:', currentSegmentChunksRef.current.length);
-      setIsListening(false);
-      isListeningRef.current = false;
-      return;
-    }
-
-    console.log('🔄 Processing current audio segment...', {
-      chunks: currentSegmentChunksRef.current.length,
-      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0),
-      recorderState: mediaRecorderRef.current.state
-    });
-    
-    setIsListening(false);
-    isListeningRef.current = false;
-    setIsProcessing(true);
-    isProcessingRef.current = true;
-    
-    try {
-      // Create blob from current chunks
-      const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
-      const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
-      console.log('📦 Created segment blob:', {
-        size: audioBlob.size,
-        type: audioBlob.type,
-        chunks: currentSegmentChunksRef.current.length
-      });
-      
-      // Clear current chunks for next segment
-      currentSegmentChunksRef.current = [];
-      
-      // Clear silence timer
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      
-      // Process the audio segment
-      if (audioBlob.size > 100) { // Minimum 100 bytes to avoid empty submissions
-        console.log('📤 Sending audio to OpenAI...');
-        await processVoiceInput(audioBlob);
-      } else {
-        console.warn('⚠️ Audio blob too small, resuming listening...', audioBlob.size, 'bytes');
-        setIsProcessing(false);
-        isProcessingRef.current = false;
-      }
-    } catch (error) {
-      console.error('❌ Error in processCurrentSegment:', error);
-      setIsProcessing(false);
-      isProcessingRef.current = false;
-    }
-  };
 
   const stopContinuousRecording = () => {
     console.log('🛑 Stopping continuous recording...');
