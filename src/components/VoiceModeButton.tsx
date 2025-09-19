@@ -188,16 +188,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       }
       
-      // Continue checking if we still have necessary components
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
+      // Continue checking only if conditions are right (not processing or playing)
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current) {
         setTimeout(() => checkAudioLevel(), 50);
       } else {
-        console.log('🛑 Stopping audio analysis - missing components or voice mode inactive');
+        console.log('🛑 Pausing audio analysis - processing:', isProcessingRef.current, 'playing:', isPlayingRef.current, 'voiceMode:', isVoiceModeActiveRef.current);
+        // If voice mode is still active but we're processing/playing, we'll resume later from the cooldown timers
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
-      // Retry after error if we still have the necessary components
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
+      // Retry after error only if not processing or playing
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current) {
         setTimeout(() => checkAudioLevel(), 100);
       }
     }
@@ -518,6 +519,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       setIsProcessing(false);
       isProcessingRef.current = false;
       console.log('🔄 Processing finished, ready for next input');
+      
+      // Add a small cooldown before allowing the next cycle
+      setTimeout(() => {
+        // Only resume if voice mode is still active and not playing
+        if (isVoiceModeActive && !isPlayingRef.current) {
+          console.log('💤 Cooldown finished, resuming audio analysis...');
+          checkAudioLevel(); // Resume audio analysis loop
+        }
+      }, 1000); // 1 second cooldown
     }
   };
 
@@ -549,12 +559,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        // Resume listening after AI response
+        // Resume listening after AI response with cooldown
         console.log('🔄 Resuming listening after AI response...');
         setTimeout(() => {
-          setIsListening(true);
-          isListeningRef.current = true;
-        }, 300);
+          if (isVoiceModeActiveRef.current) {
+            console.log('💤 AI finished speaking, resuming audio analysis...');
+            checkAudioLevel(); // Resume audio analysis loop
+          }
+        }, 500); // 500ms cooldown after AI finishes speaking
       };
 
       audio.onerror = (error) => {
