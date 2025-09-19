@@ -49,26 +49,9 @@ serve(async (req) => {
       throw new Error('No audio file provided');
     }
 
-    console.log('📝 Audio file received:', {
-      size: audioFile.size,
-      type: audioFile.type,
-      name: audioFile.name
-    });
-
-    // Create a new File with proper .webm extension and mime type
-    const processedFile = new File([audioFile], 'audio.webm', { 
-      type: 'audio/webm' 
-    });
-
-    console.log('📝 Processed audio file:', {
-      size: processedFile.size,
-      type: processedFile.type,
-      name: processedFile.name
-    });
-
     // Prepare form data for OpenAI
     const openaiFormData = new FormData();
-    openaiFormData.append('file', processedFile);
+    openaiFormData.append('file', audioFile);
     openaiFormData.append('model', 'whisper-1');
 
     // Send to OpenAI Whisper API
