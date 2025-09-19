@@ -292,6 +292,18 @@ export default function Chat() {
         ...msg,
         file_attachments: (msg.file_attachments as any) || []
       })) as Message[];
+      
+      // Debug logging
+      typedMessages.forEach(msg => {
+        if (msg.file_attachments && msg.file_attachments.length > 0) {
+          console.log('Message with file attachments:', {
+            messageId: msg.id,
+            role: msg.role,
+            fileAttachments: msg.file_attachments
+          });
+        }
+      });
+      
       setMessages(typedMessages);
     }
   };
@@ -1531,13 +1543,23 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 <div key={index}>
                   {isImageFile(file.type) && file.url ? (
                     <div className="space-y-2">
+                      {(() => {
+                        console.log('Rendering image file:', {
+                          fileName: file.name,
+                          fileType: file.type,
+                          fileUrl: file.url,
+                          isImageFile: isImageFile(file.type)
+                        });
+                        return null;
+                      })()}
                       <img 
                         src={file.url} 
                         alt={file.name || "Image"} 
                         className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border"
                         onClick={() => setSelectedImage({ url: file.url, name: file.name })}
                         onError={(e) => {
-                          console.error('Image load error:', e);
+                          console.error('Image load error for file:', file);
+                          console.error('Failed URL:', file.url);
                           e.currentTarget.style.display = 'none';
                         }}
                       />

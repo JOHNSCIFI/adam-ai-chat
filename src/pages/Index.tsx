@@ -180,6 +180,7 @@ export default function Index() {
       // Add initial message to the chat if provided
       if (initialMessage.trim() || uploadedFiles.length > 0) {
         console.log('Adding initial message to chat');
+        console.log('Upload files before saving to DB:', uploadedFiles);
         const { error: messageError } = await supabase
           .from('messages')
           .insert({
