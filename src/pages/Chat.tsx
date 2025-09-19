@@ -635,6 +635,11 @@ export default function Chat() {
 
       if (userError) throw userError;
 
+      // Mark this message as processed to prevent auto-trigger from handling it
+      if (insertedMessage) {
+        processedUserMessages.current.add(insertedMessage.id);
+      }
+
       // Update the message with the real ID from database
       if (insertedMessage) {
         setMessages(prev => prev.map(msg => 
