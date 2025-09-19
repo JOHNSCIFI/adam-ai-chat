@@ -33,9 +33,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
-    if (!analyserRef.current || !isVoiceModeActive) {
-      console.log('❌ checkAudioLevel stopped - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActive);
+    // Always log the current state for debugging
+    console.log('🔍 checkAudioLevel called - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActive, 'listening:', isListening, 'processing:', isProcessing);
+    
+    if (!analyserRef.current) {
+      console.log('❌ No analyser available, stopping audio level check');
       return;
+    }
+    
+    // Continue even if voiceMode appears false - there might be a state race condition
+    if (!isVoiceModeActive) {
+      console.log('⚠️ Voice mode appears inactive but continuing check...');
     }
     
     try {
@@ -69,7 +77,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       // More sensitive thresholds for better detection
       const generalThreshold = 0.005; // Very low for any sound
-      const speechThreshold = 0.01; // Low for speech detection
+      const speechThreshold = 0.008; // Even lower for speech detection
       
       // Consider it speech if we have both general audio and speech frequencies
       const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
@@ -82,8 +90,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         processing: isProcessing,
         playing: isPlaying,
         voiceModeActive: isVoiceModeActive,
-        bins: `${speechStartBin}-${speechEndBin}`,
-        bufferLength
+        bufferLength,
+        chunks: currentSegmentChunksRef.current?.length || 0
       });
       
       if (isSpeechDetected && !isProcessing && !isPlaying) {
@@ -105,23 +113,27 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
             isProcessing,
             isPlaying,
             volume: volume.toFixed(4),
-            speechVolume: speechVolume.toFixed(4)
+            speechVolume: speechVolume.toFixed(4),
+            chunks: currentSegmentChunksRef.current?.length || 0
           });
           silenceTimerRef.current = setTimeout(() => {
-            console.log('🔇 1 second of silence - processing segment');
+            console.log('🔇 1 second of silence - processing segment NOW');
             processCurrentSegment();
           }, 1000);
         }
       }
       
-      // Continue checking if voice mode is active
-      if (isVoiceModeActive) {
-        setTimeout(() => checkAudioLevel(), 50); // Use setTimeout instead of requestAnimationFrame for more reliable checking
+      // Continue checking regardless of voiceMode state to handle race conditions
+      if (analyserRef.current && streamRef.current) {
+        setTimeout(() => checkAudioLevel(), 50);
+      } else {
+        console.log('🛑 Stopping audio analysis - no analyser or stream');
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
-      if (isVoiceModeActive) {
-        setTimeout(() => checkAudioLevel(), 100); // Retry after error
+      // Retry after error if we still have the necessary components
+      if (analyserRef.current && streamRef.current) {
+        setTimeout(() => checkAudioLevel(), 100);
       }
     }
   }, [isVoiceModeActive, isListening, isProcessing, isPlaying]);
@@ -333,20 +345,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   }, []);
 
   const processVoiceInput = async (audioBlob: Blob) => {
-    setIsProcessing(true);
     console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
+    setIsProcessing(true);
     
     try {
       // Convert speech to text
       const formData = new FormData();
       formData.append('audio', audioBlob, `audio.${audioBlob.type.split('/')[1].split(';')[0]}`);
-      console.log('🔊 Sending audio to speech-to-text function...');
+      
+      console.log('📤 SENDING AUDIO TO OPENAI - Size:', audioBlob.size, 'bytes, Type:', audioBlob.type);
+      console.log('🔊 Sending to speech-to-text function...');
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
 
-      console.log('📝 Transcription response:', { transcriptionData, transcriptionError });
+      console.log('📝 Transcription response received:', { transcriptionData, transcriptionError });
 
       if (transcriptionError) {
         console.error('❌ Transcription error:', transcriptionError);
@@ -357,7 +371,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User said:', userText);
       
       if (!userText || userText.trim() === '') {
-        console.warn('⚠️ Empty transcription received');
+        console.warn('⚠️ Empty transcription received, resuming listening');
+        setIsProcessing(false);
         return;
       }
       
@@ -480,6 +495,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       alert(`Voice processing error: ${error.message}`);
     } finally {
       setIsProcessing(false);
+      console.log('🔄 Processing finished, ready for next input');
     }
   };
 
@@ -612,7 +628,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const startVoiceMode = async () => {
     console.log('🎤 Starting continuous voice mode...');
-    setIsVoiceModeActive(true);
     
     // Create AudioContext immediately on user click (browser security requirement)
     try {
@@ -624,6 +639,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     } catch (error) {
       console.error('❌ Failed to create AudioContext:', error);
     }
+    
+    // Set voice mode active BEFORE starting recording
+    setIsVoiceModeActive(true);
+    console.log('🎤 Voice mode set to ACTIVE');
     
     await startContinuousRecording();
   };
