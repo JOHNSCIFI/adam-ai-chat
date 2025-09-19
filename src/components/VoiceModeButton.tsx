@@ -33,84 +33,96 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
-    if (!analyserRef.current || !isVoiceModeActive) return;
-    
-    const bufferLength = analyserRef.current.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyserRef.current.getByteFrequencyData(dataArray);
-    
-    // Calculate overall RMS volume
-    let sum = 0;
-    for (let i = 0; i < bufferLength; i++) {
-      sum += dataArray[i] * dataArray[i];
-    }
-    const rms = Math.sqrt(sum / bufferLength);
-    const volume = rms / 255;
-    
-    // Human speech frequency analysis (85Hz - 4000Hz for better detection)
-    // With 24kHz sample rate and 2048 FFT: each bin = 24000/2048 = 11.72Hz
-    const binSize = 24000 / 2048; // ~11.72 Hz per bin
-    const speechStartBin = Math.floor(85 / binSize); // ~7
-    const speechEndBin = Math.floor(4000 / binSize); // ~341
-    
-    let speechSum = 0;
-    let speechBins = 0;
-    for (let i = speechStartBin; i < Math.min(speechEndBin, bufferLength); i++) {
-      speechSum += dataArray[i] * dataArray[i];
-      speechBins++;
+    if (!analyserRef.current || !isVoiceModeActive) {
+      console.log('❌ checkAudioLevel stopped - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActive);
+      return;
     }
     
-    const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
-    const speechVolume = speechRms / 255;
-    
-    // More sensitive thresholds for better detection
-    const generalThreshold = 0.005; // Very low for any sound
-    const speechThreshold = 0.01; // Low for speech detection
-    
-    // Consider it speech if we have both general audio and speech frequencies
-    const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
-    
-    console.log('🎵 Audio Analysis:', {
-      volume: volume.toFixed(4),
-      speechVolume: speechVolume.toFixed(4),
-      detected: isSpeechDetected,
-      listening: isListening,
-      processing: isProcessing,
-      playing: isPlaying,
-      voiceModeActive: isVoiceModeActive,
-      bins: `${speechStartBin}-${speechEndBin}`,
-      binSize: binSize.toFixed(2)
-    });
-    
-    if (isSpeechDetected && !isProcessing && !isPlaying) {
-      // Speech detected - clear silence timer and mark as listening
-      if (!isListening) {
-        console.log('🗣️ SPEECH DETECTED! Starting to listen...');
-        setIsListening(true);
+    try {
+      const bufferLength = analyserRef.current.frequencyBinCount;
+      const dataArray = new Uint8Array(bufferLength);
+      analyserRef.current.getByteFrequencyData(dataArray);
+      
+      // Calculate overall RMS volume
+      let sum = 0;
+      for (let i = 0; i < bufferLength; i++) {
+        sum += dataArray[i] * dataArray[i];
       }
-      if (silenceTimerRef.current) {
-        console.log('🔇 Clearing silence timer - speech continues');
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
+      const rms = Math.sqrt(sum / bufferLength);
+      const volume = rms / 255;
+      
+      // Human speech frequency analysis (85Hz - 4000Hz for better detection)
+      // With 24kHz sample rate and 2048 FFT: each bin = 24000/2048 = 11.72Hz
+      const binSize = 24000 / 2048; // ~11.72 Hz per bin
+      const speechStartBin = Math.floor(85 / binSize); // ~7
+      const speechEndBin = Math.floor(4000 / binSize); // ~341
+      
+      let speechSum = 0;
+      let speechBins = 0;
+      for (let i = speechStartBin; i < Math.min(speechEndBin, bufferLength); i++) {
+        speechSum += dataArray[i] * dataArray[i];
+        speechBins++;
       }
-    } else if (isListening && !isProcessing && !isPlaying) {
-      // Silence detected while we were listening - start timer
-      if (!silenceTimerRef.current) {
-        console.log('🔇 Starting 1-second silence timer...', {
-          wasListening: isListening,
-          isProcessing,
-          isPlaying
-        });
-        silenceTimerRef.current = setTimeout(() => {
-          console.log('🔇 1 second of silence - processing segment');
-          processCurrentSegment();
-        }, 1000);
+      
+      const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
+      const speechVolume = speechRms / 255;
+      
+      // More sensitive thresholds for better detection
+      const generalThreshold = 0.005; // Very low for any sound
+      const speechThreshold = 0.01; // Low for speech detection
+      
+      // Consider it speech if we have both general audio and speech frequencies
+      const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
+      
+      console.log('🎵 Audio Analysis:', {
+        volume: volume.toFixed(4),
+        speechVolume: speechVolume.toFixed(4),
+        detected: isSpeechDetected,
+        listening: isListening,
+        processing: isProcessing,
+        playing: isPlaying,
+        voiceModeActive: isVoiceModeActive,
+        bins: `${speechStartBin}-${speechEndBin}`,
+        bufferLength
+      });
+      
+      if (isSpeechDetected && !isProcessing && !isPlaying) {
+        // Speech detected - clear silence timer and mark as listening
+        if (!isListening) {
+          console.log('🗣️ SPEECH DETECTED! Starting to listen...');
+          setIsListening(true);
+        }
+        if (silenceTimerRef.current) {
+          console.log('🔇 Clearing silence timer - speech continues');
+          clearTimeout(silenceTimerRef.current);
+          silenceTimerRef.current = null;
+        }
+      } else if (isListening && !isProcessing && !isPlaying) {
+        // Silence detected while we were listening - start timer
+        if (!silenceTimerRef.current) {
+          console.log('🔇 Starting 1-second silence timer...', {
+            wasListening: isListening,
+            isProcessing,
+            isPlaying,
+            volume: volume.toFixed(4),
+            speechVolume: speechVolume.toFixed(4)
+          });
+          silenceTimerRef.current = setTimeout(() => {
+            console.log('🔇 1 second of silence - processing segment');
+            processCurrentSegment();
+          }, 1000);
+        }
       }
-    }
-    
-    // Continue checking if voice mode is active
-    if (isVoiceModeActive) {
-      requestAnimationFrame(checkAudioLevel);
+      
+      // Continue checking if voice mode is active
+      if (isVoiceModeActive) {
+        setTimeout(() => checkAudioLevel(), 50); // Use setTimeout instead of requestAnimationFrame for more reliable checking
+      }
+    } catch (error) {
+      console.error('❌ Error in checkAudioLevel:', error);
+      if (isVoiceModeActive) {
+        setTimeout(() => checkAudioLevel(), 100); // Retry after error
+      }
     }
   }, [isVoiceModeActive, isListening, isProcessing, isPlaying]);
 
@@ -210,7 +222,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       // Start voice activity detection
       console.log('🎵 Starting voice activity detection...');
-      requestAnimationFrame(checkAudioLevel);
+      
+      // Add a small delay to ensure everything is set up, then start checking
+      setTimeout(() => {
+        console.log('🎵 Starting audio level checking loop...');
+        checkAudioLevel();
+      }, 100);
       
     } catch (error) {
       console.error('❌ Error starting continuous recording:', error);
