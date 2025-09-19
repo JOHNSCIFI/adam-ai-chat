@@ -43,11 +43,19 @@ serve(async (req) => {
 
         // Validate file size (max 25MB for Whisper API)
         if (audioFile.size > 25 * 1024 * 1024) {
-          throw new Error('Audio file too large (max 25MB)');
+          console.error('❌ Audio file too large:', audioFile.size);
+          return new Response(
+            JSON.stringify({ error: 'Audio file too large (max 25MB)' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
-        if (audioFile.size < 100) {
-          throw new Error('Audio file too small (min 100 bytes)');
+        if (audioFile.size < 1000) { // Increased minimum to 1KB
+          console.error('❌ Audio file too small:', audioFile.size);
+          return new Response(
+            JSON.stringify({ error: 'Audio file too small (min 1KB)' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
         // Create a new blob with a clean MIME type (OpenAI doesn't like codec specifications)
@@ -116,7 +124,20 @@ serve(async (req) => {
     // Validate OpenAI API key
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
-      throw new Error('OpenAI API key not configured');
+      console.error('❌ OpenAI API key not configured');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key not configured' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Final validation of audio blob
+    if (!audioBlob || audioBlob.size === 0) {
+      console.error('❌ Invalid audio blob');
+      return new Response(
+        JSON.stringify({ error: 'Invalid audio data' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // Create form data for OpenAI
@@ -146,7 +167,24 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ OpenAI API error response:', errorText);
-      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+      
+      // Return specific error messages based on status
+      if (response.status === 400) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid audio format or content' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else if (response.status === 429) {
+        return new Response(
+          JSON.stringify({ error: 'Rate limit exceeded, please try again later' }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } else {
+        return new Response(
+          JSON.stringify({ error: 'Speech recognition service temporarily unavailable' }),
+          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
     }
 
     const result = await response.json();

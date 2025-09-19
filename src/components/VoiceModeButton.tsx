@@ -36,9 +36,28 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const isPlayingRef = useRef<boolean>(false);
   const isVoiceModeActiveRef = useRef<boolean>(false);
   
+  // Add request throttling to prevent overlapping edge function calls
+  const lastRequestTimeRef = useRef<number>(0);
+  const isRequestInProgressRef = useRef<boolean>(false);
+  const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 seconds between requests
+  
   const { user } = useAuth();
   
   const processCurrentSegment = useCallback(async () => {
+    // Check if we already have a request in progress
+    if (isRequestInProgressRef.current) {
+      console.log('🚫 Skipping segment - request already in progress');
+      return;
+    }
+    
+    // Check minimum time interval between requests
+    const now = Date.now();
+    const timeSinceLastRequest = now - lastRequestTimeRef.current;
+    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
+      console.log(`🚫 Skipping segment - too soon (${timeSinceLastRequest}ms < ${MIN_REQUEST_INTERVAL}ms)`);
+      return;
+    }
+    
     if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
       setIsListening(false);
       isListeningRef.current = false;
@@ -52,6 +71,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     isListeningRef.current = false;
     setIsProcessing(true);
     isProcessingRef.current = true;
+    isRequestInProgressRef.current = true;
+    lastRequestTimeRef.current = now;
     
     try {
       const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
@@ -64,30 +85,31 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         silenceTimerRef.current = null;
       }
       
-      // Process the audio segment (this will handle the entire AI cycle)
-      if (audioBlob.size > 100) {
+      // Validate audio data before processing
+      if (audioBlob.size > 1000) { // Increased minimum size to 1KB
         await processVoiceInput(audioBlob);
+      } else {
+        console.log(`🚫 Audio too small (${audioBlob.size} bytes), skipping`);
       }
     } catch (error) {
       console.error('❌ Error in processCurrentSegment:', error);
+    } finally {
       setIsProcessing(false);
       isProcessingRef.current = false;
+      isRequestInProgressRef.current = false;
     }
   }, []);
 
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
-    // Use refs for immediate state access to avoid stale closures
-    console.log('🔍 checkAudioLevel called - analyser:', !!analyserRef.current, 'voiceMode:', isVoiceModeActiveRef.current, 'listening:', isListeningRef.current, 'processing:', isProcessingRef.current);
-    
-    if (!analyserRef.current) {
-      console.log('🛑 Stopping audio analysis - no analyser');
+    if (!analyserRef.current || !isVoiceModeActiveRef.current) {
       return;
     }
     
-    // Continue even if voiceMode appears false - there might be a state race condition
-    if (!isVoiceModeActiveRef.current) {
-      console.log('⚠️ Voice mode appears inactive but continuing check...');
+    // Skip if we have a request in progress or are processing/playing
+    if (isRequestInProgressRef.current || isProcessingRef.current || isPlayingRef.current) {
+      setTimeout(() => checkAudioLevel(), 100);
+      return;
     }
     
     try {
@@ -126,62 +148,35 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       // Consider it speech if we have both general audio and speech frequencies
       const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
       
-      console.log('🎵 Audio Analysis:', {
-        volume: volume.toFixed(4),
-        speechVolume: speechVolume.toFixed(4),
-        detected: isSpeechDetected,
-        listening: isListeningRef.current,
-        processing: isProcessingRef.current,
-        playing: isPlayingRef.current,
-        voiceModeActive: isVoiceModeActiveRef.current,
-        bufferLength,
-        chunks: currentSegmentChunksRef.current?.length || 0
-      });
-      
       // Use refs for immediate state access
-      if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current) {
+      if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         // Speech detected - clear silence timer and mark as listening
         if (!isListeningRef.current) {
-          console.log('🗣️ SPEECH DETECTED! Starting to listen...');
           setIsListening(true);
           isListeningRef.current = true;
-          console.log('✅ Listening state activated via ref');
         }
         if (silenceTimerRef.current) {
-          console.log('🔇 Clearing silence timer - speech continues');
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
         }
-      } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current) {
+      } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
-          console.log('🔇 Starting 1-second silence timer...', {
-            wasListening: isListeningRef.current,
-            isProcessing: isProcessingRef.current,
-            isPlaying: isPlayingRef.current,
-            volume: volume.toFixed(4),
-            speechVolume: speechVolume.toFixed(4),
-            chunks: currentSegmentChunksRef.current?.length || 0
-          });
           silenceTimerRef.current = setTimeout(() => {
-            console.log('⏰ 1 second of silence - processing segment NOW');
             processCurrentSegment();
-          }, 1000);
+          }, 1500); // Increased to 1.5 seconds for better stability
         }
       }
       
-      // Continue checking only if conditions are right (not processing or playing)
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current) {
-        setTimeout(() => checkAudioLevel(), 50);
-      } else {
-        console.log('🛑 Pausing audio analysis - processing:', isProcessingRef.current, 'playing:', isPlayingRef.current, 'voiceMode:', isVoiceModeActiveRef.current);
-        // If voice mode is still active but we're processing/playing, we'll resume later from the cooldown timers
+      // Continue checking only if conditions are right
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+        setTimeout(() => checkAudioLevel(), 100); // Increased interval for better performance
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
-      // Retry after error only if not processing or playing
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current) {
-        setTimeout(() => checkAudioLevel(), 100);
+      // Retry after error only if conditions are right
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+        setTimeout(() => checkAudioLevel(), 200);
       }
     }
   }, [processCurrentSegment]);
@@ -432,17 +427,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.error('💥 Error processing voice input:', error);
       alert(`Voice processing error: ${error.message}`);
     } finally {
-      setIsProcessing(false);
-      isProcessingRef.current = false;
-      console.log('🔄 Processing finished');
+      // Note: Processing state and request progress are now handled in processCurrentSegment
       
       // Resume listening after a short delay
       setTimeout(() => {
-        if (isVoiceModeActive && !isPlayingRef.current) {
-          console.log('🎤 Resuming voice detection');
+        if (isVoiceModeActiveRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
           checkAudioLevel(); // Resume the audio analysis loop
         }
-      }, 1000);
+      }, 1500); // Longer delay for stability
     }
   };
 
