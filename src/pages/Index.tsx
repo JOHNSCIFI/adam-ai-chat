@@ -358,55 +358,15 @@ export default function Index() {
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2 justify-center">
               {selectedFiles.map((file, index) => (
-                <div key={index}>
-                  {isImageFile(file.type) ? (
-                    <div className="space-y-2">
-                      <img 
-                        src={URL.createObjectURL(file)} 
-                        alt={file.name || "Image"} 
-                        className="max-w-[300px] max-h-[200px] object-cover rounded-lg shadow-sm border"
-                      />
-                      <div className="flex items-center gap-3 p-3 rounded-xl border bg-accent border-border">
-                        <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-muted">
-                          {getFileIcon(file.type)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium truncate text-foreground">
-                            {file.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {formatFileSize(file.size)}
-                          </p>
-                        </div>
-                        <button 
-                          onClick={() => removeFile(index)}
-                          className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted/50"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-3 p-3 rounded-xl border bg-accent border-border">
-                      <div className="w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 bg-muted">
-                        {getFileIcon(file.type)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate text-foreground">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                          {formatFileSize(file.size)}
-                        </p>
-                      </div>
-                      <button 
-                        onClick={() => removeFile(index)}
-                        className="text-muted-foreground hover:text-foreground p-1 rounded-full hover:bg-muted/50"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  )}
+                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                  {getFileIcon(file.type)}
+                  <span className="truncate max-w-32">{file.name}</span>
+                  <button 
+                    onClick={() => removeFile(index)}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
                 </div>
               ))}
             </div>
