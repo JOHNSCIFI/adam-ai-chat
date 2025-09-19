@@ -117,21 +117,16 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
           role: 'user'
         });
 
-      // Send image generation request to webhook (AI will handle generation)
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/message', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      // Send image generation request to Supabase edge function
+      const { data, error } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
           message: promptText,
           chat_id: newChat.id,
-          user_id: user.id,
-          type: 'image_generation'
-        }),
+          user_id: user.id
+        }
       });
 
-      if (!webhookResponse.ok) {
+      if (error) {
         throw new Error('Failed to generate image');
       }
 
