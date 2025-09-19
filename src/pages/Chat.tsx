@@ -288,7 +288,23 @@ export default function Chat() {
 
             if (webhookResponse.ok) {
               const analysisResult = await webhookResponse.json();
-              aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content || 'File analyzed successfully'}`;
+              console.log('Webhook response:', analysisResult);
+              
+              // Handle array response format from webhook
+              if (Array.isArray(analysisResult) && analysisResult.length > 0) {
+                const analysisTexts = analysisResult.map(item => item.text || item.content || '').filter(text => text);
+                if (analysisTexts.length > 0) {
+                  aiAnalysisResponse += `\n\n${analysisTexts.join('\n\n')}`;
+                } else {
+                  aiAnalysisResponse += `\n\nFile analyzed successfully`;
+                }
+              } else if (analysisResult.text) {
+                aiAnalysisResponse += `\n\n${analysisResult.text}`;
+              } else if (analysisResult.analysis || analysisResult.content) {
+                aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content}`;
+              } else {
+                aiAnalysisResponse += `\n\nFile analyzed successfully`;
+              }
             } else {
               aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
             }
