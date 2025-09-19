@@ -154,19 +154,39 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
 
-      console.log('🤖 AI response:', { aiResponse, aiError });
-
+      console.log('🤖 Raw AI response data:', aiResponse);
+      console.log('🤖 AI error object:', aiError);
+      
+      // Check for function invocation errors first
       if (aiError) {
-        console.error('❌ AI error:', aiError);
-        throw new Error(aiError.message);
+        console.error('❌ Supabase function invocation error:', aiError);
+        throw new Error(`Function invocation failed: ${aiError.message || JSON.stringify(aiError)}`);
       }
 
-      const aiText = aiResponse?.content;
-      console.log('✅ AI said:', aiText);
+      // Check if we got a response at all
+      if (!aiResponse) {
+        console.error('❌ No response data from function');
+        throw new Error('No response data received from AI function');
+      }
 
-      if (!aiText) {
-        console.error('❌ No AI response received');
-        throw new Error('No AI response received');
+      // Log the structure of the response to debug
+      console.log('🔍 Response structure:', {
+        type: typeof aiResponse,
+        keys: Object.keys(aiResponse || {}),
+        content: aiResponse?.content,
+        hasContent: !!aiResponse?.content
+      });
+
+      const aiText = aiResponse?.content;
+      console.log('✅ Extracted AI text:', aiText);
+
+      if (!aiText || aiText.trim() === '') {
+        console.error('❌ Empty or missing AI response content:', { 
+          aiResponse, 
+          contentExists: 'content' in (aiResponse || {}),
+          contentValue: aiResponse?.content 
+        });
+        throw new Error(`No valid AI response content received. Response: ${JSON.stringify(aiResponse)}`);
       }
 
       // Save AI message
