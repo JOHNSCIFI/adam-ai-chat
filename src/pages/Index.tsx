@@ -189,7 +189,7 @@ export default function Index() {
         // Send to webhook if files are present
         if (uploadedFiles.length > 0) {
           try {
-            const webhookUrl = 'https://webhook.site/aa46c7d7-e1a6-424b-982a-7e3b0b38c66b';
+            const webhookUrl = 'https://adsgbt.app.n8n.cloud/webhook/adamGPT';
             await fetch(webhookUrl, {
               method: 'POST',
               headers: {
