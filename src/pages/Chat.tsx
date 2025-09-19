@@ -153,7 +153,10 @@ export default function Chat() {
         if (!hasAssistantResponseAfter) {
           console.log('Triggering AI response for user message:', lastMessage.content);
           processedUserMessages.current.add(lastMessage.id);
-          triggerAIResponse(lastMessage.content, lastMessage.id);
+          // Add a small delay to ensure proper state management
+          setTimeout(() => {
+            triggerAIResponse(lastMessage.content, lastMessage.id);
+          }, 100);
         }
       }
     }

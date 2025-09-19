@@ -551,18 +551,18 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                           />
                         </div>
                       ) : (
-                        <NavLink
-                          to={`/chat/${chat.id}`}
-                          className={({ isActive }) =>
-                            `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                              isActive
-                                ? 'bg-sidebar-accent text-sidebar-foreground'
-                                : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                            }`
-                          }
-                        >
-                          <span className="flex-1 truncate text-sm">{chat.title}</span>
-                        </NavLink>
+                         <NavLink
+                           to={`/chat/${chat.id}`}
+                           className={({ isActive }) =>
+                             `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                               isActive
+                                 ? 'bg-sidebar-accent text-sidebar-foreground'
+                                 : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                             }`
+                           }
+                         >
+                           <span className="flex-1 truncate text-sm">{chat.title || 'New Chat'}</span>
+                         </NavLink>
                       )}
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
                         <DropdownMenu>
