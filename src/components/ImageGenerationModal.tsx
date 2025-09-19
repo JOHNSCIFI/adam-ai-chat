@@ -96,12 +96,6 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
     setNewPrompt('');
 
     try {
-      // Show user feedback
-      toast({
-        title: "Creating new chat...",
-        description: "Setting up your image generation chat",
-      });
-
       // Create a new chat
       const { data: newChat, error: chatError } = await supabase
         .from('chats')
@@ -123,12 +117,6 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
           role: 'user'
         });
 
-      // Show progress feedback
-      toast({
-        title: "Opening chat...",
-        description: "Redirecting to your new conversation",
-      });
-
       // Close modal first, then navigate
       onClose();
       
@@ -149,22 +137,12 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
             }
           }).catch(error => {
             console.error('Error generating image:', error);
-            toast({
-              title: "Image Generation Error",
-              description: "Failed to generate image. Please try again.",
-              variant: "destructive",
-            });
           });
         }, 500);
       }, 100);
 
     } catch (error) {
       console.error('Error creating chat:', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create new chat. Please try again.",
-        variant: "destructive",
-      });
       setIsGenerating(false);
     }
   };
@@ -181,16 +159,8 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
       await navigator.clipboard.writeText(imageUrl);
       setCopiedImageId(imageId);
       setTimeout(() => setCopiedImageId(null), 2000);
-      toast({
-        title: "Copied!",
-        description: "Image URL copied to clipboard",
-      });
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to copy image URL",
-        variant: "destructive",
-      });
+      console.error('Failed to copy image URL:', error);
     }
   };
 
@@ -233,33 +203,16 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
         document.body.removeChild(a);
       }, 100);
       
-      toast({
-        title: "Success",
-        description: "Image downloaded successfully",
-      });
     } catch (error) {
       console.error('Download failed:', error);
       // Fallback to opening in new tab
       try {
         const newWindow = window.open(imageUrl, '_blank');
-        if (newWindow) {
-          toast({
-            title: "Info", 
-            description: "Image opened in new tab - right-click to save",
-          });
-        } else {
-          toast({
-            title: "Error",
-            description: "Please allow popups to download images",
-            variant: "destructive",
-          });
+        if (!newWindow) {
+          console.error('Failed to open image in new tab - popups may be blocked');
         }
       } catch (fallbackError) {
-        toast({
-          title: "Error",
-          description: "Failed to download image. Please try right-clicking the image to save.",
-          variant: "destructive",
-        });
+        console.error('Failed to download or open image:', fallbackError);
       }
     }
   };

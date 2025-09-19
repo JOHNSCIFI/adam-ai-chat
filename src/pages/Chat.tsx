@@ -226,16 +226,34 @@ export default function Chat() {
         const responseContent = aiResponse.response || aiResponse.content;
         console.log('Processing AI response content:', responseContent);
         
+        // Handle image generation responses
+        let fileAttachments: FileAttachment[] = [];
+        if (aiResponse.image_url) {
+          console.log('Image URL found in AI response:', aiResponse.image_url);
+          fileAttachments = [{
+            id: crypto.randomUUID(),
+            name: `generated_image_${Date.now()}.png`,
+            size: 0, // Unknown size for generated images
+            type: 'image/png',
+            url: aiResponse.image_url
+          }];
+        }
+        
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
           content: responseContent,
           role: 'assistant',
           created_at: new Date().toISOString(),
-          file_attachments: []
+          file_attachments: fileAttachments
         };
         
         setMessages(prev => [...prev, assistantMessage]);
         scrollToBottom();
+        
+        // Clear image prompt when response is received
+        if (isImageRequest) {
+          setCurrentImagePrompt(null);
+        }
         
         // Save to database
         console.log('Saving AI message to database...');
@@ -245,7 +263,7 @@ export default function Chat() {
             chat_id: chatId,
             content: responseContent,
             role: 'assistant',
-            file_attachments: []
+            file_attachments: fileAttachments as any
           });
           
         if (saveError) {
