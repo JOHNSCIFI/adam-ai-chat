@@ -16,7 +16,7 @@ import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
-import VoiceModeButton from '@/components/VoiceModeButton';
+import VoiceWidget from '@/components/VoiceWidget';
 
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 
@@ -2023,15 +2023,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 >
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
-                
-                {/* Voice Mode button */}
-                <VoiceModeButton
-                  onMessageSent={(messageId, content, role) => {
-                    fetchMessages();
-                  }}
-                  chatId={chatId}
-                  actualTheme={actualTheme}
-                />
+                 
+                {/* Original recording button - keep for backward compatibility */}
               </div>
             </div>
           </div>
@@ -2131,6 +2124,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           }}
         />
       )}
+
+      {/* Voice Widget - Floating */}
+      <VoiceWidget
+        chatId={chatId || ''}
+        onMessageSent={(messageId, content, role) => {
+          fetchMessages();
+        }}
+      />
     </div>
   );
 }
