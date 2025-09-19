@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Radio, Square, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -21,53 +21,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { user } = useAuth();
-
-  const detectSilence = useCallback(() => {
-    if (!analyserRef.current) return;
-
-    const bufferLength = analyserRef.current.frequencyBinCount;
-    const dataArray = new Uint8Array(bufferLength);
-    analyserRef.current.getByteFrequencyData(dataArray);
-
-    // Calculate average volume
-    const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-    const silenceThreshold = 10; // Adjust this value as needed
-
-    if (average < silenceThreshold) {
-      // If silence detected, start/reset the timeout
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-      }
-      
-      silenceTimeoutRef.current = setTimeout(() => {
-        if (isRecording) {
-          stopRecording();
-        }
-      }, 2000); // 2 seconds of silence
-    } else {
-      // If sound detected, clear the timeout
-      if (silenceTimeoutRef.current) {
-        clearTimeout(silenceTimeoutRef.current);
-        silenceTimeoutRef.current = null;
-      }
-    }
-
-    // Continue monitoring if still recording
-    if (isRecording) {
-      requestAnimationFrame(detectSilence);
-    }
-  }, [isRecording]);
 
   const startRecording = async () => {
     try {
       console.log('🎤 Starting voice recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
-          sampleRate: 16000,
+          sampleRate: 44100,
           channelCount: 1,
           echoCancellation: true,
           noiseSuppression: true,
@@ -76,16 +37,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       });
       console.log('✅ Microphone access granted');
       
-      // Set up audio analysis for silence detection
-      audioContextRef.current = new AudioContext();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      analyserRef.current.fftSize = 256;
-      source.connect(analyserRef.current);
+      // Try different formats for better compatibility
+      let mimeType = 'audio/webm';
+      if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav';
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus';
+      } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4';
+      }
+      
+      console.log('🎵 Using audio format:', mimeType);
 
-      const mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
       audioChunksRef.current = [];
 
@@ -98,8 +62,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
       mediaRecorder.onstop = async () => {
         console.log('⏹️ Recording stopped, processing audio...');
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-        console.log('📦 Created audio blob:', audioBlob.size, 'bytes');
+        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+        console.log('📦 Created audio blob:', audioBlob.size, 'bytes', 'type:', audioBlob.type);
         
         if (audioBlob.size > 0) {
           await processVoiceInput(audioBlob);
@@ -109,22 +73,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         
         // Clean up
         stream.getTracks().forEach(track => track.stop());
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-          audioContextRef.current = null;
-        }
-        if (silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current);
-          silenceTimeoutRef.current = null;
-        }
       };
 
       mediaRecorder.start(1000); // Record in 1-second chunks
       setIsRecording(true);
-      console.log('🔴 Recording started');
+      console.log('🔴 Recording started with format:', mimeType);
       
-      // Start silence detection
-      detectSilence();
     } catch (error) {
       console.error('❌ Error starting recording:', error);
       alert(`Microphone access error: ${error.message}`);
@@ -133,6 +87,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const stopRecording = () => {
     if (mediaRecorderRef.current && isRecording) {
+      console.log('🛑 Stopping recording...');
       mediaRecorderRef.current.stop();
       setIsRecording(false);
     }
@@ -140,12 +95,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const processVoiceInput = async (audioBlob: Blob) => {
     setIsProcessing(true);
-    console.log('🎤 Processing voice input - blob size:', audioBlob.size);
+    console.log('🎤 Processing voice input - blob size:', audioBlob.size, 'type:', audioBlob.type);
     
     try {
       // Convert speech to text
       const formData = new FormData();
-      formData.append('audio', audioBlob);
+      formData.append('audio', audioBlob, `audio.${audioBlob.type.split('/')[1].split(';')[0]}`);
       console.log('🔊 Sending audio to speech-to-text function...');
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
@@ -167,7 +122,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         return;
       }
       
-      // Save user message (removed user_id field)
+      // Save user message
       const userMessageId = uuidv4();
       console.log('💾 Saving user message to database...');
       const { error: userMessageError } = await supabase
@@ -187,15 +142,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, userText, 'user');
 
-      // Get AI response with special instruction to not generate images
-      const aiPrompt = userText.toLowerCase().includes('generate') && userText.toLowerCase().includes('image') 
-        ? `Please respond with text only. The user said: "${userText}". Do not generate any images, just provide a helpful text response.`
-        : userText;
-
+      // Get AI response
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
-          message: aiPrompt,
+          message: userText,
           chat_id: chatId,
           user_id: user?.id,
           has_file_analysis: false,
@@ -218,7 +169,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         throw new Error('No AI response received');
       }
 
-      // Save AI message (removed user_id field)
+      // Save AI message
       const aiMessageId = uuidv4();
       console.log('💾 Saving AI message to database...');
       const { error: aiMessageError } = await supabase
@@ -261,7 +212,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
-      // Show user-friendly error message
       alert(`Voice processing error: ${error.message}`);
     } finally {
       setIsProcessing(false);
