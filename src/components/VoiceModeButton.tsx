@@ -89,7 +89,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (userMessageError) {
-        throw new Error('Failed to save user message');
+        console.error('Database error saving user message:', userMessageError);
+        throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
 
       onMessageSent(userMessageId, userText, 'user');
@@ -128,7 +129,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (aiMessageError) {
-        throw new Error('Failed to save AI message');
+        console.error('Database error saving AI message:', aiMessageError);
+        throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
       }
 
       onMessageSent(aiMessageId, aiText, 'assistant');
@@ -185,29 +187,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const getButtonIcon = () => {
-    if (isPlaying) return <Volume2 className="h-4 w-4" />;
-    if (isProcessing) return <div className="animate-spin h-4 w-4 border-2 border-current rounded-full border-t-transparent" />;
-    if (isRecording) return <MicOff className="h-4 w-4" />;
-    return <Mic className="h-4 w-4" />;
+    if (isPlaying) return <Volume2 className="h-5 w-5" />;
+    if (isProcessing) return <div className="animate-spin h-5 w-5 border-2 border-current rounded-full border-t-transparent" />;
+    if (isRecording) return <MicOff className="h-5 w-5 animate-pulse" />;
+    return <Mic className="h-5 w-5" />;
   };
 
-  const getButtonColor = () => {
-    if (isRecording) {
-      return {
-        backgroundColor: 'hsl(var(--destructive))',
-        color: 'hsl(var(--destructive-foreground))'
-      };
-    }
-    if (isProcessing || isPlaying) {
-      return {
-        backgroundColor: 'hsl(var(--secondary))',
-        color: 'hsl(var(--secondary-foreground))'
-      };
-    }
-    return {
-      backgroundColor: actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))',
-      color: actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))'
-    };
+  const getButtonVariant = () => {
+    if (isRecording) return 'destructive';
+    if (isProcessing || isPlaying) return 'secondary';
+    return 'default';
   };
 
   const handleClick = () => {
@@ -225,9 +214,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       type="button"
       onClick={handleClick}
       disabled={isProcessing || isPlaying}
-      size="sm"
-      className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-      style={getButtonColor()}
+      variant={getButtonVariant()}
+      size="icon"
+      className={`h-10 w-10 rounded-full flex-shrink-0 transition-all duration-200 ${
+        isRecording ? 'scale-110 shadow-lg shadow-destructive/25' : 'hover:scale-105'
+      } ${isProcessing || isPlaying ? 'animate-pulse' : ''}`}
     >
       {getButtonIcon()}
     </Button>
