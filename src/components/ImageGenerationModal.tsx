@@ -134,10 +134,8 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
       onClose();
       navigate(`/chat/${newChat.id}`);
 
-      // Refresh the page to update sidebar
-      setTimeout(() => {
-        window.location.reload();
-      }, 100);
+      // Trigger sidebar refresh instead of page reload
+      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
 
     } catch (error) {
       console.error('Error generating image:', error);

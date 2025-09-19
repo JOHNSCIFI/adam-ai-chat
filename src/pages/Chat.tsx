@@ -92,6 +92,11 @@ export default function Chat() {
     if (chatId && user) {
       // Clear processed messages when changing chats
       processedUserMessages.current.clear();
+      // Reset all loading states when switching chats
+      setIsGeneratingResponse(false);
+      setCurrentImagePrompt(null);
+      setPendingImageGenerations(new Set());
+      setLoading(false);
       fetchMessages();
       
       // Set up real-time subscription for new messages
@@ -750,33 +755,10 @@ export default function Chat() {
         }
       }
 
-      // Update chat title if current title is "New Chat" (regardless of message count)
-      console.log('Checking if we need to update chat title...');
-      // Check current title to avoid overwriting custom titles
-      const { data: currentChat } = await supabase
-        .from('chats')
-        .select('title')
-        .eq('id', chatId)
-        .single();
-      
-      console.log('Current chat title:', currentChat?.title);
-      
-      if (currentChat && currentChat.title === 'New Chat') {
-        const generatedTitle = generateChatTitle(userMessage);
-        console.log('Updating chat title to:', generatedTitle);
-        const { error: updateError } = await supabase
-          .from('chats')
-          .update({ title: generatedTitle })
-          .eq('id', chatId);
-        
-        if (updateError) {
-          console.error('Error updating chat title:', updateError);
-        } else {
-          console.log('Chat title updated successfully');
-          // Trigger sidebar refresh to show updated title
-          window.dispatchEvent(new CustomEvent('force-chat-refresh'));
-        }
-      }
+      // Automatically update chat title based on conversation progression
+      setTimeout(() => {
+        updateChatTitleFromConversation(chatId);
+      }, 1000);
 
     } catch (error: any) {
       console.error('Send message error:', error);
@@ -1231,6 +1213,101 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }
   };
 
+  const generateChatTitleFromConversation = async (chatId: string, messages: Message[]) => {
+    // Only update if we have enough messages for context
+    if (messages.length < 4) return null;
+    
+    // Get the last few user messages to understand the conversation theme
+    const userMessages = messages
+      .filter(msg => msg.role === 'user')
+      .slice(0, 3) // Take first 3 user messages
+      .map(msg => msg.content);
+    
+    if (userMessages.length < 2) return null;
+    
+    // Combine messages to find common themes
+    const combinedText = userMessages.join(' ').toLowerCase();
+    
+    // Detect common conversation themes
+    const themes = {
+      'coding': /\b(code|programming|function|javascript|python|react|typescript|debug|error|syntax|api|database|sql|html|css|git|github)\b/g,
+      'business': /\b(business|marketing|strategy|sales|profit|revenue|customer|client|market|competition|startup|entrepreneur)\b/g,
+      'design': /\b(design|ui|ux|interface|layout|color|font|typography|logo|branding|aesthetic|visual|mockup)\b/g,
+      'writing': /\b(write|writing|content|article|blog|essay|copy|text|paragraph|grammar|editing|proofreading)\b/g,
+      'image': /\b(image|picture|photo|generate|create|draw|art|illustration|design|visual|graphic)\b/g,
+      'analysis': /\b(analyze|analysis|data|report|research|study|examine|evaluate|compare|statistics)\b/g,
+      'learning': /\b(learn|learning|study|understand|explain|teach|tutorial|guide|how to|lesson)\b/g,
+      'planning': /\b(plan|planning|schedule|organize|task|project|timeline|goal|objective|strategy)\b/g
+    };
+    
+    let bestTheme = '';
+    let maxMatches = 0;
+    
+    for (const [theme, regex] of Object.entries(themes)) {
+      const matches = combinedText.match(regex);
+      if (matches && matches.length > maxMatches) {
+        maxMatches = matches.length;
+        bestTheme = theme;
+      }
+    }
+    
+    // Generate contextual title based on theme and content
+    const firstMessage = userMessages[0];
+    let title = '';
+    
+    if (bestTheme && maxMatches >= 2) {
+      // Create themed title
+      const themePrefix = {
+        'coding': 'Code Help: ',
+        'business': 'Business: ',
+        'design': 'Design: ',
+        'writing': 'Writing: ',
+        'image': 'Image Gen: ',
+        'analysis': 'Analysis: ',
+        'learning': 'Learning: ',
+        'planning': 'Planning: '
+      };
+      
+      title = themePrefix[bestTheme as keyof typeof themePrefix] + generateChatTitle(firstMessage);
+    } else {
+      // Use improved title based on conversation flow
+      title = generateChatTitle(firstMessage);
+    }
+    
+    return title.length > 50 ? title.substring(0, 47) + '...' : title;
+  };
+
+  const updateChatTitleFromConversation = async (chatId: string) => {
+    if (messages.length >= 4) {
+      const { data: currentChat } = await supabase
+        .from('chats')
+        .select('title')
+        .eq('id', chatId)
+        .single();
+      
+      // Only update if title is still basic/auto-generated (not custom)
+      if (currentChat && (
+        currentChat.title === 'New Chat' ||
+        currentChat.title.length < 30 ||
+        !currentChat.title.includes(' ')
+      )) {
+        const newTitle = await generateChatTitleFromConversation(chatId, messages);
+        
+        if (newTitle && newTitle !== currentChat.title) {
+          console.log('Updating conversation title to:', newTitle);
+          const { error: updateError } = await supabase
+            .from('chats')
+            .update({ title: newTitle })
+            .eq('id', chatId);
+          
+          if (!updateError) {
+            window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+          }
+        }
+      }
+    }
+  };
+
   const generateChatTitle = (message: string) => {
     // Remove extra whitespace and normalize
     const cleaned = message.trim().replace(/\s+/g, ' ');
@@ -1619,7 +1696,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               ))}
               
               {/* Show image processing indicator when generating images */}
-              {currentImagePrompt && (
+              {currentImagePrompt && chatId && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <ImageProcessingIndicator 

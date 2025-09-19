@@ -8,11 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSidebar } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 export default function ImageGeneration() {
   const { user } = useAuth();
   const { actualTheme } = useTheme();
   const { state: sidebarState } = useSidebar();
+  const navigate = useNavigate();
   const collapsed = sidebarState === 'collapsed';
 
   const [newPrompt, setNewPrompt] = useState('');
@@ -101,7 +103,10 @@ export default function ImageGeneration() {
         });
 
       // Navigate to the new chat
-      window.location.href = `/chat/${newChat.id}`;
+      navigate(`/chat/${newChat.id}`);
+      
+      // Trigger sidebar refresh
+      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
       
     } catch (error) {
       console.error('Error creating chat:', error);
