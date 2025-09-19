@@ -20,17 +20,20 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const currentSegmentChunksRef = useRef<Blob[]>([]);
   const { user } = useAuth();
 
-  // Voice Activity Detection
+  // Continuous Voice Activity Detection
   const checkAudioLevel = useCallback(() => {
-    if (!analyserRef.current) return;
+    if (!analyserRef.current || !isVoiceModeActive) return;
     
     const bufferLength = analyserRef.current.frequencyBinCount;
     const dataArray = new Uint8Array(bufferLength);
@@ -47,30 +50,32 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const threshold = 0.01; // Silence threshold
     
     if (volume > threshold) {
-      // Voice detected - clear silence timer
+      // Voice detected - clear silence timer and mark as listening
+      setIsListening(true);
       if (silenceTimerRef.current) {
         clearTimeout(silenceTimerRef.current);
         silenceTimerRef.current = null;
       }
     } else {
       // Silence detected - start/continue timer
-      if (!silenceTimerRef.current && isRecording) {
+      if (!silenceTimerRef.current && isListening && !isProcessing && !isPlaying) {
+        console.log('🔇 Starting 2-second silence timer...');
         silenceTimerRef.current = setTimeout(() => {
-          console.log('🔇 2 seconds of silence detected - auto-stopping recording');
-          stopRecording();
+          console.log('🔇 2 seconds of silence detected - processing current segment');
+          processCurrentSegment();
         }, 2000); // 2 seconds of silence
       }
     }
     
-    // Continue checking if still recording
-    if (isRecording) {
+    // Continue checking if voice mode is active
+    if (isVoiceModeActive) {
       requestAnimationFrame(checkAudioLevel);
     }
-  }, [isRecording]);
+  }, [isVoiceModeActive, isListening, isProcessing, isPlaying]);
 
-  const startRecording = async () => {
+  const startContinuousRecording = async () => {
     try {
-      console.log('🎤 Starting voice recording...');
+      console.log('🎤 Starting continuous voice recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 44100,
@@ -81,6 +86,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       });
       console.log('✅ Microphone access granted');
+      
+      streamRef.current = stream;
       
       // Set up audio context for voice activity detection
       audioContextRef.current = new AudioContext({ sampleRate: 44100 });
@@ -105,64 +112,88 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
       const mediaRecorder = new MediaRecorder(stream, { mimeType });
       mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+      currentSegmentChunksRef.current = [];
 
       mediaRecorder.ondataavailable = (event) => {
         console.log('📊 Audio data chunk received:', event.data.size, 'bytes');
         if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
+          currentSegmentChunksRef.current.push(event.data);
         }
       };
 
-      mediaRecorder.onstop = async () => {
-        console.log('⏹️ Recording stopped, processing audio...');
-        const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-        console.log('📦 Created audio blob:', audioBlob.size, 'bytes', 'type:', audioBlob.type);
-        
-        if (audioBlob.size > 0) {
-          await processVoiceInput(audioBlob);
-        } else {
-          console.warn('⚠️ Audio blob is empty, skipping processing');
-        }
-        
-        // Clean up
-        stream.getTracks().forEach(track => track.stop());
-        if (audioContextRef.current) {
-          audioContextRef.current.close();
-          audioContextRef.current = null;
-        }
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = null;
-        }
-      };
-
-      mediaRecorder.start(1000); // Record in 1-second chunks
+      // Start continuous recording
+      mediaRecorder.start(100); // Very small chunks for responsiveness
       setIsRecording(true);
-      console.log('🔴 Recording started with format:', mimeType);
+      setIsListening(true);
+      console.log('🔴 Continuous recording started');
       
       // Start voice activity detection
       checkAudioLevel();
       
     } catch (error) {
-      console.error('❌ Error starting recording:', error);
+      console.error('❌ Error starting continuous recording:', error);
       alert(`Microphone access error: ${error.message}`);
     }
   };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      console.log('🛑 Stopping recording...');
-      
-      // Clear silence timer
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      
-      mediaRecorderRef.current.stop();
-      setIsRecording(false);
+  const processCurrentSegment = async () => {
+    if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
+      console.log('⚠️ No audio to process');
+      setIsListening(false);
+      return;
     }
+
+    console.log('🔄 Processing current audio segment...');
+    setIsListening(false);
+    
+    // Create blob from current chunks
+    const mimeType = mediaRecorderRef.current.mimeType;
+    const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
+    console.log('📦 Created segment blob:', audioBlob.size, 'bytes');
+    
+    // Clear current chunks for next segment
+    currentSegmentChunksRef.current = [];
+    
+    // Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    // Process the audio segment
+    if (audioBlob.size > 0) {
+      await processVoiceInput(audioBlob);
+    }
+  };
+
+  const stopContinuousRecording = () => {
+    console.log('🛑 Stopping continuous recording...');
+    
+    // Clear silence timer
+    if (silenceTimerRef.current) {
+      clearTimeout(silenceTimerRef.current);
+      silenceTimerRef.current = null;
+    }
+    
+    // Stop media recorder
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+      mediaRecorderRef.current.stop();
+    }
+    
+    // Stop stream
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+      streamRef.current = null;
+    }
+    
+    // Close audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    setIsRecording(false);
+    setIsListening(false);
   };
 
   // Clean up on component unmount
@@ -354,13 +385,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         setIsPlaying(false);
         URL.revokeObjectURL(audioUrl);
         
-        // If voice mode is active, start listening again
-        if (isVoiceModeActive) {
-          console.log('🔄 Voice mode active - starting new recording cycle...');
-          setTimeout(() => {
-            startRecording();
-          }, 500); // Small delay before starting next recording
-        }
+        // Resume listening after AI response
+        console.log('🔄 Resuming listening after AI response...');
+        setTimeout(() => {
+          setIsListening(true);
+        }, 300);
       };
 
       audio.onerror = (error) => {
@@ -408,7 +437,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
               // If voice mode is active, continue to next cycle even if play failed
               if (isVoiceModeActive) {
                 setTimeout(() => {
-                  startRecording();
+                  setIsListening(true);
                 }, 500);
               }
             }
@@ -425,7 +454,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
               // If voice mode is active, continue to next cycle
               if (isVoiceModeActive) {
                 setTimeout(() => {
-                  startRecording();
+                  setIsListening(true);
                 }, 500);
               }
             }
@@ -445,37 +474,30 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const getButtonIcon = () => {
     if (isPlaying) return <Volume2 className="h-6 w-6" />;
     if (isProcessing) return <div className="animate-spin h-6 w-6 border-2 border-current rounded-full border-t-transparent" />;
-    if (isRecording) return <Square className="h-6 w-6 animate-pulse" />;
+    if (isListening && isVoiceModeActive) return <Radio className="h-6 w-6 animate-pulse" />;
+    if (isVoiceModeActive) return <Square className="h-6 w-6" />;
     return <Radio className="h-6 w-6" />;
   };
 
   const getButtonVariant = () => {
-    if (isVoiceModeActive && isRecording) return 'destructive';
+    if (isVoiceModeActive && isListening) return 'destructive';
     if (isVoiceModeActive && (isProcessing || isPlaying)) return 'secondary';
     if (isVoiceModeActive) return 'default';
-    if (isRecording) return 'destructive';
-    if (isProcessing || isPlaying) return 'secondary';
     return 'default';
   };
 
   const startVoiceMode = () => {
     console.log('🎤 Starting continuous voice mode...');
     setIsVoiceModeActive(true);
-    startRecording();
+    startContinuousRecording();
   };
 
   const stopVoiceMode = () => {
     console.log('🛑 Stopping continuous voice mode...');
     setIsVoiceModeActive(false);
-    
-    // Stop current recording if active
-    if (isRecording) {
-      stopRecording();
-    }
-    
-    // Clear any pending audio if playing
-    setIsPlaying(false);
+    stopContinuousRecording();
     setIsProcessing(false);
+    setIsPlaying(false);
   };
 
   const handleClick = () => {
@@ -498,9 +520,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
         isVoiceModeActive ? 'ring-2 ring-primary ring-offset-2' : ''
       } ${
-        isRecording ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse' : 'hover:scale-105'
+        isListening && isVoiceModeActive ? 'scale-110 shadow-lg shadow-destructive/25 animate-pulse' : 'hover:scale-105'
       } ${isProcessing || isPlaying ? 'animate-pulse' : ''}`}
-      title={isVoiceModeActive ? 'Stop Voice Mode' : 'Start Voice Mode'}
+      title={isVoiceModeActive ? 'Stop Continuous Voice Mode' : 'Start Continuous Voice Mode'}
     >
       {getButtonIcon()}
     </Button>
