@@ -16,6 +16,7 @@ import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
+import VoiceModeButton from '@/components/VoiceModeButton';
 
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 
@@ -2023,24 +2024,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
                 
-                {/* Send button - always visible */}
-                <Button
-                  type="button"
-                  onClick={sendMessage}
-                  disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-full flex-shrink-0"
-                  style={{ 
-                    backgroundColor: (input.trim() || selectedFiles.length > 0) && !loading
-                      ? (actualTheme === 'light' ? 'hsl(var(--user-message-bg))' : 'hsl(var(--primary))')
-                      : 'hsl(var(--muted))',
-                    color: (input.trim() || selectedFiles.length > 0) && !loading
-                      ? (actualTheme === 'light' ? 'hsl(var(--foreground))' : 'hsl(var(--primary-foreground))')
-                      : 'hsl(var(--muted-foreground))'
+                {/* Voice Mode button */}
+                <VoiceModeButton
+                  onMessageSent={(messageId, content, role) => {
+                    fetchMessages();
                   }}
-                >
-                  {loading ? <StopIcon className="h-4 w-4" /> : <SendHorizontalIcon className="h-4 w-4" />}
-                </Button>
+                  chatId={chatId}
+                  actualTheme={actualTheme}
+                />
               </div>
             </div>
           </div>
