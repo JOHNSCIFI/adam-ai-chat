@@ -93,6 +93,16 @@ serve(async (req) => {
       image_count: image_context?.length || 0
     });
 
+    // Validate required parameters
+    if (!message) {
+      throw new Error('Message is required');
+    }
+
+    if (!chat_id || !user_id) {
+      console.error('Missing required parameters:', { chat_id, user_id });
+      throw new Error('Chat ID and User ID are required');
+    }
+
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
       throw new Error('OpenAI API key not configured');

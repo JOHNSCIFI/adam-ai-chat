@@ -6,52 +6,47 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Process base64 in chunks to prevent memory issues
-function processBase64Chunks(base64String: string, chunkSize = 32768) {
-  const chunks: Uint8Array[] = [];
-  let position = 0;
-  
-  while (position < base64String.length) {
-    const chunk = base64String.slice(position, position + chunkSize);
-    const binaryChunk = atob(chunk);
-    const bytes = new Uint8Array(binaryChunk.length);
-    
-    for (let i = 0; i < binaryChunk.length; i++) {
-      bytes[i] = binaryChunk.charCodeAt(i);
-    }
-    
-    chunks.push(bytes);
-    position += chunkSize;
-  }
-
-  const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0);
-  const result = new Uint8Array(totalLength);
-  let offset = 0;
-
-  for (const chunk of chunks) {
-    result.set(chunk, offset);
-    offset += chunk.length;
-  }
-
-  return result;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
 
   try {
-    const formData = await req.formData();
-    const audioFile = formData.get('audio') as File;
-    
-    if (!audioFile) {
-      throw new Error('No audio file provided');
+    const contentType = req.headers.get('content-type');
+    let audioData: Uint8Array;
+    let filename = 'audio.webm';
+
+    if (contentType?.includes('multipart/form-data')) {
+      // Handle FormData (File upload)
+      const formData = await req.formData();
+      const audioFile = formData.get('audio') as File;
+      
+      if (!audioFile) {
+        throw new Error('No audio file provided');
+      }
+
+      audioData = new Uint8Array(await audioFile.arrayBuffer());
+      filename = audioFile.name || 'audio.webm';
+    } else {
+      // Handle JSON (base64 audio from voice mode)
+      const { audio } = await req.json();
+      
+      if (!audio) {
+        throw new Error('No audio data provided');
+      }
+
+      // Convert base64 to binary
+      const binaryString = atob(audio);
+      audioData = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        audioData[i] = binaryString.charCodeAt(i);
+      }
     }
 
-    // Prepare form data for OpenAI
+    // Create a blob and form data for OpenAI
+    const blob = new Blob([audioData], { type: 'audio/webm' });
     const openaiFormData = new FormData();
-    openaiFormData.append('file', audioFile);
+    openaiFormData.append('file', blob, filename);
     openaiFormData.append('model', 'whisper-1');
 
     // Send to OpenAI Whisper API
