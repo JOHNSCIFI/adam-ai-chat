@@ -94,18 +94,15 @@ serve(async (req) => {
           );
         }
 
-        // Convert to WAV format for better OpenAI compatibility
-        // Create blob without codec specification to avoid opus issues
-        audioBlob = new Blob([audioFile], { type: 'audio/wav' });
-        filename = 'audio.wav';
+        // Keep original webm format as OpenAI Whisper supports it
+        audioBlob = new Blob([audioFile], { type: audioFile.type });
+        filename = audioFile.name || 'audio.webm';
         
-        console.log('🔄 Converting webm to wav format for OpenAI compatibility');
-        
-        console.log('✅ Audio processed for OpenAI:', {
+        console.log('✅ Audio processed for OpenAI (keeping original format):', {
           originalType: audioFile.type,
-          processedType: 'audio/webm',
           filename: filename,
-          size: audioBlob.size
+          size: audioBlob.size,
+          whisperSupported: true
         });
         
         console.log('✅ FormData processing complete');
