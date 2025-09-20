@@ -96,7 +96,7 @@ serve(async (req) => {
         
         console.log('✅ Audio processed for OpenAI:', {
           originalType: audioFile.type,
-          cleanType: cleanMimeType,
+          processedType: 'audio/webm',
           filename: filename,
           size: audioBlob.size
         });
