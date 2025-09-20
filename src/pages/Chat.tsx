@@ -18,6 +18,14 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import VoiceModeButton from '@/components/VoiceModeButton';
 
+// Type declarations for Web Speech API
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
+
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 
 interface Message {
@@ -1139,63 +1147,70 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
   const startRecording = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = async () => {
-        // Create audio blob and send for transcription
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        await transcribeAudio(blob);
-        
-        // Stop all tracks to release microphone
-        stream.getTracks().forEach(track => track.stop());
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-    } catch (error) {
-      console.error('Recording failed:', error);
-    }
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state === 'recording') {
-      mediaRecorder.stop();
-      setMediaRecorder(null);
-      setIsRecording(false);
-    }
-  };
-
-  const transcribeAudio = async (audioBlob: Blob) => {
-    try {
-      // Create FormData with audio file
-      const formData = new FormData();
-      formData.append('audio', audioBlob, 'recording.webm');
-
-      // Send to speech-to-text edge function
-      const response = await supabase.functions.invoke('speech-to-text', {
-        body: formData,
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
+      // Check if browser supports Web Speech API
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        console.error('Speech recognition not supported in this browser');
+        return;
       }
 
-      if (response.data && response.data.text) {
-        // Insert transcribed text into message input
-        const transcribedText = response.data.text.trim();
-        setInput(prev => prev + (prev ? ' ' : '') + transcribedText);
+      const recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      let finalTranscript = '';
+
+      recognition.onresult = (event) => {
+        let interimTranscript = '';
+        
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript;
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        // Update input with final transcript
+        if (finalTranscript) {
+          setInput(prev => prev + (prev ? ' ' : '') + finalTranscript.trim());
+          finalTranscript = '';
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('Speech recognition error:', event.error);
+        setIsRecording(false);
+        setMediaRecorder(null);
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+        setMediaRecorder(null);
         
         // Focus on textarea
         if (textareaRef.current) {
           textareaRef.current.focus();
         }
-      }
-    } catch (error: any) {
-      console.error('Transcription error:', error);
+      };
+
+      recognition.start();
+      setMediaRecorder(recognition as any); // Store recognition instance
+      setIsRecording(true);
+    } catch (error) {
+      console.error('Recording failed:', error);
+      setIsRecording(false);
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && 'stop' in mediaRecorder) {
+      (mediaRecorder as any).stop();
+      setMediaRecorder(null);
+      setIsRecording(false);
     }
   };
 
