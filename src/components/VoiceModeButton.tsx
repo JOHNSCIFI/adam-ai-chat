@@ -264,6 +264,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           mimeType = format;
           selectedAudioFormatRef.current = format; // Store for reinitialization
           console.log('✅ Selected audio format:', format);
+          console.log('📊 Format stored for consistency:', selectedAudioFormatRef.current);
           break;
         }
       }
@@ -741,14 +742,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
                 
                 // Restart recording with fresh MediaRecorder
                 if (streamRef.current && streamRef.current.active) {
-                  // Use the originally selected format for consistency
-                  let mimeType = selectedAudioFormatRef.current || 'audio/webm;codecs=opus';
-                  if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    console.warn('⚠️ Previously selected format no longer supported, finding alternative');
-                    // Fallback to the original selection logic
+                  // Use the EXACT same format that was originally successful
+                  let mimeType = selectedAudioFormatRef.current;
+                  
+                  // If no format was stored or it's no longer supported, use the same selection logic
+                  if (!mimeType || !MediaRecorder.isTypeSupported(mimeType)) {
+                    console.warn('⚠️ Need to reselect audio format for reinitialization');
+                    // Use the EXACT same selection logic as initial setup
                     const preferredFormats = [
                       'audio/wav',
-                      'audio/webm;codecs=pcm', 
+                      'audio/webm;codecs=pcm',
                       'audio/webm;codecs=opus',
                       'audio/webm',
                       'audio/mp4',
@@ -758,13 +761,29 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
                     for (const format of preferredFormats) {
                       if (MediaRecorder.isTypeSupported(format)) {
                         mimeType = format;
-                        selectedAudioFormatRef.current = format;
+                        selectedAudioFormatRef.current = format; // Store for future use
+                        console.log('✅ Reselected audio format:', format);
                         break;
                       }
                     }
                   }
                   
+                  if (!mimeType) {
+                    console.error('❌ No supported audio format found during reinitialization');
+                    return;
+                  }
+                  
                   console.log('🎵 Creating new MediaRecorder with format:', mimeType);
+                  console.log('📊 Format consistency check:', {
+                    storedFormat: selectedAudioFormatRef.current,
+                    usingFormat: mimeType,
+                    isConsistent: selectedAudioFormatRef.current === mimeType
+                  });
+                  console.log('📊 Format consistency check:', {
+                    storedFormat: selectedAudioFormatRef.current,
+                    usingFormat: mimeType,
+                    isConsistent: selectedAudioFormatRef.current === mimeType
+                  });
                   
                   // Create new MediaRecorder
                   const newMediaRecorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : {});
