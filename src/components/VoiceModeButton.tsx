@@ -278,30 +278,87 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       return;
     }
 
-    console.log('🎤 Attempting to resume listening...');
+    console.log('🎤 Resuming listening after AI response...');
     
-    setTimeout(() => {
-      if (isVoiceModeActive && !isProcessing && !isPlaying) {
+    // Create new recognition instance for continuous conversation
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        console.error('❌ Speech recognition not supported');
+        return;
+      }
+
+      // Clean up existing recognition first
+      if (recognitionRef.current) {
         try {
-          if (recognitionRef.current) {
-            console.log('🎤 Restarting existing recognition...');
-            recognitionRef.current.start();
-          } else {
-            console.log('🎤 Creating new recognition instance...');
-            startVoiceMode();
-          }
-        } catch (error) {
-          console.error('❌ Error resuming speech recognition:', error);
-          // If recognition fails, try to recreate it
-          setTimeout(() => {
-            if (isVoiceModeActive) {
-              console.log('🎤 Recreating recognition after error...');
-              startVoiceMode();
-            }
-          }, 1000);
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore errors when stopping
         }
       }
-    }, 800);
+
+      console.log('🎤 Creating fresh recognition instance for continuous chat...');
+      const recognition = new SpeechRecognition();
+      
+      // Configure recognition
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+      
+      recognitionRef.current = recognition;
+      
+      // Set up event handlers
+      recognition.onstart = () => {
+        console.log('🎤 Listening resumed - ready for next input');
+        setIsListening(true);
+      };
+      
+      recognition.onresult = async (event: any) => {
+        const result = event.results[0];
+        if (result.isFinal) {
+          const transcript = result[0].transcript.trim();
+          console.log('📝 New speech recognized:', transcript);
+          
+          if (transcript) {
+            setIsListening(false);
+            setIsProcessing(true);
+            await processUserSpeech(transcript);
+          }
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('❌ Speech recognition error during resume:', event.error);
+        setIsListening(false);
+        
+        // Try to restart on recoverable errors
+        if (event.error === 'no-speech' && isVoiceModeActive) {
+          setTimeout(() => {
+            if (isVoiceModeActive && !isProcessing && !isPlaying) {
+              resumeListening();
+            }
+          }, 1500);
+        }
+      };
+      
+      recognition.onend = () => {
+        console.log('🛑 Recognition ended during resume');
+        setIsListening(false);
+      };
+      
+      // Start listening immediately
+      setTimeout(() => {
+        if (isVoiceModeActive && !isProcessing && !isPlaying) {
+          console.log('🎤 Starting listening for next user input...');
+          recognition.start();
+        }
+      }, 300);
+      
+    } catch (error) {
+      console.error('❌ Error creating recognition for resume:', error);
+    }
   };
 
   const processUserSpeech = async (transcript: string) => {
@@ -384,14 +441,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup on unmount only (remove dependency to prevent interference)
   React.useEffect(() => {
     return () => {
-      if (isVoiceModeActive) {
-        stopVoiceMode();
+      // Only cleanup when component actually unmounts, not on state changes
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
       }
     };
-  }, [isVoiceModeActive]);
+  }, []); // Empty dependency array - only run on mount/unmount
 
   // Helper functions for button styling
   const getButtonIcon = () => {
