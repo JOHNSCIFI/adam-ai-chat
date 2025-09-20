@@ -161,27 +161,31 @@ export default function Chat() {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
-      // Don't auto-trigger AI for messages with file attachments - they should go to webhook only
-      if (lastMessage.role === 'user' && !processedUserMessages.current.has(lastMessage.id) && 
+      // Only trigger for user messages without file attachments (text-only)
+      if (lastMessage.role === 'user' && 
           (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
+        
+        // Check if there's already an assistant response after this user message
         const hasAssistantResponseAfter = messages.some(msg => 
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
         );
         
-        if (!hasAssistantResponseAfter) {
-          console.log('Triggering AI response for user message:', lastMessage.content);
+        // Only trigger if no assistant response exists and we haven't processed this message yet
+        if (!hasAssistantResponseAfter && !processedUserMessages.current.has(lastMessage.id)) {
+          console.log('User message without files - will be handled by auto-trigger');
           processedUserMessages.current.add(lastMessage.id);
-          // Add a longer delay to ensure proper state management and avoid race conditions
+          
+          // Trigger AI response immediately for text-only messages
           setTimeout(() => {
-            console.log('Executing AI response trigger...');
+            console.log('Executing AI response trigger for:', lastMessage.content);
             triggerAIResponse(lastMessage.content, lastMessage.id);
-          }, 300);
+          }, 100);
         } else {
-          console.log('Assistant response already exists for user message');
+          console.log('Message already processed or assistant response exists');
         }
       } else {
-        console.log('Message already processed, not a user message, or has file attachments (webhook handled)');
+        console.log('Message has file attachments (webhook handled) or not a user message');
       }
     } else {
       console.log('Conditions not met for auto-trigger');
