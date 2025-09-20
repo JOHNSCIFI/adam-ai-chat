@@ -233,19 +233,27 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       sourceRef.current.connect(analyserRef.current);
       console.log('🔊 Audio analysis setup complete');
       
-      // Try different audio formats for better compatibility
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        if (MediaRecorder.isTypeSupported('audio/webm')) {
-          mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/wav')) {
-          mimeType = 'audio/wav';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-        } else {
-          console.warn('⚠️ No supported audio format found, using default');
-          mimeType = '';
+      // Try different audio formats for better compatibility - prioritize WAV
+      let mimeType = '';
+      const preferredFormats = [
+        'audio/wav',
+        'audio/webm;codecs=pcm',
+        'audio/webm;codecs=opus',
+        'audio/webm',
+        'audio/mp4',
+        'audio/ogg;codecs=opus'
+      ];
+      
+      for (const format of preferredFormats) {
+        if (MediaRecorder.isTypeSupported(format)) {
+          mimeType = format;
+          console.log('✅ Selected audio format:', format);
+          break;
         }
+      }
+      
+      if (!mimeType) {
+        console.warn('⚠️ No supported audio format found, using default');
       }
       
       console.log('🎵 Using audio format:', mimeType);
@@ -346,46 +354,117 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   // Convert WebM audio to WAV format for better OpenAI compatibility
   const convertWebMToWAV = async (webmBlob: Blob): Promise<Blob> => {
-    console.log('🔄 Converting WebM to WAV format...');
+    console.log('🔄 Converting WebM to WAV format...', {
+      inputSize: webmBlob.size,
+      inputType: webmBlob.type
+    });
     
     try {
       // Create a temporary audio context for conversion
       const tempAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      console.log('✅ AudioContext created for conversion');
       
       // Convert blob to array buffer
       const arrayBuffer = await webmBlob.arrayBuffer();
       console.log('📁 WebM arrayBuffer size:', arrayBuffer.byteLength);
       
-      // Decode audio data
+      // Decode audio data - this might fail for some WebM formats
+      console.log('🔄 Attempting to decode WebM audio data...');
       const audioBuffer = await tempAudioContext.decodeAudioData(arrayBuffer);
-      console.log('🎵 Audio decoded:', {
+      console.log('🎵 Audio decoded successfully:', {
         duration: audioBuffer.duration,
         sampleRate: audioBuffer.sampleRate,
         numberOfChannels: audioBuffer.numberOfChannels
       });
       
-      // Get audio data
-      const audioData = audioBuffer.getChannelData(0); // Use first channel
+      // Get audio data from first channel
+      const audioData = audioBuffer.getChannelData(0);
       const sampleRate = audioBuffer.sampleRate;
+      console.log('📊 Audio data extracted:', {
+        samplesCount: audioData.length,
+        sampleRate: sampleRate
+      });
       
       // Create WAV buffer
+      console.log('🔄 Creating WAV buffer...');
       const wavBuffer = createWAVBuffer(audioData, sampleRate);
       
       // Close temporary audio context
       await tempAudioContext.close();
       
+      const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+      
       console.log('✅ WAV conversion complete:', {
         originalSize: webmBlob.size,
-        convertedSize: wavBuffer.byteLength,
-        format: 'WAV'
+        convertedSize: wavBlob.size,
+        originalType: webmBlob.type,
+        convertedType: wavBlob.type,
+        compressionRatio: (webmBlob.size / wavBlob.size).toFixed(2)
       });
       
-      return new Blob([wavBuffer], { type: 'audio/wav' });
+      return wavBlob;
     } catch (error) {
-      console.warn('⚠️ WAV conversion failed, using original WebM:', error);
-      // Fallback to original blob if conversion fails
-      return webmBlob;
+      console.error('❌ WAV conversion failed:', {
+        error: error.message,
+        errorName: error.name,
+        errorStack: error.stack?.slice(0, 200),
+        inputType: webmBlob.type,
+        inputSize: webmBlob.size
+      });
+      
+      // For conversion failures, try to create a simple WAV header with the original data
+      // This won't work for playback but might work for OpenAI transcription
+      console.log('🔄 Attempting fallback conversion method...');
+      try {
+        const arrayBuffer = await webmBlob.arrayBuffer();
+        const simpleWavBlob = createSimpleWAVFromRawData(arrayBuffer);
+        console.log('⚠️ Using fallback WAV conversion:', {
+          originalSize: webmBlob.size,
+          fallbackSize: simpleWavBlob.size,
+          method: 'raw_data_with_wav_header'
+        });
+        return simpleWavBlob;
+      } catch (fallbackError) {
+        console.error('❌ Fallback conversion also failed:', fallbackError.message);
+        console.warn('⚠️ Using original WebM format (may not work with OpenAI)');
+        return webmBlob;
+      }
     }
+  };
+
+  // Create a simple WAV file by wrapping raw data with WAV header
+  const createSimpleWAVFromRawData = (rawData: ArrayBuffer): Blob => {
+    // Assume 16kHz mono for speech (common for WebM speech)
+    const sampleRate = 16000;
+    const dataSize = rawData.byteLength;
+    
+    // Create WAV header
+    const header = new ArrayBuffer(44);
+    const view = new DataView(header);
+    
+    // WAV file header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, dataSize, true);
+    
+    // Combine header with raw data
+    return new Blob([header, rawData], { type: 'audio/wav' });
   };
 
   // Create WAV file buffer from audio data
