@@ -127,9 +127,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       return;
     }
     
-    // Skip if we have a request in progress or are processing/playing
+    // COMPLETELY STOP if we have a request in progress or are processing/playing
     if (isRequestInProgressRef.current || isProcessingRef.current || isPlayingRef.current) {
-      setTimeout(() => checkAudioLevel(), 100);
+      console.log('🚫 AUDIO ANALYSIS PAUSED - AI is busy:', {
+        isRequestInProgress: isRequestInProgressRef.current,
+        isProcessing: isProcessingRef.current,
+        isPlaying: isPlayingRef.current
+      });
+      // Don't schedule next check - completely stop during AI work
       return;
     }
     
@@ -162,11 +167,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // NORMAL SPEECH thresholds for regular talking (NOT whispers)
-      const generalThreshold = 0.08; // Normal threshold for regular speech
-      const speechThreshold = 0.12; // Normal speech threshold for clear talking
-      const noiseFloor = 0.02; // Higher noise floor to ignore background noise
-      const minVolumeRatio = 0.6; // Require clear speech-to-noise ratio
+      // STRICTER NORMAL SPEECH thresholds to avoid noise transcription
+      const generalThreshold = 0.12; // Higher threshold for clear regular speech
+      const speechThreshold = 0.18; // Much higher speech threshold for clear talking
+      const noiseFloor = 0.03; // Higher noise floor to ignore background noise
+      const minVolumeRatio = 1.2; // Require much clearer speech-to-noise ratio
       
       // Calculate noise reduction - ignore low volume as background noise
       const adjustedVolume = Math.max(0, volume - noiseFloor);
@@ -177,8 +182,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
       const hasGeneralAudio = adjustedVolume > generalThreshold;
       
-      // Detect REGULAR SPEECH with normal thresholds
-      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.05; // Normal volume threshold for regular speech
+      // Detect CLEAR REGULAR SPEECH with strict thresholds
+      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.08; // Higher volume threshold for clear speech
       
       // DETAILED CONSOLE LOGGING for debugging
       if (volume > 0.01) { // Only log when there's some audio activity
@@ -201,11 +206,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       // COMPLETELY STOP listening when processing or playing AI response
       if (isProcessingRef.current || isPlayingRef.current || isRequestInProgressRef.current) {
         // Immediately stop all audio processing during AI work
-        console.log('🚫 STOPPING audio analysis - AI is working:', {
+        console.log('🚫 COMPLETELY STOPPING audio analysis - AI is working:', {
           isProcessing: isProcessingRef.current,
           isPlaying: isPlayingRef.current,
           isRequestInProgress: isRequestInProgressRef.current
         });
+        // Do NOT schedule next check - completely pause until AI finishes
         return;
       }
       
@@ -238,9 +244,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
       }
       
-      // Continue checking only if we're in voice mode and not busy
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
+      // Continue checking only if we're in voice mode and AI is NOT busy
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && 
+          !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         setTimeout(() => checkAudioLevel(), 100);
+      } else if (isVoiceModeActiveRef.current) {
+        console.log('🚫 NOT scheduling next audio check - AI is busy');
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
@@ -432,23 +441,23 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       estimatedDuration: `${(audioBlob.size / 24000).toFixed(2)}s`
     });
     
-        // Validate audio blob - require substantial audio for processing
-        if (audioBlob.size < 8000) { // Require at least 8KB for clear speech
+        // STRICT audio validation - require high quality audio for processing
+        if (audioBlob.size < 15000) { // Require at least 15KB for clear speech
           console.warn('⚠️ Audio blob too small for speech processing:', {
             size: audioBlob.size,
-            required: 8000,
-            reason: 'Likely background noise or very short sound'
+            required: 15000,
+            reason: 'Likely background noise - need substantial clear speech'
           });
           return;
         }
         
         // Additional validation - check duration (approximate)
         const estimatedDuration = audioBlob.size / 24000; // Rough estimate for 24kHz audio
-        if (estimatedDuration < 0.8) { // Less than 800ms
+        if (estimatedDuration < 1.2) { // Less than 1.2 seconds
           console.warn('⚠️ Audio duration too short for meaningful speech:', {
             duration: estimatedDuration,
-            required: 0.8,
-            reason: 'Need at least 800ms for clear speech'
+            required: 1.2,
+            reason: 'Need at least 1.2 seconds for clear meaningful speech'
           });
           return;
         }
@@ -596,15 +605,25 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         isRequestInProgressRef.current = false; // IMPORTANT: Reset request flag
         URL.revokeObjectURL(audioUrl);
         
-        console.log('👂 AI done speaking - RESUMING normal speech detection in 200ms...');
+        console.log('👂 AI done speaking - RESUMING normal speech detection in 500ms...');
         
         // Resume listening after AI speech for natural conversation
         setTimeout(() => {
-          if (isVoiceModeActiveRef.current) {
+          if (isVoiceModeActiveRef.current && analyserRef.current && streamRef.current && 
+              !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
             console.log('🔄 RESTARTING voice activity detection for regular speech...');
             checkAudioLevel(); // Resume audio analysis loop
+          } else {
+            console.log('🚫 Cannot resume - voice mode conditions not met:', {
+              isVoiceModeActive: isVoiceModeActiveRef.current,
+              hasAnalyser: !!analyserRef.current,
+              hasStream: !!streamRef.current,
+              isProcessing: isProcessingRef.current,
+              isPlaying: isPlayingRef.current,
+              isRequestInProgress: isRequestInProgressRef.current
+            });
           }
-        }, 200); // Brief pause before resuming listening
+        }, 500); // Longer pause before resuming listening
       };
 
       audio.onerror = (error) => {
