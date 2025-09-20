@@ -51,19 +51,45 @@ serve(async (req) => {
           );
         }
 
-        // Validate file size (max 25MB for Whisper API)
-        if (audioFile.size > 25 * 1024 * 1024) {
-          console.error('❌ Audio file too large:', audioFile.size);
+        // Validate file size (increased limits for better voice mode support)
+        const maxSize = 50 * 1024 * 1024; // Increased to 50MB (Whisper supports up to 25MB but we need headroom)
+        const minSize = 100; // Reduced minimum to 100 bytes for very short utterances
+        
+        console.log('📊 Audio file size validation:', {
+          size: audioFile.size,
+          sizeKB: Math.round(audioFile.size / 1024),
+          sizeMB: Math.round(audioFile.size / (1024 * 1024) * 100) / 100,
+          minSize,
+          maxSize: maxSize / (1024 * 1024) + 'MB'
+        });
+        
+        if (audioFile.size > maxSize) {
+          console.error('❌ Audio file too large:', {
+            actual: audioFile.size,
+            actualMB: Math.round(audioFile.size / (1024 * 1024) * 100) / 100,
+            maxMB: maxSize / (1024 * 1024)
+          });
           return new Response(
-            JSON.stringify({ error: 'Audio file too large (max 25MB)' }),
+            JSON.stringify({ 
+              error: `Audio file too large (${Math.round(audioFile.size / (1024 * 1024) * 100) / 100}MB, max 50MB)`,
+              actualSize: audioFile.size,
+              maxSize: maxSize
+            }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
 
-        if (audioFile.size < 1000) { // Increased minimum to 1KB
-          console.error('❌ Audio file too small:', audioFile.size);
+        if (audioFile.size < minSize) {
+          console.error('❌ Audio file too small:', {
+            actual: audioFile.size,
+            min: minSize
+          });
           return new Response(
-            JSON.stringify({ error: 'Audio file too small (min 1KB)' }),
+            JSON.stringify({ 
+              error: `Audio file too small (${audioFile.size} bytes, min ${minSize} bytes)`,
+              actualSize: audioFile.size,
+              minSize: minSize
+            }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -86,9 +112,22 @@ serve(async (req) => {
         
       } catch (formDataError) {
         console.error('❌ FormData processing error:', formDataError);
-        console.error('❌ FormData error details:', formDataError.stack);
+        console.error('❌ FormData error details:', {
+          name: formDataError.name,
+          message: formDataError.message,
+          stack: formDataError.stack?.slice(0, 500)
+        });
+        console.error('❌ Request info during error:', {
+          contentType: req.headers.get('content-type'),
+          contentLength: req.headers.get('content-length'),
+          userAgent: req.headers.get('user-agent')
+        });
         return new Response(
-          JSON.stringify({ error: `FormData processing failed: ${formDataError.message}` }),
+          JSON.stringify({ 
+            error: `FormData processing failed: ${formDataError.message}`,
+            errorType: formDataError.name,
+            details: 'Failed to parse multipart form data - this might be due to network issues or corrupted upload'
+          }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -106,13 +145,29 @@ serve(async (req) => {
           throw new Error('No audio data provided in JSON');
         }
 
-        console.log('📊 Base64 audio length:', audio.length);
+        console.log('📊 Base64 audio processing:', {
+          base64Length: audio.length,
+          estimatedSizeBytes: Math.floor(audio.length * 0.75), // Base64 is ~33% larger than binary
+          estimatedSizeKB: Math.round((audio.length * 0.75) / 1024)
+        });
 
-        // Convert base64 to binary and create proper webm blob
-        const binaryString = atob(audio);
-        const audioData = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          audioData[i] = binaryString.charCodeAt(i);
+        // Convert base64 to binary with better error handling for large files
+        let binaryString: string;
+        let audioData: Uint8Array;
+        
+        try {
+          binaryString = atob(audio);
+          console.log('✅ Base64 decode successful, size:', binaryString.length);
+          
+          audioData = new Uint8Array(binaryString.length);
+          for (let i = 0; i < binaryString.length; i++) {
+            audioData[i] = binaryString.charCodeAt(i);
+          }
+          console.log('✅ Uint8Array conversion successful');
+          
+        } catch (decodeError) {
+          console.error('❌ Base64 decode error:', decodeError);
+          throw new Error(`Base64 decode failed: ${decodeError.message}`);
         }
         
         // Convert to WAV format for better OpenAI compatibility
@@ -131,11 +186,36 @@ serve(async (req) => {
       }
     }
 
-    console.log('🔊 Final audio blob:', {
+    // Additional validation before sending to OpenAI
+    const finalSizeKB = Math.round(audioBlob.size / 1024);
+    const finalSizeMB = Math.round(audioBlob.size / (1024 * 1024) * 100) / 100;
+    
+    console.log('🔊 Final audio blob validation:', {
       size: audioBlob.size,
+      sizeKB: finalSizeKB,
+      sizeMB: finalSizeMB,
       type: audioBlob.type,
-      filename: filename
+      filename: filename,
+      whisperLimitMB: 25,
+      withinLimit: finalSizeMB <= 25
     });
+    
+    // Final size check before OpenAI (Whisper has 25MB hard limit)
+    if (audioBlob.size > 25 * 1024 * 1024) {
+      console.error('❌ Final audio blob exceeds OpenAI Whisper limit:', {
+        size: audioBlob.size,
+        sizeMB: finalSizeMB,
+        limit: '25MB'
+      });
+      return new Response(
+        JSON.stringify({ 
+          error: `Audio too large for speech recognition (${finalSizeMB}MB, max 25MB)`,
+          size: audioBlob.size,
+          sizeMB: finalSizeMB
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Validate OpenAI API key
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
@@ -156,16 +236,32 @@ serve(async (req) => {
       );
     }
 
-    // Create form data for OpenAI
-    const openaiFormData = new FormData();
-    openaiFormData.append('file', audioBlob, filename);
-    openaiFormData.append('model', 'whisper-1');
+    // Create form data for OpenAI with timeout considerations
+    let openaiFormData: FormData;
+    try {
+      openaiFormData = new FormData();
+      openaiFormData.append('file', audioBlob, filename);
+      openaiFormData.append('model', 'whisper-1');
+      
+      console.log('✅ OpenAI FormData created successfully');
+    } catch (formDataError) {
+      console.error('❌ Failed to create OpenAI FormData:', formDataError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Failed to prepare audio for speech recognition',
+          details: formDataError.message
+        }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     console.log('🚀 Sending to OpenAI Whisper API...');
     console.log('📊 FormData for OpenAI:', {
       hasFile: openaiFormData.has('file'),
       hasModel: openaiFormData.has('model'),
-      filename: filename
+      filename: filename,
+      audioSizeKB: Math.round(audioBlob.size / 1024),
+      estimatedProcessingTime: `${Math.round(audioBlob.size / 1024 / 100)}s` // Rough estimate
     });
 
     // Send to OpenAI Whisper API
@@ -182,25 +278,58 @@ serve(async (req) => {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ OpenAI API error response:', errorText);
+      console.error('❌ OpenAI API error response:', {
+        status: response.status,
+        statusText: response.statusText,
+        error: errorText,
+        audioSize: audioBlob.size,
+        audioSizeKB: Math.round(audioBlob.size / 1024),
+        filename: filename
+      });
       
-      // Return specific error messages based on status
-      if (response.status === 400) {
-        return new Response(
-          JSON.stringify({ error: 'Invalid audio format or content' }),
-          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } else if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded, please try again later' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      } else {
-        return new Response(
-          JSON.stringify({ error: 'Speech recognition service temporarily unavailable' }),
-          { status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+      let errorMessage: string;
+      let errorDetails: string;
+      
+      // Parse OpenAI error for more specific feedback
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorDetails = errorJson.error?.message || errorText;
+      } catch {
+        errorDetails = errorText;
       }
+      
+      // Return specific error messages based on status with more context
+      if (response.status === 400) {
+        errorMessage = 'Audio format not supported or corrupted';
+        if (errorDetails.includes('format')) {
+          errorMessage = `Audio format issue: ${errorDetails}`;
+        } else if (errorDetails.includes('duration')) {
+          errorMessage = 'Audio too long or too short for processing';
+        }
+      } else if (response.status === 413) {
+        errorMessage = 'Audio file too large for processing';
+      } else if (response.status === 429) {
+        errorMessage = 'Rate limit exceeded, please try again later';
+      } else if (response.status >= 500) {
+        errorMessage = 'Speech recognition service temporarily unavailable';
+      } else {
+        errorMessage = 'Speech recognition failed';
+      }
+      
+      return new Response(
+        JSON.stringify({ 
+          error: errorMessage,
+          details: errorDetails,
+          openaiStatus: response.status,
+          audioInfo: {
+            size: audioBlob.size,
+            sizeKB: Math.round(audioBlob.size / 1024),
+            type: audioBlob.type,
+            filename: filename
+          }
+        }),
+        { status: response.status >= 500 ? 503 : 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const result = await response.json();
