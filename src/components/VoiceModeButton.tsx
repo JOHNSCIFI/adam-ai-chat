@@ -40,6 +40,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const lastRequestTimeRef = useRef<number>(0);
   const isRequestInProgressRef = useRef<boolean>(false);
   const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 seconds between requests
+  const selectedAudioFormatRef = useRef<string>(''); // Store selected format for reinitialization
+  const audioAnalysisActiveRef = useRef<boolean>(false); // Prevent overlapping checkAudioLevel calls
   
   const { user } = useAuth();
   
@@ -103,11 +105,20 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   // Enhanced Voice Activity Detection with proper frequency analysis
   const checkAudioLevel = useCallback(() => {
     if (!analyserRef.current || !isVoiceModeActiveRef.current) {
+      audioAnalysisActiveRef.current = false;
       return;
     }
     
+    // Prevent overlapping calls
+    if (audioAnalysisActiveRef.current) {
+      return;
+    }
+    
+    audioAnalysisActiveRef.current = true;
+    
     // Skip if we have a request in progress or are processing/playing
     if (isRequestInProgressRef.current || isProcessingRef.current || isPlayingRef.current) {
+      audioAnalysisActiveRef.current = false;
       setTimeout(() => checkAudioLevel(), 100);
       return;
     }
@@ -178,10 +189,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       // Continue checking only if conditions are right
       if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+        audioAnalysisActiveRef.current = false; // Reset flag before next call
         setTimeout(() => checkAudioLevel(), 100); // Increased interval for better performance
+      } else {
+        audioAnalysisActiveRef.current = false;
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
+      audioAnalysisActiveRef.current = false;
       // Retry after error only if conditions are right
       if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         setTimeout(() => checkAudioLevel(), 200);
@@ -247,6 +262,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       for (const format of preferredFormats) {
         if (MediaRecorder.isTypeSupported(format)) {
           mimeType = format;
+          selectedAudioFormatRef.current = format; // Store for reinitialization
           console.log('✅ Selected audio format:', format);
           break;
         }
@@ -311,6 +327,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const stopContinuousRecording = () => {
     console.log('🛑 Stopping continuous recording...');
+    
+    // Reset audio analysis flag
+    audioAnalysisActiveRef.current = false;
     
     // Clear silence timer
     if (silenceTimerRef.current) {
@@ -722,13 +741,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
                 
                 // Restart recording with fresh MediaRecorder
                 if (streamRef.current && streamRef.current.active) {
-                  // Get the existing MIME type
-                  let mimeType = 'audio/webm;codecs=opus';
+                  // Use the originally selected format for consistency
+                  let mimeType = selectedAudioFormatRef.current || 'audio/webm;codecs=opus';
                   if (!MediaRecorder.isTypeSupported(mimeType)) {
-                    if (MediaRecorder.isTypeSupported('audio/webm')) {
-                      mimeType = 'audio/webm';
-                    } else {
-                      mimeType = '';
+                    console.warn('⚠️ Previously selected format no longer supported, finding alternative');
+                    // Fallback to the original selection logic
+                    const preferredFormats = [
+                      'audio/wav',
+                      'audio/webm;codecs=pcm', 
+                      'audio/webm;codecs=opus',
+                      'audio/webm',
+                      'audio/mp4',
+                      'audio/ogg;codecs=opus'
+                    ];
+                    
+                    for (const format of preferredFormats) {
+                      if (MediaRecorder.isTypeSupported(format)) {
+                        mimeType = format;
+                        selectedAudioFormatRef.current = format;
+                        break;
+                      }
                     }
                   }
                   
@@ -760,14 +792,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
                   // Start the new recorder
                   newMediaRecorder.start(200);
                   console.log('✅ MediaRecorder reinitialized successfully');
+                  
+                  // Resume audio analysis immediately after reinitialization
+                  setTimeout(() => {
+                    if (isVoiceModeActiveRef.current && !isProcessingRef.current && !isRequestInProgressRef.current) {
+                      console.log('🔄 Starting audio analysis loop after AI speech');
+                      checkAudioLevel();
+                    }
+                  }, 200); // Quick restart for better responsiveness
                 } else {
                   console.warn('⚠️ Stream inactive, need to restart recording completely');
                   // If stream is inactive, restart the entire recording process
                   await startContinuousRecording();
                 }
-                
-                console.log('🔄 Starting audio analysis loop after AI speech');
-                checkAudioLevel();
                 
               } catch (error) {
                 console.error('❌ Failed to reinitialize MediaRecorder:', error);
