@@ -7,10 +7,12 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2 } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
+import VoiceModeButton from '@/components/VoiceModeButton';
+import { toast } from 'sonner';
 
 interface Chat {
   id: string;
@@ -70,6 +72,7 @@ export default function ProjectPage() {
   const [editingChatTitle, setEditingChatTitle] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [isImageMode, setIsImageMode] = useState(false);
   
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -497,6 +500,84 @@ export default function ProjectPage() {
     }
   };
 
+  const handleCreateImageClick = () => {
+    setIsImageMode(true);
+    setIsPopoverOpen(false);
+    setInput('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleExitImageMode = () => {
+    setIsImageMode(false);
+    setInput('');
+  };
+
+  const startRecording = async () => {
+    try {
+      console.log('🎤 Starting speech recognition...');
+      
+      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        toast.error('Speech recognition not supported in this browser');
+        return;
+      }
+
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const recognition = new SpeechRecognition();
+      
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onstart = () => {
+        console.log('🎤 Speech recognition started successfully');
+        setIsRecording(true);
+      };
+
+      recognition.onresult = (event) => {
+        const transcript = Array.from(event.results)
+          .map((result) => result[0])
+          .map((result) => result.transcript)
+          .join('');
+
+        if (event.results[0].isFinal) {
+          console.log('📝 Final transcript:', transcript);
+          setInput(prev => prev + (prev ? ' ' : '') + transcript);
+          setIsRecording(false);
+        }
+      };
+
+      recognition.onerror = (event) => {
+        console.error('❌ Speech recognition error:', event.error);
+        setIsRecording(false);
+        toast.error('Speech recognition failed');
+      };
+
+      recognition.onend = () => {
+        setIsRecording(false);
+        setMediaRecorder(null);
+      };
+
+      setMediaRecorder(recognition as any);
+      recognition.start();
+      
+    } catch (error) {
+      console.error('❌ Failed to start speech recognition:', error);
+      setIsRecording(false);
+      toast.error('Failed to start speech recognition');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder) {
+      console.log('🔴 Calling stop on recognition instance');
+      (mediaRecorder as any).stop();
+      setMediaRecorder(null);
+      setIsRecording(false);
+    }
+  };
+
   if (!project) {
     return <div>Loading...</div>;
   }
@@ -627,6 +708,24 @@ export default function ProjectPage() {
                 </div>
               )}
               
+              {/* Image mode indicator */}
+              {isImageMode && (
+                <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+                  <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    <ImageIcon2 className="h-3 w-3" />
+                    <span>Image Generation Mode</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleExitImageMode}
+                      className="h-4 w-4 p-0 ml-1 hover:bg-muted-foreground/20"
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+              
               <div className="relative">
                 <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
                   {/* Attachment button */}
@@ -641,44 +740,67 @@ export default function ProjectPage() {
                         <Paperclip className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2"
-                        onClick={handleFileUpload}
-                      >
-                        <Paperclip className="h-4 w-4" />
-                        Attach files
-                      </Button>
-                    </PopoverContent>
+                     <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         className="w-full justify-start gap-2"
+                         onClick={handleFileUpload}
+                       >
+                         <Paperclip className="h-4 w-4" />
+                         Add photos & files
+                       </Button>
+                       <Button
+                         variant="ghost"
+                         size="sm"
+                         className="w-full justify-start gap-2"
+                         onClick={handleCreateImageClick}
+                       >
+                         <ImageIcon2 className="h-4 w-4" />
+                         Create image
+                       </Button>
+                     </PopoverContent>
                   </Popover>
                   
-                  <Textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    placeholder={`New chat in ${project.title}`}
-                    className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
-                    style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
-                    disabled={loading}
-                    rows={1}
-                  />
+                 <Textarea
+                   ref={textareaRef}
+                   value={input}
+                   onChange={handleInputChange}
+                   onKeyDown={handleKeyDown}
+                   placeholder={isImageMode ? "Describe an image" : `New chat in ${project.title}`}
+                   className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                   style={{ wordWrap: 'break-word', overflowWrap: 'break-word' }}
+                   disabled={loading}
+                   rows={1}
+                 />
                   
-                  <div className="flex items-center gap-1 ml-2 pb-1">
-                    {/* Dictation button */}
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                      disabled={loading}
-                    >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                    
-                    {/* Send button */}
+                 <div className="flex items-center gap-1 ml-2 pb-1">
+                   {/* Dictation button */}
+                   <Button
+                     type="button"
+                     variant="ghost"
+                     size="sm"
+                     className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                     onClick={isRecording ? stopRecording : startRecording}
+                     disabled={loading}
+                   >
+                     {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                   </Button>
+                   
+                   {/* Voice Mode button */}
+                   <VoiceModeButton
+                     onMessageSent={(messageId, content, role) => {
+                       // Mark voice messages as processed and refresh chats
+                       if (role === 'user') {
+                         console.log('✅ Voice user message sent:', messageId);
+                         fetchProjectChats();
+                       }
+                     }}
+                     chatId={projectId}
+                     actualTheme={actualTheme}
+                   />
+                   
+                   {/* Send button */}
                     <Button
                       type="button"
                       onClick={sendMessage}
