@@ -1397,8 +1397,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
 
   const updateChatTitleFromConversation = async (chatId: string) => {
-    // Update title after 2-3 messages instead of 4
-    if (messages.length >= 3) {
+    // Update title after 2 messages
+    if (messages.length >= 2) {
       const { data: currentChat } = await supabase
         .from('chats')
         .select('title')
