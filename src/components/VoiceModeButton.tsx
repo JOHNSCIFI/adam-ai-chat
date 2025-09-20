@@ -141,11 +141,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // Much stricter thresholds to prevent false speech detection
-      const generalThreshold = 0.08; // Significantly higher - only detect clear speech
-      const speechThreshold = 0.12; // Much higher speech threshold  
-      const noiseFloor = 0.015; // Higher noise floor to ignore ambient sounds
-      const minVolumeRatio = 0.7; // Require high speech-to-noise ratio
+      // Sensitive thresholds for whisper-level speech detection
+      const generalThreshold = 0.02; // Very low threshold for quiet speech
+      const speechThreshold = 0.03; // Low speech threshold for whispers
+      const noiseFloor = 0.005; // Lower noise floor to catch quiet sounds
+      const minVolumeRatio = 0.4; // Reduced ratio requirement for whispers
       
       // Calculate noise reduction - ignore low volume as background noise
       const adjustedVolume = Math.max(0, volume - noiseFloor);
@@ -156,8 +156,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
       const hasGeneralAudio = adjustedVolume > generalThreshold;
       
-      // Only trigger on clear, intentional speech (not background noise/whispers)
-      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.05;
+      // Detect whisper-level speech with sensitive thresholds
+      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.015; // Much lower volume threshold for whispers
       
       // Use refs for immediate state access
       if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
