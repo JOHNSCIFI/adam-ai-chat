@@ -1241,9 +1241,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
         // Update input with final transcript
         if (finalTranscript) {
-          const newInput = input + (input ? ' ' : '') + finalTranscript.trim();
-          console.log('📝 Updating input field:', newInput);
-          setInput(newInput);
+          setInput(prevInput => {
+            const newInput = prevInput + (prevInput ? ' ' : '') + finalTranscript.trim();
+            console.log('📝 Updating input field:', { prevInput, finalTranscript, newInput });
+            return newInput;
+          });
           finalTranscript = '';
         }
       };
