@@ -1158,29 +1158,67 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         return;
       }
 
+      // Check if we're on HTTPS or localhost
+      const isSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+      const isChromeBased = /Chrome|Chromium|Edge/.test(navigator.userAgent) && !/Safari/.test(navigator.userAgent);
+      
+      console.log('🔐 Security context check:', {
+        isSecureContext,
+        isChromeBased,
+        protocol: location.protocol,
+        hostname: location.hostname,
+        userAgent: navigator.userAgent
+      });
+
+      // For Chrome-based browsers on HTTP (non-localhost), show a helpful message
+      if (isChromeBased && !isSecureContext && location.hostname !== 'localhost') {
+        console.error('❌ Chrome-based browsers require HTTPS for speech recognition');
+        toast.error('Speech recognition requires HTTPS in this browser. Please use HTTPS or try Safari.');
+        return;
+      }
+
       console.log('✅ Speech recognition supported, creating instance...');
       const recognition = new SpeechRecognition();
       
-      // Configure recognition
+      // Configure recognition with better settings for different browsers
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
       
+      // Add timeout handling for Chrome-based browsers
+      if (isChromeBased) {
+        recognition.maxAlternatives = 1;
+      }
+      
       console.log('🔧 Speech recognition configured:', {
         continuous: recognition.continuous,
         interimResults: recognition.interimResults,
-        lang: recognition.lang
+        lang: recognition.lang,
+        maxAlternatives: recognition.maxAlternatives || 'default'
       });
 
       let finalTranscript = '';
+      let recognitionTimeout: NodeJS.Timeout;
 
       recognition.onstart = () => {
         console.log('🎤 Speech recognition started successfully');
         setIsRecording(true);
+        
+        // Set a timeout to restart recognition if it stops unexpectedly
+        recognitionTimeout = setTimeout(() => {
+          console.log('⏰ Recognition timeout - restarting...');
+          if (mediaRecorder === recognition) {
+            recognition.stop();
+          }
+        }, 30000); // 30 second timeout
       };
 
       recognition.onresult = (event) => {
         console.log('📝 Speech recognition result received:', event);
+        
+        if (recognitionTimeout) {
+          clearTimeout(recognitionTimeout);
+        }
         
         let interimTranscript = '';
         
@@ -1214,16 +1252,25 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         console.error('❌ Speech recognition error:', {
           error: event.error,
           message: event.message,
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          browser: isChromeBased ? 'Chrome-based' : 'Other'
         });
+        
+        if (recognitionTimeout) {
+          clearTimeout(recognitionTimeout);
+        }
         
         setIsRecording(false);
         setMediaRecorder(null);
         
-        // Show user-friendly error message
+        // Show user-friendly error message with browser-specific advice
         switch (event.error) {
           case 'network':
-            toast.error('Network error - please check your internet connection');
+            if (isChromeBased) {
+              toast.error('Network error: Try using Safari or enable HTTPS. Chrome-based browsers need secure connection for speech recognition.');
+            } else {
+              toast.error('Network error - please check your internet connection');
+            }
             break;
           case 'not-allowed':
             toast.error('Microphone access denied - please allow microphone permission');
@@ -1241,6 +1288,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
       recognition.onend = () => {
         console.log('🛑 Speech recognition ended');
+        
+        if (recognitionTimeout) {
+          clearTimeout(recognitionTimeout);
+        }
+        
         setIsRecording(false);
         setMediaRecorder(null);
         
