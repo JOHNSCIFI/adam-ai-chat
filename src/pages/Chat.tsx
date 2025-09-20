@@ -1146,48 +1146,101 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const isImageFile = (type: string) => type.startsWith('image/');
 
   const startRecording = async () => {
+    console.log('🎤 Starting speech recognition...');
+    
     try {
       // Check if browser supports Web Speech API
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
-        console.error('Speech recognition not supported in this browser');
+        console.error('❌ Speech recognition not supported in this browser');
+        toast.error('Speech recognition not supported in this browser');
         return;
       }
 
+      console.log('✅ Speech recognition supported, creating instance...');
       const recognition = new SpeechRecognition();
+      
+      // Configure recognition
       recognition.continuous = true;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+      
+      console.log('🔧 Speech recognition configured:', {
+        continuous: recognition.continuous,
+        interimResults: recognition.interimResults,
+        lang: recognition.lang
+      });
 
       let finalTranscript = '';
 
+      recognition.onstart = () => {
+        console.log('🎤 Speech recognition started successfully');
+        setIsRecording(true);
+      };
+
       recognition.onresult = (event) => {
+        console.log('📝 Speech recognition result received:', event);
+        
         let interimTranscript = '';
         
         for (let i = event.resultIndex; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
+          console.log(`📄 Result ${i}:`, {
+            transcript,
+            isFinal: event.results[i].isFinal,
+            confidence: event.results[i][0].confidence
+          });
+          
           if (event.results[i].isFinal) {
             finalTranscript += transcript;
+            console.log('✅ Final transcript updated:', finalTranscript);
           } else {
             interimTranscript += transcript;
+            console.log('📝 Interim transcript:', interimTranscript);
           }
         }
 
         // Update input with final transcript
         if (finalTranscript) {
-          setInput(prev => prev + (prev ? ' ' : '') + finalTranscript.trim());
+          const newInput = input + (input ? ' ' : '') + finalTranscript.trim();
+          console.log('📝 Updating input field:', newInput);
+          setInput(newInput);
           finalTranscript = '';
         }
       };
 
       recognition.onerror = (event) => {
-        console.error('Speech recognition error:', event.error);
+        console.error('❌ Speech recognition error:', {
+          error: event.error,
+          message: event.message,
+          timestamp: new Date().toISOString()
+        });
+        
         setIsRecording(false);
         setMediaRecorder(null);
+        
+        // Show user-friendly error message
+        switch (event.error) {
+          case 'network':
+            toast.error('Network error - please check your internet connection');
+            break;
+          case 'not-allowed':
+            toast.error('Microphone access denied - please allow microphone permission');
+            break;
+          case 'no-speech':
+            toast.error('No speech detected - please try speaking again');
+            break;
+          case 'audio-capture':
+            toast.error('Audio capture failed - please check your microphone');
+            break;
+          default:
+            toast.error(`Speech recognition error: ${event.error}`);
+        }
       };
 
       recognition.onend = () => {
+        console.log('🛑 Speech recognition ended');
         setIsRecording(false);
         setMediaRecorder(null);
         
@@ -1197,20 +1250,27 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         }
       };
 
+      console.log('🚀 Starting speech recognition...');
       recognition.start();
       setMediaRecorder(recognition as any); // Store recognition instance
-      setIsRecording(true);
+      
     } catch (error) {
-      console.error('Recording failed:', error);
+      console.error('❌ Failed to start speech recognition:', error);
       setIsRecording(false);
+      toast.error('Failed to start speech recognition');
     }
   };
 
   const stopRecording = () => {
+    console.log('🛑 Stopping speech recognition...');
+    
     if (mediaRecorder && 'stop' in mediaRecorder) {
+      console.log('🔴 Calling stop on recognition instance');
       (mediaRecorder as any).stop();
       setMediaRecorder(null);
       setIsRecording(false);
+    } else {
+      console.log('⚠️ No active recognition instance to stop');
     }
   };
 
