@@ -105,10 +105,10 @@ serve(async (req) => {
           );
         }
 
-        if (audioFile.size < 5000) { // Increased minimum to 5KB to avoid noise
-          console.error('❌ Audio file too small (likely noise):', audioFile.size);
+        if (audioFile.size < 1000) { // Increased minimum to 1KB
+          console.error('❌ Audio file too small:', audioFile.size);
           return new Response(
-            JSON.stringify({ error: 'Audio file too small - please speak more clearly' }),
+            JSON.stringify({ error: 'Audio file too small (min 1KB)' }),
             { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
           );
         }
@@ -249,11 +249,11 @@ serve(async (req) => {
     const result = await response.json();
     console.log('✅ OpenAI transcription result:', result);
 
-    if (!result.text || result.text.trim().length < 2) {
-      console.warn('⚠️ Empty or very short transcription result:', result.text);
+    if (!result.text) {
+      console.warn('⚠️ Empty transcription result');
       return new Response(
-        JSON.stringify({ error: 'No clear speech detected - please speak louder and more clearly' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ text: '', warning: 'Empty transcription' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
