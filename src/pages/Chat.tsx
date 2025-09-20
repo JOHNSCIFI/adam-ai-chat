@@ -639,8 +639,9 @@ export default function Chat() {
 
       if (userError) throw userError;
 
-      // Mark this message as processed to prevent auto-trigger from handling it
-      if (insertedMessage) {
+      // Only mark as processed if there are files (since file messages get AI analysis above)
+      // Messages without files should be handled by auto-trigger
+      if (insertedMessage && files.length > 0) {
         processedUserMessages.current.add(insertedMessage.id);
       }
 
