@@ -152,31 +152,21 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       synthesisRef.current = utterance;
       
       // Configure voice settings
-      utterance.rate = 0.9;
+      utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       
-      // Wait for voices to load if not already loaded
-      const setVoiceAndSpeak = () => {
-        const voices = window.speechSynthesis.getVoices();
-        console.log('Available voices:', voices.map(v => v.name));
-        
-        // Try to find a natural-sounding voice
-        const preferredVoice = voices.find(voice => 
-          voice.name.includes('Samantha') || 
-          voice.name.includes('Alex') || 
-          voice.name.includes('Karen') ||
-          voice.name.includes('Google') ||
-          (voice.lang.startsWith('en') && voice.localService)
-        );
-        
-        if (preferredVoice) {
-          utterance.voice = preferredVoice;
-          console.log('Using voice:', preferredVoice.name);
-        }
-        
-        window.speechSynthesis.speak(utterance);
-      };
+      // Try to find a natural-sounding voice
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Alex') || 
+        voice.name.includes('Karen') ||
+        voice.lang.startsWith('en')
+      );
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
       
       utterance.onend = () => {
         console.log('✅ Speech synthesis finished');
@@ -186,7 +176,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         if (isVoiceModeActive && recognitionRef.current) {
           setTimeout(() => {
             if (isVoiceModeActive && !isProcessing) {
-              console.log('🎤 Restarting recognition for next input...');
               recognitionRef.current.start();
             }
           }, 500);
@@ -196,23 +185,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       utterance.onerror = (error) => {
         console.error('❌ Speech synthesis error:', error);
         setIsPlaying(false);
-        
-        // Resume listening even if TTS failed
-        if (isVoiceModeActive && recognitionRef.current) {
-          setTimeout(() => {
-            if (isVoiceModeActive && !isProcessing) {
-              recognitionRef.current.start();
-            }
-          }, 500);
-        }
       };
       
-      // Handle voice loading
-      if (window.speechSynthesis.getVoices().length === 0) {
-        window.speechSynthesis.addEventListener('voiceschanged', setVoiceAndSpeak, { once: true });
-      } else {
-        setVoiceAndSpeak();
-      }
+      window.speechSynthesis.speak(utterance);
     } else {
       console.error('❌ Speech synthesis not supported');
       setIsPlaying(false);
@@ -243,13 +218,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, transcript, 'user');
 
-      // Get AI response with correct parameters
+      // Get AI response
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
-          message: transcript,
-          chat_id: chatId,
-          user_id: user?.id
+          messages: [{ role: 'user', content: transcript }],
+          chatId: chatId
         }
       });
       
@@ -338,17 +312,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       onClick={handleClick}
       disabled={isProcessing}
       className={`
-        relative transition-all duration-200 min-w-[40px] h-[40px]
+        transition-all duration-200 
         ${isListening || isVoiceModeActive 
-          ? 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary shadow-lg scale-105' 
-          : 'hover:scale-105'
+          ? 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary shadow-lg' 
+          : ''
         }
         ${isProcessing 
           ? 'opacity-70 cursor-not-allowed' 
-          : 'hover:shadow-md'
+          : ''
         }
         ${isPlaying 
-          ? 'animate-pulse bg-secondary text-secondary-foreground' 
+          ? 'animate-pulse' 
           : ''
         }
       `}
@@ -363,9 +337,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       }
     >
       {getButtonIcon()}
-      {(isListening || isVoiceModeActive) && (
-        <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-500 rounded-full animate-pulse" />
-      )}
     </Button>
   );
 };
