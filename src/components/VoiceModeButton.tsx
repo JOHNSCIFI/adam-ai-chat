@@ -138,16 +138,23 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const speakText = async (text: string) => {
-    console.log('🔊 Speaking text with OpenAI TTS:', text.substring(0, 100) + '...');
+    console.log('🔊 Speaking text with OpenAI TTS:', text.substring(0, 50) + '...');
     setIsPlaying(true);
     
     try {
-      // Use OpenAI's TTS with proper error handling
+      console.log('🤖 Calling OpenAI TTS...');
       const { data: ttsResponse, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
         body: {
           text: text,
           voice: 'alloy'
         }
+      });
+
+      console.log('🎵 TTS Response:', { 
+        hasData: !!ttsResponse, 
+        hasAudio: !!ttsResponse?.audioContent,
+        error: ttsError,
+        audioLength: ttsResponse?.audioContent?.length 
       });
 
       if (ttsError || !ttsResponse?.audioContent) {
@@ -156,44 +163,42 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         return;
       }
 
-      // Convert base64 to audio and play
-      const audioData = `data:audio/mp3;base64,${ttsResponse.audioContent}`;
+      // Create audio with proper format
+      const audioFormat = ttsResponse.format || 'wav';
+      const audioData = `data:audio/${audioFormat};base64,${ttsResponse.audioContent}`;
       const audio = new Audio(audioData);
       
-      // Ensure audio can be played
-      audio.preload = 'auto';
+      console.log('🎵 Audio created with format:', audioFormat, 'Size:', ttsResponse.size);
       
-      const playAudio = () => {
-        return new Promise<void>((resolve, reject) => {
-          audio.onended = () => {
-            console.log('✅ OpenAI TTS playback finished');
-            setIsPlaying(false);
-            resolve();
-          };
-          
-          audio.onerror = (error) => {
-            console.error('❌ Audio playback error:', error);
-            setIsPlaying(false);
-            reject(error);
-          };
-          
-          // Try to play with user interaction handling
-          const playPromise = audio.play();
-          if (playPromise !== undefined) {
-            playPromise.catch((error) => {
-              console.error('❌ Audio play promise error:', error);
-              reject(error);
-            });
+      // Set up audio event handlers
+      audio.onloadstart = () => console.log('🎵 Audio loading started');
+      audio.oncanplay = () => console.log('🎵 Audio can play');
+      audio.onloadeddata = () => console.log('🎵 Audio data loaded');
+      
+      audio.onended = () => {
+        console.log('✅ OpenAI TTS playback finished');
+        setIsPlaying(false);
+        // Automatically resume listening after TTS finishes
+        setTimeout(() => {
+          if (isVoiceModeActive) {
+            resumeListening();
           }
-        });
+        }, 500);
       };
-
+      
+      audio.onerror = (error) => {
+        console.error('❌ Audio playback error:', error);
+        setIsPlaying(false);
+        fallbackToBrowserTTS(text);
+      };
+      
+      // Play the audio
       try {
-        await playAudio();
-        // Resume listening after successful playback
-        resumeListening();
-      } catch (audioError) {
-        console.error('❌ Audio playback failed, using browser TTS:', audioError);
+        console.log('🎵 Starting audio playback...');
+        await audio.play();
+      } catch (playError) {
+        console.error('❌ Audio play failed:', playError);
+        setIsPlaying(false);
         fallbackToBrowserTTS(text);
       }
       
@@ -231,42 +236,72 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       utterance.onend = () => {
         console.log('✅ Browser TTS finished');
         setIsPlaying(false);
-        resumeListening();
+        // Automatically resume listening after browser TTS finishes
+        setTimeout(() => {
+          if (isVoiceModeActive) {
+            resumeListening();
+          }
+        }, 500);
       };
       
       utterance.onerror = (error) => {
         console.error('❌ Browser TTS error:', error);
         setIsPlaying(false);
-        resumeListening();
+        // Still try to resume listening even on error
+        setTimeout(() => {
+          if (isVoiceModeActive) {
+            resumeListening();
+          }
+        }, 1000);
       };
       
       window.speechSynthesis.speak(utterance);
     } else {
       console.error('❌ No TTS available');
       setIsPlaying(false);
-      resumeListening();
+      // Resume listening even if no TTS is available
+      setTimeout(() => {
+        if (isVoiceModeActive) {
+          resumeListening();
+        }
+      }, 1000);
     }
   };
 
   const resumeListening = () => {
-    if (isVoiceModeActive && recognitionRef.current && !isProcessing) {
-      setTimeout(() => {
-        if (isVoiceModeActive && !isProcessing && !isPlaying) {
-          console.log('🎤 Resuming speech recognition...');
-          try {
-            recognitionRef.current.start();
-          } catch (error) {
-            console.error('❌ Error resuming speech recognition:', error);
-            // Try to recreate recognition if it failed
-            setTimeout(() => {
-              if (isVoiceModeActive) {
-                startVoiceMode();
-              }
-            }, 1000);
-          }
-        }
-      }, 1500);
+    if (!isVoiceModeActive || isProcessing || isPlaying) {
+      console.log('🎤 Not resuming - conditions not met:', { 
+        isVoiceModeActive, 
+        isProcessing, 
+        isPlaying 
+      });
+      return;
     }
+
+    console.log('🎤 Attempting to resume listening...');
+    
+    setTimeout(() => {
+      if (isVoiceModeActive && !isProcessing && !isPlaying) {
+        try {
+          if (recognitionRef.current) {
+            console.log('🎤 Restarting existing recognition...');
+            recognitionRef.current.start();
+          } else {
+            console.log('🎤 Creating new recognition instance...');
+            startVoiceMode();
+          }
+        } catch (error) {
+          console.error('❌ Error resuming speech recognition:', error);
+          // If recognition fails, try to recreate it
+          setTimeout(() => {
+            if (isVoiceModeActive) {
+              console.log('🎤 Recreating recognition after error...');
+              startVoiceMode();
+            }
+          }, 1000);
+        }
+      }
+    }, 800);
   };
 
   const processUserSpeech = async (transcript: string) => {

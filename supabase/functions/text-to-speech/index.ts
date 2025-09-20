@@ -28,7 +28,7 @@ serve(async (req) => {
       throw new Error('OpenAI API key not configured');
     }
 
-    console.log('🔊 Generating speech for text:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
+    console.log('🔊 Generating speech for text:', text.substring(0, 50) + '...');
 
     // Generate speech from text using OpenAI's TTS
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -38,51 +38,49 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'tts-1',
+        model: 'tts-1-hd',
         input: text,
         voice: voice || 'alloy',
-        response_format: 'mp3',
+        response_format: 'wav',
       }),
     });
 
     console.log('🎵 OpenAI TTS response status:', response.status);
+    console.log('🎵 Response headers:', Object.fromEntries(response.headers.entries()));
 
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ OpenAI TTS error response:', errorText);
-      let errorMessage = 'Failed to generate speech';
-      
-      try {
-        const errorJson = JSON.parse(errorText);
-        errorMessage = errorJson.error?.message || errorMessage;
-      } catch (parseError) {
-        console.error('❌ Could not parse OpenAI error response');
-      }
-      
-      throw new Error(errorMessage);
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
     }
 
-    // Convert audio buffer to base64
-    console.log('🔄 Converting audio to base64...');
+    // Get the audio buffer
     const arrayBuffer = await response.arrayBuffer();
     console.log('📊 Audio buffer size:', arrayBuffer.byteLength, 'bytes');
     
-    // Use a more efficient base64 encoding method for large files
-    const uint8Array = new Uint8Array(arrayBuffer);
-    let base64Audio = '';
-    
-    // Process in chunks to avoid memory issues
-    const chunkSize = 32768; // 32KB chunks
-    for (let i = 0; i < uint8Array.length; i += chunkSize) {
-      const chunk = uint8Array.slice(i, i + chunkSize);
-      const chunkString = String.fromCharCode.apply(null, Array.from(chunk));
-      base64Audio += btoa(chunkString);
+    if (arrayBuffer.byteLength === 0) {
+      throw new Error('Received empty audio buffer from OpenAI');
     }
 
+    // Convert to base64 using proper encoding
+    const bytes = new Uint8Array(arrayBuffer);
+    let binary = '';
+    const chunkSize = 8192;
+    
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, Math.min(i + chunkSize, bytes.length));
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
+    }
+    
+    const base64Audio = btoa(binary);
     console.log('✅ Speech generated successfully, base64 length:', base64Audio.length);
 
     return new Response(
-      JSON.stringify({ audioContent: base64Audio }),
+      JSON.stringify({ 
+        audioContent: base64Audio,
+        format: 'wav',
+        size: arrayBuffer.byteLength 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       },
