@@ -44,6 +44,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const { user } = useAuth();
   
   const processCurrentSegment = useCallback(async () => {
+    console.log('🎯 processCurrentSegment CALLED', {
+      isRequestInProgress: isRequestInProgressRef.current,
+      chunksLength: currentSegmentChunksRef.current.length,
+      hasMediaRecorder: !!mediaRecorderRef.current
+    });
+    
     // Check if we already have a request in progress
     if (isRequestInProgressRef.current) {
       console.log('🚫 Skipping segment - request already in progress');
@@ -59,14 +65,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     }
     
     if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
+      console.log('🚫 No audio to process', {
+        hasMediaRecorder: !!mediaRecorderRef.current,
+        chunksLength: currentSegmentChunksRef.current.length
+      });
       setIsListening(false);
       isListeningRef.current = false;
       return;
     }
 
-    console.log('🔄 Processing speech segment...');
+    console.log('🔄 Processing speech segment...', {
+      chunksCount: currentSegmentChunksRef.current.length,
+      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0)
+    });
     
     // STOP listening and audio analysis immediately
+    console.log('🛑 STOPPING all listening - processing user speech');
     setIsListening(false);
     isListeningRef.current = false;
     setIsProcessing(true);
@@ -86,10 +100,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       }
       
       // Validate audio data before processing
-      if (audioBlob.size > 1000) { // Increased minimum size to 1KB
+      console.log('📊 Audio blob created:', {
+        size: audioBlob.size,
+        type: audioBlob.type,
+        durationEstimate: `${(audioBlob.size / 24000).toFixed(2)}s`
+      });
+      
+      if (audioBlob.size > 5000) { // Require at least 5KB for meaningful audio
+        console.log('✅ Audio size acceptable - sending to processVoiceInput');
         await processVoiceInput(audioBlob);
       } else {
-        console.log(`🚫 Audio too small (${audioBlob.size} bytes), skipping`);
+        console.log(`🚫 Audio too small (${audioBlob.size} bytes), skipping - likely just noise`);
       }
     } catch (error) {
       console.error('❌ Error in processCurrentSegment:', error);
@@ -141,11 +162,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // Ultra-sensitive thresholds for whisper detection
-      const generalThreshold = 0.008; // Ultra-low threshold for whispers
-      const speechThreshold = 0.012; // Ultra-low speech threshold for whispers
-      const noiseFloor = 0.002; // Very low noise floor to catch the quietest sounds
-      const minVolumeRatio = 0.2; // Very low ratio requirement for whispers
+      // NORMAL SPEECH thresholds for regular talking (NOT whispers)
+      const generalThreshold = 0.08; // Normal threshold for regular speech
+      const speechThreshold = 0.12; // Normal speech threshold for clear talking
+      const noiseFloor = 0.02; // Higher noise floor to ignore background noise
+      const minVolumeRatio = 0.6; // Require clear speech-to-noise ratio
       
       // Calculate noise reduction - ignore low volume as background noise
       const adjustedVolume = Math.max(0, volume - noiseFloor);
@@ -156,12 +177,35 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
       const hasGeneralAudio = adjustedVolume > generalThreshold;
       
-      // Detect whisper-level speech with ultra-sensitive thresholds
-      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.008; // Ultra-low volume threshold for whispers
+      // Detect REGULAR SPEECH with normal thresholds
+      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.05; // Normal volume threshold for regular speech
+      
+      // DETAILED CONSOLE LOGGING for debugging
+      if (volume > 0.01) { // Only log when there's some audio activity
+        console.log('🎵 AUDIO ANALYSIS:', {
+          volume: volume.toFixed(4),
+          speechVolume: speechVolume.toFixed(4),
+          adjustedVolume: adjustedVolume.toFixed(4),
+          adjustedSpeechVolume: adjustedSpeechVolume.toFixed(4),
+          volumeRatio: volumeRatio.toFixed(4),
+          hasGeneralAudio,
+          hasStrongSpeech,
+          isSpeechDetected,
+          isListening: isListeningRef.current,
+          isProcessing: isProcessingRef.current,
+          isPlaying: isPlayingRef.current,
+          isRequestInProgress: isRequestInProgressRef.current
+        });
+      }
       
       // COMPLETELY STOP listening when processing or playing AI response
       if (isProcessingRef.current || isPlayingRef.current || isRequestInProgressRef.current) {
         // Immediately stop all audio processing during AI work
+        console.log('🚫 STOPPING audio analysis - AI is working:', {
+          isProcessing: isProcessingRef.current,
+          isPlaying: isPlayingRef.current,
+          isRequestInProgress: isRequestInProgressRef.current
+        });
         return;
       }
       
@@ -169,19 +213,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       if (isSpeechDetected) {
         // Speech detected - clear silence timer and mark as listening
         if (!isListeningRef.current) {
-          console.log('👂 Started listening to whisper-level speech');
+          console.log('🎤 SPEECH DETECTED - Started listening to REGULAR speech', {
+            volume: volume.toFixed(4),
+            speechVolume: speechVolume.toFixed(4),
+            volumeRatio: volumeRatio.toFixed(4)
+          });
           setIsListening(true);
           isListeningRef.current = true;
         }
         if (silenceTimerRef.current) {
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
+          console.log('⏰ Cleared silence timer - continuing to listen');
         }
       } else if (isListeningRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
+          console.log('🔇 SILENCE detected - starting 1 second timer to process speech');
           // Quick silence timer for natural conversation flow
           silenceTimerRef.current = setTimeout(() => {
+            console.log('⏰ Silence timer completed - processing speech segment');
             processCurrentSegment();
           }, 1000); // 1 second for fast conversation like real person
         }
@@ -375,43 +426,73 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   }, [isVoiceModeActive]);
 
   const processVoiceInput = async (audioBlob: Blob) => {
-    console.log('🎤 Processing voice input - blob size:', audioBlob.size);
+    console.log('🎤 processVoiceInput STARTED - Processing user speech', {
+      blobSize: audioBlob.size,
+      blobType: audioBlob.type,
+      estimatedDuration: `${(audioBlob.size / 24000).toFixed(2)}s`
+    });
     
         // Validate audio blob - require substantial audio for processing
-        if (audioBlob.size < 5000) { // Increased minimum size to 5KB
-          console.warn('⚠️ Audio blob too small (likely just noise), skipping processing');
+        if (audioBlob.size < 8000) { // Require at least 8KB for clear speech
+          console.warn('⚠️ Audio blob too small for speech processing:', {
+            size: audioBlob.size,
+            required: 8000,
+            reason: 'Likely background noise or very short sound'
+          });
           return;
         }
         
         // Additional validation - check duration (approximate)
         const estimatedDuration = audioBlob.size / 24000; // Rough estimate for 24kHz audio
-        if (estimatedDuration < 0.5) { // Less than 500ms
-          console.warn('⚠️ Audio duration too short, skipping processing');
+        if (estimatedDuration < 0.8) { // Less than 800ms
+          console.warn('⚠️ Audio duration too short for meaningful speech:', {
+            duration: estimatedDuration,
+            required: 0.8,
+            reason: 'Need at least 800ms for clear speech'
+          });
           return;
         }
+        
+        console.log('✅ Audio validation passed - proceeding with speech-to-text');
     
     try {
       // Convert speech to text directly (OpenAI will validate format)
       const formData = new FormData();
       
-      console.log('🎤 Sending audio to speech-to-text:', {
+      console.log('📡 SENDING AUDIO TO SPEECH-TO-TEXT ENDPOINT:', {
         size: audioBlob.size,
         type: audioBlob.type,
-        extension: 'webm'
+        filename: 'audio.webm',
+        timestamp: new Date().toISOString()
       });
       
       formData.append('audio', audioBlob, 'audio.webm');
 
+      console.log('🚀 Calling supabase.functions.invoke("speech-to-text")...');
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
 
+      console.log('📡 SPEECH-TO-TEXT RESPONSE:', {
+        data: transcriptionData,
+        error: transcriptionError,
+        timestamp: new Date().toISOString()
+      });
+
       if (transcriptionError) {
+        console.error('❌ TRANSCRIPTION ERROR:', transcriptionError);
         throw new Error(transcriptionError.message);
       }
 
       const userText = transcriptionData?.text;
+      console.log('📝 TRANSCRIBED TEXT:', {
+        text: userText,
+        length: userText?.length || 0,
+        isEmpty: !userText || userText.trim() === ''
+      });
+      
       if (!userText || userText.trim() === '') {
+        console.warn('⚠️ Empty transcription received - no speech detected');
         setIsProcessing(false);
         isProcessingRef.current = false;
         return;
@@ -419,6 +500,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       // Save user message
       const userMessageId = uuidv4();
+      console.log('💾 SAVING USER MESSAGE TO DATABASE:', {
+        messageId: userMessageId,
+        chatId: chatId,
+        content: userText,
+        role: 'user'
+      });
+      
       const { error: userMessageError } = await supabase
         .from('messages')
         .insert({
@@ -429,41 +517,59 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (userMessageError) {
+        console.error('❌ DATABASE ERROR saving user message:', userMessageError);
         throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
 
+      console.log('✅ USER MESSAGE SAVED TO DATABASE successfully');
+      
       // Mark this message as processed by voice mode to prevent auto-trigger conflicts
-      console.log('✅ Voice user message marked as processed:', userMessageId);
+      console.log('🎯 CALLING onMessageSent to trigger AI response:', {
+        messageId: userMessageId,
+        text: userText,
+        role: 'user'
+      });
       onMessageSent(userMessageId, userText, 'user');
       
-      console.log('🎯 User speech processed - waiting for AI response...');
+      console.log('🎯 User speech processed successfully - AI will now generate response...');
       // Stay in processing mode until AI speaks the response
 
     } catch (error) {
-      console.error('💥 Error processing voice input:', error);
+      console.error('💥 CRITICAL ERROR in processVoiceInput:', {
+        error: error.message,
+        stack: error.stack,
+        timestamp: new Date().toISOString()
+      });
       
       // Reset processing state on error and resume listening
+      console.log('🔄 RESETTING all states due to error');
       setIsProcessing(false);
       isProcessingRef.current = false;
       setIsPlaying(false);
       isPlayingRef.current = false;
+      isRequestInProgressRef.current = false;
       
-      console.log('❌ Error occurred - resuming listening...');
+      console.log('❌ Error occurred - will resume listening in 1 second...');
       
       // Resume listening after error
       setTimeout(() => {
         if (isVoiceModeActiveRef.current) {
+          console.log('🔄 Resuming audio analysis after error recovery');
           checkAudioLevel();
         }
-      }, 500);
+      }, 1000);
     }
   };
 
   const playAudio = async (base64Audio: string) => {
     try {
+      console.log('🔊 AI RESPONSE PLAYBACK STARTING - COMPLETELY STOPPING listening');
       setIsPlaying(true);
       isPlayingRef.current = true;
-      console.log('🔊 Converting base64 to audio blob...');
+      console.log('🔊 Converting base64 audio to playable format...', {
+        base64Length: base64Audio.length,
+        timestamp: new Date().toISOString()
+      });
       
       // Convert base64 to blob
       const binaryString = atob(base64Audio);
@@ -482,29 +588,42 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       audio.preload = 'auto';
       
       audio.onended = () => {
-        console.log('✅ AI finished speaking - resuming ultra-sensitive whisper detection');
+        console.log('✅ AI SPEECH FINISHED - resuming listening for user speech');
         setIsPlaying(false);
         isPlayingRef.current = false;
         setIsProcessing(false);
         isProcessingRef.current = false;
+        isRequestInProgressRef.current = false; // IMPORTANT: Reset request flag
         URL.revokeObjectURL(audioUrl);
         
-        console.log('👂 AI done speaking - RESUMING whisper-sensitive listening...');
+        console.log('👂 AI done speaking - RESUMING normal speech detection in 200ms...');
         
-        // Resume listening immediately after AI speech for natural conversation
+        // Resume listening after AI speech for natural conversation
         setTimeout(() => {
           if (isVoiceModeActiveRef.current) {
-            console.log('🔄 Restarting ultra-sensitive voice activity detection...');
+            console.log('🔄 RESTARTING voice activity detection for regular speech...');
             checkAudioLevel(); // Resume audio analysis loop
           }
-        }, 100); // Very quick resume for natural conversation
+        }, 200); // Brief pause before resuming listening
       };
 
       audio.onerror = (error) => {
-        console.error('❌ Audio playback error:', error);
+        console.error('❌ AUDIO PLAYBACK ERROR:', {
+          error: error,
+          timestamp: new Date().toISOString()
+        });
         setIsPlaying(false);
         isPlayingRef.current = false;
+        isRequestInProgressRef.current = false;
         URL.revokeObjectURL(audioUrl);
+        
+        // Resume listening even after audio error
+        setTimeout(() => {
+          if (isVoiceModeActiveRef.current) {
+            console.log('🔄 Resuming listening after audio error');
+            checkAudioLevel();
+          }
+        }, 500);
       };
 
       audio.oncanplaythrough = async () => {
