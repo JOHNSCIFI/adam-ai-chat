@@ -344,23 +344,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     };
   }, []);
 
-  // Listen for AI response playback events from Chat component
-  useEffect(() => {
-    const handlePlayAIResponse = async (event: CustomEvent) => {
-      const { audioContent } = event.detail;
-      if (audioContent && isVoiceModeActive) {
-        console.log('🎵 Playing AI response audio from event');
-        await playAudio(audioContent);
-      }
-    };
-
-    window.addEventListener('playAIResponse', handlePlayAIResponse);
-    
-    return () => {
-      window.removeEventListener('playAIResponse', handlePlayAIResponse);
-    };
-  }, [isVoiceModeActive]);
-
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
@@ -412,12 +395,54 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
 
-      // Mark this message as processed by voice mode to prevent auto-trigger conflicts
-      console.log('✅ Voice user message marked as processed:', userMessageId);
       onMessageSent(userMessageId, userText, 'user');
 
-      // Let the Chat component handle AI response through auto-trigger
-      // Voice mode only handles transcription
+      // Get AI response
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
+          message: userText,
+          chat_id: chatId,
+          user_id: user?.id,
+          has_file_analysis: false,
+          image_count: 0
+        }
+      });
+
+      if (aiError || !aiResponse?.content) {
+        throw new Error(`AI response failed: ${aiError?.message || 'No content'}`);
+      }
+
+      // Save AI message
+      const aiMessageId = uuidv4();
+      const { error: aiMessageError } = await supabase
+        .from('messages')
+        .insert({
+          id: aiMessageId,
+          chat_id: chatId,
+          content: aiResponse.content,
+          role: 'assistant'
+        });
+
+      if (aiMessageError) {
+        throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
+      }
+
+      onMessageSent(aiMessageId, aiResponse.content, 'assistant');
+
+      // Convert AI response to speech
+      const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
+        body: {
+          text: aiResponse.content,
+          voice: 'alloy'
+        }
+      });
+
+      if (speechError || !speechData?.audioContent) {
+        throw new Error(`Speech generation failed: ${speechError?.message || 'No audio'}`);
+      }
+
+      // Play AI response
+      await playAudio(speechData.audioContent);
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
@@ -627,7 +652,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         isListening && isVoiceModeActive ? 'scale-110 shadow-lg animate-pulse bg-secondary/80 ring-secondary border-secondary' : 'hover:scale-105'
       } ${isProcessing ? 'animate-spin bg-primary/80' : ''} ${isPlaying ? 'animate-pulse bg-accent/80' : ''}`}
       title={isVoiceModeActive ? 'Stop Continuous Voice Mode' : 'Start Continuous Voice Mode'}
-      data-voice-mode-active={isVoiceModeActive}
     >
       {getButtonIcon()}
     </Button>

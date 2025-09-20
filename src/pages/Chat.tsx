@@ -161,7 +161,7 @@ export default function Chat() {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
-      // Only trigger for user messages without file attachments (text-only OR voice transcriptions)
+      // Only trigger for user messages without file attachments (text-only)
       if (lastMessage.role === 'user' && 
           (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         
@@ -275,31 +275,6 @@ export default function Chat() {
           console.error('Error saving AI message:', saveError);
         } else {
           console.log('AI message saved successfully');
-          
-          // Generate TTS for voice mode if active
-          const voiceModeButton = document.querySelector('[data-voice-mode-active="true"]');
-          if (voiceModeButton) {
-            try {
-              console.log('🔊 Converting AI response to speech...');
-              const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
-                body: {
-                  text: responseContent,
-                  voice: 'alloy'
-                }
-              });
-
-              if (speechError || !speechData?.audioContent) {
-                console.error('❌ Speech generation failed:', speechError?.message || 'No audio');
-              } else {
-                // Trigger voice mode to play audio
-                window.dispatchEvent(new CustomEvent('playAIResponse', { 
-                  detail: { audioContent: speechData.audioContent }
-                }));
-              }
-            } catch (speechError) {
-              console.error('❌ Error generating speech:', speechError);
-            }
-          }
         }
       } else {
         console.log('No response content received from AI');

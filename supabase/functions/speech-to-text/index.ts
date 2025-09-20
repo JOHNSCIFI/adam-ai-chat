@@ -6,51 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Function to convert WebM audio to WAV format
-async function convertWebMToWAV(webmData: Uint8Array): Promise<Blob> {
-  // Create a simple WAV header for 16-bit PCM at 24kHz
-  const sampleRate = 24000;
-  const numChannels = 1;
-  const bitsPerSample = 16;
-  
-  // For simplicity, we'll create a WAV wrapper around the WebM data
-  // This creates a basic WAV file that OpenAI can process
-  const wavHeaderSize = 44;
-  const dataSize = webmData.length;
-  const fileSize = wavHeaderSize + dataSize - 8;
-  
-  const wavHeader = new ArrayBuffer(wavHeaderSize);
-  const view = new DataView(wavHeader);
-  
-  // WAV header
-  const writeString = (offset: number, string: string) => {
-    for (let i = 0; i < string.length; i++) {
-      view.setUint8(offset + i, string.charCodeAt(i));
-    }
-  };
-  
-  writeString(0, 'RIFF');
-  view.setUint32(4, fileSize, true);
-  writeString(8, 'WAVE');
-  writeString(12, 'fmt ');
-  view.setUint32(16, 16, true); // Subchunk1Size
-  view.setUint16(20, 1, true);  // AudioFormat (PCM)
-  view.setUint16(22, numChannels, true);
-  view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * bitsPerSample / 8, true); // ByteRate
-  view.setUint16(32, numChannels * bitsPerSample / 8, true); // BlockAlign
-  view.setUint16(34, bitsPerSample, true);
-  writeString(36, 'data');
-  view.setUint32(40, dataSize, true);
-  
-  // Combine header and data
-  const wavFile = new Uint8Array(wavHeaderSize + dataSize);
-  wavFile.set(new Uint8Array(wavHeader), 0);
-  wavFile.set(webmData, wavHeaderSize);
-  
-  return new Blob([wavFile], { type: 'audio/wav' });
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
@@ -113,10 +68,14 @@ serve(async (req) => {
           );
         }
 
-        // Convert webm to wav format for better OpenAI compatibility
-        const audioBuffer = await audioFile.arrayBuffer();
-        audioBlob = await convertWebMToWAV(new Uint8Array(audioBuffer));
-        filename = 'audio.wav';
+        // Create a new blob with clean MIME type (keep original audio data)
+        audioBlob = new Blob([audioFile], { type: 'audio/webm' });
+        filename = audioFile.name || 'audio.webm';
+        
+        // Ensure proper extension
+        if (!filename.includes('.')) {
+          filename = 'audio.webm';
+        }
         
         console.log('✅ Audio processed for OpenAI:', {
           originalType: audioFile.type,
@@ -158,9 +117,9 @@ serve(async (req) => {
           audioData[i] = binaryString.charCodeAt(i);
         }
         
-        // Convert webm to wav format for better OpenAI compatibility
-        audioBlob = await convertWebMToWAV(audioData);
-        filename = 'audio.wav';
+        // Keep original webm format - OpenAI supports it
+        audioBlob = new Blob([audioData], { type: 'audio/webm' });
+        filename = 'audio.webm';
         
         console.log('✅ JSON processing complete');
         
