@@ -141,28 +141,35 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // Sensitive thresholds for whisper-level speech detection
-      const generalThreshold = 0.02; // Very low threshold for quiet speech
-      const speechThreshold = 0.03; // Low speech threshold for whispers
-      const noiseFloor = 0.005; // Lower noise floor to catch quiet sounds
-      const minVolumeRatio = 0.4; // Reduced ratio requirement for whispers
+      // Ultra-sensitive thresholds for whisper detection
+      const generalThreshold = 0.008; // Ultra-low threshold for whispers
+      const speechThreshold = 0.012; // Ultra-low speech threshold for whispers
+      const noiseFloor = 0.002; // Very low noise floor to catch the quietest sounds
+      const minVolumeRatio = 0.2; // Very low ratio requirement for whispers
       
       // Calculate noise reduction - ignore low volume as background noise
       const adjustedVolume = Math.max(0, volume - noiseFloor);
       const adjustedSpeechVolume = Math.max(0, speechVolume - noiseFloor);
       
-      // Very strict detection: require strong, clear speech signals only
+      // Detect even the faintest whispers
       const volumeRatio = speechVolume > 0 ? (speechVolume / Math.max(volume, 0.001)) : 0;
       const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
       const hasGeneralAudio = adjustedVolume > generalThreshold;
       
-      // Detect whisper-level speech with sensitive thresholds
-      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.015; // Much lower volume threshold for whispers
+      // Detect whisper-level speech with ultra-sensitive thresholds
+      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.008; // Ultra-low volume threshold for whispers
+      
+      // COMPLETELY STOP listening when processing or playing AI response
+      if (isProcessingRef.current || isPlayingRef.current || isRequestInProgressRef.current) {
+        // Immediately stop all audio processing during AI work
+        return;
+      }
       
       // Use refs for immediate state access
-      if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+      if (isSpeechDetected) {
         // Speech detected - clear silence timer and mark as listening
         if (!isListeningRef.current) {
+          console.log('👂 Started listening to whisper-level speech');
           setIsListening(true);
           isListeningRef.current = true;
         }
@@ -170,19 +177,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           clearTimeout(silenceTimerRef.current);
           silenceTimerRef.current = null;
         }
-      } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+      } else if (isListeningRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
-        // Quick silence timer for natural conversation flow
+          // Quick silence timer for natural conversation flow
           silenceTimerRef.current = setTimeout(() => {
             processCurrentSegment();
           }, 1000); // 1 second for fast conversation like real person
         }
       }
       
-      // Continue checking only if conditions are right
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
-        setTimeout(() => checkAudioLevel(), 100); // Increased interval for better performance
+      // Continue checking only if we're in voice mode and not busy
+      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current) {
+        setTimeout(() => checkAudioLevel(), 100);
       }
     } catch (error) {
       console.error('❌ Error in checkAudioLevel:', error);
@@ -468,26 +475,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const audioBlob = new Blob([bytes], { type: 'audio/mp3' });
       const audioUrl = URL.createObjectURL(audioBlob);
       
-      console.log('🎵 Creating audio element and playing...');
+      console.log('🔊 Starting AI audio playback - COMPLETELY STOPPING whisper detection...');
       const audio = new Audio(audioUrl);
       
       // Handle browser autoplay restrictions
       audio.preload = 'auto';
       
       audio.onended = () => {
-        console.log('✅ AI finished speaking');
+        console.log('✅ AI finished speaking - resuming ultra-sensitive whisper detection');
         setIsPlaying(false);
         isPlayingRef.current = false;
         setIsProcessing(false);
         isProcessingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        console.log('🎤 AI done speaking - RESUMING listening for user...');
+        console.log('👂 AI done speaking - RESUMING whisper-sensitive listening...');
         
         // Resume listening immediately after AI speech for natural conversation
         setTimeout(() => {
           if (isVoiceModeActiveRef.current) {
-            console.log('🔄 Restarting voice activity detection...');
+            console.log('🔄 Restarting ultra-sensitive voice activity detection...');
             checkAudioLevel(); // Resume audio analysis loop
           }
         }, 100); // Very quick resume for natural conversation
