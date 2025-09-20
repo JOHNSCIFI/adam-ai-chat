@@ -541,19 +541,18 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
     
     try {
-      // Convert WebM to WAV for better OpenAI compatibility
-      const convertedAudioBlob = await convertWebMToWAV(audioBlob);
-      
+      // Send original WebM format directly - edge function supports it
       const formData = new FormData();
       
       console.log('🎤 Sending audio to speech-to-text:', {
-        originalSize: audioBlob.size,
-        convertedSize: convertedAudioBlob.size,
-        originalType: audioBlob.type,
-        convertedType: convertedAudioBlob.type
+        size: audioBlob.size,
+        type: audioBlob.type,
+        format: 'original_webm_no_conversion'
       });
       
-      formData.append('audio', convertedAudioBlob, 'audio.wav');
+      // Use original WebM format - much more reliable than conversion
+      const filename = audioBlob.type.includes('webm') ? 'audio.webm' : 'audio.wav';
+      formData.append('audio', audioBlob, filename);
 
       console.log('📡 Calling speech-to-text edge function...');
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
