@@ -176,12 +176,27 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       audio.onloadeddata = () => console.log('🎵 Audio data loaded');
       
       audio.onended = () => {
-        console.log('✅ OpenAI TTS playback finished');
+        console.log('✅ OpenAI TTS playbook finished');
+        console.log('🔄 TTS ended - checking voice mode state:', { 
+          isVoiceModeActive, 
+          isProcessing, 
+          isPlaying: true 
+        });
         setIsPlaying(false);
+        
         // Automatically resume listening after TTS finishes
+        console.log('⏰ Setting timeout to resume listening in 500ms...');
         setTimeout(() => {
+          console.log('🔄 Timeout fired - rechecking voice mode state:', { 
+            isVoiceModeActive, 
+            isProcessing, 
+            isPlaying: false 
+          });
           if (isVoiceModeActive) {
+            console.log('🎤 Conditions met - calling resumeListening()');
             resumeListening();
+          } else {
+            console.log('❌ Voice mode not active - not resuming listening');
           }
         }, 500);
       };
@@ -235,11 +250,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       utterance.onend = () => {
         console.log('✅ Browser TTS finished');
+        console.log('🔄 Browser TTS ended - checking voice mode state:', { 
+          isVoiceModeActive, 
+          isProcessing, 
+          isPlaying: true 
+        });
         setIsPlaying(false);
+        
         // Automatically resume listening after browser TTS finishes
+        console.log('⏰ Setting timeout to resume listening after browser TTS...');
         setTimeout(() => {
+          console.log('🔄 Browser TTS timeout fired - rechecking state:', { 
+            isVoiceModeActive, 
+            isProcessing, 
+            isPlaying: false 
+          });
           if (isVoiceModeActive) {
+            console.log('🎤 Browser TTS done - calling resumeListening()');
             resumeListening();
+          } else {
+            console.log('❌ Voice mode not active after browser TTS');
           }
         }, 500);
       };
@@ -269,6 +299,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const resumeListening = () => {
+    console.log('🎤 resumeListening() called with state:', { 
+      isVoiceModeActive, 
+      isProcessing, 
+      isPlaying 
+    });
+    
     if (!isVoiceModeActive || isProcessing || isPlaying) {
       console.log('🎤 Not resuming - conditions not met:', { 
         isVoiceModeActive, 
@@ -278,7 +314,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       return;
     }
 
-    console.log('🎤 Resuming listening after AI response...');
+    console.log('🎤 ✅ All conditions met - resuming listening after AI response...');
     
     // Create new recognition instance for continuous conversation
     try {
