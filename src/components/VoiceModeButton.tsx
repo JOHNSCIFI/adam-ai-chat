@@ -339,27 +339,42 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
+    // Validate audio blob before processing
+    if (audioBlob.size < 1000) {
+      console.warn('⚠️ Audio blob too small, skipping processing');
+      return;
+    }
+    
     try {
-      // Convert speech to text with safer filename generation
-      const formData = new FormData();
+      // Validate webm format by checking file header to prevent corruption issues
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
       
-      // Generate a safe filename
-      let extension = 'webm'; // default
-      if (audioBlob.type) {
-        const mimeType = audioBlob.type.split(';')[0]; // Remove codec info
-        if (mimeType === 'audio/webm') extension = 'webm';
-        else if (mimeType === 'audio/wav') extension = 'wav';
-        else if (mimeType === 'audio/mp4') extension = 'mp4';
-        else if (mimeType === 'audio/ogg') extension = 'ogg';
+      // Check for webm file signature (EBML header: 0x1A, 0x45, 0xDF, 0xA3)
+      const isValidWebm = uint8Array.length > 4 && 
+        uint8Array[0] === 0x1A && uint8Array[1] === 0x45 && 
+        uint8Array[2] === 0xDF && uint8Array[3] === 0xA3;
+      
+      if (!isValidWebm) {
+        console.error('❌ Invalid or corrupted webm file format, skipping processing');
+        setIsProcessing(false);
+        isProcessingRef.current = false;
+        return;
       }
       
-      console.log('🎤 Sending audio to speech-to-text:', {
-        size: audioBlob.size,
-        type: audioBlob.type,
-        extension: extension
+      // Create a clean blob with proper format
+      const cleanBlob = new Blob([uint8Array], { type: 'audio/webm' });
+      
+      // Convert speech to text with validated audio
+      const formData = new FormData();
+      
+      console.log('🎤 Sending validated audio to speech-to-text:', {
+        size: cleanBlob.size,
+        type: cleanBlob.type,
+        extension: 'webm'
       });
       
-      formData.append('audio', audioBlob, `audio.${extension}`);
+      formData.append('audio', cleanBlob, 'audio.webm');
 
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,

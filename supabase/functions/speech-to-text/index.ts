@@ -68,15 +68,30 @@ serve(async (req) => {
           );
         }
 
-        // Create a new blob with a clean MIME type (OpenAI supports webm directly)
-        const cleanMimeType = audioFile.type.split(';')[0]; // Remove codec info
-        audioBlob = new Blob([audioFile], { type: cleanMimeType });
+        // Validate audio file header to ensure it's not corrupted
+        const arrayBuffer = await audioFile.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        
+        // Check for webm file signature (starts with 0x1A, 0x45, 0xDF, 0xA3)
+        const isValidWebm = uint8Array.length > 4 && 
+          uint8Array[0] === 0x1A && uint8Array[1] === 0x45 && 
+          uint8Array[2] === 0xDF && uint8Array[3] === 0xA3;
+        
+        if (!isValidWebm) {
+          console.error('❌ Invalid webm file format detected');
+          return new Response(
+            JSON.stringify({ error: 'Invalid audio format - corrupted webm file' }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
+        }
+
+        // Create a new blob with clean MIME type
+        audioBlob = new Blob([uint8Array], { type: 'audio/webm' });
         filename = audioFile.name || 'audio.webm';
         
-        // Ensure we have a proper extension
-        if (!filename.includes('.') && audioFile.type) {
-          const extension = audioFile.type.split('/')[1]?.split(';')[0] || 'webm';
-          filename = `audio.${extension}`;
+        // Ensure proper extension
+        if (!filename.includes('.')) {
+          filename = 'audio.webm';
         }
         
         console.log('✅ Audio processed for OpenAI:', {
