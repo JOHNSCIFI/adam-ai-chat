@@ -91,6 +91,7 @@ export default function Chat() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const processedUserMessages = useRef<Set<string>>(new Set());
+  const imageGenerationChats = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (chatId && user) {
@@ -102,8 +103,25 @@ export default function Chat() {
       setPendingImageGenerations(new Set());
       setLoading(false);
       fetchMessages();
+
+      // Listen for image generation chat events
+      const handleImageGenerationChat = (event: CustomEvent) => {
+        if (event.detail?.chatId === chatId) {
+          imageGenerationChats.current.add(chatId);
+          // Remove the flag after a delay to allow normal auto-trigger for subsequent messages
+          setTimeout(() => {
+            imageGenerationChats.current.delete(chatId);
+          }, 2000);
+        }
+      };
+
+      window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
+
+      return () => {
+        window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
+      };
       
-      // Set up real-time subscription for new messages
+      // Set up real-time subscription for new messages  
       const subscription = supabase
         .channel(`messages-${chatId}`)
         .on('postgres_changes', 
@@ -140,6 +158,7 @@ export default function Chat() {
 
       return () => {
         subscription.unsubscribe();
+        window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
       };
     }
   }, [chatId, user]);
@@ -171,8 +190,11 @@ export default function Chat() {
           new Date(msg.created_at) > new Date(lastMessage.created_at)
         );
         
-        // Only trigger if no assistant response exists and we haven't processed this message yet
-        if (!hasAssistantResponseAfter && !processedUserMessages.current.has(lastMessage.id)) {
+        // Only trigger if no assistant response exists, we haven't processed this message yet,
+        // and this isn't from an image generation modal
+        if (!hasAssistantResponseAfter && 
+            !processedUserMessages.current.has(lastMessage.id) &&
+            !imageGenerationChats.current.has(chatId)) {
           console.log('User message without files - will be handled by auto-trigger');
           processedUserMessages.current.add(lastMessage.id);
           
@@ -182,7 +204,7 @@ export default function Chat() {
             triggerAIResponse(lastMessage.content, lastMessage.id);
           }, 100);
         } else {
-          console.log('Message already processed or assistant response exists');
+          console.log('Message already processed, assistant response exists, or from image generation modal');
         }
       } else {
         console.log('Message has file attachments (webhook handled) or not a user message');
@@ -1178,8 +1200,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
 
   const generateChatTitleFromConversation = async (chatId: string, messages: Message[]) => {
-    // Only update if we have enough messages for context
-    if (messages.length < 4) return null;
+    // Only update if we have enough messages for context (2-3 messages minimum)
+    if (messages.length < 3) return null;
     
     // Get the last few user messages to understand the conversation theme
     const userMessages = messages
@@ -1242,7 +1264,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
 
   const updateChatTitleFromConversation = async (chatId: string) => {
-    if (messages.length >= 4) {
+    // Update title after 2-3 messages instead of 4
+    if (messages.length >= 3) {
       const { data: currentChat } = await supabase
         .from('chats')
         .select('title')

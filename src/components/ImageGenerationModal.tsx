@@ -108,7 +108,7 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
 
       if (chatError) throw chatError;
 
-      // Add user message
+      // Add user message with a flag to indicate it came from image generation modal
       await supabase
         .from('messages')
         .insert({
@@ -126,6 +126,11 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
         
         // Trigger sidebar refresh
         window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+        
+        // Set a flag to prevent auto-trigger for this specific chat
+        window.dispatchEvent(new CustomEvent('image-generation-chat', { 
+          detail: { chatId: newChat.id } 
+        }));
         
         // Send image generation request after navigation
         setTimeout(() => {
