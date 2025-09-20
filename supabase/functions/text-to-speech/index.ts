@@ -13,7 +13,10 @@ serve(async (req) => {
   }
 
   try {
-    const { text, voice } = await req.json();
+    const requestBody = await req.json();
+    console.log('📥 TTS request received:', { textLength: requestBody.text?.length, voice: requestBody.voice });
+    
+    const { text, voice } = requestBody;
 
     if (!text) {
       throw new Error('Text is required');
@@ -21,10 +24,11 @@ serve(async (req) => {
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {
+      console.error('❌ OpenAI API key not found in environment');
       throw new Error('OpenAI API key not configured');
     }
 
-    console.log('🔊 Generating speech for text:', text.substring(0, 100) + '...');
+    console.log('🔊 Generating speech for text:', text.substring(0, 100) + (text.length > 100 ? '...' : ''));
 
     // Generate speech from text using OpenAI's TTS
     const response = await fetch('https://api.openai.com/v1/audio/speech', {
@@ -41,19 +45,41 @@ serve(async (req) => {
       }),
     });
 
+    console.log('🎵 OpenAI TTS response status:', response.status);
+
     if (!response.ok) {
-      const error = await response.json();
-      console.error('❌ OpenAI TTS error:', error);
-      throw new Error(error.error?.message || 'Failed to generate speech');
+      const errorText = await response.text();
+      console.error('❌ OpenAI TTS error response:', errorText);
+      let errorMessage = 'Failed to generate speech';
+      
+      try {
+        const errorJson = JSON.parse(errorText);
+        errorMessage = errorJson.error?.message || errorMessage;
+      } catch (parseError) {
+        console.error('❌ Could not parse OpenAI error response');
+      }
+      
+      throw new Error(errorMessage);
     }
 
     // Convert audio buffer to base64
+    console.log('🔄 Converting audio to base64...');
     const arrayBuffer = await response.arrayBuffer();
-    const base64Audio = btoa(
-      String.fromCharCode(...new Uint8Array(arrayBuffer))
-    );
+    console.log('📊 Audio buffer size:', arrayBuffer.byteLength, 'bytes');
+    
+    // Use a more efficient base64 encoding method for large files
+    const uint8Array = new Uint8Array(arrayBuffer);
+    let base64Audio = '';
+    
+    // Process in chunks to avoid memory issues
+    const chunkSize = 32768; // 32KB chunks
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.slice(i, i + chunkSize);
+      const chunkString = String.fromCharCode.apply(null, Array.from(chunk));
+      base64Audio += btoa(chunkString);
+    }
 
-    console.log('✅ Speech generated successfully');
+    console.log('✅ Speech generated successfully, base64 length:', base64Audio.length);
 
     return new Response(
       JSON.stringify({ audioContent: base64Audio }),
@@ -62,9 +88,17 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('❌ TTS function error:', error);
+    console.error('❌ TTS function error:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        error: error.message,
+        details: error.name || 'UnknownError'
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

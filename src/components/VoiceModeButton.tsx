@@ -82,14 +82,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
             await processUserSpeech(transcript);
           }
           
-          // Restart listening for next input
-          if (isVoiceModeActive) {
-            setTimeout(() => {
-              if (isVoiceModeActive && !isProcessing && !isPlaying) {
-                recognition.start();
-              }
-            }, 1000);
-          }
+          // Don't automatically restart here - let TTS completion handle it
         }
       };
       
@@ -98,10 +91,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         setIsListening(false);
         
         // Restart on certain errors
-        if (event.error === 'no-speech' || event.error === 'aborted') {
+        if (event.error === 'no-speech') {
           setTimeout(() => {
             if (isVoiceModeActive && !isProcessing && !isPlaying) {
-              recognition.start();
+              try {
+                recognition.start();
+              } catch (restartError) {
+                console.error('❌ Error restarting recognition:', restartError);
+              }
             }
           }, 1000);
         }
@@ -145,7 +142,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     setIsPlaying(true);
     
     try {
-      // Use OpenAI's TTS instead of browser's speech synthesis
+      // Use OpenAI's TTS with proper error handling
       const { data: ttsResponse, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
         body: {
           text: text,
@@ -155,7 +152,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
       if (ttsError || !ttsResponse?.audioContent) {
         console.error('❌ TTS error, falling back to browser TTS:', ttsError);
-        // Fallback to browser TTS if OpenAI TTS fails
         fallbackToBrowserTTS(text);
         return;
       }
@@ -164,34 +160,46 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const audioData = `data:audio/mp3;base64,${ttsResponse.audioContent}`;
       const audio = new Audio(audioData);
       
-      audio.onended = () => {
-        console.log('✅ OpenAI TTS playback finished');
-        setIsPlaying(false);
-        
-        // Resume listening for next input after a short delay
-        if (isVoiceModeActive && recognitionRef.current) {
-          setTimeout(() => {
-            if (isVoiceModeActive && !isProcessing) {
-              console.log('🎤 Resuming speech recognition...');
-              recognitionRef.current.start();
-            }
-          }, 1000);
-        }
-      };
+      // Ensure audio can be played
+      audio.preload = 'auto';
       
-      audio.onerror = (error) => {
-        console.error('❌ Audio playback error:', error);
-        setIsPlaying(false);
-        // Fallback to browser TTS
+      const playAudio = () => {
+        return new Promise<void>((resolve, reject) => {
+          audio.onended = () => {
+            console.log('✅ OpenAI TTS playback finished');
+            setIsPlaying(false);
+            resolve();
+          };
+          
+          audio.onerror = (error) => {
+            console.error('❌ Audio playback error:', error);
+            setIsPlaying(false);
+            reject(error);
+          };
+          
+          // Try to play with user interaction handling
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((error) => {
+              console.error('❌ Audio play promise error:', error);
+              reject(error);
+            });
+          }
+        });
+      };
+
+      try {
+        await playAudio();
+        // Resume listening after successful playback
+        resumeListening();
+      } catch (audioError) {
+        console.error('❌ Audio playback failed, using browser TTS:', audioError);
         fallbackToBrowserTTS(text);
-      };
-      
-      await audio.play();
+      }
       
     } catch (error) {
       console.error('❌ TTS function call error:', error);
       setIsPlaying(false);
-      // Fallback to browser TTS
       fallbackToBrowserTTS(text);
     }
   };
@@ -223,25 +231,41 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       utterance.onend = () => {
         console.log('✅ Browser TTS finished');
         setIsPlaying(false);
-        
-        if (isVoiceModeActive && recognitionRef.current) {
-          setTimeout(() => {
-            if (isVoiceModeActive && !isProcessing) {
-              recognitionRef.current.start();
-            }
-          }, 1000);
-        }
+        resumeListening();
       };
       
       utterance.onerror = (error) => {
         console.error('❌ Browser TTS error:', error);
         setIsPlaying(false);
+        resumeListening();
       };
       
       window.speechSynthesis.speak(utterance);
     } else {
       console.error('❌ No TTS available');
       setIsPlaying(false);
+      resumeListening();
+    }
+  };
+
+  const resumeListening = () => {
+    if (isVoiceModeActive && recognitionRef.current && !isProcessing) {
+      setTimeout(() => {
+        if (isVoiceModeActive && !isProcessing && !isPlaying) {
+          console.log('🎤 Resuming speech recognition...');
+          try {
+            recognitionRef.current.start();
+          } catch (error) {
+            console.error('❌ Error resuming speech recognition:', error);
+            // Try to recreate recognition if it failed
+            setTimeout(() => {
+              if (isVoiceModeActive) {
+                startVoiceMode();
+              }
+            }, 1000);
+          }
+        }
+      }, 1500);
     }
   };
 
@@ -360,28 +384,31 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   return (
     <Button
       variant={getButtonVariant()}
-      size="sm"
+      size="icon"
       onClick={handleClick}
       disabled={isProcessing}
       className={`
-        relative overflow-hidden transition-all duration-300 ease-in-out
-        ${isListening || isVoiceModeActive 
-          ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70 border-primary shadow-lg scale-105 ring-2 ring-primary/20' 
-          : 'hover:scale-102'
+        relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu
+        ${isListening 
+          ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-110 ring-4 ring-red-500/20 animate-pulse' 
+          : isVoiceModeActive
+            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105 ring-2 ring-primary/30'
+            : 'hover:scale-105 bg-background border-2 border-border hover:bg-accent hover:text-accent-foreground'
         }
         ${isProcessing 
-          ? 'opacity-80 animate-pulse bg-secondary' 
+          ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white animate-spin' 
           : ''
         }
         ${isPlaying 
-          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white animate-pulse shadow-lg shadow-green-500/30' 
+          ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105' 
           : ''
         }
-        focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2
+        focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+        before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
       `}
       title={
         isPlaying 
-          ? 'AI is speaking...' 
+          ? 'AI is speaking... Click to stop' 
           : isProcessing 
             ? 'Processing your speech...' 
             : isListening 
@@ -391,28 +418,36 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
                 : 'Start voice conversation'
       }
     >
-      <div className="flex items-center gap-2">
+      <div className="relative z-10 flex items-center justify-center">
         {getButtonIcon()}
+        
+        {/* Listening animation */}
         {isListening && (
-          <div className="flex space-x-1">
-            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-8 h-8 border-2 border-white/30 rounded-full animate-ping"></div>
+            <div className="absolute w-6 h-6 border-2 border-white/50 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
           </div>
         )}
+        
+        {/* Speaking animation */}
         {isPlaying && (
-          <div className="flex items-center space-x-1">
-            <div className="w-1 h-3 bg-current rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-1 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
-            <div className="w-1 h-4 bg-current rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
-            <div className="w-1 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+          <div className="absolute -inset-1 flex items-center justify-center">
+            <div className="w-10 h-10 border border-green-300/50 rounded-full animate-pulse"></div>
+            <div className="absolute w-12 h-12 border border-green-300/30 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+          </div>
+        )}
+        
+        {/* Processing animation */}
+        {isProcessing && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
           </div>
         )}
       </div>
       
       {/* Glowing effect when active */}
-      {(isListening || isVoiceModeActive) && (
-        <div className="absolute inset-0 bg-primary/20 animate-ping rounded-md"></div>
+      {isVoiceModeActive && !isListening && !isPlaying && !isProcessing && (
+        <div className="absolute inset-0 bg-primary/10 animate-pulse rounded-full"></div>
       )}
     </Button>
   );
