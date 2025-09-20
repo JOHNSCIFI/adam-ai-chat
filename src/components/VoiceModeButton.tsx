@@ -119,6 +119,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const stopVoiceMode = () => {
+    console.log('🛑 stopVoiceMode() called - STACK TRACE:');
+    console.trace('Who called stopVoiceMode?');
     console.log('🛑 Stopping voice mode...');
     
     if (recognitionRef.current) {
@@ -180,11 +182,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         console.log('🔄 TTS ended - will restart voice mode automatically');
         setIsPlaying(false);
         
-        // Simply restart voice mode after TTS finishes (easier and more reliable)
+        // Don't check isVoiceModeActive - just restart if the button hasn't been manually clicked
         setTimeout(() => {
-          if (isVoiceModeActive) {
-            console.log('🎤 Auto-restarting voice mode after AI response...');
-            startVoiceMode(); // Just restart the whole thing
+          console.log('🎤 Auto-restarting voice mode after AI response (ignoring state check)...');
+          
+          // Check if component is still mounted and user hasn't manually stopped
+          const button = document.querySelector('[title*="voice"]') || document.querySelector('[title*="Voice"]');
+          if (button && !button.getAttribute('disabled')) {
+            console.log('🎤 Button still exists and enabled - restarting voice mode');
+            startVoiceMode(); // Just restart regardless of current state
+          } else {
+            console.log('❌ Button not found or disabled - user manually stopped');
           }
         }, 800);
       };
@@ -241,11 +249,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         console.log('🔄 Browser TTS ended - will restart voice mode automatically');
         setIsPlaying(false);
         
-        // Simply restart voice mode after browser TTS finishes
+        // Don't check isVoiceModeActive - just restart if the button hasn't been manually clicked
         setTimeout(() => {
-          if (isVoiceModeActive) {
-            console.log('🎤 Auto-restarting voice mode after browser TTS...');
-            startVoiceMode(); // Just restart the whole thing
+          console.log('🎤 Auto-restarting voice mode after browser TTS (ignoring state check)...');
+          
+          // Check if component is still mounted and user hasn't manually stopped
+          const button = document.querySelector('[title*="voice"]') || document.querySelector('[title*="Voice"]');
+          if (button && !button.getAttribute('disabled')) {
+            console.log('🎤 Button still exists and enabled - restarting voice mode');
+            startVoiceMode(); // Just restart regardless of current state
+          } else {
+            console.log('❌ Button not found or disabled - user manually stopped');
           }
         }, 800);
       };
