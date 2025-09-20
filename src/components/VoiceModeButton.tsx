@@ -140,23 +140,75 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     setIsPlaying(false);
   };
 
-  const speakText = (text: string) => {
-    console.log('🔊 Speaking text:', text);
+  const speakText = async (text: string) => {
+    console.log('🔊 Speaking text with OpenAI TTS:', text.substring(0, 100) + '...');
     setIsPlaying(true);
     
+    try {
+      // Use OpenAI's TTS instead of browser's speech synthesis
+      const { data: ttsResponse, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: text,
+          voice: 'alloy'
+        }
+      });
+
+      if (ttsError || !ttsResponse?.audioContent) {
+        console.error('❌ TTS error, falling back to browser TTS:', ttsError);
+        // Fallback to browser TTS if OpenAI TTS fails
+        fallbackToBrowserTTS(text);
+        return;
+      }
+
+      // Convert base64 to audio and play
+      const audioData = `data:audio/mp3;base64,${ttsResponse.audioContent}`;
+      const audio = new Audio(audioData);
+      
+      audio.onended = () => {
+        console.log('✅ OpenAI TTS playback finished');
+        setIsPlaying(false);
+        
+        // Resume listening for next input after a short delay
+        if (isVoiceModeActive && recognitionRef.current) {
+          setTimeout(() => {
+            if (isVoiceModeActive && !isProcessing) {
+              console.log('🎤 Resuming speech recognition...');
+              recognitionRef.current.start();
+            }
+          }, 1000);
+        }
+      };
+      
+      audio.onerror = (error) => {
+        console.error('❌ Audio playback error:', error);
+        setIsPlaying(false);
+        // Fallback to browser TTS
+        fallbackToBrowserTTS(text);
+      };
+      
+      await audio.play();
+      
+    } catch (error) {
+      console.error('❌ TTS function call error:', error);
+      setIsPlaying(false);
+      // Fallback to browser TTS
+      fallbackToBrowserTTS(text);
+    }
+  };
+
+  const fallbackToBrowserTTS = (text: string) => {
+    console.log('🔊 Using browser TTS as fallback');
+    
     if (window.speechSynthesis) {
-      // Cancel any ongoing speech
       window.speechSynthesis.cancel();
       
       const utterance = new SpeechSynthesisUtterance(text);
       synthesisRef.current = utterance;
       
-      // Configure voice settings
       utterance.rate = 1.0;
       utterance.pitch = 1.0;
       utterance.volume = 1.0;
       
-      // Try to find a natural-sounding voice
       const voices = window.speechSynthesis.getVoices();
       const preferredVoice = voices.find(voice => 
         voice.name.includes('Samantha') || 
@@ -169,27 +221,26 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       }
       
       utterance.onend = () => {
-        console.log('✅ Speech synthesis finished');
+        console.log('✅ Browser TTS finished');
         setIsPlaying(false);
         
-        // Resume listening for next input
         if (isVoiceModeActive && recognitionRef.current) {
           setTimeout(() => {
             if (isVoiceModeActive && !isProcessing) {
               recognitionRef.current.start();
             }
-          }, 500);
+          }, 1000);
         }
       };
       
       utterance.onerror = (error) => {
-        console.error('❌ Speech synthesis error:', error);
+        console.error('❌ Browser TTS error:', error);
         setIsPlaying(false);
       };
       
       window.speechSynthesis.speak(utterance);
     } else {
-      console.error('❌ Speech synthesis not supported');
+      console.error('❌ No TTS available');
       setIsPlaying(false);
     }
   };
@@ -222,8 +273,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
-          messages: [{ role: 'user', content: transcript }],
-          chatId: chatId
+          message: transcript,
+          chat_id: chatId,
+          user_id: user?.id
         }
       });
       
@@ -312,31 +364,56 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       onClick={handleClick}
       disabled={isProcessing}
       className={`
-        transition-all duration-200 
+        relative overflow-hidden transition-all duration-300 ease-in-out
         ${isListening || isVoiceModeActive 
-          ? 'bg-primary text-primary-foreground hover:bg-primary/90 border-primary shadow-lg' 
-          : ''
+          ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground hover:from-primary/90 hover:to-primary/70 border-primary shadow-lg scale-105 ring-2 ring-primary/20' 
+          : 'hover:scale-102'
         }
         ${isProcessing 
-          ? 'opacity-70 cursor-not-allowed' 
+          ? 'opacity-80 animate-pulse bg-secondary' 
           : ''
         }
         ${isPlaying 
-          ? 'animate-pulse' 
+          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white animate-pulse shadow-lg shadow-green-500/30' 
           : ''
         }
+        focus-visible:ring-2 focus-visible:ring-primary/50 focus-visible:ring-offset-2
       `}
       title={
         isPlaying 
           ? 'AI is speaking...' 
           : isProcessing 
-            ? 'Processing speech...' 
-            : isListening || isVoiceModeActive 
-              ? 'Voice mode active - Click to stop' 
-              : 'Click to start voice mode'
+            ? 'Processing your speech...' 
+            : isListening 
+              ? 'Listening... Speak now!'
+              : isVoiceModeActive 
+                ? 'Voice mode active - Click to stop' 
+                : 'Start voice conversation'
       }
     >
-      {getButtonIcon()}
+      <div className="flex items-center gap-2">
+        {getButtonIcon()}
+        {isListening && (
+          <div className="flex space-x-1">
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-1 h-1 bg-current rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        )}
+        {isPlaying && (
+          <div className="flex items-center space-x-1">
+            <div className="w-1 h-3 bg-current rounded-full animate-pulse" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-1 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '100ms' }}></div>
+            <div className="w-1 h-4 bg-current rounded-full animate-pulse" style={{ animationDelay: '200ms' }}></div>
+            <div className="w-1 h-2 bg-current rounded-full animate-pulse" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        )}
+      </div>
+      
+      {/* Glowing effect when active */}
+      {(isListening || isVoiceModeActive) && (
+        <div className="absolute inset-0 bg-primary/20 animate-ping rounded-md"></div>
+      )}
     </Button>
   );
 };
