@@ -1724,8 +1724,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         </div>
       </div>
 
-      {/* Input area - fixed at bottom like ChatGPT */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background">
+      {/* Input area - fixed at bottom without background that obscures buttons */}
+      <div className="fixed bottom-0 left-0 right-0">
         <div className="px-4 py-4" style={getContainerStyle()}>
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (

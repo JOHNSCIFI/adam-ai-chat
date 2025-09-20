@@ -141,12 +141,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // More sensitive thresholds for better detection
-      const generalThreshold = 0.005; // Very low for any sound
-      const speechThreshold = 0.008; // Even lower for speech detection
+      // Enhanced thresholds for noisy environments
+      const generalThreshold = 0.015; // Higher threshold to filter background noise
+      const speechThreshold = 0.025; // Higher speech threshold for better accuracy
+      const noiseFloor = 0.003; // Minimum noise level to ignore
       
-      // Consider it speech if we have both general audio and speech frequencies
-      const isSpeechDetected = volume > generalThreshold && speechVolume > speechThreshold;
+      // Calculate noise reduction - ignore very low volume as background noise
+      const adjustedVolume = Math.max(0, volume - noiseFloor);
+      const adjustedSpeechVolume = Math.max(0, speechVolume - noiseFloor);
+      
+      // Enhanced detection: require significant speech content with noise filtering
+      const volumeRatio = speechVolume > 0 ? (speechVolume / Math.max(volume, 0.001)) : 0;
+      const isStrongSpeech = volumeRatio > 0.4 && adjustedSpeechVolume > speechThreshold;
+      const isSpeechDetected = adjustedVolume > generalThreshold && isStrongSpeech;
       
       // Use refs for immediate state access
       if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
@@ -162,9 +169,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
+          // Reduced silence timer for more responsive detection in noisy environments
           silenceTimerRef.current = setTimeout(() => {
             processCurrentSegment();
-          }, 1500); // Increased to 1.5 seconds for better stability
+          }, 1000); // Reduced to 1 second for better responsiveness
         }
       }
       
@@ -185,7 +193,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     try {
       console.log('🎤 Starting continuous voice recording...');
       
-      // Request microphone permission with specific constraints
+      // Request microphone permission with enhanced noise reduction constraints
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 24000,
@@ -339,11 +347,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
-    // Validate audio blob before processing
-    if (audioBlob.size < 1000) {
-      console.warn('⚠️ Audio blob too small, skipping processing');
-      return;
-    }
+        // Validate audio blob before processing (reduced minimum size)
+        if (audioBlob.size < 500) {
+          console.warn('⚠️ Audio blob too small, skipping processing');
+          return;
+        }
     
     try {
       // Convert speech to text directly (OpenAI will validate format)
