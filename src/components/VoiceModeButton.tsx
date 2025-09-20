@@ -1,8 +1,7 @@
-import React, { useState, useRef, useCallback, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
+import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Radio, Square, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 
 interface VoiceModeButtonProps {
@@ -11,260 +10,36 @@ interface VoiceModeButtonProps {
   actualTheme: string;
 }
 
-const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({ 
-  onMessageSent, 
-  chatId, 
-  actualTheme 
+const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
+  onMessageSent,
+  chatId,
+  actualTheme
 }) => {
+  const [voiceMode, setVoiceMode] = useState<'inactive' | 'active' | 'processing'>('inactive');
   const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
-  const [isListening, setIsListening] = useState(false);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
-  const silenceTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
-  const currentSegmentChunksRef = useRef<Blob[]>([]);
-  
-  // Refs for immediate state access in callbacks
-  const isListeningRef = useRef<boolean>(false);
-  const isProcessingRef = useRef<boolean>(false);
-  const isPlayingRef = useRef<boolean>(false);
-  const isVoiceModeActiveRef = useRef<boolean>(false);
-  
-  // Add request throttling to prevent overlapping edge function calls
-  const lastRequestTimeRef = useRef<number>(0);
-  const isRequestInProgressRef = useRef<boolean>(false);
-  const MIN_REQUEST_INTERVAL = 2000; // Minimum 2 seconds between requests
-  
-  const { user } = useAuth();
-  
-  const processCurrentSegment = useCallback(async () => {
-    console.log('🎯 processCurrentSegment CALLED', {
-      isRequestInProgress: isRequestInProgressRef.current,
-      chunksLength: currentSegmentChunksRef.current.length,
-      hasMediaRecorder: !!mediaRecorderRef.current
-    });
-    
-    // Check if we already have a request in progress
-    if (isRequestInProgressRef.current) {
-      console.log('🚫 Skipping segment - request already in progress');
-      return;
+
+  const toggleVoiceMode = async () => {
+    if (voiceMode === 'inactive') {
+      setVoiceMode('active');
+    } else {
+      setVoiceMode('inactive');
+      if (isRecording) {
+        stopRecording();
+      }
     }
-    
-    // Check minimum time interval between requests
-    const now = Date.now();
-    const timeSinceLastRequest = now - lastRequestTimeRef.current;
-    if (timeSinceLastRequest < MIN_REQUEST_INTERVAL) {
-      console.log(`🚫 Skipping segment - too soon (${timeSinceLastRequest}ms < ${MIN_REQUEST_INTERVAL}ms)`);
-      return;
-    }
-    
-    if (!mediaRecorderRef.current || currentSegmentChunksRef.current.length === 0) {
-      console.log('🚫 No audio to process', {
-        hasMediaRecorder: !!mediaRecorderRef.current,
-        chunksLength: currentSegmentChunksRef.current.length
-      });
-      setIsListening(false);
-      isListeningRef.current = false;
+  };
+
+  const startRecording = async () => {
+    if (isProcessing || isPlaying) {
+      console.log('🚫 Cannot record - AI is processing or speaking');
       return;
     }
 
-    console.log('🔄 Processing speech segment...', {
-      chunksCount: currentSegmentChunksRef.current.length,
-      totalSize: currentSegmentChunksRef.current.reduce((sum, chunk) => sum + chunk.size, 0)
-    });
-    
-    // STOP listening and audio analysis immediately
-    console.log('🛑 STOPPING all listening - processing user speech');
-    setIsListening(false);
-    isListeningRef.current = false;
-    setIsProcessing(true);
-    isProcessingRef.current = true;
-    isRequestInProgressRef.current = true;
-    lastRequestTimeRef.current = now;
-    
     try {
-      const mimeType = mediaRecorderRef.current.mimeType || 'audio/webm';
-      const audioBlob = new Blob(currentSegmentChunksRef.current, { type: mimeType });
-      
-      // Clear current chunks and timer
-      currentSegmentChunksRef.current = [];
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-        silenceTimerRef.current = null;
-      }
-      
-      // Validate audio data before processing
-      console.log('📊 Audio blob created:', {
-        size: audioBlob.size,
-        type: audioBlob.type,
-        durationEstimate: `${(audioBlob.size / 24000).toFixed(2)}s`
-      });
-      
-      if (audioBlob.size > 5000) { // Require at least 5KB for meaningful audio
-        console.log('✅ Audio size acceptable - sending to processVoiceInput');
-        await processVoiceInput(audioBlob);
-      } else {
-        console.log(`🚫 Audio too small (${audioBlob.size} bytes), skipping - likely just noise`);
-      }
-    } catch (error) {
-      console.error('❌ Error in processCurrentSegment:', error);
-    } finally {
-      setIsProcessing(false);
-      isProcessingRef.current = false;
-      isRequestInProgressRef.current = false;
-    }
-  }, []);
-
-  // Enhanced Voice Activity Detection with proper frequency analysis
-  const checkAudioLevel = useCallback(() => {
-    if (!analyserRef.current || !isVoiceModeActiveRef.current) {
-      return;
-    }
-    
-    // COMPLETELY STOP if we have a request in progress or are processing/playing
-    if (isRequestInProgressRef.current || isProcessingRef.current || isPlayingRef.current) {
-      console.log('🚫 AUDIO ANALYSIS PAUSED - AI is busy:', {
-        isRequestInProgress: isRequestInProgressRef.current,
-        isProcessing: isProcessingRef.current,
-        isPlaying: isPlayingRef.current
-      });
-      // Don't schedule next check - completely stop during AI work
-      return;
-    }
-    
-    try {
-      const bufferLength = analyserRef.current.frequencyBinCount;
-      const dataArray = new Uint8Array(bufferLength);
-      analyserRef.current.getByteFrequencyData(dataArray);
-      
-      // Calculate overall RMS volume
-      let sum = 0;
-      for (let i = 0; i < bufferLength; i++) {
-        sum += dataArray[i] * dataArray[i];
-      }
-      const rms = Math.sqrt(sum / bufferLength);
-      const volume = rms / 255;
-      
-      // Human speech frequency analysis (85Hz - 4000Hz for better detection)
-      // With 24kHz sample rate and 2048 FFT: each bin = 24000/2048 = 11.72Hz
-      const binSize = 24000 / 2048; // ~11.72 Hz per bin
-      const speechStartBin = Math.floor(85 / binSize); // ~7
-      const speechEndBin = Math.floor(4000 / binSize); // ~341
-      
-      let speechSum = 0;
-      let speechBins = 0;
-      for (let i = speechStartBin; i < Math.min(speechEndBin, bufferLength); i++) {
-        speechSum += dataArray[i] * dataArray[i];
-        speechBins++;
-      }
-      
-      const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
-      const speechVolume = speechRms / 255;
-      
-      // STRICTER NORMAL SPEECH thresholds to avoid noise transcription
-      const generalThreshold = 0.12; // Higher threshold for clear regular speech
-      const speechThreshold = 0.18; // Much higher speech threshold for clear talking
-      const noiseFloor = 0.03; // Higher noise floor to ignore background noise
-      const minVolumeRatio = 1.2; // Require much clearer speech-to-noise ratio
-      
-      // Calculate noise reduction - ignore low volume as background noise
-      const adjustedVolume = Math.max(0, volume - noiseFloor);
-      const adjustedSpeechVolume = Math.max(0, speechVolume - noiseFloor);
-      
-      // Detect even the faintest whispers
-      const volumeRatio = speechVolume > 0 ? (speechVolume / Math.max(volume, 0.001)) : 0;
-      const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
-      const hasGeneralAudio = adjustedVolume > generalThreshold;
-      
-      // Detect CLEAR REGULAR SPEECH with strict thresholds
-      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.08; // Higher volume threshold for clear speech
-      
-      // DETAILED CONSOLE LOGGING for debugging
-      if (volume > 0.01) { // Only log when there's some audio activity
-        console.log('🎵 AUDIO ANALYSIS:', {
-          volume: volume.toFixed(4),
-          speechVolume: speechVolume.toFixed(4),
-          adjustedVolume: adjustedVolume.toFixed(4),
-          adjustedSpeechVolume: adjustedSpeechVolume.toFixed(4),
-          volumeRatio: volumeRatio.toFixed(4),
-          hasGeneralAudio,
-          hasStrongSpeech,
-          isSpeechDetected,
-          isListening: isListeningRef.current,
-          isProcessing: isProcessingRef.current,
-          isPlaying: isPlayingRef.current,
-          isRequestInProgress: isRequestInProgressRef.current
-        });
-      }
-      
-      // COMPLETELY STOP listening when processing or playing AI response
-      if (isProcessingRef.current || isPlayingRef.current || isRequestInProgressRef.current) {
-        // Immediately stop all audio processing during AI work
-        console.log('🚫 COMPLETELY STOPPING audio analysis - AI is working:', {
-          isProcessing: isProcessingRef.current,
-          isPlaying: isPlayingRef.current,
-          isRequestInProgress: isRequestInProgressRef.current
-        });
-        // Do NOT schedule next check - completely pause until AI finishes
-        return;
-      }
-      
-      // Use refs for immediate state access
-      if (isSpeechDetected) {
-        // Speech detected - clear silence timer and mark as listening
-        if (!isListeningRef.current) {
-          console.log('🎤 SPEECH DETECTED - Started listening to REGULAR speech', {
-            volume: volume.toFixed(4),
-            speechVolume: speechVolume.toFixed(4),
-            volumeRatio: volumeRatio.toFixed(4)
-          });
-          setIsListening(true);
-          isListeningRef.current = true;
-        }
-        if (silenceTimerRef.current) {
-          clearTimeout(silenceTimerRef.current);
-          silenceTimerRef.current = null;
-          console.log('⏰ Cleared silence timer - continuing to listen');
-        }
-      } else if (isListeningRef.current) {
-        // Silence detected while we were listening - start timer
-        if (!silenceTimerRef.current) {
-          console.log('🔇 SILENCE detected - starting 1 second timer to process speech');
-          // Quick silence timer for natural conversation flow
-          silenceTimerRef.current = setTimeout(() => {
-            console.log('⏰ Silence timer completed - processing speech segment');
-            processCurrentSegment();
-          }, 1000); // 1 second for fast conversation like real person
-        }
-      }
-      
-      // Continue checking only if we're in voice mode and AI is NOT busy
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && 
-          !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
-        setTimeout(() => checkAudioLevel(), 100);
-      } else if (isVoiceModeActiveRef.current) {
-        console.log('🚫 NOT scheduling next audio check - AI is busy');
-      }
-    } catch (error) {
-      console.error('❌ Error in checkAudioLevel:', error);
-      // Retry after error only if conditions are right
-      if (analyserRef.current && streamRef.current && isVoiceModeActiveRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
-        setTimeout(() => checkAudioLevel(), 200);
-      }
-    }
-  }, [processCurrentSegment]);
-
-  const startContinuousRecording = async () => {
-    try {
-      console.log('🎤 Starting continuous voice recording...');
-      
-      // Request microphone permission with enhanced noise reduction constraints
+      console.log('🎤 Starting voice recording...');
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           sampleRate: 24000,
@@ -274,527 +49,252 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           autoGainControl: true
         }
       });
-      console.log('✅ Microphone access granted');
       
-      streamRef.current = stream;
-      
-      // Use the pre-created AudioContext and resume it if needed
-      if (!audioContextRef.current) {
-        console.error('❌ AudioContext not created during click!');
-        return;
-      }
-      
-      // Resume audio context if suspended (browser requirement)
-      if (audioContextRef.current.state === 'suspended') {
-        await audioContextRef.current.resume();
-        console.log('🔊 Audio context resumed');
-      }
-      
-      console.log('🔊 AudioContext state:', audioContextRef.current.state);
-      
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-      
-      // Configure analyser for better speech detection
-      analyserRef.current.fftSize = 2048;
-      analyserRef.current.smoothingTimeConstant = 0.3;
-      analyserRef.current.minDecibels = -90;
-      analyserRef.current.maxDecibels = -10;
-      
-      sourceRef.current.connect(analyserRef.current);
-      console.log('🔊 Audio analysis setup complete');
-      
-      // Try different audio formats for better compatibility
-      let mimeType = 'audio/webm;codecs=opus';
-      if (!MediaRecorder.isTypeSupported(mimeType)) {
-        if (MediaRecorder.isTypeSupported('audio/webm')) {
-          mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/wav')) {
-          mimeType = 'audio/wav';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-        } else {
-          console.warn('⚠️ No supported audio format found, using default');
-          mimeType = '';
-        }
-      }
-      
-      console.log('🎵 Using audio format:', mimeType);
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks: Blob[] = [];
 
-      const mediaRecorder = new MediaRecorder(stream, mimeType ? { mimeType } : {});
-      mediaRecorderRef.current = mediaRecorder;
-      currentSegmentChunksRef.current = [];
-
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && isVoiceModeActiveRef.current) {
-          currentSegmentChunksRef.current.push(event.data);
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
         }
       };
-
-      mediaRecorder.onerror = (event) => {
-        console.error('❌ MediaRecorder error:', event);
+      
+      recorder.onstop = async () => {
+        console.log('🎤 Recording stopped, processing audio...');
+        const blob = new Blob(chunks, { type: 'audio/webm' });
+        await processVoiceToAI(blob);
+        
+        // Stop all tracks to release microphone
+        stream.getTracks().forEach(track => track.stop());
       };
 
-      mediaRecorder.onstart = () => {
-        console.log('🔴 MediaRecorder started');
-      };
-
-      mediaRecorder.onstop = () => {
-        console.log('⏹️ MediaRecorder stopped');
-      };
-
-      // Start continuous recording with small time slices
-      mediaRecorder.start(200); // 200ms chunks for better responsiveness
+      recorder.start();
+      setMediaRecorder(recorder);
       setIsRecording(true);
-      setIsListening(false); // Will be set to true when voice is detected
-      isListeningRef.current = false;
-      console.log('🔴 Continuous recording started');
-      
-      // Start voice activity detection
-      console.log('🎵 Starting voice activity detection...');
-      
-      // Add a small delay to ensure everything is set up, then start checking
-      setTimeout(() => {
-        console.log('🎵 Starting audio level checking loop...');
-        checkAudioLevel();
-      }, 100);
-      
+      console.log('🔴 Recording started');
     } catch (error) {
-      console.error('❌ Error starting continuous recording:', error);
-      if (error.name === 'NotAllowedError') {
-        alert('Microphone access denied. Please allow microphone access and try again.');
-      } else if (error.name === 'NotFoundError') {
-        alert('No microphone found. Please connect a microphone and try again.');
-      } else {
-        alert(`Microphone error: ${error.message}`);
-      }
+      console.error('❌ Recording failed:', error);
     }
   };
 
-
-  const stopContinuousRecording = () => {
-    console.log('🛑 Stopping continuous recording...');
-    
-    // Clear silence timer
-    if (silenceTimerRef.current) {
-      clearTimeout(silenceTimerRef.current);
-      silenceTimerRef.current = null;
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+      console.log('🛑 Stopping recording...');
+      mediaRecorder.stop();
+      setMediaRecorder(null);
+      setIsRecording(false);
     }
-    
-    // Stop media recorder
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    
-    // Stop stream
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    
-    // Close audio context
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-      audioContextRef.current = null;
-    }
-    
-    setIsRecording(false);
-    setIsListening(false);
-    isListeningRef.current = false;
   };
 
-  // Clean up on component unmount
-  useEffect(() => {
-    return () => {
-      if (silenceTimerRef.current) {
-        clearTimeout(silenceTimerRef.current);
-      }
-      if (audioContextRef.current) {
-        audioContextRef.current.close();
-      }
-    };
-  }, []);
+  const processVoiceToAI = async (audioBlob: Blob) => {
+    if (isProcessing) {
+      console.log('🚫 Already processing, skipping...');
+      return;
+    }
 
-  // Listen for AI response playback events from Chat component
-  useEffect(() => {
-    const handlePlayAIResponse = async (event: CustomEvent) => {
-      const { audioContent } = event.detail;
-      if (audioContent && isVoiceModeActive) {
-        console.log('🎵 AI is speaking - staying silent until finished...');
-        setIsPlaying(true);
-        isPlayingRef.current = true;
-        await playAudio(audioContent);
-      }
-    };
-
-    window.addEventListener('playAIResponse', handlePlayAIResponse);
-    
-    return () => {
-      window.removeEventListener('playAIResponse', handlePlayAIResponse);
-    };
-  }, [isVoiceModeActive]);
-
-  const processVoiceInput = async (audioBlob: Blob) => {
-    console.log('🎤 processVoiceInput STARTED - Processing user speech', {
-      blobSize: audioBlob.size,
-      blobType: audioBlob.type,
-      estimatedDuration: `${(audioBlob.size / 24000).toFixed(2)}s`
-    });
-    
-        // STRICT audio validation - require high quality audio for processing
-        if (audioBlob.size < 15000) { // Require at least 15KB for clear speech
-          console.warn('⚠️ Audio blob too small for speech processing:', {
-            size: audioBlob.size,
-            required: 15000,
-            reason: 'Likely background noise - need substantial clear speech'
-          });
-          return;
-        }
-        
-        // Additional validation - check duration (approximate)
-        const estimatedDuration = audioBlob.size / 24000; // Rough estimate for 24kHz audio
-        if (estimatedDuration < 1.2) { // Less than 1.2 seconds
-          console.warn('⚠️ Audio duration too short for meaningful speech:', {
-            duration: estimatedDuration,
-            required: 1.2,
-            reason: 'Need at least 1.2 seconds for clear meaningful speech'
-          });
-          return;
-        }
-        
-        console.log('✅ Audio validation passed - proceeding with speech-to-text');
+    setIsProcessing(true);
     
     try {
-      // Convert speech to text directly (OpenAI will validate format)
-      const formData = new FormData();
-      
-      console.log('📡 SENDING AUDIO TO SPEECH-TO-TEXT ENDPOINT:', {
+      console.log('📡 Converting speech to text...', {
         size: audioBlob.size,
-        type: audioBlob.type,
-        filename: 'audio.webm',
-        timestamp: new Date().toISOString()
+        type: audioBlob.type
       });
-      
-      formData.append('audio', audioBlob, 'audio.webm');
 
-      console.log('🚀 Calling supabase.functions.invoke("speech-to-text")...');
-      const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
+      // Step 1: Convert speech to text
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+
+      const speechResponse = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
 
-      console.log('📡 SPEECH-TO-TEXT RESPONSE:', {
-        data: transcriptionData,
-        error: transcriptionError,
-        timestamp: new Date().toISOString()
-      });
-
-      if (transcriptionError) {
-        console.error('❌ TRANSCRIPTION ERROR:', transcriptionError);
-        throw new Error(transcriptionError.message);
+      if (speechResponse.error) {
+        throw new Error(speechResponse.error.message);
       }
 
-      const userText = transcriptionData?.text;
-      console.log('📝 TRANSCRIBED TEXT:', {
-        text: userText,
-        length: userText?.length || 0,
-        isEmpty: !userText || userText.trim() === ''
-      });
-      
-      if (!userText || userText.trim() === '') {
-        console.warn('⚠️ Empty transcription received - no speech detected');
-        setIsProcessing(false);
-        isProcessingRef.current = false;
+      if (!speechResponse.data?.text?.trim()) {
+        console.log('🚫 No text transcribed from audio');
         return;
       }
-      
-      // Save user message
+
+      const transcribedText = speechResponse.data.text.trim();
+      console.log('📝 Transcribed text:', transcribedText);
+
+      // Step 2: Save user message to database
       const userMessageId = uuidv4();
-      console.log('💾 SAVING USER MESSAGE TO DATABASE:', {
-        messageId: userMessageId,
-        chatId: chatId,
-        content: userText,
-        role: 'user'
-      });
+      console.log('💾 Saving user message to database...');
       
-      const { error: userMessageError } = await supabase
+      const { error: saveError } = await supabase
         .from('messages')
         .insert({
           id: userMessageId,
           chat_id: chatId,
-          content: userText,
+          content: transcribedText,
           role: 'user'
         });
 
-      if (userMessageError) {
-        console.error('❌ DATABASE ERROR saving user message:', userMessageError);
-        throw new Error(`Failed to save user message: ${userMessageError.message}`);
+      if (saveError) {
+        throw new Error('Failed to save user message: ' + saveError.message);
       }
 
-      console.log('✅ USER MESSAGE SAVED TO DATABASE successfully');
-      
-      // Mark this message as processed by voice mode to prevent auto-trigger conflicts
-      console.log('🎯 CALLING onMessageSent to trigger AI response:', {
-        messageId: userMessageId,
-        text: userText,
-        role: 'user'
-      });
-      onMessageSent(userMessageId, userText, 'user');
-      
-      console.log('🎯 User speech processed successfully - AI will now generate response...');
-      // Stay in processing mode until AI speaks the response
+      console.log('✅ User message saved');
+      onMessageSent(userMessageId, transcribedText, 'user');
 
-    } catch (error) {
-      console.error('💥 CRITICAL ERROR in processVoiceInput:', {
-        error: error.message,
-        stack: error.stack,
-        timestamp: new Date().toISOString()
-      });
-      
-      // Reset processing state on error and resume listening
-      console.log('🔄 RESETTING all states due to error');
-      setIsProcessing(false);
-      isProcessingRef.current = false;
-      setIsPlaying(false);
-      isPlayingRef.current = false;
-      isRequestInProgressRef.current = false;
-      
-      console.log('❌ Error occurred - will resume listening in 1 second...');
-      
-      // Resume listening after error
-      setTimeout(() => {
-        if (isVoiceModeActiveRef.current) {
-          console.log('🔄 Resuming audio analysis after error recovery');
-          checkAudioLevel();
+      // Step 3: Get AI response 
+      console.log('🤖 Getting AI response...');
+      const aiResponse = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
+          message: transcribedText,
+          chatId: chatId,
+          userId: chatId // Use chatId as userId for now
         }
-      }, 1000);
+      });
+
+      if (aiResponse.error) {
+        throw new Error('AI response error: ' + aiResponse.error.message);
+      }
+
+      const aiContent = aiResponse.data?.aiResponse?.content;
+      if (!aiContent) {
+        throw new Error('No AI response content received');
+      }
+
+      console.log('✅ AI response received:', aiContent);
+
+      // Step 4: Save AI message to database
+      const aiMessageId = uuidv4();
+      console.log('💾 Saving AI message to database...');
+      
+      const { error: aiSaveError } = await supabase
+        .from('messages')
+        .insert({
+          id: aiMessageId,
+          chat_id: chatId,
+          content: aiContent,
+          role: 'assistant'
+        });
+
+      if (aiSaveError) {
+        throw new Error('Failed to save AI message: ' + aiSaveError.message);
+      }
+
+      console.log('✅ AI message saved');
+      onMessageSent(aiMessageId, aiContent, 'assistant');
+
+      // Step 5: Convert AI response to speech and play it
+      if (voiceMode === 'active') {
+        console.log('🔊 Converting AI response to speech...');
+        await convertAndPlayAIResponse(aiContent);
+      }
+
+    } catch (error: any) {
+      console.error('❌ Error in processVoiceToAI:', error);
+    } finally {
+      setIsProcessing(false);
+      
+      // Auto-restart recording if voice mode is still active
+      if (voiceMode === 'active' && !isRecording) {
+        setTimeout(() => {
+          startRecording();
+        }, 500);
+      }
     }
   };
 
-  const playAudio = async (base64Audio: string) => {
+  const convertAndPlayAIResponse = async (text: string) => {
     try {
-      console.log('🔊 AI RESPONSE PLAYBACK STARTING - COMPLETELY STOPPING listening');
       setIsPlaying(true);
-      isPlayingRef.current = true;
-      console.log('🔊 Converting base64 audio to playable format...', {
-        base64Length: base64Audio.length,
-        timestamp: new Date().toISOString()
-      });
+      console.log('🎵 Converting text to speech...');
       
-      // Convert base64 to blob
-      const binaryString = atob(base64Audio);
-      const bytes = new Uint8Array(binaryString.length);
-      for (let i = 0; i < binaryString.length; i++) {
-        bytes[i] = binaryString.charCodeAt(i);
-      }
-      
-      const audioBlob = new Blob([bytes], { type: 'audio/mp3' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      
-      console.log('🔊 Starting AI audio playback - COMPLETELY STOPPING whisper detection...');
-      const audio = new Audio(audioUrl);
-      
-      // Handle browser autoplay restrictions
-      audio.preload = 'auto';
-      
-      audio.onended = () => {
-        console.log('✅ AI SPEECH FINISHED - resuming listening for user speech');
-        setIsPlaying(false);
-        isPlayingRef.current = false;
-        setIsProcessing(false);
-        isProcessingRef.current = false;
-        isRequestInProgressRef.current = false; // IMPORTANT: Reset request flag
-        URL.revokeObjectURL(audioUrl);
-        
-        console.log('👂 AI done speaking - RESUMING normal speech detection in 500ms...');
-        
-        // Resume listening after AI speech for natural conversation
-        setTimeout(() => {
-          if (isVoiceModeActiveRef.current && analyserRef.current && streamRef.current && 
-              !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
-            console.log('🔄 RESTARTING voice activity detection for regular speech...');
-            checkAudioLevel(); // Resume audio analysis loop
-          } else {
-            console.log('🚫 Cannot resume - voice mode conditions not met:', {
-              isVoiceModeActive: isVoiceModeActiveRef.current,
-              hasAnalyser: !!analyserRef.current,
-              hasStream: !!streamRef.current,
-              isProcessing: isProcessingRef.current,
-              isPlaying: isPlayingRef.current,
-              isRequestInProgress: isRequestInProgressRef.current
-            });
-          }
-        }, 500); // Longer pause before resuming listening
-      };
-
-      audio.onerror = (error) => {
-        console.error('❌ AUDIO PLAYBACK ERROR:', {
-          error: error,
-          timestamp: new Date().toISOString()
-        });
-        setIsPlaying(false);
-        isPlayingRef.current = false;
-        isRequestInProgressRef.current = false;
-        URL.revokeObjectURL(audioUrl);
-        
-        // Resume listening even after audio error
-        setTimeout(() => {
-          if (isVoiceModeActiveRef.current) {
-            console.log('🔄 Resuming listening after audio error');
-            checkAudioLevel();
-          }
-        }, 500);
-      };
-
-      audio.oncanplaythrough = async () => {
-        try {
-          console.log('▶️ Audio ready to play, attempting playback...');
-          await audio.play();
-          console.log('✅ Audio playback started successfully');
-        } catch (playError) {
-          console.error('❌ Audio play failed:', playError);
-          
-          // Fallback: Create a user-activated play button
-          const playButton = document.createElement('button');
-          playButton.textContent = '🔊 Click to play AI response';
-          playButton.style.cssText = `
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 9999;
-            padding: 12px 24px;
-            background: #007bff;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-          `;
-          
-          playButton.onclick = async () => {
-            try {
-              await audio.play();
-              document.body.removeChild(playButton);
-            } catch (buttonPlayError) {
-              console.error('❌ Button play failed:', buttonPlayError);
-              document.body.removeChild(playButton);
-              setIsPlaying(false);
-              isPlayingRef.current = false;
-              
-              // If voice mode is active, continue to next cycle even if play failed
-              if (isVoiceModeActive) {
-                setTimeout(() => {
-                  setIsListening(true);
-                  isListeningRef.current = true;
-                }, 500);
-              }
-            }
-          };
-          
-          document.body.appendChild(playButton);
-          
-          // Auto-remove after 10 seconds if not clicked
-          setTimeout(() => {
-            if (document.body.contains(playButton)) {
-              document.body.removeChild(playButton);
-              setIsPlaying(false);
-              isPlayingRef.current = false;
-              
-              // If voice mode is active, continue to next cycle
-              if (isVoiceModeActive) {
-                setTimeout(() => {
-                  setIsListening(true);
-                  isListeningRef.current = true;
-                }, 500);
-              }
-            }
-          }, 10000);
+      const ttsResponse = await supabase.functions.invoke('text-to-speech-voice-mode', {
+        body: {
+          text: text,
+          voice: 'alloy'
         }
-      };
-      
-      // Load the audio
-      audio.load();
-      
-    } catch (error) {
-      console.error('💥 Error playing audio:', error);
+      });
+
+      if (ttsResponse.error) {
+        throw new Error('TTS error: ' + ttsResponse.error.message);
+      }
+
+      if (ttsResponse.data?.audioContent) {
+        console.log('🎵 Playing AI speech response...');
+        await playAudioFromBase64(ttsResponse.data.audioContent);
+      }
+    } catch (error: any) {
+      console.error('❌ Error in TTS:', error);
+    } finally {
       setIsPlaying(false);
-      isPlayingRef.current = false;
     }
+  };
+
+  const playAudioFromBase64 = async (base64Audio: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      try {
+        const binaryString = atob(base64Audio);
+        const bytes = new Uint8Array(binaryString.length);
+        
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const audioBlob = new Blob([bytes], { type: 'audio/mp3' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        const audio = new Audio(audioUrl);
+        
+        audio.onended = () => {
+          URL.revokeObjectURL(audioUrl);
+          console.log('🎵 Audio playback finished');
+          resolve();
+        };
+        
+        audio.onerror = (error) => {
+          URL.revokeObjectURL(audioUrl);
+          console.error('❌ Audio playback error:', error);
+          reject(error);
+        };
+        
+        audio.play().catch(reject);
+      } catch (error) {
+        console.error('❌ Error creating audio from base64:', error);
+        reject(error);
+      }
+    });
+  };
+
+  // Auto-start recording when voice mode becomes active
+  React.useEffect(() => {
+    if (voiceMode === 'active' && !isRecording && !isProcessing && !isPlaying) {
+      startRecording();
+    }
+  }, [voiceMode, isRecording, isProcessing, isPlaying]);
+
+  const getButtonColor = () => {
+    if (voiceMode === 'active') {
+      if (isProcessing) return 'text-yellow-500';
+      if (isPlaying) return 'text-blue-500';
+      if (isRecording) return 'text-red-500';
+      return 'text-green-500';
+    }
+    return 'text-muted-foreground';
   };
 
   const getButtonIcon = () => {
-    if (isPlaying) return <Volume2 className="h-6 w-6" />;
-    if (isProcessing) return <div className="animate-spin h-6 w-6 border-2 border-current rounded-full border-t-transparent" />;
-    if (isListening && isVoiceModeActive) return <Radio className="h-6 w-6 animate-pulse" />;
-    if (isVoiceModeActive) return <Square className="h-6 w-6" />;
-    return <Radio className="h-6 w-6" />;
-  };
-
-  const getButtonVariant = () => {
-    if (isVoiceModeActive && isListening) return 'destructive';
-    if (isVoiceModeActive && (isProcessing || isPlaying)) return 'secondary';
-    if (isVoiceModeActive) return 'default';
-    return 'default';
-  };
-
-  const startVoiceMode = async () => {
-    console.log('🎤 Starting continuous voice mode...');
-    
-    // Create AudioContext immediately on user click (browser security requirement)
-    try {
-      audioContextRef.current = new AudioContext({ 
-        sampleRate: 24000,
-        latencyHint: 'interactive'
-      });
-      console.log('🔊 AudioContext created immediately on click');
-    } catch (error) {
-      console.error('❌ Failed to create AudioContext:', error);
-    }
-    
-    // Set voice mode active BEFORE starting recording
-    setIsVoiceModeActive(true);
-    isVoiceModeActiveRef.current = true;
-    console.log('🎤 Voice mode set to ACTIVE');
-    
-    await startContinuousRecording();
-  };
-
-  const stopVoiceMode = () => {
-    console.log('🛑 Stopping continuous voice mode...');
-    setIsVoiceModeActive(false);
-    isVoiceModeActiveRef.current = false;
-    stopContinuousRecording();
-    setIsProcessing(false);
-    isProcessingRef.current = false;
-    setIsPlaying(false);
-    isPlayingRef.current = false;
-  };
-
-  const handleClick = () => {
-    if (!isVoiceModeActive) {
-      // Start voice mode
-      startVoiceMode();
-    } else {
-      // Stop voice mode
-      stopVoiceMode();
-    }
+    if (isPlaying) return <Volume2 className="h-4 w-4" />;
+    if (isRecording) return <MicOff className="h-4 w-4" />;
+    return <Mic className="h-4 w-4" />;
   };
 
   return (
     <Button
       type="button"
-      onClick={handleClick}
-      disabled={false}
-      variant={getButtonVariant()}
-      size="icon"
-      className={`h-12 w-12 rounded-full flex-shrink-0 transition-all duration-300 ${
-        isVoiceModeActive ? 'ring-2 ring-primary ring-offset-2' : ''
-      } ${
-        isListening && isVoiceModeActive ? 'scale-110 shadow-lg animate-pulse bg-secondary/80 ring-secondary border-secondary' : 'hover:scale-105'
-      } ${isProcessing ? 'animate-spin bg-primary/80' : ''} ${isPlaying ? 'animate-pulse bg-accent/80' : ''}`}
-      title={isVoiceModeActive ? 'Stop Continuous Voice Mode' : 'Start Continuous Voice Mode'}
-      data-voice-mode-active={isVoiceModeActive}
+      variant="ghost"
+      size="sm"
+      className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${getButtonColor()}`}
+      onClick={voiceMode === 'active' && isRecording ? stopRecording : 
+               voiceMode === 'active' ? startRecording : toggleVoiceMode}
+      disabled={isProcessing}
+      data-voice-mode-active={voiceMode === 'active'}
     >
       {getButtonIcon()}
     </Button>
