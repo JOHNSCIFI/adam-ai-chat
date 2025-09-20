@@ -173,10 +173,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
-        // Longer silence timer to ensure we capture complete thoughts
+        // Quick silence timer for natural conversation flow
           silenceTimerRef.current = setTimeout(() => {
             processCurrentSegment();
-          }, 2000); // 2 seconds to avoid cutting off mid-sentence
+          }, 1000); // 1 second for fast conversation like real person
         }
       }
       
@@ -353,7 +353,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     const handlePlayAIResponse = async (event: CustomEvent) => {
       const { audioContent } = event.detail;
       if (audioContent && isVoiceModeActive) {
-        console.log('🎵 Playing AI response audio from event');
+        console.log('🎵 AI is speaking - staying silent until finished...');
+        setIsPlaying(true);
+        isPlayingRef.current = true;
         await playAudio(audioContent);
       }
     };
@@ -426,22 +428,27 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       // Mark this message as processed by voice mode to prevent auto-trigger conflicts
       console.log('✅ Voice user message marked as processed:', userMessageId);
       onMessageSent(userMessageId, userText, 'user');
-
-      // Let the Chat component handle AI response through auto-trigger
-      // Voice mode only handles transcription
+      
+      console.log('🎯 User speech processed - waiting for AI response...');
+      // Stay in processing mode until AI speaks the response
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
-      alert(`Voice processing error: ${error.message}`);
-    } finally {
-      // Note: Processing state and request progress are now handled in processCurrentSegment
       
-      // Resume listening after a short delay
+      // Reset processing state on error and resume listening
+      setIsProcessing(false);
+      isProcessingRef.current = false;
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      
+      console.log('❌ Error occurred - resuming listening...');
+      
+      // Resume listening after error
       setTimeout(() => {
-        if (isVoiceModeActiveRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
-          checkAudioLevel(); // Resume the audio analysis loop
+        if (isVoiceModeActiveRef.current) {
+          checkAudioLevel();
         }
-      }, 1500); // Longer delay for stability
+      }, 500);
     }
   };
 
@@ -471,15 +478,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         console.log('✅ AI finished speaking');
         setIsPlaying(false);
         isPlayingRef.current = false;
+        setIsProcessing(false);
+        isProcessingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        // Resume listening after AI response with delay
+        console.log('🎤 AI done speaking - RESUMING listening for user...');
+        
+        // Resume listening immediately after AI speech for natural conversation
         setTimeout(() => {
           if (isVoiceModeActiveRef.current) {
-            console.log('🎤 Resuming listening after AI speech');
+            console.log('🔄 Restarting voice activity detection...');
             checkAudioLevel(); // Resume audio analysis loop
           }
-        }, 500);
+        }, 100); // Very quick resume for natural conversation
       };
 
       audio.onerror = (error) => {
