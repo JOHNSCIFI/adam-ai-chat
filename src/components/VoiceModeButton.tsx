@@ -346,6 +346,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
+    console.log('🎤 Voice processing states:', {
+      isProcessing: isProcessingRef.current,
+      isPlaying: isPlayingRef.current,
+      isVoiceModeActive: isVoiceModeActiveRef.current,
+      isRequestInProgress: isRequestInProgressRef.current
+    });
     
         // Validate audio blob before processing (reduced minimum size)
         if (audioBlob.size < 500) {
@@ -365,22 +371,37 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       formData.append('audio', audioBlob, 'audio.webm');
 
+      console.log('📡 Calling speech-to-text edge function...');
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
         body: formData,
       });
+      
+      console.log('📡 Speech-to-text response:', { data: transcriptionData, error: transcriptionError });
 
       if (transcriptionError) {
-        throw new Error(transcriptionError.message);
+        console.error('❌ Speech-to-text error:', transcriptionError);
+        throw new Error(`Speech-to-text failed: ${transcriptionError.message}`);
       }
 
       const userText = transcriptionData?.text;
+      console.log('📝 Transcribed text:', { text: userText, length: userText?.length });
+      
       if (!userText || userText.trim() === '') {
+        console.warn('⚠️ Empty transcription result, resuming listening');
         setIsProcessing(false);
         isProcessingRef.current = false;
+        // Resume listening immediately for empty results
+        setTimeout(() => {
+          if (isVoiceModeActiveRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+            console.log('🔄 Resuming audio analysis after empty transcription');
+            checkAudioLevel();
+          }
+        }, 500);
         return;
       }
       
       // Save user message
+      console.log('💾 Saving user message to database...');
       const userMessageId = uuidv4();
       const { error: userMessageError } = await supabase
         .from('messages')
@@ -392,12 +413,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (userMessageError) {
+        console.error('❌ Failed to save user message:', userMessageError);
         throw new Error(`Failed to save user message: ${userMessageError.message}`);
       }
-
+      
+      console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, userText, 'user');
 
       // Get AI response
+      console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userText,
@@ -407,12 +431,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           image_count: 0
         }
       });
+      
+      console.log('🤖 AI response:', { data: aiResponse, error: aiError });
 
       if (aiError || !aiResponse?.content) {
+        console.error('❌ AI response failed:', aiError);
         throw new Error(`AI response failed: ${aiError?.message || 'No content'}`);
       }
 
       // Save AI message
+      console.log('💾 Saving AI message to database...');
       const aiMessageId = uuidv4();
       const { error: aiMessageError } = await supabase
         .from('messages')
@@ -424,38 +452,61 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         });
 
       if (aiMessageError) {
+        console.error('❌ Failed to save AI message:', aiMessageError);
         throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
       }
-
+      
+      console.log('✅ AI message saved successfully');
       onMessageSent(aiMessageId, aiResponse.content, 'assistant');
 
       // Convert AI response to speech
+      console.log('🎵 Converting AI response to speech...');
       const { data: speechData, error: speechError } = await supabase.functions.invoke('text-to-speech-voice-mode', {
         body: {
           text: aiResponse.content,
           voice: 'alloy'
         }
       });
+      
+      console.log('🎵 Speech generation result:', { data: speechData ? 'has_data' : 'no_data', error: speechError });
 
       if (speechError || !speechData?.audioContent) {
+        console.error('❌ Speech generation failed:', speechError);
         throw new Error(`Speech generation failed: ${speechError?.message || 'No audio'}`);
       }
 
       // Play AI response
+      console.log('🔊 Playing AI response audio...');
       await playAudio(speechData.audioContent);
 
     } catch (error) {
       console.error('💥 Error processing voice input:', error);
+      console.error('💥 Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack?.slice(0, 200)
+      });
       alert(`Voice processing error: ${error.message}`);
     } finally {
-      // Note: Processing state and request progress are now handled in processCurrentSegment
+      // Always reset processing state
+      setIsProcessing(false);
+      isProcessingRef.current = false;
       
-      // Resume listening after a short delay
+      console.log('🔄 Voice processing completed, preparing to resume listening...');
+      
+      // Resume listening after a short delay (only if not playing)
       setTimeout(() => {
         if (isVoiceModeActiveRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
+          console.log('🔄 Resuming audio analysis after processing');
           checkAudioLevel(); // Resume the audio analysis loop
+        } else {
+          console.log('🚫 Not resuming audio analysis:', {
+            voiceModeActive: isVoiceModeActiveRef.current,
+            isPlaying: isPlayingRef.current,
+            isRequestInProgress: isRequestInProgressRef.current
+          });
         }
-      }, 1500); // Longer delay for stability
+      }, 1000); // Shorter delay for better responsiveness
     }
   };
 
@@ -487,13 +538,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        // Resume listening after AI response with delay
-        setTimeout(() => {
-          if (isVoiceModeActiveRef.current) {
-            console.log('🎤 Resuming listening after AI speech');
-            checkAudioLevel(); // Resume audio analysis loop
-          }
-        }, 500);
+        // Resume listening for next input with proper state checks
+        if (isVoiceModeActiveRef.current && !isRequestInProgressRef.current) {
+          console.log('🎤 Resuming listening after AI speech');
+          setTimeout(() => {
+            if (isVoiceModeActiveRef.current && !isProcessingRef.current && !isRequestInProgressRef.current) {
+              console.log('🔄 Starting audio analysis loop after AI speech');
+              checkAudioLevel();
+            }
+          }, 500);
+        }
       };
 
       audio.onerror = (error) => {

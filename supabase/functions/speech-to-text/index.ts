@@ -68,14 +68,12 @@ serve(async (req) => {
           );
         }
 
-        // Create a new blob with clean MIME type (keep original audio data)
-        audioBlob = new Blob([audioFile], { type: 'audio/webm' });
-        filename = audioFile.name || 'audio.webm';
+        // Convert to WAV format for better OpenAI compatibility
+        // Create blob without codec specification to avoid opus issues
+        audioBlob = new Blob([audioFile], { type: 'audio/wav' });
+        filename = 'audio.wav';
         
-        // Ensure proper extension
-        if (!filename.includes('.')) {
-          filename = 'audio.webm';
-        }
+        console.log('🔄 Converting webm to wav format for OpenAI compatibility');
         
         console.log('✅ Audio processed for OpenAI:', {
           originalType: audioFile.type,
@@ -117,9 +115,9 @@ serve(async (req) => {
           audioData[i] = binaryString.charCodeAt(i);
         }
         
-        // Keep original webm format - OpenAI supports it
-        audioBlob = new Blob([audioData], { type: 'audio/webm' });
-        filename = 'audio.webm';
+        // Convert to WAV format for better OpenAI compatibility
+        audioBlob = new Blob([audioData], { type: 'audio/wav' });
+        filename = 'audio.wav';
         
         console.log('✅ JSON processing complete');
         
