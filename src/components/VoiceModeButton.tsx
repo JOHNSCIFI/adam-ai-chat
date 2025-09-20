@@ -344,6 +344,88 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     };
   }, []);
 
+  // Convert WebM audio to WAV format for better OpenAI compatibility
+  const convertWebMToWAV = async (webmBlob: Blob): Promise<Blob> => {
+    console.log('🔄 Converting WebM to WAV format...');
+    
+    try {
+      // Create a temporary audio context for conversion
+      const tempAudioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      
+      // Convert blob to array buffer
+      const arrayBuffer = await webmBlob.arrayBuffer();
+      console.log('📁 WebM arrayBuffer size:', arrayBuffer.byteLength);
+      
+      // Decode audio data
+      const audioBuffer = await tempAudioContext.decodeAudioData(arrayBuffer);
+      console.log('🎵 Audio decoded:', {
+        duration: audioBuffer.duration,
+        sampleRate: audioBuffer.sampleRate,
+        numberOfChannels: audioBuffer.numberOfChannels
+      });
+      
+      // Get audio data
+      const audioData = audioBuffer.getChannelData(0); // Use first channel
+      const sampleRate = audioBuffer.sampleRate;
+      
+      // Create WAV buffer
+      const wavBuffer = createWAVBuffer(audioData, sampleRate);
+      
+      // Close temporary audio context
+      await tempAudioContext.close();
+      
+      console.log('✅ WAV conversion complete:', {
+        originalSize: webmBlob.size,
+        convertedSize: wavBuffer.byteLength,
+        format: 'WAV'
+      });
+      
+      return new Blob([wavBuffer], { type: 'audio/wav' });
+    } catch (error) {
+      console.warn('⚠️ WAV conversion failed, using original WebM:', error);
+      // Fallback to original blob if conversion fails
+      return webmBlob;
+    }
+  };
+
+  // Create WAV file buffer from audio data
+  const createWAVBuffer = (audioData: Float32Array, sampleRate: number): ArrayBuffer => {
+    const length = audioData.length;
+    const buffer = new ArrayBuffer(44 + length * 2);
+    const view = new DataView(buffer);
+    
+    // WAV file header
+    const writeString = (offset: number, string: string) => {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    };
+    
+    writeString(0, 'RIFF');
+    view.setUint32(4, 36 + length * 2, true);
+    writeString(8, 'WAVE');
+    writeString(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, 1, true); // Mono
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(36, 'data');
+    view.setUint32(40, length * 2, true);
+    
+    // Convert float audio data to 16-bit PCM
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+      const sample = Math.max(-1, Math.min(1, audioData[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
+    }
+    
+    return buffer;
+  };
+
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     console.log('🎤 Voice processing states:', {
@@ -360,16 +442,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         }
     
     try {
-      // Convert speech to text directly (OpenAI will validate format)
+      // Convert WebM to WAV for better OpenAI compatibility
+      const convertedAudioBlob = await convertWebMToWAV(audioBlob);
+      
       const formData = new FormData();
       
       console.log('🎤 Sending audio to speech-to-text:', {
-        size: audioBlob.size,
-        type: audioBlob.type,
-        extension: 'webm'
+        originalSize: audioBlob.size,
+        convertedSize: convertedAudioBlob.size,
+        originalType: audioBlob.type,
+        convertedType: convertedAudioBlob.type
       });
       
-      formData.append('audio', audioBlob, 'audio.webm');
+      formData.append('audio', convertedAudioBlob, 'audio.wav');
 
       console.log('📡 Calling speech-to-text edge function...');
       const { data: transcriptionData, error: transcriptionError } = await supabase.functions.invoke('speech-to-text', {
@@ -538,15 +623,84 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         isPlayingRef.current = false;
         URL.revokeObjectURL(audioUrl);
         
-        // Resume listening for next input with proper state checks
+        // Resume listening for next input with proper MediaRecorder reinitialization
         if (isVoiceModeActiveRef.current && !isRequestInProgressRef.current) {
           console.log('🎤 Resuming listening after AI speech');
-          setTimeout(() => {
+          
+          // Reinitialize MediaRecorder to prevent audio corruption
+          setTimeout(async () => {
             if (isVoiceModeActiveRef.current && !isProcessingRef.current && !isRequestInProgressRef.current) {
-              console.log('🔄 Starting audio analysis loop after AI speech');
-              checkAudioLevel();
+              console.log('🔄 Reinitializing MediaRecorder after AI speech...');
+              
+              try {
+                // Stop current MediaRecorder if still active
+                if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+                  mediaRecorderRef.current.stop();
+                }
+                
+                // Clear existing chunks
+                currentSegmentChunksRef.current = [];
+                
+                // Restart recording with fresh MediaRecorder
+                if (streamRef.current && streamRef.current.active) {
+                  // Get the existing MIME type
+                  let mimeType = 'audio/webm;codecs=opus';
+                  if (!MediaRecorder.isTypeSupported(mimeType)) {
+                    if (MediaRecorder.isTypeSupported('audio/webm')) {
+                      mimeType = 'audio/webm';
+                    } else {
+                      mimeType = '';
+                    }
+                  }
+                  
+                  console.log('🎵 Creating new MediaRecorder with format:', mimeType);
+                  
+                  // Create new MediaRecorder
+                  const newMediaRecorder = new MediaRecorder(streamRef.current, mimeType ? { mimeType } : {});
+                  mediaRecorderRef.current = newMediaRecorder;
+                  
+                  // Set up event handlers
+                  newMediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0 && isVoiceModeActiveRef.current) {
+                      currentSegmentChunksRef.current.push(event.data);
+                    }
+                  };
+                  
+                  newMediaRecorder.onerror = (event) => {
+                    console.error('❌ MediaRecorder error during restart:', event);
+                  };
+                  
+                  newMediaRecorder.onstart = () => {
+                    console.log('🔴 New MediaRecorder started after AI speech');
+                  };
+                  
+                  newMediaRecorder.onstop = () => {
+                    console.log('⏹️ New MediaRecorder stopped');
+                  };
+                  
+                  // Start the new recorder
+                  newMediaRecorder.start(200);
+                  console.log('✅ MediaRecorder reinitialized successfully');
+                } else {
+                  console.warn('⚠️ Stream inactive, need to restart recording completely');
+                  // If stream is inactive, restart the entire recording process
+                  await startContinuousRecording();
+                }
+                
+                console.log('🔄 Starting audio analysis loop after AI speech');
+                checkAudioLevel();
+                
+              } catch (error) {
+                console.error('❌ Failed to reinitialize MediaRecorder:', error);
+                // Fallback: restart the entire recording process
+                try {
+                  await startContinuousRecording();
+                } catch (restartError) {
+                  console.error('❌ Failed to restart recording completely:', restartError);
+                }
+              }
             }
-          }, 500);
+          }, 800); // Increased delay to ensure AI audio is fully finished
         }
       };
 
