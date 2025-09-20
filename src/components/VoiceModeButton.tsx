@@ -177,28 +177,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       audio.onended = () => {
         console.log('✅ OpenAI TTS playbook finished');
-        console.log('🔄 TTS ended - checking voice mode state:', { 
-          isVoiceModeActive, 
-          isProcessing, 
-          isPlaying: true 
-        });
+        console.log('🔄 TTS ended - will restart voice mode automatically');
         setIsPlaying(false);
         
-        // Automatically resume listening after TTS finishes
-        console.log('⏰ Setting timeout to resume listening in 500ms...');
+        // Simply restart voice mode after TTS finishes (easier and more reliable)
         setTimeout(() => {
-          console.log('🔄 Timeout fired - rechecking voice mode state:', { 
-            isVoiceModeActive, 
-            isProcessing, 
-            isPlaying: false 
-          });
           if (isVoiceModeActive) {
-            console.log('🎤 Conditions met - calling resumeListening()');
-            resumeListening();
-          } else {
-            console.log('❌ Voice mode not active - not resuming listening');
+            console.log('🎤 Auto-restarting voice mode after AI response...');
+            startVoiceMode(); // Just restart the whole thing
           }
-        }, 500);
+        }, 800);
       };
       
       audio.onerror = (error) => {
@@ -250,28 +238,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       utterance.onend = () => {
         console.log('✅ Browser TTS finished');
-        console.log('🔄 Browser TTS ended - checking voice mode state:', { 
-          isVoiceModeActive, 
-          isProcessing, 
-          isPlaying: true 
-        });
+        console.log('🔄 Browser TTS ended - will restart voice mode automatically');
         setIsPlaying(false);
         
-        // Automatically resume listening after browser TTS finishes
-        console.log('⏰ Setting timeout to resume listening after browser TTS...');
+        // Simply restart voice mode after browser TTS finishes
         setTimeout(() => {
-          console.log('🔄 Browser TTS timeout fired - rechecking state:', { 
-            isVoiceModeActive, 
-            isProcessing, 
-            isPlaying: false 
-          });
           if (isVoiceModeActive) {
-            console.log('🎤 Browser TTS done - calling resumeListening()');
-            resumeListening();
-          } else {
-            console.log('❌ Voice mode not active after browser TTS');
+            console.log('🎤 Auto-restarting voice mode after browser TTS...');
+            startVoiceMode(); // Just restart the whole thing
           }
-        }, 500);
+        }, 800);
       };
       
       utterance.onerror = (error) => {
