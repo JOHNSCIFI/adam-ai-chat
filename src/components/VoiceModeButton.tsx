@@ -141,19 +141,23 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const speechRms = speechBins > 0 ? Math.sqrt(speechSum / speechBins) : 0;
       const speechVolume = speechRms / 255;
       
-      // Enhanced thresholds for noisy environments
-      const generalThreshold = 0.015; // Higher threshold to filter background noise
-      const speechThreshold = 0.025; // Higher speech threshold for better accuracy
-      const noiseFloor = 0.003; // Minimum noise level to ignore
+      // Much stricter thresholds to prevent false speech detection
+      const generalThreshold = 0.08; // Significantly higher - only detect clear speech
+      const speechThreshold = 0.12; // Much higher speech threshold  
+      const noiseFloor = 0.015; // Higher noise floor to ignore ambient sounds
+      const minVolumeRatio = 0.7; // Require high speech-to-noise ratio
       
-      // Calculate noise reduction - ignore very low volume as background noise
+      // Calculate noise reduction - ignore low volume as background noise
       const adjustedVolume = Math.max(0, volume - noiseFloor);
       const adjustedSpeechVolume = Math.max(0, speechVolume - noiseFloor);
       
-      // Enhanced detection: require significant speech content with noise filtering
+      // Very strict detection: require strong, clear speech signals only
       const volumeRatio = speechVolume > 0 ? (speechVolume / Math.max(volume, 0.001)) : 0;
-      const isStrongSpeech = volumeRatio > 0.4 && adjustedSpeechVolume > speechThreshold;
-      const isSpeechDetected = adjustedVolume > generalThreshold && isStrongSpeech;
+      const hasStrongSpeech = volumeRatio > minVolumeRatio && adjustedSpeechVolume > speechThreshold;
+      const hasGeneralAudio = adjustedVolume > generalThreshold;
+      
+      // Only trigger on clear, intentional speech (not background noise/whispers)
+      const isSpeechDetected = hasGeneralAudio && hasStrongSpeech && volume > 0.05;
       
       // Use refs for immediate state access
       if (isSpeechDetected && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
@@ -169,10 +173,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       } else if (isListeningRef.current && !isProcessingRef.current && !isPlayingRef.current && !isRequestInProgressRef.current) {
         // Silence detected while we were listening - start timer
         if (!silenceTimerRef.current) {
-          // Reduced silence timer for more responsive detection in noisy environments
+        // Longer silence timer to ensure we capture complete thoughts
           silenceTimerRef.current = setTimeout(() => {
             processCurrentSegment();
-          }, 1000); // Reduced to 1 second for better responsiveness
+          }, 2000); // 2 seconds to avoid cutting off mid-sentence
         }
       }
       
@@ -364,9 +368,16 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const processVoiceInput = async (audioBlob: Blob) => {
     console.log('🎤 Processing voice input - blob size:', audioBlob.size);
     
-        // Validate audio blob before processing (reduced minimum size)
-        if (audioBlob.size < 500) {
-          console.warn('⚠️ Audio blob too small, skipping processing');
+        // Validate audio blob - require substantial audio for processing
+        if (audioBlob.size < 5000) { // Increased minimum size to 5KB
+          console.warn('⚠️ Audio blob too small (likely just noise), skipping processing');
+          return;
+        }
+        
+        // Additional validation - check duration (approximate)
+        const estimatedDuration = audioBlob.size / 24000; // Rough estimate for 24kHz audio
+        if (estimatedDuration < 0.5) { // Less than 500ms
+          console.warn('⚠️ Audio duration too short, skipping processing');
           return;
         }
     
