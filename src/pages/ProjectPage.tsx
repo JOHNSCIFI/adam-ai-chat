@@ -433,6 +433,19 @@ export default function ProjectPage() {
         }
       }
 
+      // Update chat title after messages are added
+      setTimeout(async () => {
+        const { data: chatMessages } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', newChat.id)
+          .order('created_at', { ascending: true });
+        
+        if (chatMessages && chatMessages.length >= 2) {
+          await updateChatTitle(newChat.id, chatMessages);
+        }
+      }, 2000);
+
       // Refresh chats and navigate
       fetchProjectChats();
       navigate(`/chat/${newChat.id}`);
@@ -447,6 +460,69 @@ export default function ProjectPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateChatTitle = async (chatId: string, messages: any[]) => {
+    const { data: currentChat } = await supabase
+      .from('chats')
+      .select('title')
+      .eq('id', chatId)
+      .single();
+    
+    // Only update if title is still basic/auto-generated
+    if (currentChat && (
+      currentChat.title === 'New Chat' ||
+      currentChat.title.length < 30 ||
+      !currentChat.title.includes(' ')
+    )) {
+      const newTitle = generateChatTitle(messages);
+      
+      if (newTitle && newTitle !== currentChat.title) {
+        const { error: updateError } = await supabase
+          .from('chats')
+          .update({ title: newTitle })
+          .eq('id', chatId);
+        
+        if (!updateError) {
+          fetchProjectChats();
+          window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+        }
+      }
+    }
+  };
+
+  const generateChatTitle = (messages: any[]) => {
+    const userMessages = messages
+      .filter(msg => msg.role === 'user')
+      .slice(0, 2);
+    
+    if (userMessages.length === 0) return 'New Chat';
+    
+    const firstMessage = userMessages[0].content;
+    const cleaned = firstMessage.trim().replace(/\s+/g, ' ');
+    
+    // Common words to filter out
+    const stopWords = new Set([
+      'the', 'a', 'an', 'and', 'or', 'but', 'in', 'on', 'at', 'to', 'for', 'of', 'with', 'by',
+      'is', 'are', 'was', 'were', 'be', 'been', 'being', 'have', 'has', 'had', 'do', 'does', 'did',
+      'please', 'help', 'tell', 'explain', 'show', 'give', 'get', 'make', 'take', 'go', 'come'
+    ]);
+    
+    // Split into words and filter
+    const words = cleaned.toLowerCase().split(/\s+/)
+      .filter(word => word.length > 2 && !stopWords.has(word))
+      .map(word => word.replace(/[^\w]/g, ''))
+      .filter(word => word.length > 2);
+    
+    let title = words.slice(0, 4).join(' ');
+    if (!title) {
+      title = cleaned.length > 40 ? cleaned.substring(0, 40) + '...' : cleaned;
+    }
+    
+    // Capitalize first letter
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+    
+    return title.length > 50 ? title.substring(0, 47) + '...' : title;
   };
 
   const handleFileUpload = () => {
@@ -724,9 +800,6 @@ export default function ProjectPage() {
                           ) : (
                             <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>
                           )}
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(chat.updated_at).toLocaleDateString()} • {new Date(chat.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                          </p>
                         </div>
                       </div>
                       
