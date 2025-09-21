@@ -1854,6 +1854,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <ImageProcessingIndicator 
+                      key={`${chatId}-${currentImagePrompts.get(chatId)}`}
                       prompt={currentImagePrompts.get(chatId)!}
                     />
                   </div>

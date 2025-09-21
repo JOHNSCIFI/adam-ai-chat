@@ -18,6 +18,12 @@ export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> =
     "Finalizing the image"
   ];
 
+  // Reset state when prompt changes
+  useEffect(() => {
+    setStage(0);
+    setDots('');
+  }, [prompt]);
+
   useEffect(() => {
     const stageInterval = setInterval(() => {
       setStage(prev => (prev + 1) % stages.length);
@@ -34,7 +40,7 @@ export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> =
       clearInterval(stageInterval);
       clearInterval(dotsInterval);
     };
-  }, []);
+  }, [prompt]); // Reset animation when prompt changes
 
   return (
     <div className="flex flex-col gap-3 p-4 rounded-lg bg-muted/50 border">
