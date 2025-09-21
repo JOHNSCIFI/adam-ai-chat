@@ -22,10 +22,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
 
-  console.log('AuthProvider rendering with Supabase');
-
   useEffect(() => {
-    console.log('AuthProvider useEffect running with Supabase');
     
     // Handle auth callback from email verification
     const handleAuthCallback = async () => {
@@ -33,7 +30,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (error) {
         console.error('Error getting session:', error);
       } else {
-        console.log('Session from callback:', data.session?.user?.email);
         setSession(data.session);
         setUser(data.session?.user ?? null);
       }
@@ -43,11 +39,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('Auth state changed:', event, session?.user?.email);
         
         // Handle email confirmation
         if (event === 'SIGNED_IN' && session) {
-          console.log('User signed in successfully');
           setSession(session);
           setUser(session.user);
           
@@ -128,7 +122,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
           }, 0);
         } else if (event === 'SIGNED_OUT') {
-          console.log('User signed out');
           setSession(null);
           setUser(null);
           setUserProfile(null);
@@ -189,28 +182,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { error: null };
     }
     
+    
     console.log('Signup result:', { error, user: data.user?.email });
     return { error };
   };
 
   const signIn = async (email: string, password: string) => {
-    console.log('Attempting to sign in:', email);
     const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password
     });
     
-    console.log('Signin result:', { error, user: data.user?.email });
     return { error };
   };
 
   const signInWithGoogle = async () => {
-    console.log('Attempting to sign in with Google');
     const redirectUrl = window.location.origin.includes('localhost') 
       ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
       : `${window.location.origin}/`;
-    
-    console.log('Google OAuth redirect URL:', redirectUrl);
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
