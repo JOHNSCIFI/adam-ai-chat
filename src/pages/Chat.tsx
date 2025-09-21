@@ -177,6 +177,14 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
+    console.log('Auto-trigger effect:', { 
+      messagesLength: messages.length, 
+      loading, 
+      isGeneratingResponse, 
+      chatId,
+      lastMessage: messages[messages.length - 1]
+    });
+    
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
@@ -195,25 +203,38 @@ export default function Chat() {
         if (!hasAssistantResponseAfter && 
             !processedUserMessages.current.has(lastMessage.id) &&
             !imageGenerationChats.current.has(chatId)) {
+          console.log('User message without files - will be handled by auto-trigger');
           processedUserMessages.current.add(lastMessage.id);
           
           // Trigger AI response immediately for text-only messages
           setTimeout(() => {
+            console.log('Executing AI response trigger for:', lastMessage.content);
             triggerAIResponse(lastMessage.content, lastMessage.id);
           }, 100);
+        } else {
+          console.log('Message already processed, assistant response exists, or from image generation modal');
         }
+      } else {
+        console.log('Message has file attachments (webhook handled) or not a user message');
       }
+    } else {
+      console.log('Conditions not met for auto-trigger');
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
 
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
+    console.log('triggerAIResponse called:', { userMessage, userMessageId, isGeneratingResponse, loading });
+    
     if (isGeneratingResponse || loading) {
+      console.log('Skipping AI response - already in progress');
       return;
     }
     
     setIsGeneratingResponse(true);
     
     try {
+      console.log('Starting AI response generation...');
+      
       // Check if this is an image generation request
       const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
       
@@ -221,6 +242,7 @@ export default function Chat() {
         setCurrentImagePrompt(userMessage);
       }
       
+      console.log('Invoking chat-with-ai-optimized function...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userMessage,
@@ -231,14 +253,18 @@ export default function Chat() {
         }
       });
 
+      console.log('AI response received:', { aiResponse, aiError });
+
       if (aiError) throw aiError;
 
       if (aiResponse?.response || aiResponse?.content) {
         const responseContent = aiResponse.response || aiResponse.content;
+        console.log('Processing AI response content:', responseContent);
         
         // Handle image generation responses
         let fileAttachments: FileAttachment[] = [];
         if (aiResponse.image_url) {
+          console.log('Image URL found in AI response:', aiResponse.image_url);
           fileAttachments = [{
             id: crypto.randomUUID(),
             name: `generated_image_${Date.now()}.png`,
@@ -265,6 +291,7 @@ export default function Chat() {
         }
         
         // Save to database
+        console.log('Saving AI message to database...');
         const { error: saveError } = await supabase
           .from('messages')
           .insert({
@@ -276,7 +303,11 @@ export default function Chat() {
           
         if (saveError) {
           console.error('Error saving AI message:', saveError);
+        } else {
+          console.log('AI message saved successfully');
         }
+      } else {
+        console.log('No response content received from AI');
       }
     } catch (error) {
       console.error('Error triggering AI response:', error);
@@ -293,6 +324,7 @@ export default function Chat() {
       setMessages(prev => [...prev, errorMessage]);
       scrollToBottom();
     } finally {
+      console.log('AI response generation completed');
       setIsGeneratingResponse(false);
     }
   };
@@ -316,6 +348,17 @@ export default function Chat() {
         ...msg,
         file_attachments: (msg.file_attachments as any) || []
       })) as Message[];
+      
+      // Debug logging
+      typedMessages.forEach(msg => {
+        if (msg.file_attachments && msg.file_attachments.length > 0) {
+          console.log('Message with file attachments:', {
+            messageId: msg.id,
+            role: msg.role,
+            fileAttachments: msg.file_attachments
+          });
+        }
+      });
       
       setMessages(typedMessages);
     }
@@ -703,6 +746,7 @@ export default function Chat() {
         }
       } else if (userMessage && files.length === 0) {
         // Don't call AI here - let the auto-trigger handle it to avoid duplicates
+        console.log('User message without files - will be handled by auto-trigger');
       }
 
       // Automatically update chat title based on conversation progression
@@ -722,6 +766,7 @@ export default function Chat() {
   const extractFileContent = async (file: File): Promise<string> => {
     try {
       const fileType = file.type;
+      console.log(`Extracting content from: ${file.name}`);
       
       if (fileType.startsWith('text/') || fileType.includes('json') || fileType.includes('csv')) {
         // Extract actual text content
@@ -730,6 +775,7 @@ export default function Chat() {
         
       } else if (fileType.startsWith('image/')) {
         // For images, use OpenAI Vision API for analysis
+        console.log('Performing OpenAI image analysis...');
         
         try {
           // Convert image to base64
@@ -787,6 +833,7 @@ export default function Chat() {
               };
               
               setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
+              console.log('OpenAI image analysis completed and saved');
             }
           }).catch(error => {
             console.error('Background image analysis failed:', error);

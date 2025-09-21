@@ -31,16 +31,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const cancelProcessingRef = useRef<boolean>(false);
   
   const { user } = useAuth();
 
   const startVoiceMode = async () => {
     console.log('🎤 Starting voice mode...');
-    
-    // Reset cancel flag when starting
-    cancelProcessingRef.current = false;
     
     try {
       // Check if browser supports Web Speech API
@@ -76,24 +71,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       };
       
       recognition.onresult = async (event: any) => {
-        // Check cancellation status immediately when result comes in
-        if (cancelProcessingRef.current) {
-          console.log('🛑 Speech recognition result ignored - already cancelled');
-          setIsListening(false);
-          return;
-        }
-        
         const result = event.results[0];
         if (result.isFinal) {
           const transcript = result[0].transcript.trim();
           console.log('📝 Speech recognized:', transcript);
-          
-          // Double-check cancellation status before processing
-          if (cancelProcessingRef.current) {
-            console.log('🛑 Speech recognition cancelled - not processing transcript');
-            setIsListening(false);
-            return;
-          }
           
           if (transcript) {
             setIsListening(false);
@@ -142,20 +123,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     console.trace('Who called stopVoiceMode?');
     console.log('🛑 Stopping voice mode...');
     
-    // Cancel any ongoing processing
-    cancelProcessingRef.current = true;
-    
-    // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
-    }
-    
-    // Stop any ongoing audio playback
-    if (audioRef.current) {
-      audioRef.current.pause();
-      audioRef.current.currentTime = 0;
-      audioRef.current = null;
     }
     
     // Stop any ongoing speech synthesis
@@ -171,13 +141,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const speakText = async (text: string) => {
     console.log('🔊 Speaking text with OpenAI TTS:', text.substring(0, 50) + '...');
-    
-    // Check if cancelled before starting to speak
-    if (cancelProcessingRef.current) {
-      console.log('🛑 Speaking cancelled before starting');
-      return;
-    }
-    
     setIsPlaying(true);
     
     try {
@@ -205,16 +168,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       // Create audio with proper format
       const audioFormat = ttsResponse.format || 'wav';
       const audioData = `data:audio/${audioFormat};base64,${ttsResponse.audioContent}`;
-      
-      // Check if cancelled before creating audio
-      if (cancelProcessingRef.current) {
-        console.log('🛑 Speaking cancelled before audio creation');
-        setIsPlaying(false);
-        return;
-      }
-      
       const audio = new Audio(audioData);
-      audioRef.current = audio; // Store reference for stopping
       
       console.log('🎵 Audio created with format:', audioFormat, 'Size:', ttsResponse.size);
       
@@ -225,37 +179,32 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       audio.onended = () => {
         console.log('✅ OpenAI TTS playbook finished');
-        audioRef.current = null; // Clear reference
+        console.log('🔄 TTS ended - setting voice mode back to active');
         setIsPlaying(false);
-        setIsProcessing(false);
         
-        // Automatically resume listening for continuous conversation
-        if (isVoiceModeActive && !cancelProcessingRef.current) {
+        // Simply set voice mode back to active and start listening
+        setTimeout(() => {
+          console.log('🎤 Setting isVoiceModeActive back to true and starting listening...');
+          setIsVoiceModeActive(true); // Just turn it back on
+          
+          // Start fresh recognition
           setTimeout(() => {
-            if (isVoiceModeActive && !cancelProcessingRef.current) {
-              console.log('🎤 Auto-resuming listening for continuous conversation...');
-              resumeListening();
+            if (!isProcessing) { // Only start if not processing
+              console.log('🎤 Starting fresh recognition after TTS...');
+              startVoiceMode();
             }
-          }, 500);
-        }
+          }, 200);
+        }, 500);
       };
       
       audio.onerror = (error) => {
         console.error('❌ Audio playback error:', error);
-        audioRef.current = null; // Clear reference
         setIsPlaying(false);
         fallbackToBrowserTTS(text);
       };
       
       // Play the audio
       try {
-        // Check if cancelled before playing
-        if (cancelProcessingRef.current) {
-          console.log('🛑 Speaking cancelled before audio play');
-          setIsPlaying(false);
-          return;
-        }
-        
         console.log('🎵 Starting audio playback...');
         await audio.play();
       } catch (playError) {
@@ -273,13 +222,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const fallbackToBrowserTTS = (text: string) => {
     console.log('🔊 Using browser TTS as fallback');
-    
-    // Check if cancelled before starting browser TTS
-    if (cancelProcessingRef.current) {
-      console.log('🛑 Browser TTS cancelled before starting');
-      setIsPlaying(false);
-      return;
-    }
     
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -304,18 +246,22 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       utterance.onend = () => {
         console.log('✅ Browser TTS finished');
+        console.log('🔄 Browser TTS ended - setting voice mode back to active');
         setIsPlaying(false);
-        setIsProcessing(false);
         
-        // Automatically resume listening for continuous conversation
-        if (isVoiceModeActive && !cancelProcessingRef.current) {
+        // Simply set voice mode back to active and start listening
+        setTimeout(() => {
+          console.log('🎤 Setting isVoiceModeActive back to true after browser TTS...');
+          setIsVoiceModeActive(true); // Just turn it back on
+          
+          // Start fresh recognition
           setTimeout(() => {
-            if (isVoiceModeActive && !cancelProcessingRef.current) {
-              console.log('🎤 Auto-resuming listening for continuous conversation...');
-              resumeListening();
+            if (!isProcessing) { // Only start if not processing
+              console.log('🎤 Starting fresh recognition after browser TTS...');
+              startVoiceMode();
             }
-          }, 500);
-        }
+          }, 200);
+        }, 500);
       };
       
       utterance.onerror = (error) => {
@@ -323,18 +269,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         setIsPlaying(false);
         // Still try to resume listening even on error
         setTimeout(() => {
-          if (isVoiceModeActive && !cancelProcessingRef.current) {
+          if (isVoiceModeActive) {
             resumeListening();
           }
         }, 1000);
       };
-      
-      // Check once more before speaking
-      if (cancelProcessingRef.current) {
-        console.log('🛑 Browser TTS cancelled before speaking');
-        setIsPlaying(false);
-        return;
-      }
       
       window.speechSynthesis.speak(utterance);
     } else {
@@ -342,7 +281,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       setIsPlaying(false);
       // Resume listening even if no TTS is available
       setTimeout(() => {
-        if (isVoiceModeActive && !cancelProcessingRef.current) {
+        if (isVoiceModeActive) {
           resumeListening();
         }
       }, 1000);
@@ -350,35 +289,106 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   const resumeListening = () => {
-    if (!isVoiceModeActive || cancelProcessingRef.current) {
-      console.log('🎤 Not resuming - voice mode inactive or cancelled');
+    console.log('🎤 resumeListening() called with state:', { 
+      isVoiceModeActive, 
+      isProcessing, 
+      isPlaying 
+    });
+    
+    if (!isVoiceModeActive || isProcessing || isPlaying) {
+      console.log('🎤 Not resuming - conditions not met:', { 
+        isVoiceModeActive, 
+        isProcessing, 
+        isPlaying 
+      });
       return;
     }
 
-    console.log('🎤 Resuming listening for continuous conversation...');
+    console.log('🎤 ✅ All conditions met - resuming listening after AI response...');
     
-    // Clean up existing recognition first
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {
-        // Ignore errors when stopping
+    // Create new recognition instance for continuous conversation
+    try {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        console.error('❌ Speech recognition not supported');
+        return;
       }
-    }
 
-    // Use the existing startVoiceMode function for consistency
-    setTimeout(() => {
-      if (isVoiceModeActive && !cancelProcessingRef.current) {
-        startVoiceMode();
+      // Clean up existing recognition first
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.stop();
+        } catch (e) {
+          // Ignore errors when stopping
+        }
       }
-    }, 200);
+
+      console.log('🎤 Creating fresh recognition instance for continuous chat...');
+      const recognition = new SpeechRecognition();
+      
+      // Configure recognition
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+      
+      recognitionRef.current = recognition;
+      
+      // Set up event handlers
+      recognition.onstart = () => {
+        console.log('🎤 Listening resumed - ready for next input');
+        setIsListening(true);
+      };
+      
+      recognition.onresult = async (event: any) => {
+        const result = event.results[0];
+        if (result.isFinal) {
+          const transcript = result[0].transcript.trim();
+          console.log('📝 New speech recognized:', transcript);
+          
+          if (transcript) {
+            setIsListening(false);
+            setIsProcessing(true);
+            await processUserSpeech(transcript);
+          }
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('❌ Speech recognition error during resume:', event.error);
+        setIsListening(false);
+        
+        // Try to restart on recoverable errors
+        if (event.error === 'no-speech' && isVoiceModeActive) {
+          setTimeout(() => {
+            if (isVoiceModeActive && !isProcessing && !isPlaying) {
+              resumeListening();
+            }
+          }, 1500);
+        }
+      };
+      
+      recognition.onend = () => {
+        console.log('🛑 Recognition ended during resume');
+        setIsListening(false);
+      };
+      
+      // Start listening immediately
+      setTimeout(() => {
+        if (isVoiceModeActive && !isProcessing && !isPlaying) {
+          console.log('🎤 Starting listening for next user input...');
+          recognition.start();
+        }
+      }, 300);
+      
+    } catch (error) {
+      console.error('❌ Error creating recognition for resume:', error);
+    }
   };
 
   const processUserSpeech = async (transcript: string) => {
     console.log('🎤 Processing user speech:', transcript);
-    
-    // Reset cancel flag at start of processing
-    cancelProcessingRef.current = false;
     
     try {
       // Save user message
@@ -401,12 +411,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, transcript, 'user');
 
-      // Check if processing was cancelled before making AI request
-      if (cancelProcessingRef.current) {
-        console.log('🛑 Processing cancelled before AI request');
-        return;
-      }
-
       // Get AI response
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
@@ -419,24 +423,14 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       console.log('🤖 AI response:', { data: aiResponse ? 'has_data' : 'no_data', error: aiError });
 
-      // Check if processing was cancelled after AI response
-      if (cancelProcessingRef.current) {
-        console.log('🛑 Processing cancelled after AI response - not saving or speaking');
-        return;
-      }
-
       if (aiError || !aiResponse?.content) {
         console.error('❌ AI response error:', aiError);
         throw new Error(`AI response failed: ${aiError?.message || 'No response content'}`);
       }
 
-      // Show AI response to user first (this displays it on screen)
-      const aiMessageId = uuidv4();
-      onMessageSent(aiMessageId, aiResponse.content, 'assistant');
-      console.log('✅ AI message displayed to user');
-
-      // Now save to database (since user has seen it)
+      // Save AI response
       console.log('💾 Saving AI message to database...');
+      const aiMessageId = uuidv4();
       const { error: aiMessageError } = await supabase
         .from('messages')
         .insert({
@@ -448,16 +442,11 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
       if (aiMessageError) {
         console.error('❌ Failed to save AI message:', aiMessageError);
-        // Don't throw here since message is already displayed
-      } else {
-        console.log('✅ AI message saved successfully');
+        throw new Error(`Failed to save AI message: ${aiMessageError.message}`);
       }
-
-      // Check once more before speaking
-      if (cancelProcessingRef.current) {
-        console.log('🛑 Processing cancelled before speaking - message already displayed and saved');
-        return;
-      }
+      
+      console.log('✅ AI message saved successfully');
+      onMessageSent(aiMessageId, aiResponse.content, 'assistant');
 
       // Speak AI response using client-side TTS
       speakText(aiResponse.content);
@@ -471,8 +460,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   // Main toggle function
   const handleClick = () => {
-    // If any voice activity is happening, stop it
-    if (isVoiceModeActive || isProcessing || isPlaying || isListening) {
+    if (isVoiceModeActive) {
       stopVoiceMode();
     } else {
       startVoiceMode();
@@ -486,10 +474,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
-      }
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
       }
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -525,6 +509,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       variant={getButtonVariant()}
       size="icon"
       onClick={handleClick}
+      disabled={isProcessing}
       className={`
         relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu
         ${isListening 
