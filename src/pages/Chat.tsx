@@ -239,23 +239,30 @@ export default function Chat() {
       return;
     }
     
+    // CRITICAL: Capture the original chat ID to prevent responses going to wrong chats
+    const originalChatId = chatId;
+    if (!originalChatId) {
+      console.error('No chat ID available for AI response');
+      return;
+    }
+    
     setIsGeneratingResponse(true);
     
     try {
-      console.log('Starting AI response generation...');
+      console.log('Starting AI response generation for chat:', originalChatId);
       
       // Check if this is an image generation request
       const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
       
       if (isImageRequest) {
-        setCurrentImagePrompts(prev => new Map(prev).set(chatId!, userMessage));
+        setCurrentImagePrompts(prev => new Map(prev).set(originalChatId, userMessage));
       }
       
       console.log('Invoking chat-with-ai-optimized function...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userMessage,
-          chat_id: chatId,
+          chat_id: originalChatId,
           user_id: user.id,
           file_analysis: null,
           image_context: []
@@ -291,24 +298,27 @@ export default function Chat() {
           file_attachments: fileAttachments
         };
         
-        setMessages(prev => [...prev, assistantMessage]);
-        scrollToBottom();
+        // Only update UI if user is still viewing the original chat
+        if (chatId === originalChatId) {
+          setMessages(prev => [...prev, assistantMessage]);
+          scrollToBottom();
+        }
         
-        // Clear image prompt when response is received
+        // Clear image prompt when response is received (only for original chat)
         if (isImageRequest) {
           setCurrentImagePrompts(prev => {
             const newMap = new Map(prev);
-            newMap.delete(chatId!);
+            newMap.delete(originalChatId);
             return newMap;
           });
         }
         
-        // Save to database
-        console.log('Saving AI message to database...');
+        // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
+        console.log('Saving AI message to database for chat:', originalChatId);
         const { error: saveError } = await supabase
           .from('messages')
           .insert({
-            chat_id: chatId,
+            chat_id: originalChatId,
             content: responseContent,
             role: 'assistant',
             file_attachments: fileAttachments as any
@@ -317,7 +327,7 @@ export default function Chat() {
         if (saveError) {
           console.error('Error saving AI message:', saveError);
         } else {
-          console.log('AI message saved successfully');
+          console.log('AI message saved successfully to chat:', originalChatId);
         }
       } else {
         console.log('No response content received from AI');
@@ -325,19 +335,21 @@ export default function Chat() {
     } catch (error) {
       console.error('Error triggering AI response:', error);
       
-      // Add error message to chat
-      const errorMessage: Message = {
-        id: crypto.randomUUID(),
-        content: 'I apologize, but I encountered an error. Please try again.',
-        role: 'assistant',
-        created_at: new Date().toISOString(),
-        file_attachments: []
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
-      scrollToBottom();
+      // Only show error in UI if user is still viewing the original chat
+      if (chatId === originalChatId) {
+        const errorMessage: Message = {
+          id: crypto.randomUUID(),
+          content: 'I apologize, but I encountered an error. Please try again.',
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: []
+        };
+        
+        setMessages(prev => [...prev, errorMessage]);
+        scrollToBottom();
+      }
     } finally {
-      console.log('AI response generation completed');
+      console.log('AI response generation completed for chat:', originalChatId);
       setIsGeneratingResponse(false);
     }
   };
