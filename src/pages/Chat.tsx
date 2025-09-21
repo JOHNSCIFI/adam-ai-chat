@@ -112,6 +112,9 @@ export default function Chat() {
       console.log(`[CHAT-INIT] Initialized chat ${chatId}, processed messages:`, 
         Array.from(processedUserMessages.current.get(chatId) || []));
       
+      // CRITICAL: Clear messages state immediately when switching chats to prevent cross-chat bleeding
+      setMessages([]);
+      
       // Reset all loading states when switching chats - CRITICAL for chat isolation
       setIsGeneratingResponse(false);
       // Only clear image prompts for OTHER chats, keep current chat's prompt if switching back
@@ -176,7 +179,9 @@ export default function Chat() {
               }
               
               console.log(`[REALTIME] Adding new message to chat ${chatId}`);
-              return [...prev, newMessage];
+              // CRITICAL: Filter out any messages not belonging to current chat before adding new message
+              const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
+              return [...filteredPrev, newMessage];
             });
             scrollToBottom();
           }
@@ -207,7 +212,15 @@ export default function Chat() {
     });
     
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
-      const lastMessage = messages[messages.length - 1];
+      // CRITICAL: Filter messages to only include those belonging to current chat
+      const currentChatMessages = messages.filter(msg => msg.chat_id === chatId);
+      
+      if (currentChatMessages.length === 0) {
+        console.log(`[AUTO-TRIGGER] No messages for current chat ${chatId}, skipping`);
+        return;
+      }
+      
+      const lastMessage = currentChatMessages[currentChatMessages.length - 1];
       
       // Get processed messages Set for this specific chat
       const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set();
@@ -232,7 +245,7 @@ export default function Chat() {
         }
         
         // Check if there's already an assistant response after this user message
-        const hasAssistantResponseAfter = messages.some(msg => 
+        const hasAssistantResponseAfter = currentChatMessages.some(msg => 
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
         );
