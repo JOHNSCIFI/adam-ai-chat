@@ -81,6 +81,13 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
           const transcript = result[0].transcript.trim();
           console.log('📝 Speech recognized:', transcript);
           
+          // Check if processing was cancelled during speech recognition
+          if (cancelProcessingRef.current) {
+            console.log('🛑 Speech recognition cancelled - not processing transcript');
+            setIsListening(false);
+            return;
+          }
+          
           if (transcript) {
             setIsListening(false);
             setIsProcessing(true);
