@@ -545,15 +545,16 @@ export default function Chat() {
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify({
-                type: webhookType,
-                fileName: file.name,
-                fileSize: file.size,
-                fileType: file.type,
-                fileData: base64,
-                userId: user.id,
-                chatId: chatId
-              }),
+               body: JSON.stringify({
+                 type: webhookType,
+                 fileName: file.name,
+                 fileSize: file.size,
+                 fileType: file.type,
+                 fileData: base64,
+                 userId: user.id,
+                 chatId: chatId,
+                 message: userMessage
+               }),
             });
 
             if (webhookResponse.ok) {
