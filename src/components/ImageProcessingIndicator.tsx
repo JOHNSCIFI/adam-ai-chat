@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ImageIcon, Sparkles } from 'lucide-react';
+import { Sparkles } from 'lucide-react';
 
 interface ImageProcessingIndicatorProps {
   prompt: string;
@@ -8,7 +8,6 @@ interface ImageProcessingIndicatorProps {
 
 export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> = ({ prompt, onComplete }) => {
   const [stage, setStage] = useState(0);
-  const [dots, setDots] = useState('');
 
   const stages = [
     "Understanding your request",
@@ -18,56 +17,46 @@ export const ImageProcessingIndicator: React.FC<ImageProcessingIndicatorProps> =
     "Finalizing the image"
   ];
 
-  // Reset state when prompt changes
   useEffect(() => {
+    // Reset stage when prompt changes
     setStage(0);
-    setDots('');
-  }, [prompt]);
-
-  useEffect(() => {
+    
     const stageInterval = setInterval(() => {
       setStage(prev => (prev + 1) % stages.length);
     }, 2000);
 
-    const dotsInterval = setInterval(() => {
-      setDots(prev => {
-        if (prev === '...') return '';
-        return prev + '.';
-      });
-    }, 500);
-
     return () => {
       clearInterval(stageInterval);
-      clearInterval(dotsInterval);
     };
-  }, [prompt]); // Reset animation when prompt changes
+  }, [prompt]);
 
   return (
-    <div className="flex flex-col gap-3 p-4 rounded-lg bg-muted/50 border">
-      <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-4 p-6 rounded-lg bg-muted/50 border">
+      <div className="flex items-center gap-3">
         <div className="relative">
-          <ImageIcon className="h-5 w-5 text-primary" />
-          <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
+          {/* Circular spinning animation like ChatGPT */}
+          <div className="w-6 h-6 border-2 border-primary/20 border-t-primary rounded-full animate-spin"></div>
+          <Sparkles className="h-3 w-3 text-primary absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
         </div>
         <span className="font-medium text-foreground">Generating Image</span>
       </div>
       
       <div className="text-sm text-muted-foreground">
-        <div className="mb-2">"{prompt}"</div>
-        <div className="flex items-center gap-2">
-          <div className="flex space-x-1">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="w-2 h-2 bg-primary rounded-full animate-bounce"
-                style={{ animationDelay: `${i * 0.2}s` }}
-              />
-            ))}
+        <div className="mb-3 p-3 bg-background/50 rounded-md border border-border/50">
+          <span className="text-foreground font-medium">Prompt:</span> "{prompt}"
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            {/* Small circular indicator for stage */}
+            <div className="w-4 h-4 border border-primary/30 rounded-full flex items-center justify-center">
+              <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+            </div>
           </div>
-          <span>{stages[stage]}{dots}</span>
+          <span className="text-foreground font-medium">{stages[stage]}</span>
         </div>
       </div>
       
+      {/* Progress bar */}
       <div className="w-full bg-muted rounded-full h-2 overflow-hidden">
         <div 
           className="h-full bg-gradient-to-r from-primary/50 to-primary transition-all duration-2000 ease-in-out"

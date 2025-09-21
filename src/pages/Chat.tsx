@@ -105,9 +105,18 @@ export default function Chat() {
     if (chatId && user) {
       // Clear processed messages when changing chats
       processedUserMessages.current.clear();
-      // Reset all loading states when switching chats
+      // Reset all loading states when switching chats - CRITICAL for chat isolation
       setIsGeneratingResponse(false);
-      setCurrentImagePrompts(new Map()); // Clear all image prompts when switching chats
+      // Only clear image prompts for OTHER chats, keep current chat's prompt if switching back
+      setCurrentImagePrompts(prev => {
+        const newMap = new Map();
+        // Only keep the current chat's prompt if it exists
+        const currentPrompt = prev.get(chatId);
+        if (currentPrompt) {
+          newMap.set(chatId, currentPrompt);
+        }
+        return newMap;
+      });
       setPendingImageGenerations(new Set());
       setLoading(false);
       fetchMessages();
