@@ -99,13 +99,19 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const processedUserMessages = useRef<Set<string>>(new Set());
+  // Track processed messages per chat to prevent cross-chat bleeding
+  const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
 
   useEffect(() => {
     if (chatId && user) {
-      // Clear processed messages when changing chats
-      processedUserMessages.current.clear();
+      // Initialize processed messages Set for this chat if it doesn't exist
+      if (!processedUserMessages.current.has(chatId)) {
+        processedUserMessages.current.set(chatId, new Set());
+      }
+      console.log(`[CHAT-INIT] Initialized chat ${chatId}, processed messages:`, 
+        Array.from(processedUserMessages.current.get(chatId) || []));
+      
       // Reset all loading states when switching chats - CRITICAL for chat isolation
       setIsGeneratingResponse(false);
       // Only clear image prompts for OTHER chats, keep current chat's prompt if switching back
@@ -203,9 +209,27 @@ export default function Chat() {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       const lastMessage = messages[messages.length - 1];
       
+      // Get processed messages Set for this specific chat
+      const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set();
+      
+      console.log(`[AUTO-TRIGGER] Chat ${chatId} - Last message:`, {
+        id: lastMessage.id,
+        content: lastMessage.content.substring(0, 50),
+        role: lastMessage.role,
+        chat_id: lastMessage.chat_id,
+        alreadyProcessed: chatProcessedMessages.has(lastMessage.id),
+        processedCount: chatProcessedMessages.size
+      });
+      
       // Only trigger for user messages without file attachments (text-only)
       if (lastMessage.role === 'user' && 
           (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
+        
+        // CRITICAL: Verify message belongs to current chat
+        if (lastMessage.chat_id && lastMessage.chat_id !== chatId) {
+          console.warn(`[AUTO-TRIGGER] Message chat_id ${lastMessage.chat_id} doesn't match current chat ${chatId}, skipping`);
+          return;
+        }
         
         // Check if there's already an assistant response after this user message
         const hasAssistantResponseAfter = messages.some(msg => 
@@ -216,10 +240,15 @@ export default function Chat() {
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && 
-            !processedUserMessages.current.has(lastMessage.id) &&
+            !chatProcessedMessages.has(lastMessage.id) &&
             !imageGenerationChats.current.has(chatId)) {
-          console.log('User message without files - will be handled by auto-trigger');
-          processedUserMessages.current.add(lastMessage.id);
+          console.log(`[AUTO-TRIGGER] Processing user message in chat ${chatId}:`, lastMessage.id);
+          
+          // Add to processed messages for this specific chat
+          if (!processedUserMessages.current.has(chatId)) {
+            processedUserMessages.current.set(chatId, new Set());
+          }
+          processedUserMessages.current.get(chatId)!.add(lastMessage.id);
           
           // Trigger AI response immediately for text-only messages
           setTimeout(() => {
@@ -706,8 +735,13 @@ export default function Chat() {
 
       // Only mark as processed if there are files (since file messages get AI analysis above)
       // Messages without files should be handled by auto-trigger
-      if (insertedMessage && files.length > 0) {
-        processedUserMessages.current.add(insertedMessage.id);
+      if (insertedMessage && files.length > 0 && chatId) {
+        // Add to processed messages for this specific chat
+        if (!processedUserMessages.current.has(chatId)) {
+          processedUserMessages.current.set(chatId, new Set());
+        }
+        processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+        console.log(`[FILE-MESSAGE] Marked message ${insertedMessage.id} as processed in chat ${chatId}`);
       }
 
       // Update the message with the real ID from database
@@ -2054,9 +2088,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 <VoiceModeButton
                   onMessageSent={(messageId, content, role) => {
                     // Mark voice messages as processed to prevent auto-trigger duplicates
-                    if (role === 'user') {
-                      processedUserMessages.current.add(messageId);
-                      console.log('✅ Voice user message marked as processed:', messageId);
+                    if (role === 'user' && chatId) {
+                      // Add to processed messages for this specific chat
+                      if (!processedUserMessages.current.has(chatId)) {
+                        processedUserMessages.current.set(chatId, new Set());
+                      }
+                      processedUserMessages.current.get(chatId)!.add(messageId);
+                      console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
                       // Refresh messages immediately for user voice input
                       fetchMessages();
                     } else if (role === 'assistant') {
