@@ -90,7 +90,7 @@ export default function Chat() {
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
   const [fileAnalyses, setFileAnalyses] = useState<Map<string, string>>(new Map());
-  const [currentImagePrompt, setCurrentImagePrompt] = useState<string | null>(null);
+  const [currentImagePrompts, setCurrentImagePrompts] = useState<Map<string, string>>(new Map());
   const [imageAnalysisResults, setImageAnalysisResults] = useState<Map<string, ImageAnalysisResult>>(new Map());
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
@@ -107,7 +107,11 @@ export default function Chat() {
       processedUserMessages.current.clear();
       // Reset all loading states when switching chats
       setIsGeneratingResponse(false);
-      setCurrentImagePrompt(null);
+      setCurrentImagePrompts(prev => {
+        const newMap = new Map(prev);
+        newMap.delete(chatId);
+        return newMap;
+      });
       setPendingImageGenerations(new Set());
       setLoading(false);
       fetchMessages();
@@ -239,7 +243,7 @@ export default function Chat() {
       const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
       
       if (isImageRequest) {
-        setCurrentImagePrompt(userMessage);
+        setCurrentImagePrompts(prev => new Map(prev).set(chatId!, userMessage));
       }
       
       console.log('Invoking chat-with-ai-optimized function...');
@@ -287,7 +291,11 @@ export default function Chat() {
         
         // Clear image prompt when response is received
         if (isImageRequest) {
-          setCurrentImagePrompt(null);
+          setCurrentImagePrompts(prev => {
+            const newMap = new Map(prev);
+            newMap.delete(chatId!);
+            return newMap;
+          });
         }
         
         // Save to database
@@ -760,7 +768,11 @@ export default function Chat() {
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
-      setCurrentImagePrompt(null);
+      setCurrentImagePrompts(prev => {
+        const newMap = new Map(prev);
+        if (chatId) newMap.delete(chatId);
+        return newMap;
+      });
     }
   };
 
@@ -1842,17 +1854,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               ))}
               
               {/* Show image processing indicator when generating images */}
-              {currentImagePrompt && chatId && (
+              {chatId && currentImagePrompts.get(chatId) && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <ImageProcessingIndicator 
-                      prompt={currentImagePrompt}
+                      prompt={currentImagePrompts.get(chatId)!}
                     />
                   </div>
                 </div>
               )}
               
-              {loading && !currentImagePrompt && (
+              {loading && (!chatId || !currentImagePrompts.get(chatId)) && (
                 <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted text-foreground rounded-3xl rounded-bl-lg px-5 py-3.5 shadow-sm">
