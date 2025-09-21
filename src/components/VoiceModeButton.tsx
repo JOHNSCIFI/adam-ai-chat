@@ -31,6 +31,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   
   const { user } = useAuth();
 
@@ -123,9 +124,17 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     console.trace('Who called stopVoiceMode?');
     console.log('🛑 Stopping voice mode...');
     
+    // Stop speech recognition
     if (recognitionRef.current) {
       recognitionRef.current.stop();
       recognitionRef.current = null;
+    }
+    
+    // Stop any ongoing audio playback
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current.currentTime = 0;
+      audioRef.current = null;
     }
     
     // Stop any ongoing speech synthesis
@@ -169,6 +178,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       const audioFormat = ttsResponse.format || 'wav';
       const audioData = `data:audio/${audioFormat};base64,${ttsResponse.audioContent}`;
       const audio = new Audio(audioData);
+      audioRef.current = audio; // Store reference for stopping
       
       console.log('🎵 Audio created with format:', audioFormat, 'Size:', ttsResponse.size);
       
@@ -180,25 +190,28 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       audio.onended = () => {
         console.log('✅ OpenAI TTS playbook finished');
         console.log('🔄 TTS ended - setting voice mode back to active');
+        audioRef.current = null; // Clear reference
         setIsPlaying(false);
         
-        // Simply set voice mode back to active and start listening
-        setTimeout(() => {
-          console.log('🎤 Setting isVoiceModeActive back to true and starting listening...');
-          setIsVoiceModeActive(true); // Just turn it back on
-          
-          // Start fresh recognition
+        // Only resume if voice mode is still active and not manually stopped
+        if (isVoiceModeActive && !isProcessing) {
           setTimeout(() => {
-            if (!isProcessing) { // Only start if not processing
-              console.log('🎤 Starting fresh recognition after TTS...');
-              startVoiceMode();
-            }
-          }, 200);
-        }, 500);
+            console.log('🎤 Setting isVoiceModeActive back to true and starting listening...');
+            
+            // Start fresh recognition
+            setTimeout(() => {
+              if (isVoiceModeActive && !isProcessing) { // Only start if not processing and still active
+                console.log('🎤 Starting fresh recognition after TTS...');
+                startVoiceMode();
+              }
+            }, 200);
+          }, 500);
+        }
       };
       
       audio.onerror = (error) => {
         console.error('❌ Audio playback error:', error);
+        audioRef.current = null; // Clear reference
         setIsPlaying(false);
         fallbackToBrowserTTS(text);
       };
@@ -249,19 +262,20 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
         console.log('🔄 Browser TTS ended - setting voice mode back to active');
         setIsPlaying(false);
         
-        // Simply set voice mode back to active and start listening
-        setTimeout(() => {
-          console.log('🎤 Setting isVoiceModeActive back to true after browser TTS...');
-          setIsVoiceModeActive(true); // Just turn it back on
-          
-          // Start fresh recognition
+        // Only resume if voice mode is still active and not manually stopped
+        if (isVoiceModeActive && !isProcessing) {
           setTimeout(() => {
-            if (!isProcessing) { // Only start if not processing
-              console.log('🎤 Starting fresh recognition after browser TTS...');
-              startVoiceMode();
-            }
-          }, 200);
-        }, 500);
+            console.log('🎤 Setting isVoiceModeActive back to true after browser TTS...');
+            
+            // Start fresh recognition
+            setTimeout(() => {
+              if (isVoiceModeActive && !isProcessing) { // Only start if not processing and still active
+                console.log('🎤 Starting fresh recognition after browser TTS...');
+                startVoiceMode();
+              }
+            }, 200);
+          }, 500);
+        }
       };
       
       utterance.onerror = (error) => {
@@ -460,7 +474,8 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   // Main toggle function
   const handleClick = () => {
-    if (isVoiceModeActive) {
+    // If any voice activity is happening, stop it
+    if (isVoiceModeActive || isProcessing || isPlaying || isListening) {
       stopVoiceMode();
     } else {
       startVoiceMode();
@@ -474,6 +489,10 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       if (recognitionRef.current) {
         recognitionRef.current.stop();
         recognitionRef.current = null;
+      }
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -509,7 +528,6 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       variant={getButtonVariant()}
       size="icon"
       onClick={handleClick}
-      disabled={isProcessing}
       className={`
         relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu
         ${isListening 
