@@ -142,6 +142,16 @@ export default function Chat() {
           (payload) => {
             console.log('New message received via realtime:', payload);
             const newMessage = payload.new as Message;
+            
+            // Clear image prompt when assistant message with image attachment is received
+            if (newMessage.role === 'assistant' && 
+                newMessage.file_attachments && 
+                newMessage.file_attachments.length > 0 && 
+                newMessage.file_attachments.some(file => isImageFile(file.type))) {
+              console.log('Image received, clearing currentImagePrompt');
+              setCurrentImagePrompt(null);
+            }
+            
             setMessages(prev => {
               // Check if message already exists (by real ID or temp ID) to prevent duplicates
               const existsById = prev.find(msg => msg.id === newMessage.id);
@@ -285,8 +295,8 @@ export default function Chat() {
         setMessages(prev => [...prev, assistantMessage]);
         scrollToBottom();
         
-        // Clear image prompt when response is received
-        if (isImageRequest) {
+        // Clear image prompt only when we receive actual image data, not just the initial response
+        if (isImageRequest && aiResponse?.message_type === 'image_generated') {
           setCurrentImagePrompt(null);
         }
         
@@ -759,7 +769,7 @@ export default function Chat() {
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
-      setCurrentImagePrompt(null);
+      // Don't clear currentImagePrompt here - let it be cleared when image is received
     }
   };
 
