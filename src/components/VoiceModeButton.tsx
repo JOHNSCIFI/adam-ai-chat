@@ -76,12 +76,19 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       };
       
       recognition.onresult = async (event: any) => {
+        // Check cancellation status immediately when result comes in
+        if (cancelProcessingRef.current) {
+          console.log('🛑 Speech recognition result ignored - already cancelled');
+          setIsListening(false);
+          return;
+        }
+        
         const result = event.results[0];
         if (result.isFinal) {
           const transcript = result[0].transcript.trim();
           console.log('📝 Speech recognized:', transcript);
           
-          // Check if processing was cancelled during speech recognition
+          // Double-check cancellation status before processing
           if (cancelProcessingRef.current) {
             console.log('🛑 Speech recognition cancelled - not processing transcript');
             setIsListening(false);
