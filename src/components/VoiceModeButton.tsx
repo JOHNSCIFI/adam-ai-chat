@@ -32,11 +32,15 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const cancelProcessingRef = useRef<boolean>(false);
   
   const { user } = useAuth();
 
   const startVoiceMode = async () => {
     console.log('🎤 Starting voice mode...');
+    
+    // Reset cancel flag when starting
+    cancelProcessingRef.current = false;
     
     try {
       // Check if browser supports Web Speech API
@@ -123,6 +127,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     console.log('🛑 stopVoiceMode() called - STACK TRACE:');
     console.trace('Who called stopVoiceMode?');
     console.log('🛑 Stopping voice mode...');
+    
+    // Cancel any ongoing processing
+    cancelProcessingRef.current = true;
     
     // Stop speech recognition
     if (recognitionRef.current) {
@@ -404,6 +411,9 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const processUserSpeech = async (transcript: string) => {
     console.log('🎤 Processing user speech:', transcript);
     
+    // Reset cancel flag at start of processing
+    cancelProcessingRef.current = false;
+    
     try {
       // Save user message
       console.log('💾 Saving user message to database...');
@@ -425,6 +435,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       console.log('✅ User message saved successfully');
       onMessageSent(userMessageId, transcript, 'user');
 
+      // Check if processing was cancelled before making AI request
+      if (cancelProcessingRef.current) {
+        console.log('🛑 Processing cancelled before AI request');
+        return;
+      }
+
       // Get AI response
       console.log('🤖 Getting AI response...');
       const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
@@ -437,12 +453,18 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       console.log('🤖 AI response:', { data: aiResponse ? 'has_data' : 'no_data', error: aiError });
 
+      // Check if processing was cancelled after AI response
+      if (cancelProcessingRef.current) {
+        console.log('🛑 Processing cancelled after AI response - not saving or speaking');
+        return;
+      }
+
       if (aiError || !aiResponse?.content) {
         console.error('❌ AI response error:', aiError);
         throw new Error(`AI response failed: ${aiError?.message || 'No response content'}`);
       }
 
-      // Save AI response
+      // Save AI response only if not cancelled
       console.log('💾 Saving AI message to database...');
       const aiMessageId = uuidv4();
       const { error: aiMessageError } = await supabase
@@ -461,6 +483,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
       
       console.log('✅ AI message saved successfully');
       onMessageSent(aiMessageId, aiResponse.content, 'assistant');
+
+      // Check once more before speaking
+      if (cancelProcessingRef.current) {
+        console.log('🛑 Processing cancelled before speaking');
+        return;
+      }
 
       // Speak AI response using client-side TTS
       speakText(aiResponse.content);
