@@ -290,8 +290,9 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         description: "All your chats, projects, and images have been permanently deleted.",
       });
 
-      // Redirect to home page but keep settings modal open
-      window.history.pushState({}, '', '/');
+      // Close settings modal and redirect to home page
+      onOpenChange(false);
+      window.location.href = 'http://preview--adam-ai-chat.lovable.app/';
     } catch (error: any) {
       console.error('Delete all chats error:', error);
       toast({
