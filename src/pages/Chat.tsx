@@ -107,11 +107,7 @@ export default function Chat() {
       processedUserMessages.current.clear();
       // Reset all loading states when switching chats
       setIsGeneratingResponse(false);
-      setCurrentImagePrompts(prev => {
-        const newMap = new Map(prev);
-        newMap.delete(chatId);
-        return newMap;
-      });
+      setCurrentImagePrompts(new Map()); // Clear all image prompts when switching chats
       setPendingImageGenerations(new Set());
       setLoading(false);
       fetchMessages();
