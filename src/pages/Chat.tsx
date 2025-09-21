@@ -30,6 +30,7 @@ import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageA
 
 interface Message {
   id: string;
+  chat_id: string;
   content: string;
   role: 'user' | 'assistant';
   created_at: string;
@@ -133,10 +134,6 @@ export default function Chat() {
       };
 
       window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
-
-      return () => {
-        window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
-      };
       
       // Set up real-time subscription for new messages  
       const subscription = supabase
@@ -149,8 +146,15 @@ export default function Chat() {
             filter: `chat_id=eq.${chatId}`
           }, 
           (payload) => {
-            console.log('New message received via realtime:', payload);
+            console.log(`[REALTIME] Message received for chat ${chatId}:`, payload);
             const newMessage = payload.new as Message;
+            
+            // CRITICAL: Double-check message belongs to current chat to prevent leakage
+            if (newMessage.chat_id !== chatId) {
+              console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
+              return;
+            }
+            
             setMessages(prev => {
               // Check if message already exists (by real ID or temp ID) to prevent duplicates
               const existsById = prev.find(msg => msg.id === newMessage.id);
@@ -161,11 +165,11 @@ export default function Chat() {
               );
               
               if (existsById || existsByContent) {
-                console.log('Message already exists, skipping realtime update');
+                console.log(`[REALTIME] Message already exists in chat ${chatId}, skipping`);
                 return prev;
               }
               
-              console.log('Adding new message from realtime');
+              console.log(`[REALTIME] Adding new message to chat ${chatId}`);
               return [...prev, newMessage];
             });
             scrollToBottom();
@@ -173,9 +177,11 @@ export default function Chat() {
         )
         .subscribe();
 
+      // SINGLE cleanup function that handles both event listener AND subscription
       return () => {
-        subscription.unsubscribe();
+        console.log(`[CLEANUP] Cleaning up chat ${chatId} - removing event listener and unsubscribing`);
         window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
+        subscription.unsubscribe();
       };
     }
   }, [chatId, user]);
@@ -292,6 +298,7 @@ export default function Chat() {
         
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
+          chat_id: originalChatId,
           content: responseContent,
           role: 'assistant',
           created_at: new Date().toISOString(),
@@ -339,6 +346,7 @@ export default function Chat() {
       if (chatId === originalChatId) {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
+          chat_id: originalChatId,
           content: 'I apologize, but I encountered an error. Please try again.',
           role: 'assistant',
           created_at: new Date().toISOString(),
@@ -614,6 +622,7 @@ export default function Chat() {
       // Create clean user message
       const newUserMessage: Message = {
         id: `temp-${Date.now()}`,
+        chat_id: chatId!,
         content: userMessage,
         role: 'user',
         created_at: new Date().toISOString(),
@@ -728,6 +737,7 @@ export default function Chat() {
         // Create assistant message with analysis results from webhook
         const analysisMessage: Message = {
           id: `temp-ai-${Date.now()}`,
+          chat_id: chatId!,
           content: aiAnalysisResponse.trim(),
           role: 'assistant',
           created_at: new Date().toISOString(),
@@ -2122,6 +2132,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   // Add edited image to chat as assistant message
                   const editedImageMessage: Message = {
                     id: `temp-edited-${Date.now()}`,
+                    chat_id: chatId!,
                     content: 'Here is your edited image:',
                     role: 'assistant',
                     created_at: new Date().toISOString(),
