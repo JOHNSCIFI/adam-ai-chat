@@ -28,11 +28,14 @@ serve(async (req) => {
     const uniqueFileName = `${imageType}_${timestamp}_${fileName}`;
     const filePath = `${userId}/${chatId}/${uniqueFileName}`;
 
-    console.log('Saving image to Supabase storage:', filePath);
+    // Determine which bucket to use based on image type
+    const bucketName = imageType === 'generated' ? 'generated-images' : 'chat-images';
+
+    console.log('Saving image to Supabase storage:', filePath, 'in bucket:', bucketName);
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('generated-images')
+      .from(bucketName)
       .upload(filePath, imageData, {
         contentType: 'image/png',
         upsert: true
@@ -45,7 +48,7 @@ serve(async (req) => {
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('generated-images')
+      .from(bucketName)
       .getPublicUrl(filePath);
 
     console.log('Image saved successfully:', urlData.publicUrl);
