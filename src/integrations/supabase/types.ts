@@ -204,6 +204,14 @@ export type Database = {
         Args: Record<PropertyKey, never>
         Returns: undefined
       }
+      get_misplaced_generated_images: {
+        Args: Record<PropertyKey, never>
+        Returns: {
+          bucket_name: string
+          created_at: string
+          file_path: string
+        }[]
+      }
       halfvec_avg: {
         Args: { "": number[] }
         Returns: unknown
