@@ -305,21 +305,41 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     setConfirmDialog({
       isOpen: true,
       title: 'Delete Project',
-      description: 'Are you sure you want to delete this project? All chats in this project will be moved to unorganized chats.',
+      description: 'Are you sure you want to delete this project? All chats in this project will also be permanently deleted.',
       onConfirm: () => executeDeleteProject(projectId)
     });
   };
 
   const executeDeleteProject = async (projectId: string) => {
-
     try {
+      console.log(`[PROJECT-DELETE] Starting deletion process for project: ${projectId}`);
+      
+      // First, delete all chats associated with this project
+      const { error: chatsError } = await supabase
+        .from('chats')
+        .delete()
+        .eq('project_id', projectId);
+
+      if (chatsError) {
+        console.error('Error deleting project chats:', chatsError);
+        throw chatsError;
+      }
+      
+      console.log(`[PROJECT-DELETE] Successfully deleted chats for project: ${projectId}`);
+
+      // Then delete the project itself
       const { error } = await supabase
         .from('projects')
         .delete()
         .eq('id', projectId);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Error deleting project:', error);
+        throw error;
+      }
 
+      console.log(`[PROJECT-DELETE] Successfully deleted project and associated chats: ${projectId}`);
+      
       fetchProjects();
       fetchChats();
     } catch (error: any) {

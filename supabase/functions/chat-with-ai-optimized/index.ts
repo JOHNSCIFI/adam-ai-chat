@@ -55,19 +55,19 @@ async function saveImageToStorage(imageUrl: string, userId: string, prompt: stri
     
     console.log('Uploading image to storage:', fileName);
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('chat-images') // Use chat-images bucket for consistency
+      .from('generated-images') // Use correct generated-images bucket
       .upload(fileName, imageBlob, {
         contentType: 'image/png',
         upsert: false
       });
 
     if (uploadError) {
-      console.error('Failed to upload image to storage:', uploadError);
+      console.error('Failed to upload image to generated-images storage:', uploadError);
       return null;
     }
 
     const { data: { publicUrl } } = supabase.storage
-      .from('chat-images')
+      .from('generated-images')
       .getPublicUrl(fileName);
 
     console.log('Image successfully saved to storage:', publicUrl);

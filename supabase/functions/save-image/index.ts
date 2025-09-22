@@ -32,7 +32,7 @@ serve(async (req) => {
 
     // Upload to Supabase Storage
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('chat-images')
+      .from('generated-images')
       .upload(filePath, imageData, {
         contentType: 'image/png',
         upsert: true
@@ -45,7 +45,7 @@ serve(async (req) => {
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('chat-images')
+      .from('generated-images')
       .getPublicUrl(filePath);
 
     console.log('Image saved successfully:', urlData.publicUrl);
