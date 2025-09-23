@@ -868,7 +868,7 @@ export default function ToolPage() {
       </div>
 
       {/* Input area - dynamically centered on available space */}
-      <div className="bg-background overflow-hidden" style={getMessageInputStyle()}>
+      <div className="overflow-hidden" style={getMessageInputStyle()}>
         <div className="px-4 py-4">
           <div className="w-full">
             {/* File attachments preview */}
@@ -956,20 +956,6 @@ export default function ToolPage() {
                     disabled={loading}
                   >
                     {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                  
-                  {/* Send button */}
-                  <Button
-                    onClick={handleSubmit}
-                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    className="h-8 w-8 p-0 hover:bg-primary/80 rounded-full flex-shrink-0"
-                    size="sm"
-                  >
-                    {loading ? (
-                      <StopIcon className="h-4 w-4" />
-                    ) : (
-                      <SendHorizontalIcon className="h-4 w-4" />
-                    )}
                   </Button>
                 </div>
               </div>
