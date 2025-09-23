@@ -132,6 +132,22 @@ export default function ToolPage() {
       width: '100%'
     };
   };
+
+  // Dynamic positioning for message input based on sidebar state
+  const getMessageInputStyle = () => {
+    const sidebarWidth = collapsed ? 56 : 240; // collapsed vs expanded width
+    const availableWidth = window.innerWidth - sidebarWidth;
+    const maxContentWidth = 768; // max width for readability
+    const contentWidth = Math.min(availableWidth * 0.9, maxContentWidth); // 90% of available width or max
+    
+    return {
+      position: 'absolute' as const,
+      left: '50%',
+      transform: 'translateX(-50%)',
+      width: `${contentWidth}px`,
+      maxWidth: '768px'
+    };
+  };
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -699,8 +715,8 @@ export default function ToolPage() {
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-        <div className="px-4 py-4" style={getContainerStyle()}>
-          <div className="w-full max-w-2xl mx-auto">
+        <div className="px-4 py-4 relative">
+          <div className="mx-auto" style={getMessageInputStyle()}>
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
