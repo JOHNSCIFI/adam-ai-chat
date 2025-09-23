@@ -20,6 +20,8 @@ import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
 import NotFound from '@/pages/NotFound';
+import ExploreTools from '@/pages/ExploreTools';
+import PricingPlans from '@/pages/PricingPlans';
 
 const queryClient = new QueryClient();
 
@@ -34,11 +36,9 @@ function App() {
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Index />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <Index />
+                  </MainLayout>
                 } />
                 <Route path="/chat/:chatId" element={
                   <ProtectedRoute>
@@ -74,6 +74,16 @@ function App() {
                       <Help />
                     </MainLayout>
                   </ProtectedRoute>
+                } />
+                <Route path="/explore-tools" element={
+                  <MainLayout>
+                    <ExploreTools />
+                  </MainLayout>
+                } />
+                <Route path="/pricing" element={
+                  <MainLayout>
+                    <PricingPlans />
+                  </MainLayout>
                 } />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

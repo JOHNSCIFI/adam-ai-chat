@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -7,6 +7,7 @@ import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useMessageLimit } from '@/hooks/useMessageLimit';
 import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
@@ -50,8 +51,10 @@ import { ImageEditModal } from '@/components/ImageEditModal';
 
 export default function Chat() {
   const { chatId } = useParams();
+  const navigate = useNavigate();
   const { user, userProfile } = useAuth();
   const { actualTheme } = useTheme();
+  const { isLimitReached, incrementCount } = useMessageLimit();
   // Remove toast hook since we're not using toasts
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
@@ -549,6 +552,15 @@ export default function Chat() {
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if ((!input.trim() && selectedFiles.length === 0) || !chatId || !user || loading) return;
+
+    // Check message limits
+    if (isLimitReached) {
+      navigate('/pricing');
+      return;
+    }
+
+    // Increment message count
+    incrementCount();
 
     setLoading(true);
     const userMessage = input.trim();

@@ -1,15 +1,17 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Paperclip, X, FileText, ImageIcon, Mic, MicOff, Palette, Image as ImageIcon2 } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useMessageLimit } from '@/hooks/useMessageLimit';
 
 interface FileAttachment {
   id: string;
@@ -24,6 +26,7 @@ export default function Index() {
   const { actualTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { messageCount, isLimitReached, incrementCount } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -33,6 +36,7 @@ export default function Index() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -85,10 +89,6 @@ export default function Index() {
         </div>
       </div>
     );
-  }
-
-  if (!user) {
-    return <Navigate to="/auth" replace />;
   }
 
   // File size limits based on ChatGPT recommendations
@@ -286,6 +286,22 @@ export default function Index() {
 
   const handleNewChat = async (initialMessage: string, files: File[] = []) => {
     if (loading) return;
+
+    // Check message limits before processing
+    if (isLimitReached) {
+      if (user) {
+        // Authenticated user - show pricing
+        navigate('/pricing');
+      } else {
+        // Unauthenticated user - show signup
+        navigate('/auth');
+      }
+      return;
+    }
+
+    // Increment message count
+    incrementCount();
+    
     setLoading(true);
     
     try {
@@ -530,8 +546,31 @@ export default function Index() {
         <div className="w-full max-w-3xl text-center">
           {/* Welcome Message */}
           <h1 className="text-3xl font-normal text-foreground mb-12">
-            How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
+            How can I help, {user ? (userProfile?.display_name || user?.email?.split('@')[0]) : 'there'}?
           </h1>
+
+          {/* Message Limit Warning */}
+          {!user && messageCount > 0 && (
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800">
+                You have {15 - messageCount} messages remaining before signing up. 
+                <Button variant="link" className="p-0 h-auto text-amber-800 underline ml-1" onClick={() => navigate('/auth')}>
+                  Sign up for free
+                </Button>
+              </p>
+            </div>
+          )}
+          
+          {user && messageCount > 0 && (
+            <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                You have {15 - messageCount} messages remaining. 
+                <Button variant="link" className="p-0 h-auto text-blue-800 underline ml-1" onClick={() => navigate('/pricing')}>
+                  Upgrade for unlimited access
+                </Button>
+              </p>
+            </div>
+          )}
           
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
