@@ -12,12 +12,15 @@ import AuthPage from '@/pages/AuthPage';
 import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
-
 import ProjectPage from '@/pages/ProjectPage';
 import Profile from '@/pages/Profile';
 import Settings from '@/pages/Settings';
 import Help from '@/pages/Help';
+import Privacy from '@/pages/Privacy';
+import Terms from '@/pages/Terms';
+import Cookies from '@/pages/Cookies';
 import NotFound from '@/pages/NotFound';
+import CookieConsent from '@/components/CookieConsent';
 
 const queryClient = new QueryClient();
 
@@ -73,9 +76,13 @@ function App() {
                     </MainLayout>
                   </ProtectedRoute>
                 } />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/cookies" element={<Cookies />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Router>
+            <CookieConsent />
             <Toaster />
             <Sonner />
           </ThemeProvider>
