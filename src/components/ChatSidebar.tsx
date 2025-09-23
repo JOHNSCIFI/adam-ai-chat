@@ -757,8 +757,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       {/* Settings Modal */}
       <SettingsModal 
-        isOpen={showSettings}
-        onClose={() => setShowSettings(false)}
+        open={showSettings}
+        onOpenChange={setShowSettings}
       />
 
       {/* Confirmation Dialog */}
@@ -770,7 +770,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
           confirmDialog.onConfirm();
           setConfirmDialog({ isOpen: false, title: '', description: '', onConfirm: () => {} });
         }}
-        onCancel={() => setConfirmDialog({ isOpen: false, title: '', description: '', onConfirm: () => {} })}
+        onClose={() => setConfirmDialog({ isOpen: false, title: '', description: '', onConfirm: () => {} })}
+        variant="destructive"
+        confirmText="Delete"
       />
     </>
   );
