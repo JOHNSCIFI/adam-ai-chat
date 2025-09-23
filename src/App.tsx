@@ -13,15 +13,12 @@ import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
 import ProjectPage from '@/pages/ProjectPage';
-import Profile from '@/pages/Profile';
-import Settings from '@/pages/Settings';
 import Help from '@/pages/Help';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
 import ExploreTools from '@/pages/ExploreTools';
 import PricingPlans from '@/pages/PricingPlans';
-import ToolPage from '@/pages/ToolPage';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -57,20 +54,6 @@ function App() {
                     </MainLayout>
                   </ProtectedRoute>
                 } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Profile />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/settings" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Settings />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
                 <Route path="/help" element={
                   <ProtectedRoute>
                     <MainLayout>
@@ -86,11 +69,6 @@ function App() {
                 <Route path="/pricing-plans" element={
                   <MainLayout>
                     <PricingPlans />
-                  </MainLayout>
-                } />
-                <Route path="/:toolName/:toolId" element={
-                  <MainLayout>
-                    <ToolPage />
                   </MainLayout>
                 } />
                 <Route path="/privacy" element={<Privacy />} />
