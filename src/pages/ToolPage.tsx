@@ -591,15 +591,6 @@ export default function ToolPage() {
       {messages.length === 0 && (
         <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
           <div style={getContainerStyle()} className="flex items-center gap-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate('/explore-tools')}
-              className="flex items-center gap-2"
-            >
-              <ArrowLeft className="h-4 w-4" />
-              Back
-            </Button>
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
                 {toolConfig.icon}
@@ -713,91 +704,113 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-border/40 bg-card/30 backdrop-blur-xl">
-        <div style={getContainerStyle()} className="py-4">
-          {/* File attachments */}
+      {/* Input Area - fixed at bottom */}
+      <div className="fixed bottom-0 left-0 right-0">
+        <div className="px-4 py-4" style={getContainerStyle()}>
+          {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted p-2 rounded-lg text-sm">
+                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   {file.type.startsWith('image/') ? (
                     <ImageIcon className="h-4 w-4" />
                   ) : (
                     <FileText className="h-4 w-4" />
                   )}
                   <span className="truncate max-w-32">{file.name}</span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
+                  <button 
                     onClick={() => removeFile(index)}
-                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3" />
-                  </Button>
+                  </button>
                 </div>
               ))}
             </div>
           )}
-
-          {/* Input row */}
-          <div className="flex items-end gap-2">
-            {(toolConfig.allowImages || toolConfig.allowFiles) && (
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="h-10 w-10 p-0"
-                    disabled={loading}
-                  >
-                    <Paperclip className="h-4 w-4" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-40 p-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      handleFileUpload();
-                      setIsPopoverOpen(false);
-                    }}
-                    className="w-full justify-start gap-2"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                    Attach File
-                  </Button>
-                </PopoverContent>
-              </Popover>
-            )}
-
-            <div className="flex-1 relative">
+          
+          <div className="relative">
+            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              {/* Attachment button - left side inside input */}
+              {(toolConfig.allowImages || toolConfig.allowFiles) && (
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+                    >
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={() => {
+                        handleFileUpload();
+                        setIsPopoverOpen(false);
+                      }}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      Add photos & files
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              )}
+              
               <Textarea
                 ref={textareaRef}
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={`Message ${toolConfig.name}...`}
-                className="min-h-[40px] max-h-[200px] resize-none pr-12 py-2.5"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !e.shiftKey) {
                     e.preventDefault();
                     handleSubmit();
                   }
                 }}
+                placeholder={`Message ${toolConfig.name}...`}
+                className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+                style={{ 
+                  wordWrap: 'break-word', 
+                  overflowWrap: 'break-word',
+                  lineHeight: '1.5rem',
+                  height: '24px',
+                  overflowY: 'hidden'
+                }}
+                disabled={false}
+                rows={1}
               />
               
-              <Button
-                onClick={handleSubmit}
-                disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                className="absolute right-2 bottom-2 h-8 w-8 p-0"
-                size="sm"
-              >
-                {loading ? (
-                  <StopIcon className="h-4 w-4" />
-                ) : (
-                  <SendHorizontalIcon className="h-4 w-4" />
-                )}
-              </Button>
+              <div className="flex items-center gap-1 ml-2 pb-1">
+                {/* Dictation button */}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                  onClick={isRecording ? () => {} : () => {}}
+                  disabled={loading}
+                >
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                </Button>
+                
+                {/* Send button */}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                  className="h-8 w-8 p-0 hover:bg-primary/80 rounded-full flex-shrink-0"
+                  size="sm"
+                >
+                  {loading ? (
+                    <StopIcon className="h-4 w-4" />
+                  ) : (
+                    <SendHorizontalIcon className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
 
