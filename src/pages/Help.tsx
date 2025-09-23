@@ -17,33 +17,18 @@ export default function Help() {
           <p className="text-muted-foreground">Get help with adamGPT and find answers to common questions</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Mail className="h-5 w-5" />
-                Email Support
+        <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/privacy')}>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <Shield className="h-5 w-5 text-primary" />
+                </div>
+                <span>Privacy Policy</span>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Send us an email and we'll get back to you
-              </p>
-              <Button className="w-full" disabled>
-                Send Email (Coming Soon)
-              </Button>
-            </CardContent>
-          </Card>
-
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/privacy')}>
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Shield className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Privacy Policy</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Learn how we collect, use, and protect your personal information
               </p>
               <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -53,14 +38,16 @@ export default function Help() {
           </Card>
 
           <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/terms')}>
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <FileText className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Terms of Service</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <FileText className="h-5 w-5 text-primary" />
+                </div>
+                <span>Terms of Service</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Review the terms and conditions for using adamGPT services
               </p>
               <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
@@ -70,14 +57,16 @@ export default function Help() {
           </Card>
 
           <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/cookies')}>
-            <CardHeader className="pb-3">
-              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                <Cookie className="h-6 w-6 text-primary" />
-              </div>
-              <CardTitle className="text-lg">Cookie Policy</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <Cookie className="h-5 w-5 text-primary" />
+                </div>
+                <span>Cookie Policy</span>
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-6">
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Understand how we use cookies and manage your preferences
               </p>
               <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">

@@ -1,10 +1,26 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft, Home } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 
 export default function Privacy() {
+  const navigate = useNavigate();
+  
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div className="flex items-center gap-4 mb-6">
+        <Button variant="outline" onClick={() => navigate('/help')}>
+          <ArrowLeft className="h-4 w-4 mr-2" />
+          Back to Help
+        </Button>
+        <Button variant="outline" onClick={() => navigate('/')}>
+          <Home className="h-4 w-4 mr-2" />
+          Home
+        </Button>
+      </div>
+      
       <div className="space-y-8">
         <div className="text-center space-y-4">
           <h1 className="text-4xl font-bold tracking-tight">Privacy Policy</h1>
