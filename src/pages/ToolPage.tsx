@@ -699,7 +699,7 @@ export default function ToolPage() {
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-        <div className="flex justify-center px-4 py-4 w-full">
+        <div className="px-4 py-4" style={getContainerStyle()}>
           <div className="w-full max-w-2xl mx-auto">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
