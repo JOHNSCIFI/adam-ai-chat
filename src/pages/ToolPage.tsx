@@ -583,26 +583,87 @@ export default function ToolPage() {
       // Navigate to the new chat URL
       navigate(`/${toolName}/${actualChatId}`, { replace: true });
     }
-    
-    const userMessage: Message = {
-      id: crypto.randomUUID(),
-      chat_id: actualChatId,
-      content: input,
-      role: 'user',
-      created_at: new Date().toISOString(),
-      file_attachments: []
-    };
-    
-    setMessages(prev => [...prev, userMessage]);
 
     try {
       // Handle file uploads if any
       let fileAttachments: FileAttachment[] = [];
+      let webhookData: any = {
+        path: toolName,
+        message: input,
+        chat_id: actualChatId,
+        user_id: user.id
+      };
+
       if (selectedFiles.length > 0) {
-        // Similar file processing logic from Chat.tsx
-        // For now, simplified version
-        console.log('Files selected:', selectedFiles);
+        for (const file of selectedFiles) {
+          if (file.type.startsWith('image/')) {
+            // Convert image to base64
+            const base64Data = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const result = reader.result as string;
+                // Remove data:image/jpeg;base64, prefix
+                const base64 = result.split(',')[1];
+                resolve(base64);
+              };
+              reader.readAsDataURL(file);
+            });
+
+            // Save image to Supabase storage
+            const fileName = `${actualChatId}_${Date.now()}_${file.name}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('chat-images')
+              .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error('Error uploading image:', uploadError);
+              toast.error('Failed to upload image');
+              continue;
+            }
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+              .from('chat-images')
+              .getPublicUrl(fileName);
+
+            const fileAttachment: FileAttachment = {
+              id: crypto.randomUUID(),
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              url: urlData.publicUrl
+            };
+
+            fileAttachments.push(fileAttachment);
+
+            // Set webhook data for image analysis
+            webhookData = {
+              type: 'analyse_image',
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              fileData: base64Data,
+              path: toolName,
+              chat_id: actualChatId,
+              user_id: user.id
+            };
+          }
+        }
       }
+
+      const userMessage: Message = {
+        id: crypto.randomUUID(),
+        chat_id: actualChatId,
+        content: input,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        file_attachments: fileAttachments
+      };
+      
+      setMessages(prev => [...prev, userMessage]);
 
       // Save user message to database
       const { error: saveError } = await supabase
@@ -624,13 +685,7 @@ export default function ToolPage() {
             headers: {
               'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-              path: toolName,
-              message: input,
-              chat_id: actualChatId,
-              user_id: user.id,
-              file_attachments: fileAttachments
-            })
+            body: JSON.stringify(webhookData)
           });
         } catch (webhookError) {
           console.error('Error sending webhook:', webhookError);
