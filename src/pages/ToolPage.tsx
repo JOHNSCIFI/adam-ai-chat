@@ -789,27 +789,48 @@ export default function ToolPage() {
               {messages.map((message, index) => (
                 <div 
                   key={message.id}
-                  className={`group relative flex gap-4 px-4 ${
-                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  className={`flex flex-col gap-2 px-4 ${
+                    message.role === 'user' ? 'items-end' : 'items-start'
                   }`}
-                  onMouseEnter={() => setHoveredMessage(message.id)}
-                  onMouseLeave={() => setHoveredMessage(null)}
                 >
                   <div 
-                    className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                       message.role === 'user' 
                         ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted'
+                        : ''
                     }`}
                   >
+                    {/* File attachments for user messages - show before text */}
+                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && (
+                      <div className="mb-3 space-y-2">
+                        {message.file_attachments.map((file) => (
+                          <div key={file.id} className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? (
+                              <img 
+                                src={file.url} 
+                                alt={file.name}
+                                className="max-w-full h-auto rounded-lg cursor-pointer"
+                                onClick={() => setSelectedImage({ url: file.url, name: file.name })}
+                              />
+                            ) : (
+                              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                                <FileText className="h-4 w-4" />
+                                <span className="text-sm">{file.name}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     <div className="prose prose-sm max-w-none dark:prose-invert">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {message.content}
                       </ReactMarkdown>
                     </div>
                     
-                    {/* File attachments */}
-                    {message.file_attachments && message.file_attachments.length > 0 && (
+                    {/* File attachments for assistant messages - show after text */}
+                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && (
                       <div className="mt-3 space-y-2">
                         {message.file_attachments.map((file) => (
                           <div key={file.id} className="flex items-center gap-2">
@@ -830,23 +851,23 @@ export default function ToolPage() {
                         ))}
                       </div>
                     )}
-                    
-                    {/* Copy button */}
-                    {hoveredMessage === message.id && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="absolute -right-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
-                        onClick={() => copyToClipboard(message.content, message.id)}
-                      >
-                        {copiedMessageId === message.id ? (
-                          <Check className="h-4 w-4 text-green-500" />
-                        ) : (
-                          <Copy className="h-4 w-4" />
-                        )}
-                      </Button>
-                    )}
                   </div>
+                  
+                  {/* Copy button - always visible, positioned based on message role */}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className={`h-6 w-6 p-0 text-muted-foreground hover:text-foreground ${
+                      message.role === 'user' ? 'self-end' : 'self-start'
+                    }`}
+                    onClick={() => copyToClipboard(message.content, message.id)}
+                  >
+                    {copiedMessageId === message.id ? (
+                      <Check className="h-3 w-3 text-green-500" />
+                    ) : (
+                      <Copy className="h-3 w-3" />
+                    )}
+                  </Button>
                 </div>
               ))}
               
