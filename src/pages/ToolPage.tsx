@@ -697,127 +697,130 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Input Area - fixed at bottom */}
-      <div className="fixed bottom-0 left-0 right-0">
-        <div className="px-4 py-4 mx-auto max-w-3xl w-full">
-          {/* File attachments preview */}
-          {selectedFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
-                  {file.type.startsWith('image/') ? (
-                    <ImageIcon className="h-4 w-4" />
-                  ) : (
-                    <FileText className="h-4 w-4" />
-                  )}
-                  <span className="truncate max-w-32">{file.name}</span>
-                  <button 
-                    onClick={() => removeFile(index)}
-                    className="text-muted-foreground hover:text-foreground"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-          
-          <div className="relative max-w-2xl mx-auto">
-            <div className={`flex items-center border rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-              {/* Attachment button - left side inside input */}
-              {(toolConfig.allowImages || toolConfig.allowFiles) && (
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+      {/* Input area - fixed at bottom like ChatGPT */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
+        <div className="flex justify-center px-4 py-4 w-full" style={getContainerStyle()}>
+          <div className="w-full max-w-2xl">
+            {/* File attachments preview */}
+            {selectedFiles.length > 0 && (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {selectedFiles.map((file, index) => (
+                  <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                    {file.type.startsWith('image/') ? (
+                      <ImageIcon className="h-4 w-4" />
+                    ) : (
+                      <FileText className="h-4 w-4" />
+                    )}
+                    <span className="truncate max-w-32">{file.name}</span>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="text-muted-foreground hover:text-foreground"
                     >
-                      <Paperclip className="h-4 w-4 text-muted-foreground" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start gap-2"
-                      onClick={() => {
-                        handleFileUpload();
-                        setIsPopoverOpen(false);
-                      }}
-                    >
-                      <Paperclip className="h-4 w-4" />
-                      Add photos & files
-                    </Button>
-                  </PopoverContent>
-                </Popover>
-              )}
-              
-              <Textarea
-                ref={textareaRef}
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder={`Message ${toolConfig.name}...`}
-                className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
-                style={{ 
-                  wordWrap: 'break-word', 
-                  overflowWrap: 'break-word',
-                  lineHeight: '1.5rem',
-                  height: '24px',
-                  overflowY: 'hidden'
-                }}
-                disabled={false}
-                rows={1}
-              />
-              
-              <div className="flex items-center gap-1 ml-2 sm:ml-3">
-                {/* Dictation button */}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className={`h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                  onClick={isRecording ? () => {} : () => {}}
-                  disabled={loading}
-                >
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            
+            <div className="relative">
+              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+                {/* Attachment button */}
+                {(toolConfig.allowImages || toolConfig.allowFiles) && (
+                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
+                      >
+                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={() => {
+                          handleFileUpload();
+                          setIsPopoverOpen(false);
+                        }}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        Add photos & files
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+                )}
                 
-                {/* Send button - more prominent */}
-                <Button
-                  onClick={handleSubmit}
-                  disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                  className="h-9 w-9 sm:h-10 sm:w-10 p-0 bg-primary hover:bg-primary/90 rounded-full flex-shrink-0 shadow-lg"
-                  size="sm"
-                >
-                  {loading ? (
-                    <StopIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  ) : (
-                    <SendHorizontalIcon className="h-4 w-4 sm:h-5 sm:w-5" />
-                  )}
-                </Button>
+                <Textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder={`Message ${toolConfig.name}...`}
+                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
+                  style={{
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word'
+                  }}
+                  disabled={loading}
+                  rows={1}
+                />
+                
+                <div className="flex items-center gap-1 ml-2 pb-1">
+                  {/* Dictation button */}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                    onClick={isRecording ? () => {} : () => {}}
+                    disabled={loading}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                  
+                  {/* Send button */}
+                  <Button
+                    onClick={handleSubmit}
+                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                    className="h-8 w-8 p-0 hover:bg-primary/80 rounded-full flex-shrink-0"
+                    size="sm"
+                  >
+                    {loading ? (
+                      <StopIcon className="h-4 w-4" />
+                    ) : (
+                      <SendHorizontalIcon className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
               </div>
             </div>
+            
+            <p className="text-xs text-muted-foreground text-center mt-3">
+              {toolConfig.name} can make mistakes. Check important info.
+            </p>
           </div>
-
-          {/* File input */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            className="hidden"
-            onChange={handleFileChange}
-            multiple
-            accept={toolConfig.allowImages && !toolConfig.allowFiles ? "image/*" : "*"}
-          />
         </div>
       </div>
+
+      {/* File input */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        className="hidden"
+        onChange={handleFileChange}
+        multiple
+        accept={toolConfig.allowImages && !toolConfig.allowFiles ? "image/*" : "*"}
+      />
 
       {/* Image popup modal */}
       {selectedImage && (
