@@ -33,6 +33,7 @@ import {
   HelpCircle,
   Bot,
   Menu,
+  ImageIcon,
   FolderPlus,
   ChevronDown,
   ChevronRight,
@@ -52,10 +53,7 @@ import {
   Trophy,
   Flame,
   Gem,
-  Sparkles,
-  Wrench,
-  CreditCard,
-  Crown
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
@@ -63,7 +61,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
 import { ImageGenerationModal } from '@/components/ImageGenerationModal';
-import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+import SettingsModal from './SettingsModal';
 
 interface Chat {
   id: string;
@@ -119,7 +117,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
   
   const { user, signOut, userProfile } = useAuth();
-  const { favoriteTools } = useFavoriteTools();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -227,12 +224,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleExploreTools = () => {
-    navigate('/explore-tools');
-  };
-
-  const handlePricingPlans = () => {
-    navigate('/pricing');
+  const handleImageGeneration = () => {
+    setShowImageGeneration(true);
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -407,6 +400,15 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
+              <Button 
+                onClick={handleImageGeneration}
+                className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                size="sm"
+                variant="ghost"
+                title="Image Generation"
+              >
+                <ImageIcon className="h-5 w-5 flex-shrink-0" />
+              </Button>
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
                   className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
@@ -419,66 +421,28 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               </ProjectModal>
             </div>
           ) : (
-            <div className="mt-1 space-y-1">
+            <div className="mt-1 space-y-2">
               <Button 
                 onClick={handleNewChat}
-                className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                 size="sm"
                 variant="ghost"
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
                 <span className="font-medium">New Chat</span>
               </Button>
-              
-              {/* My Tools - moved here */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                    size="sm"
-                    variant="ghost"
-                  >
-                    <Star className="h-5 w-5 flex-shrink-0" />
-                    <span className="font-medium">My Tools</span>
-                    <ChevronDown className="h-4 w-4 ml-auto" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
-                  <div className="p-1">
-                    {favoriteTools.length === 0 ? (
-                      <div className="px-2 py-6 text-center text-sm text-muted-foreground">
-                        <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                        <p>No favorite tools yet</p>
-                        <p>Add tools from Explore Tools</p>
-                      </div>
-                    ) : (
-                      favoriteTools.map((tool) => {
-                        const getToolIcon = (toolName: string) => {
-                          switch (toolName.toLowerCase()) {
-                            case 'calculate calories': return <Zap className="h-4 w-4 text-blue-500" />;
-                            case 'generate image (ai)': return <Palette className="h-4 w-4 text-purple-500" />;
-                            case 'edit images': return <Sparkles className="h-4 w-4 text-green-500" />;
-                            case 'gpt-4o': return <Bot className="h-4 w-4 text-orange-500" />;
-                            case 'analyze files': return <FileText className="h-4 w-4 text-red-500" />;
-                            default: return <Wrench className="h-4 w-4 text-gray-500" />;
-                          }
-                        };
-
-                        return (
-                          <DropdownMenuItem key={tool.id} className="flex items-center gap-2 px-2 py-1.5">
-                            {getToolIcon(tool.tool_name)}
-                            <span className="text-sm">{tool.tool_name}</span>
-                          </DropdownMenuItem>
-                        );
-                      })
-                    )}
-                  </div>
-                </DropdownMenuContent>
-              </DropdownMenu>
-
+              <Button 
+                onClick={handleImageGeneration}
+                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                size="sm"
+                variant="ghost"
+              >
+                <ImageIcon className="h-5 w-5 flex-shrink-0" />
+                <span className="font-medium">Image Generation</span>
+              </Button>
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
-                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                   size="sm"
                   variant="ghost"
                 >
@@ -657,119 +621,51 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
         <SidebarFooter>
           <SidebarMenu>
-            {/* My Tools - only show when collapsed */}
-            {collapsed && (
-              <SidebarMenuItem>
-                <div className="flex justify-center mb-1">
-                  <Button 
-                    onClick={handleExploreTools}
-                    className="h-10 w-10 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                    size="sm"
-                    variant="ghost"
-                    title="My Tools"
-                  >
-                    <Star className="h-4 w-4 flex-shrink-0" />
-                  </Button>
-                </div>
-              </SidebarMenuItem>
-            )}
-
-            {/* Explore Tools */}
-            {!collapsed && (
-              <SidebarMenuItem>
-                <Button 
-                  onClick={handleExploreTools}
-                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-1"
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Wrench className="h-4 w-4 flex-shrink-0" />
-                  <span className="font-medium">Explore Tools</span>
-                </Button>
-              </SidebarMenuItem>
-            )}
-
-            {/* Pricing Plans */}
-            {!collapsed && (
-              <SidebarMenuItem>
-                <Button 
-                  onClick={handlePricingPlans}
-                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-1"
-                  size="sm"
-                  variant="ghost"
-                >
-                  <CreditCard className="h-4 w-4 flex-shrink-0" />
-                  <span className="font-medium">Pricing Plans</span>
-                </Button>
-              </SidebarMenuItem>
-            )}
-
-            {/* User Profile/Auth Section */}
             <SidebarMenuItem>
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div className={`flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full ${
-                      collapsed ? 'justify-center' : ''
-                    }`}>
-                      <Avatar className="h-6 w-6">
-                        {userProfile?.avatar_url ? (
-                          <img 
-                            src={userProfile.avatar_url} 
-                            alt="Profile" 
-                            className="h-6 w-6 rounded-full object-cover"
-                          />
-                        ) : (
-                          <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                            {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
-                          </AvatarFallback>
-                        )}
-                      </Avatar>
-                      {!collapsed && (
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm text-sidebar-foreground font-medium truncate">
-                            {userProfile?.display_name || user?.email?.split('@')[0] || 'User'}
-                          </p>
-                          <p className="text-xs text-sidebar-foreground/60 truncate">Free</p>
-                        </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <div className={`flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full ${
+                    collapsed ? 'justify-center' : ''
+                  }`}>
+                    <Avatar className="h-6 w-6">
+                      {userProfile?.avatar_url ? (
+                        <img 
+                          src={userProfile.avatar_url} 
+                          alt="Profile" 
+                          className="h-6 w-6 rounded-full object-cover"
+                        />
+                      ) : (
+                        <AvatarFallback className="bg-primary text-primary-foreground text-xs">
+                          {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
+                        </AvatarFallback>
                       )}
-                    </div>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onClick={() => setShowSettings(true)}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => navigate('/help')}>
-                      <HelpCircle className="mr-2 h-4 w-4" />
-                      Help
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleSignOut}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      Sign Out
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <div className="space-y-2">
-                  <Button 
-                    onClick={() => navigate('/auth')}
-                    className="w-full h-10 text-sm"
-                    size="sm"
-                  >
-                    Sign In
-                  </Button>
-                  <Button 
-                    onClick={() => navigate('/auth')}
-                    className="w-full h-10 text-sm"
-                    variant="outline"
-                    size="sm"
-                  >
-                    Sign Up
-                  </Button>
-                </div>
-              )}
+                    </Avatar>
+                    {!collapsed && (
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-sidebar-foreground font-medium truncate">
+                          {userProfile?.display_name || user?.email?.split('@')[0] || 'User'}
+                        </p>
+                        <p className="text-xs text-sidebar-foreground/60 truncate">Free</p>
+                      </div>
+                    )}
+                  </div>
+                </DropdownMenuTrigger>
+                 <DropdownMenuContent align="end" className="w-56">
+                   <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                     <Settings className="mr-2 h-4 w-4" />
+                     Settings
+                   </DropdownMenuItem>
+                   <DropdownMenuItem onClick={() => navigate('/help')}>
+                     <HelpCircle className="mr-2 h-4 w-4" />
+                     Help
+                   </DropdownMenuItem>
+                   <DropdownMenuSeparator />
+                   <DropdownMenuItem onClick={handleSignOut}>
+                     <LogOut className="mr-2 h-4 w-4" />
+                     Sign Out
+                   </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
@@ -790,9 +686,10 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       )}
 
       {/* Settings Modal */}
-      {showSettings && (
-        <div></div>
-      )}
+      <SettingsModal 
+        open={showSettings} 
+        onOpenChange={setShowSettings} 
+      />
 
       {/* Image Generation Modal */}
       <ImageGenerationModal 

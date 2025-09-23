@@ -49,27 +49,6 @@ export type Database = {
           },
         ]
       }
-      favorite_tools: {
-        Row: {
-          created_at: string
-          id: string
-          tool_name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          tool_name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          tool_name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       image_analyses: {
         Row: {
           analysis: string
@@ -117,7 +96,6 @@ export type Database = {
           file_attachments: Json | null
           id: string
           role: string
-          session_id: string | null
         }
         Insert: {
           chat_id: string
@@ -127,7 +105,6 @@ export type Database = {
           file_attachments?: Json | null
           id?: string
           role: string
-          session_id?: string | null
         }
         Update: {
           chat_id?: string
@@ -137,7 +114,6 @@ export type Database = {
           file_attachments?: Json | null
           id?: string
           role?: string
-          session_id?: string | null
         }
         Relationships: [
           {
@@ -210,33 +186,6 @@ export type Database = {
           icon?: string | null
           id?: string
           title?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      user_subscriptions: {
-        Row: {
-          created_at: string
-          id: string
-          plan: string
-          status: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          plan?: string
-          status?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          plan?: string
-          status?: string
           updated_at?: string
           user_id?: string
         }
