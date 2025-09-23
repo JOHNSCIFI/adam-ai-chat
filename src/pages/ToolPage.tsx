@@ -123,25 +123,15 @@ export default function ToolPage() {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
-  // Calculate proper centering based on sidebar state
+  // Always center content on the entire page regardless of sidebar state
   const getContainerStyle = () => {
-    const sidebarWidth = collapsed ? 56 : 280;
-    const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
-    
-    return {
-      marginLeft: `${sidebarWidth}px`,
-      width: availableWidth,
-      maxWidth: 'none',
-      display: 'flex',
-      justifyContent: 'center'
+    return { 
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      maxWidth: '768px',
+      width: '100%'
     };
   };
-
-  // Style for content inside containers to maintain max width and center properly
-  const getContentStyle = () => ({
-    width: '100%',
-    maxWidth: '768px'
-  });
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -593,16 +583,14 @@ export default function ToolPage() {
       {/* Tool Header - Only show when no messages */}
       {messages.length === 0 && (
         <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
-          <div style={getContainerStyle()}>
-            <div style={getContentStyle()} className="flex items-center gap-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  {toolConfig.icon}
-                </div>
-                <div>
-                  <h1 className="text-lg font-semibold">{toolConfig.name}</h1>
-                  <p className="text-sm text-muted-foreground">{toolConfig.description}</p>
-                </div>
+          <div style={getContainerStyle()} className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-lg bg-primary/10">
+                {toolConfig.icon}
+              </div>
+              <div>
+                <h1 className="text-lg font-semibold">{toolConfig.name}</h1>
+                <p className="text-sm text-muted-foreground">{toolConfig.description}</p>
               </div>
             </div>
           </div>
@@ -612,35 +600,107 @@ export default function ToolPage() {
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto">
         <div style={getContainerStyle()}>
-          <div style={getContentStyle()}>
-            {messages.length === 0 ? (
-              // Welcome message
-              <div className="flex items-center justify-center min-h-[60vh]">
-                <div className="text-center max-w-2xl mx-auto p-8">
-                  <div className="mb-6 p-4 rounded-2xl bg-primary/10 w-fit mx-auto">
-                    {toolConfig.icon}
-                  </div>
-                  <h2 className="text-2xl font-bold mb-3">{toolConfig.name}</h2>
-                  <p className="text-muted-foreground text-lg mb-6">
-                    {toolConfig.instructions}
-                  </p>
+          {messages.length === 0 ? (
+            // Welcome message
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="text-center max-w-2xl mx-auto p-8">
+                <div className="mb-6 p-4 rounded-2xl bg-primary/10 w-fit mx-auto">
+                  {toolConfig.icon}
                 </div>
+                <h2 className="text-2xl font-bold mb-3">{toolConfig.name}</h2>
+                <p className="text-muted-foreground text-lg mb-6">
+                  {toolConfig.instructions}
+                </p>
               </div>
-            ) : (
-              // Messages
-              <div className="py-8 space-y-6">
-...
-              </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            // Messages
+            <div className="py-8 space-y-6">
+              {messages.map((message, index) => (
+                <div 
+                  key={message.id}
+                  className={`group relative flex gap-4 px-4 ${
+                    message.role === 'user' ? 'justify-end' : 'justify-start'
+                  }`}
+                  onMouseEnter={() => setHoveredMessage(message.id)}
+                  onMouseLeave={() => setHoveredMessage(null)}
+                >
+                  <div 
+                    className={`relative max-w-[85%] rounded-2xl px-4 py-3 ${
+                      message.role === 'user' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'bg-muted'
+                    }`}
+                  >
+                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
+                    
+                    {/* File attachments */}
+                    {message.file_attachments && message.file_attachments.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {message.file_attachments.map((file) => (
+                          <div key={file.id} className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? (
+                              <img 
+                                src={file.url} 
+                                alt={file.name}
+                                className="max-w-full h-auto rounded-lg cursor-pointer"
+                                onClick={() => setSelectedImage({ url: file.url, name: file.name })}
+                              />
+                            ) : (
+                              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                                <FileText className="h-4 w-4" />
+                                <span className="text-sm">{file.name}</span>
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    
+                    {/* Copy button */}
+                    {hoveredMessage === message.id && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="absolute -right-12 top-2 opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 p-0"
+                        onClick={() => copyToClipboard(message.content, message.id)}
+                      >
+                        {copiedMessageId === message.id ? (
+                          <Check className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+              
+              {/* Loading indicator */}
+              {(loading || isGeneratingResponse) && (
+                <div className="flex justify-start px-4">
+                  <div className="bg-muted rounded-2xl px-4 py-3 max-w-[85%]">
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      <div className="animate-pulse">Thinking...</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div ref={messagesEndRef} />
+            </div>
+          )}
         </div>
       </div>
 
       {/* Input area - fixed at bottom like ChatGPT */}
       <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-        <div style={getContainerStyle()} className="px-4 py-4">
-          <div style={getContentStyle()}>
-            <div className="w-full max-w-2xl mx-auto">
+        <div className="px-4 py-4" style={getContainerStyle()}>
+          <div className="w-full max-w-2xl mx-auto">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
@@ -750,7 +810,6 @@ export default function ToolPage() {
             </p>
           </div>
         </div>
-      </div>
       </div>
 
       {/* File input */}
