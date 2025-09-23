@@ -71,6 +71,8 @@ interface Chat {
   created_at: string;
   updated_at: string;
   project_id?: string;
+  tool_id?: string;
+  tool_name?: string;
 }
 
 
@@ -142,6 +144,12 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     { id: 'generate-image-openai', name: 'Generate Image', icon: '🎨' },
     { id: 'analyse-image-openai', name: 'Analyse Image', icon: '🔍' }
   ];
+
+  // Helper function to get tool icon by tool_id
+  const getToolIcon = (toolId: string) => {
+    const tool = availableTools.find(t => t.id === toolId);
+    return tool?.icon || '🔧';
+  };
 
   const myFavoriteTools = availableTools.filter(tool => favoriteTools.includes(tool.id));
 
@@ -274,7 +282,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
         fetchChats();
         fetchProjects();
         
-        if (window.location.pathname === `/chat/${chatId}`) {
+        if (window.location.pathname === `/chat/${chatId}` || 
+            window.location.pathname.includes(`/${chatId}`) || 
+            window.location.pathname.endsWith(`/${chatId}`)) {
           navigate('/');
         }
       }
@@ -636,18 +646,21 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                           />
                         </div>
                       ) : (
-                         <NavLink
-                           to={`/chat/${chat.id}`}
-                           className={({ isActive }) =>
-                             `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
-                               isActive
-                                 ? 'bg-sidebar-accent text-sidebar-foreground'
-                                 : 'text-sidebar-foreground hover:bg-sidebar-accent'
-                             }`
-                           }
-                         >
-                           <span className="flex-1 truncate text-sm">{chat.title || 'New Chat'}</span>
-                         </NavLink>
+                          <NavLink
+                            to={chat.tool_id ? `/${chat.tool_id}/${chat.id}` : `/chat/${chat.id}`}
+                            className={({ isActive }) =>
+                              `flex items-center gap-2 px-3 py-2 rounded-lg transition-colors ${
+                                isActive
+                                  ? 'bg-sidebar-accent text-sidebar-foreground'
+                                  : 'text-sidebar-foreground hover:bg-sidebar-accent'
+                              }`
+                            }
+                          >
+                            {chat.tool_id && (
+                              <span className="text-sm">{getToolIcon(chat.tool_id)}</span>
+                            )}
+                            <span className="flex-1 truncate text-sm">{chat.title || 'New Chat'}</span>
+                          </NavLink>
                       )}
                       <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/chat:opacity-100 transition-opacity">
                         <DropdownMenu>

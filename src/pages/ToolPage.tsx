@@ -557,6 +557,22 @@ export default function ToolPage() {
         console.log('Files selected:', selectedFiles);
       }
 
+      // Ensure chat exists with tool information
+      const { error: chatError } = await supabase
+        .from('chats')
+        .upsert({
+          id: toolId,
+          user_id: user.id,
+          title: `${toolConfig.name} Chat`,
+          tool_id: toolName,
+          tool_name: toolConfig.name,
+          updated_at: new Date().toISOString()
+        });
+
+      if (chatError) {
+        console.error('Error upserting chat:', chatError);
+      }
+
       // Save user message to database
       const { error: saveError } = await supabase
         .from('messages')

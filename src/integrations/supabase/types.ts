@@ -47,6 +47,8 @@ export type Database = {
           id: string
           project_id: string | null
           title: string
+          tool_id: string | null
+          tool_name: string | null
           updated_at: string
           user_id: string
         }
@@ -55,6 +57,8 @@ export type Database = {
           id?: string
           project_id?: string | null
           title?: string
+          tool_id?: string | null
+          tool_name?: string | null
           updated_at?: string
           user_id: string
         }
@@ -63,6 +67,8 @@ export type Database = {
           id?: string
           project_id?: string | null
           title?: string
+          tool_id?: string | null
+          tool_name?: string | null
           updated_at?: string
           user_id?: string
         }
