@@ -117,6 +117,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
   const [showMyTools, setShowMyTools] = useState(false);
+  const [myToolsTimeout, setMyToolsTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const { user, signOut, userProfile } = useAuth();
   const { favoriteTools } = useFavoriteTools();
@@ -445,8 +446,19 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               {/* My Tools Hover Section */}
               <div 
                 className="relative"
-                onMouseEnter={() => setShowMyTools(true)}
-                onMouseLeave={() => setShowMyTools(false)}
+                onMouseEnter={() => {
+                  if (myToolsTimeout) {
+                    clearTimeout(myToolsTimeout);
+                    setMyToolsTimeout(null);
+                  }
+                  setShowMyTools(true);
+                }}
+                onMouseLeave={() => {
+                  const timeout = setTimeout(() => {
+                    setShowMyTools(false);
+                  }, 2000);
+                  setMyToolsTimeout(timeout);
+                }}
               >
                 <Button 
                   className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
@@ -458,7 +470,21 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 </Button>
                 
                 {showMyTools && myFavoriteTools.length > 0 && (
-                  <div className="absolute left-full top-0 ml-2 bg-popover border rounded-lg shadow-lg p-2 min-w-48 z-50">
+                  <div 
+                    className="absolute left-full top-0 ml-2 bg-popover border rounded-lg shadow-lg p-2 min-w-48 z-50"
+                    onMouseEnter={() => {
+                      if (myToolsTimeout) {
+                        clearTimeout(myToolsTimeout);
+                        setMyToolsTimeout(null);
+                      }
+                    }}
+                    onMouseLeave={() => {
+                      const timeout = setTimeout(() => {
+                        setShowMyTools(false);
+                      }, 2000);
+                      setMyToolsTimeout(timeout);
+                    }}
+                  >
                     <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Favorite Tools</div>
                     {myFavoriteTools.map((tool) => (
                       <Button

@@ -207,13 +207,20 @@ export default function ExploreTools() {
   };
 
   return (
-    <div className="container mx-auto p-6 max-w-7xl">
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Explore Tools</h1>
-        <p className="text-muted-foreground text-lg">
-          Discover and use the most popular AI tools for your everyday tasks.
-        </p>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
+      <div className="container mx-auto p-6 max-w-7xl">
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
+            <Sparkles className="h-4 w-4" />
+            <span className="text-sm font-medium">Discover Amazing AI Tools</span>
+          </div>
+          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+            Explore Tools
+          </h1>
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
+            Discover and use the most powerful AI tools for your everyday tasks. From image generation to complex analysis.
+          </p>
+        </div>
 
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
         <TabsList className="grid w-full grid-cols-7 mb-8">
@@ -226,23 +233,24 @@ export default function ExploreTools() {
 
         {categories.map((category) => (
           <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {filteredTools.map((tool) => (
                 <Card 
                   key={tool.id} 
-                  className="hover:shadow-lg transition-all duration-200 cursor-pointer group border border-border/40 bg-background/50 backdrop-blur-sm"
+                  className="group relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:-translate-y-1"
                 >
-                  <CardHeader className="pb-3">
+                  <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <CardHeader className="pb-4 relative z-10">
                     <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                      <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
                           {tool.icon}
                         </div>
                         <div className="flex-1">
-                          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                          <CardTitle className="text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
                             {tool.name}
                             {tool.isNew && (
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">
+                              <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 animate-pulse">
                                 New
                               </Badge>
                             )}
@@ -271,15 +279,18 @@ export default function ExploreTools() {
                       )}
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0">
-                    <CardDescription className="text-sm text-muted-foreground mb-4 leading-relaxed">
+                  <CardContent className="pt-0 relative z-10">
+                    <CardDescription className="text-base text-muted-foreground mb-6 leading-relaxed">
                       {tool.description}
                     </CardDescription>
                     <Button 
                       onClick={() => handleToolClick(tool)}
-                      className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-3 rounded-xl group-hover:shadow-lg group-hover:shadow-primary/25 transition-all duration-300"
                     >
-                      Use Tool
+                      <span className="flex items-center gap-2">
+                        Use Tool
+                        <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
+                      </span>
                     </Button>
                   </CardContent>
                 </Card>
@@ -288,6 +299,7 @@ export default function ExploreTools() {
           </TabsContent>
         ))}
       </Tabs>
+      </div>
     </div>
   );
 }

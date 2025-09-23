@@ -260,91 +260,101 @@ export default function ToolPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full">
+    <div className="flex-1 flex flex-col h-full bg-gradient-to-br from-background via-background/95 to-background/90">
       {/* Header */}
-      <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 p-4">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => navigate('/explore-tools')}
-            className="flex items-center gap-2"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back
-          </Button>
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-primary/10">
-              {toolConfig.icon}
-            </div>
-            <div>
-              <h1 className="text-lg font-semibold">{toolConfig.name}</h1>
-              <p className="text-sm text-muted-foreground">{toolConfig.description}</p>
+      <div className="border-b bg-card/50 backdrop-blur-xl supports-[backdrop-filter]:bg-card/30 p-6 shadow-sm">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate('/explore-tools')}
+              className="flex items-center gap-2 hover:bg-primary/10 border-border/50"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Tools
+            </Button>
+            <div className="flex items-center gap-4">
+              <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 shadow-inner">
+                {toolConfig.icon}
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  {toolConfig.name}
+                </h1>
+                <p className="text-base text-muted-foreground mt-1">{toolConfig.description}</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-4">
-        {messages.length === 0 ? (
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader className="text-center">
-              <div className="mx-auto mb-4 p-4 rounded-lg bg-primary/10 w-fit">
-                {toolConfig.icon}
-              </div>
-              <CardTitle>{toolConfig.name}</CardTitle>
-              <CardDescription>{toolConfig.instructions}</CardDescription>
-            </CardHeader>
-          </Card>
-        ) : (
-          <div className="max-w-4xl mx-auto space-y-6">
-            {messages.map((msg, index) => (
-              <div
-                key={index}
-                className={`flex gap-3 ${
-                  msg.role === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-              >
+      <div className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-6xl mx-auto">
+          {messages.length === 0 ? (
+            <Card className="max-w-3xl mx-auto border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl shadow-2xl shadow-primary/10">
+              <CardHeader className="text-center py-12">
+                <div className="mx-auto mb-6 p-6 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 w-fit shadow-inner">
+                  {toolConfig.icon}
+                </div>
+                <CardTitle className="text-3xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+                  {toolConfig.name}
+                </CardTitle>
+                <CardDescription className="text-lg leading-relaxed max-w-xl mx-auto">
+                  {toolConfig.instructions}
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          ) : (
+            <div className="space-y-6">
+              {messages.map((msg, index) => (
                 <div
-                  className={`max-w-[80%] p-4 rounded-lg ${
-                    msg.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted'
+                  key={index}
+                  className={`flex gap-4 ${
+                    msg.role === 'user' ? 'justify-end' : 'justify-start'
                   }`}
                 >
-                  <div className="whitespace-pre-wrap break-words">
-                    {msg.content}
-                  </div>
-                  <div className="text-xs opacity-70 mt-2">
-                    {msg.timestamp.toLocaleTimeString()}
+                  <div
+                    className={`max-w-[75%] p-6 rounded-2xl shadow-lg ${
+                      msg.role === 'user'
+                        ? 'bg-gradient-to-r from-primary to-primary/80 text-primary-foreground'
+                        : 'bg-gradient-to-br from-card to-card/60 backdrop-blur-sm border border-border/50'
+                    }`}
+                  >
+                    <div className="whitespace-pre-wrap break-words text-base leading-relaxed">
+                      {msg.content}
+                    </div>
+                    <div className="text-xs opacity-60 mt-3 flex items-center gap-1">
+                      <span>{msg.timestamp.toLocaleTimeString()}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Input Area */}
-      <div className="border-t bg-background p-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="border-t bg-card/30 backdrop-blur-xl p-6">
+        <div className="max-w-6xl mx-auto">
           {/* File Attachments */}
           {selectedFiles.length > 0 && (
-            <div className="mb-3 flex flex-wrap gap-2">
+            <div className="mb-4 flex flex-wrap gap-3">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted p-2 rounded-lg text-sm">
+                <div key={index} className="flex items-center gap-3 bg-gradient-to-r from-card to-card/60 p-3 rounded-xl border border-border/50 text-sm shadow-sm">
                   {file.type.startsWith('image/') ? (
-                    <ImageIcon className="h-4 w-4" />
+                    <ImageIcon className="h-4 w-4 text-primary" />
                   ) : (
-                    <FileText className="h-4 w-4" />
+                    <FileText className="h-4 w-4 text-primary" />
                   )}
-                  <span className="truncate max-w-32">{file.name}</span>
+                  <span className="truncate max-w-32 font-medium">{file.name}</span>
                   <Button
                     size="sm"
                     variant="ghost"
                     onClick={() => removeFile(index)}
-                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground"
+                    className="h-6 w-6 p-0 hover:bg-destructive hover:text-destructive-foreground rounded-full"
                   >
                     ×
                   </Button>
@@ -353,7 +363,7 @@ export default function ToolPage() {
             </div>
           )}
 
-          <div className="flex gap-2">
+          <div className="flex gap-3 p-2 bg-gradient-to-r from-card/50 to-card/30 rounded-2xl border border-border/50 backdrop-blur-sm shadow-inner">
             {(toolConfig.allowImages || toolConfig.allowFiles) && (
               <>
                 <Button
@@ -361,7 +371,7 @@ export default function ToolPage() {
                   variant="outline"
                   size="sm"
                   onClick={handleFileUpload}
-                  className="px-3"
+                  className="px-4 py-2 h-12 border-border/50 hover:bg-primary/10 rounded-xl"
                   disabled={loading}
                 >
                   <Paperclip className="h-4 w-4" />
@@ -381,7 +391,7 @@ export default function ToolPage() {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={`Ask ${toolConfig.name} anything...`}
-              className="min-h-12 resize-none"
+              className="min-h-12 resize-none border-0 bg-transparent focus-visible:ring-0 text-base placeholder:text-muted-foreground/60"
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
@@ -393,7 +403,7 @@ export default function ToolPage() {
             <Button
               onClick={handleSubmit}
               disabled={(!message.trim() && selectedFiles.length === 0) || loading || !canSendMessage}
-              className="px-4"
+              className="px-6 h-12 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 rounded-xl shadow-lg"
             >
               <Send className="h-4 w-4" />
             </Button>
