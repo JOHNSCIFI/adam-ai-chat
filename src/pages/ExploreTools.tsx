@@ -23,6 +23,7 @@ import {
   Eye
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useFavoriteTools } from '@/hooks/useFavoriteTools';
 import { useNavigate } from 'react-router-dom';
 
 interface Tool {
@@ -40,14 +41,11 @@ interface Tool {
 export default function ExploreTools() {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { addFavorite, removeFavorite, isFavorite } = useFavoriteTools();
   const [activeTab, setActiveTab] = useState('popular');
 
   const handleToolClick = (toolId: string) => {
-    if (!user) {
-      navigate('/auth');
-      return;
-    }
-    // Here you would implement the actual tool functionality
+    // Allow tool access without requiring authentication
     console.log(`Clicked tool: ${toolId}`);
   };
 
@@ -239,6 +237,20 @@ export default function ExploreTools() {
     return tools.filter(tool => tool.category === category);
   };
 
+  const handleFavoriteToggle = async (toolName: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
+    
+    if (isFavorite(toolName)) {
+      await removeFavorite(toolName);
+    } else {
+      await addFavorite(toolName);
+    }
+  };
+
   const ToolCard = ({ tool }: { tool: Tool }) => (
     <Card className="hover:shadow-lg transition-all duration-200 cursor-pointer group" onClick={tool.onClick}>
       <CardHeader className="pb-3">
@@ -256,7 +268,17 @@ export default function ExploreTools() {
               </p>
             </div>
           </div>
-          <div className="flex gap-1">
+          <div className="flex gap-1 items-center">
+            {user && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-8 w-8 p-0"
+                onClick={(e) => handleFavoriteToggle(tool.name, e)}
+              >
+                <Star className={`h-4 w-4 ${isFavorite(tool.name) ? 'fill-yellow-400 text-yellow-400' : 'text-muted-foreground'}`} />
+              </Button>
+            )}
             {tool.isNew && <Badge variant="secondary" className="text-xs">New</Badge>}
             {tool.isPopular && <Badge variant="default" className="text-xs">Popular</Badge>}
           </div>
@@ -305,17 +327,6 @@ export default function ExploreTools() {
           </TabsContent>
         ))}
       </Tabs>
-
-      {!user && (
-        <div className="text-center p-6 bg-muted/50 rounded-lg">
-          <p className="text-muted-foreground mb-4">
-            Sign in to access all tools and features
-          </p>
-          <Button onClick={() => navigate('/auth')}>
-            Sign In to Continue
-          </Button>
-        </div>
-      )}
     </div>
   );
 }

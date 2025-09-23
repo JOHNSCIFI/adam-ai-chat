@@ -63,7 +63,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
 import { ImageGenerationModal } from '@/components/ImageGenerationModal';
-import SettingsModal from './SettingsModal';
+import { useFavoriteTools } from '@/hooks/useFavoriteTools';
 
 interface Chat {
   id: string;
@@ -119,6 +119,7 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
   
   const { user, signOut, userProfile } = useAuth();
+  const { favoriteTools } = useFavoriteTools();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -444,26 +445,33 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
                   <div className="p-1">
-                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
-                      <Zap className="h-4 w-4 text-blue-500" />
-                      <span className="text-sm">Calculate Calories</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
-                      <Palette className="h-4 w-4 text-purple-500" />
-                      <span className="text-sm">Generate Image (AI)</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
-                      <Sparkles className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Edit Images</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
-                      <Bot className="h-4 w-4 text-orange-500" />
-                      <span className="text-sm">GPT-4o</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
-                      <FileText className="h-4 w-4 text-red-500" />
-                      <span className="text-sm">Analyze Files</span>
-                    </DropdownMenuItem>
+                    {favoriteTools.length === 0 ? (
+                      <div className="px-2 py-6 text-center text-sm text-muted-foreground">
+                        <Star className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                        <p>No favorite tools yet</p>
+                        <p>Add tools from Explore Tools</p>
+                      </div>
+                    ) : (
+                      favoriteTools.map((tool) => {
+                        const getToolIcon = (toolName: string) => {
+                          switch (toolName.toLowerCase()) {
+                            case 'calculate calories': return <Zap className="h-4 w-4 text-blue-500" />;
+                            case 'generate image (ai)': return <Palette className="h-4 w-4 text-purple-500" />;
+                            case 'edit images': return <Sparkles className="h-4 w-4 text-green-500" />;
+                            case 'gpt-4o': return <Bot className="h-4 w-4 text-orange-500" />;
+                            case 'analyze files': return <FileText className="h-4 w-4 text-red-500" />;
+                            default: return <Wrench className="h-4 w-4 text-gray-500" />;
+                          }
+                        };
+
+                        return (
+                          <DropdownMenuItem key={tool.id} className="flex items-center gap-2 px-2 py-1.5">
+                            {getToolIcon(tool.tool_name)}
+                            <span className="text-sm">{tool.tool_name}</span>
+                          </DropdownMenuItem>
+                        );
+                      })
+                    )}
                   </div>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -782,10 +790,9 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
       )}
 
       {/* Settings Modal */}
-      <SettingsModal 
-        open={showSettings} 
-        onOpenChange={setShowSettings} 
-      />
+      {showSettings && (
+        <div></div>
+      )}
 
       {/* Image Generation Modal */}
       <ImageGenerationModal 

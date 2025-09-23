@@ -26,7 +26,7 @@ export default function Index() {
   const { actualTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { messageCount, isLimitReached, incrementCount } = useMessageLimit();
+  const { messageCount, isLimitReached, hasUnlimitedAccess, incrementCount, getSessionId } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -184,6 +184,15 @@ export default function Index() {
   };
 
   const startRecording = async () => {
+    // Check if user has subscription for voice mode
+    if (!hasUnlimitedAccess && user) {
+      navigate('/pricing');
+      return;
+    } else if (!user) {
+      navigate('/pricing');
+      return;
+    }
+
     try {
       console.log('🎤 Starting speech recognition...');
       
@@ -306,83 +315,102 @@ export default function Index() {
     
     try {
       console.log('Creating new chat with message:', initialMessage);
-      // Create the chat first with default title
-      const { data: chatData, error: chatError } = await supabase
-        .from('chats')
-        .insert([{
-          user_id: user.id,
-          title: 'New Chat'
-        }])
-        .select()
-        .single();
+      
+      let chatData;
+      if (user) {
+        // Create chat for authenticated user
+        const { data, error: chatError } = await supabase
+          .from('chats')
+          .insert([{
+            user_id: user.id,
+            title: 'New Chat'
+          }])
+          .select()
+          .single();
 
-      if (chatError || !chatData) throw chatError;
+        if (chatError || !data) throw chatError;
+        chatData = data;
+      } else {
+        // For anonymous users, create a temporary chat ID
+        chatData = {
+          id: `anonymous_${Date.now()}_${Math.random().toString(36).substring(2)}`,
+          title: 'New Chat',
+          user_id: null
+        };
+      }
+      
       console.log('Chat created:', chatData);
 
-      // Upload files to Supabase storage if any
+      // Upload files to Supabase storage if any (only for authenticated users)
       const uploadedFiles: FileAttachment[] = [];
       
-      for (const file of files) {
-        // Check file size limits
-        const maxSize = getMaxFileSize(file.type);
-        if (file.size > maxSize) {
-          toast({
-            title: "File too large",
-            description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${getFileTypeCategory(file.type)} files.`,
-            variant: "destructive",
+      if (user && files.length > 0) {
+        for (const file of files) {
+          // Check file size limits
+          const maxSize = getMaxFileSize(file.type);
+          if (file.size > maxSize) {
+            toast({
+              title: "File too large",
+              description: `${file.name} exceeds the ${formatFileSize(maxSize)} limit for ${getFileTypeCategory(file.type)} files.`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          const fileExtension = file.name.split('.').pop();
+          const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+          
+          const { data: uploadData, error: uploadError } = await supabase.storage
+            .from('chat-files')
+            .upload(fileName, file);
+
+          if (uploadError) {
+            console.error('File upload error:', uploadError);
+            toast({
+              title: "Upload failed",
+              description: `Failed to upload ${file.name}`,
+              variant: "destructive",
+            });
+            continue;
+          }
+
+          // Get public URL for the uploaded file
+          const { data: urlData } = supabase.storage
+            .from('chat-files')
+            .getPublicUrl(fileName);
+
+          console.log('File uploaded successfully:', {
+            fileName,
+            originalName: file.name,
+            publicUrl: urlData.publicUrl
           });
-          continue;
-        }
 
-        const fileExtension = file.name.split('.').pop();
-        const fileName = `${user.id}/${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('chat-files')
-          .upload(fileName, file);
-
-        if (uploadError) {
-          console.error('File upload error:', uploadError);
-          toast({
-            title: "Upload failed",
-            description: `Failed to upload ${file.name}`,
-            variant: "destructive",
+          uploadedFiles.push({
+            id: uploadData.id || Date.now().toString(),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: urlData.publicUrl
           });
-          continue;
         }
-
-        // Get public URL for the uploaded file
-        const { data: urlData } = supabase.storage
-          .from('chat-files')
-          .getPublicUrl(fileName);
-
-        console.log('File uploaded successfully:', {
-          fileName,
-          originalName: file.name,
-          publicUrl: urlData.publicUrl
-        });
-
-        uploadedFiles.push({
-          id: uploadData.id || Date.now().toString(),
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: urlData.publicUrl
-        });
       }
 
       // Add initial message to the chat if provided
       if (initialMessage.trim() || uploadedFiles.length > 0) {
         console.log('Adding initial message to chat');
         console.log('Upload files before saving to DB:', uploadedFiles);
+        
+        const messageData = {
+          chat_id: chatData.id,
+          content: initialMessage,
+          role: 'user',
+          file_attachments: uploadedFiles as any,
+          ...(user ? {} : { session_id: getSessionId() })
+        };
+
         const { error: messageError } = await supabase
           .from('messages')
-          .insert({
-            chat_id: chatData.id,
-            content: initialMessage,
-            role: 'user',
-            file_attachments: uploadedFiles as any
-          });
+          .insert(messageData);
 
         if (messageError) throw messageError;
         console.log('Initial message added');
@@ -414,7 +442,8 @@ export default function Index() {
               body: JSON.stringify({
                 message: initialMessage,
                 chatId: chatData.id,
-                userId: user.id,
+                userId: user?.id || null,
+                sessionId: user ? null : getSessionId(),
                 type: file.type.split('/')[1] || 'file',
                 fileName: file.name,
                 fileSize: file.size,
@@ -447,24 +476,29 @@ export default function Index() {
               }
               
               // Save actual webhook response as AI message
+              const aiMessageData = {
+                chat_id: chatData.id,
+                content: responseContent,
+                role: 'assistant',
+                ...(user ? {} : { session_id: getSessionId() })
+              };
+
               await supabase
                 .from('messages')
-                .insert({
-                  chat_id: chatData.id,
-                  content: responseContent,
-                  role: 'assistant'
-                });
+                .insert(aiMessageData);
             }
           } catch (webhookError) {
             console.error('Webhook error:', webhookError);
             // Add fallback message
+            const fallbackMessageData = {
+              chat_id: chatData.id,
+              content: 'I received your file but encountered an error processing it. Please try again.',
+              role: 'assistant',
+              ...(user ? {} : { session_id: getSessionId() })
+            };
             await supabase
               .from('messages')
-              .insert({
-                chat_id: chatData.id,
-                content: 'I received your file but encountered an error processing it. Please try again.',
-                role: 'assistant'
-              });
+              .insert(fallbackMessageData);
           }
         } else {
           // Send text-only message to OpenAI via existing chat function
@@ -473,42 +507,55 @@ export default function Index() {
               body: {
                 message: initialMessage,
                 chatId: chatData.id,
-                userId: user.id
+                userId: user?.id || null,
+                sessionId: user ? null : getSessionId()
               }
             });
 
             if (!error && data?.response) {
               // Save OpenAI response
+              const responseMessageData = {
+                chat_id: chatData.id,
+                content: data.response,
+                role: 'assistant',
+                ...(user ? {} : { session_id: getSessionId() })
+              };
               await supabase
                 .from('messages')
-                .insert({
-                  chat_id: chatData.id,
-                  content: data.response,
-                  role: 'assistant'
-                });
+                .insert(responseMessageData);
             }
           } catch (aiError) {
             console.error('AI response error:', aiError);
             // Add fallback message
+            const fallbackMessageData = {
+              chat_id: chatData.id,
+              content: 'I apologize, but I encountered an error processing your message. Please try again.',
+              role: 'assistant',
+              ...(user ? {} : { session_id: getSessionId() })
+            };
             await supabase
               .from('messages')
-              .insert({
-                chat_id: chatData.id,
-                content: 'I apologize, but I encountered an error processing your message. Please try again.',
-                role: 'assistant'
-              });
+              .insert(fallbackMessageData);
           }
         }
       }
 
-      // Navigate to the new chat immediately for smooth experience
-      // The chat page will handle getting the AI response automatically
-      navigate(`/chat/${chatData.id}`);
-      
-      // Force sidebar update after a short delay to ensure the new chat appears
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('force-chat-refresh'));
-      }, 100);
+      // Navigate appropriately based on user status
+      if (user) {
+        // For authenticated users, navigate to chat
+        navigate(`/chat/${chatData.id}`);
+        
+        // Force sidebar update after a short delay to ensure the new chat appears
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+        }, 100);
+      } else {
+        // For anonymous users, show success message and stay on current page
+        toast({
+          title: "Message sent!",
+          description: `${messageCount + 1}/15 messages used. Sign up to unlock unlimited messages.`,
+        });
+      }
 
     } catch (error: any) {
       console.error('Create chat error:', error);

@@ -5,6 +5,8 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Check, X, Star, Sparkles, Crown, Bot, Search, FileText, MessageSquare, Upload, Mic, Zap } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 interface PricingPlan {
   id: string;
@@ -32,6 +34,8 @@ interface ComparisonFeature {
 }
 
 export default function PricingPlans() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   const getPrice = (basePrice: number): number => {
@@ -276,6 +280,15 @@ export default function PricingPlans() {
                   className="w-full" 
                   variant={plan.current ? "secondary" : "default"}
                   disabled={plan.current}
+                  onClick={() => {
+                    if (!plan.current && plan.id !== 'free') {
+                      if (!user) {
+                        navigate('/auth');
+                        return;
+                      }
+                      // Handle subscription logic here
+                    }
+                  }}
                 >
                   {plan.buttonText}
                 </Button>
