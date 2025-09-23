@@ -1726,11 +1726,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="w-full px-2 sm:px-4 py-6" style={getContainerStyle()}>
+        <div className="w-full px-4 py-6" style={getContainerStyle()}>
           {messages.length === 0 ? (
             <div className="flex items-center justify-center h-full min-h-[70vh]">
-              <div className="text-center max-w-sm sm:max-w-md px-4">
-                <h3 className="text-xl sm:text-2xl font-normal mb-6 text-foreground">
+              <div className="text-center max-w-md">
+                <h3 className="text-2xl font-normal mb-6 text-foreground">
                   How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
                 </h3>
               </div>
@@ -1744,8 +1744,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   onMouseEnter={() => setHoveredMessage(message.id)}
                   onMouseLeave={() => setHoveredMessage(null)}
                 >
-                  <div className={`flex ${message.role === 'user' ? 'justify-end mr-1 sm:mr-3' : 'justify-start ml-1 sm:ml-3'}`}>
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[85%] sm:max-w-[70%] relative`}>
+                  <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${
                           message.role === 'user' 
                             ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' 

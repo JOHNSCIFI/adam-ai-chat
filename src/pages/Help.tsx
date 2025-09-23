@@ -10,66 +10,66 @@ export default function Help() {
   const navigate = useNavigate();
   
   return (
-    <div className="flex-1 p-4 sm:p-6 max-w-4xl mx-auto w-full">
+    <div className="flex-1 p-6 max-w-4xl mx-auto">
       <div className="space-y-6">
-        <div className="text-center sm:text-left">
-          <h1 className="text-xl sm:text-2xl font-semibold">Help & Support</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Get help with adamGPT and find answers to common questions</p>
+        <div>
+          <h1 className="text-2xl font-semibold">Help & Support</h1>
+          <p className="text-muted-foreground">Get help with adamGPT and find answers to common questions</p>
         </div>
 
-        <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
           <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/privacy')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center gap-3 text-base sm:text-lg">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
-                  <Shield className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <Shield className="h-5 w-5 text-primary" />
                 </div>
                 <span>Privacy Policy</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Learn how we collect, use, and protect your personal information
               </p>
-              <Button size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 Read Policy
               </Button>
             </CardContent>
           </Card>
 
           <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/terms')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center gap-3 text-base sm:text-lg">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
-                  <FileText className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <FileText className="h-5 w-5 text-primary" />
                 </div>
                 <span>Terms of Service</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Review the terms and conditions for using adamGPT services
               </p>
-              <Button size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 Read Terms
               </Button>
             </CardContent>
           </Card>
 
           <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/cookies')}>
-            <CardHeader className="pb-3 sm:pb-4">
-              <CardTitle className="flex items-center gap-3 text-base sm:text-lg">
-                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
-                  <Cookie className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+            <CardHeader className="pb-4">
+              <CardTitle className="flex items-center gap-3 text-lg">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">
+                  <Cookie className="h-5 w-5 text-primary" />
                 </div>
                 <span>Cookie Policy</span>
               </CardTitle>
             </CardHeader>
-            <CardContent className="pt-0">
-              <p className="text-xs sm:text-sm text-muted-foreground mb-4 sm:mb-6">
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6 ml-13">
                 Understand how we use cookies and manage your preferences
               </p>
-              <Button size="sm" className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 View Cookies
               </Button>
             </CardContent>
@@ -78,7 +78,7 @@ export default function Help() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Frequently Asked Questions</CardTitle>
+            <CardTitle>Frequently Asked Questions</CardTitle>
           </CardHeader>
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
@@ -135,20 +135,20 @@ export default function Help() {
 
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg sm:text-xl">Get in Touch</CardTitle>
+            <CardTitle>Get in Touch</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <p className="text-muted-foreground text-sm sm:text-base">
+              <p className="text-muted-foreground">
                 Can't find what you're looking for? We're here to help! Contact us using one of the methods above 
                 or check out our community forums.
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-                <Button variant="outline" size="sm" disabled className="w-full sm:w-auto">
+              <div className="flex gap-4">
+                <Button variant="outline" disabled>
                   Community Forum (Coming Soon)
                 </Button>
-                <Button variant="outline" size="sm" disabled className="w-full sm:w-auto">
+                <Button variant="outline" disabled>
                   Feature Requests (Coming Soon)
                 </Button>
               </div>

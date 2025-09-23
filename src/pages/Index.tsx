@@ -518,31 +518,31 @@ export default function Index() {
   return (
     <div className="flex-1 flex flex-col bg-background">
       {/* Header - clean like ChatGPT */}
-      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-border bg-background">
-        <div className="text-lg sm:text-xl font-semibold text-foreground">AdamGPT</div>
+      <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-background">
+        <div className="text-xl font-semibold text-foreground">AdamGPT</div>
         <div className="flex items-center space-x-4">
           
         </div>
       </div>
 
       {/* Main Content - centered from all sides */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6" style={{ paddingTop: '20vh' }}>
-        <div className="w-full max-w-sm sm:max-w-3xl text-center">
+      <div className="flex-1 flex flex-col items-center justify-center px-6" style={{ paddingTop: '30vh' }}>
+        <div className="w-full max-w-3xl text-center">
           {/* Welcome Message */}
-          <h1 className="text-xl sm:text-2xl lg:text-3xl font-normal text-foreground mb-8 sm:mb-12">
+          <h1 className="text-3xl font-normal text-foreground mb-12">
             How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
           </h1>
           
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2 justify-center">
+            <div className="mb-4 flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-2 sm:px-3 py-2 text-xs sm:text-sm max-w-full">
+                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   {getFileIcon(file.type)}
-                  <span className="truncate max-w-24 sm:max-w-32">{file.name}</span>
+                  <span className="truncate max-w-32">{file.name}</span>
                   <button 
                     onClick={() => removeFile(index)}
-                    className="text-muted-foreground hover:text-foreground flex-shrink-0"
+                    className="text-muted-foreground hover:text-foreground"
                   >
                     <X className="h-3 w-3" />
                   </button>
@@ -553,7 +553,7 @@ export default function Index() {
 
           {/* Image mode indicator */}
           {isImageMode && (
-            <div className="mb-4 flex items-center justify-center gap-2 flex-wrap animate-fade-in">
+            <div className="mb-4 flex items-center gap-2 flex-wrap animate-fade-in">
               <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                 <ImageIcon2 className="h-3 w-3" />
                 <span>Image</span>
