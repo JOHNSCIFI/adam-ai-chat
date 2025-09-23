@@ -2,9 +2,13 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, Mail, ExternalLink } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Mail, ExternalLink, FileText, Shield, Cookie } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Help() {
+  const navigate = useNavigate();
+  
   return (
     <div className="flex-1 p-6 max-w-4xl mx-auto">
       <div className="space-y-6">
@@ -13,24 +17,7 @@ export default function Help() {
           <p className="text-muted-foreground">Get help with adamGPT and find answers to common questions</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <MessageCircle className="h-5 w-5" />
-                Live Chat
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Chat with our support team in real-time
-              </p>
-              <Button className="w-full" disabled>
-                Start Chat (Coming Soon)
-              </Button>
-            </CardContent>
-          </Card>
-
+        <div className="grid gap-6 md:grid-cols-2">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -51,17 +38,35 @@ export default function Help() {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <ExternalLink className="h-5 w-5" />
+                <FileText className="h-5 w-5" />
                 Documentation
               </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Browse our comprehensive guides and tutorials
+                Browse our legal documents and policies
               </p>
-              <Button className="w-full" disabled>
-                View Docs (Coming Soon)
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button className="w-full">
+                    View Documents
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-full">
+                  <DropdownMenuItem onClick={() => navigate('/privacy')}>
+                    <Shield className="h-4 w-4 mr-2" />
+                    Privacy Policy
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/terms')}>
+                    <FileText className="h-4 w-4 mr-2" />
+                    Terms of Service
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate('/cookies')}>
+                    <Cookie className="h-4 w-4 mr-2" />
+                    Cookie Policy
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </CardContent>
           </Card>
         </div>
