@@ -616,6 +616,25 @@ export default function ToolPage() {
 
       if (saveError) {
         console.error('Error saving user message:', saveError);
+      } else {
+        // Send webhook notification
+        try {
+          await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              path: toolName,
+              message: input,
+              chat_id: actualChatId,
+              user_id: user.id,
+              file_attachments: fileAttachments
+            })
+          });
+        } catch (webhookError) {
+          console.error('Error sending webhook:', webhookError);
+        }
       }
 
     } catch (error) {
