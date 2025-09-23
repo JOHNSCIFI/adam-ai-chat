@@ -26,7 +26,7 @@ export default function Index() {
   const { actualTheme } = useTheme();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { messageCount, isLimitReached, hasUnlimitedAccess, incrementCount, getSessionId } = useMessageLimit();
+  const { messageCount, isLimitReached, incrementCount } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
