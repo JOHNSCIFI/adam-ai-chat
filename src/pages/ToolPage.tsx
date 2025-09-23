@@ -427,6 +427,23 @@ export default function ToolPage() {
           console.error('Error saving AI message:', saveError);
         } else {
           console.log('AI message saved successfully to tool:', originalToolId);
+          
+          // Update chat title based on AI response if this is a new chat
+          const firstWords = responseContent.split(' ').slice(0, 6).join(' ');
+          const newTitle = firstWords.length > 30 ? firstWords.substring(0, 30) + '...' : firstWords;
+          
+          if (newTitle && newTitle !== `${toolConfig.name} Chat`) {
+            const { error: titleError } = await supabase
+              .from('chats')
+              .update({ title: newTitle })
+              .eq('id', originalToolId);
+              
+            if (titleError) {
+              console.error('Error updating chat title:', titleError);
+            } else {
+              console.log('Chat title updated successfully');
+            }
+          }
         }
       } else {
         console.log('No response content received from AI');
@@ -537,9 +554,39 @@ export default function ToolPage() {
 
     setLoading(true);
     
+    // Check if this is the first message in this tool session
+    const isFirstMessage = messages.length === 0;
+    let actualChatId = toolId!;
+    
+    // If this is the first message, create a new chat with proper UUID
+    if (isFirstMessage) {
+      actualChatId = crypto.randomUUID();
+      
+      // Create the chat entry
+      const { error: chatError } = await supabase
+        .from('chats')
+        .insert({
+          id: actualChatId,
+          user_id: user.id,
+          title: `${toolConfig.name} Chat`,
+          tool_id: toolName,
+          tool_name: toolConfig.name,
+          updated_at: new Date().toISOString()
+        });
+
+      if (chatError) {
+        console.error('Error creating chat:', chatError);
+        setLoading(false);
+        return;
+      }
+      
+      // Navigate to the new chat URL
+      navigate(`/${toolName}/${actualChatId}`, { replace: true });
+    }
+    
     const userMessage: Message = {
       id: crypto.randomUUID(),
-      chat_id: toolId!,
+      chat_id: actualChatId,
       content: input,
       role: 'user',
       created_at: new Date().toISOString(),
@@ -557,27 +604,11 @@ export default function ToolPage() {
         console.log('Files selected:', selectedFiles);
       }
 
-      // Ensure chat exists with tool information
-      const { error: chatError } = await supabase
-        .from('chats')
-        .upsert({
-          id: toolId,
-          user_id: user.id,
-          title: `${toolConfig.name} Chat`,
-          tool_id: toolName,
-          tool_name: toolConfig.name,
-          updated_at: new Date().toISOString()
-        });
-
-      if (chatError) {
-        console.error('Error upserting chat:', chatError);
-      }
-
       // Save user message to database
       const { error: saveError } = await supabase
         .from('messages')
         .insert({
-          chat_id: toolId,
+          chat_id: actualChatId,
           content: input,
           role: 'user',
           file_attachments: fileAttachments as any
