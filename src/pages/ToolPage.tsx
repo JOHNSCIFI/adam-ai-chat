@@ -585,20 +585,18 @@ export default function ToolPage() {
     }
 
     try {
-      // Handle file uploads if any
+      // Process file uploads first
       let fileAttachments: FileAttachment[] = [];
-      let webhookData: any = {
-        path: toolName,
-        message: input,
-        chat_id: actualChatId,
-        user_id: user.id
-      };
+      let base64ImageData: string | null = null;
+      let imageFileInfo: any = null;
 
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           if (file.type.startsWith('image/')) {
+            console.log('Processing image file:', file.name);
+            
             // Convert image to base64
-            const base64Data = await new Promise<string>((resolve) => {
+            base64ImageData = await new Promise<string>((resolve) => {
               const reader = new FileReader();
               reader.onload = () => {
                 const result = reader.result as string;
@@ -611,6 +609,8 @@ export default function ToolPage() {
 
             // Save image to Supabase storage
             const fileName = `${actualChatId}_${Date.now()}_${file.name}`;
+            console.log('Uploading to storage:', fileName);
+            
             const { data: uploadData, error: uploadError } = await supabase.storage
               .from('chat-images')
               .upload(fileName, file, {
@@ -624,10 +624,14 @@ export default function ToolPage() {
               continue;
             }
 
+            console.log('Upload successful:', uploadData);
+
             // Get public URL
             const { data: urlData } = supabase.storage
               .from('chat-images')
               .getPublicUrl(fileName);
+
+            console.log('Public URL:', urlData.publicUrl);
 
             const fileAttachment: FileAttachment = {
               id: crypto.randomUUID(),
@@ -639,21 +643,17 @@ export default function ToolPage() {
 
             fileAttachments.push(fileAttachment);
 
-            // Set webhook data for image analysis
-            webhookData = {
-              type: 'analyse_image',
+            // Store image info for webhook
+            imageFileInfo = {
               fileName: file.name,
               fileSize: file.size,
-              fileType: file.type,
-              fileData: base64Data,
-              path: toolName,
-              chat_id: actualChatId,
-              user_id: user.id
+              fileType: file.type
             };
           }
         }
       }
 
+      // Create user message with file attachments
       const userMessage: Message = {
         id: crypto.randomUUID(),
         chat_id: actualChatId,
@@ -663,7 +663,9 @@ export default function ToolPage() {
         file_attachments: fileAttachments
       };
       
+      // Display message in chat first
       setMessages(prev => [...prev, userMessage]);
+      console.log('Message displayed with attachments:', fileAttachments);
 
       // Save user message to database
       const { error: saveError } = await supabase
@@ -678,8 +680,37 @@ export default function ToolPage() {
       if (saveError) {
         console.error('Error saving user message:', saveError);
       } else {
+        console.log('Message saved to database');
+        
         // Send webhook notification
         try {
+          let webhookData: any;
+          
+          if (base64ImageData && imageFileInfo) {
+            // Send image analysis format
+            webhookData = {
+              type: 'analyse_image',
+              fileName: imageFileInfo.fileName,
+              fileSize: imageFileInfo.fileSize,
+              fileType: imageFileInfo.fileType,
+              fileData: base64ImageData,
+              path: toolName,
+              chat_id: actualChatId,
+              user_id: user.id,
+              message: input
+            };
+          } else {
+            // Send text message format
+            webhookData = {
+              path: toolName,
+              message: input,
+              chat_id: actualChatId,
+              user_id: user.id
+            };
+          }
+
+          console.log('Sending to webhook:', { type: webhookData.type || 'text', hasImage: !!base64ImageData });
+          
           await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
             method: 'POST',
             headers: {
@@ -687,6 +718,8 @@ export default function ToolPage() {
             },
             body: JSON.stringify(webhookData)
           });
+          
+          console.log('Webhook sent successfully');
         } catch (webhookError) {
           console.error('Error sending webhook:', webhookError);
         }
