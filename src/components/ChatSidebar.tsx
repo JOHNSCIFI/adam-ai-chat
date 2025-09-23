@@ -434,11 +434,11 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             <div className="mt-1 space-y-2">
               <Button 
                 onClick={handleNewChat}
-                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                 size="sm"
                 variant="ghost"
               >
-                <Plus className="h-5 w-5 flex-shrink-0" />
+                <Plus className="h-4 w-4 flex-shrink-0" />
                 <span className="font-medium">New Chat</span>
               </Button>
 
@@ -449,11 +449,11 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 onMouseLeave={() => setShowMyTools(false)}
               >
                 <Button 
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                   size="sm"
                   variant="ghost"
                 >
-                  <Star className="h-5 w-5 flex-shrink-0" />
+                  <Star className="h-4 w-4 flex-shrink-0" />
                   <span className="font-medium">My Tools</span>
                 </Button>
                 
@@ -481,11 +481,11 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                   size="sm"
                   variant="ghost"
                 >
-                  <FolderPlus className="h-5 w-5 flex-shrink-0" />
+                  <FolderPlus className="h-4 w-4 flex-shrink-0" />
                   <span className="font-medium">New Project</span>
                 </Button>
               </ProjectModal>
