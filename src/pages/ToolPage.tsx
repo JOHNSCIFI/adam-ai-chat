@@ -894,7 +894,7 @@ export default function ToolPage() {
             )}
             
             <div className="relative">
-              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles) && (
                   <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -908,7 +908,7 @@ export default function ToolPage() {
                         <Paperclip className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
                       <Button
                         variant="ghost"
                         size="sm"
