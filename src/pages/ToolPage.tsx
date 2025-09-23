@@ -699,7 +699,7 @@ export default function ToolPage() {
 
       {/* Input Area - fixed at bottom */}
       <div className="fixed bottom-0 left-0 right-0">
-        <div className="px-4 py-4" style={getContainerStyle()}>
+        <div className="px-4 py-4 mx-auto max-w-3xl w-full">
           {/* File attachments preview */}
           {selectedFiles.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
@@ -722,8 +722,8 @@ export default function ToolPage() {
             </div>
           )}
           
-          <div className="relative">
-            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+          <div className="relative max-w-2xl mx-auto">
+            <div className={`flex items-center border rounded-2xl px-3 py-2 sm:px-4 sm:py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
               {/* Attachment button - left side inside input */}
               {(toolConfig.allowImages || toolConfig.allowFiles) && (
                 <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
@@ -777,30 +777,30 @@ export default function ToolPage() {
                 rows={1}
               />
               
-              <div className="flex items-center gap-1 ml-2 pb-1">
+              <div className="flex items-center gap-1 ml-2 sm:ml-3">
                 {/* Dictation button */}
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
+                  className={`h-8 w-8 sm:h-9 sm:w-9 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
                   onClick={isRecording ? () => {} : () => {}}
                   disabled={loading}
                 >
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
                 
-                {/* Send button */}
+                {/* Send button - more prominent */}
                 <Button
                   onClick={handleSubmit}
                   disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                  className="h-8 w-8 p-0 hover:bg-primary/80 rounded-full flex-shrink-0"
+                  className="h-9 w-9 sm:h-10 sm:w-10 p-0 bg-primary hover:bg-primary/90 rounded-full flex-shrink-0 shadow-lg"
                   size="sm"
                 >
                   {loading ? (
-                    <StopIcon className="h-4 w-4" />
+                    <StopIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   ) : (
-                    <SendHorizontalIcon className="h-4 w-4" />
+                    <SendHorizontalIcon className="h-4 w-4 sm:h-5 sm:w-5" />
                   )}
                 </Button>
               </div>
