@@ -83,21 +83,21 @@ export default function Profile() {
   };
 
   return (
-    <div className="flex-1 p-6 max-w-2xl mx-auto">
+    <div className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full">
       <Card>
         <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">Profile Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div className="flex items-center space-x-4">
-            <Avatar className="h-20 w-20">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start space-y-4 sm:space-y-0 sm:space-x-4">
+            <Avatar className="h-16 w-16 sm:h-20 sm:w-20">
               <AvatarImage src={profile.avatar_url} />
-              <AvatarFallback className="text-lg">
+              <AvatarFallback className="text-base sm:text-lg">
                 {profile.display_name ? getInitials(profile.display_name) : 'U'}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <Button variant="outline" disabled>
+            <div className="text-center sm:text-left">
+              <Button variant="outline" size="sm" disabled>
                 Change Avatar (Coming Soon)
               </Button>
               <p className="text-sm text-muted-foreground mt-1">
@@ -128,15 +128,15 @@ export default function Profile() {
               />
             </div>
 
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" size="sm" disabled={loading} className="w-full sm:w-auto">
               {loading ? 'Saving...' : 'Save Changes'}
             </Button>
           </form>
 
           <div className="pt-6 border-t">
-            <h3 className="text-lg font-semibold mb-2">Account Information</h3>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <p>User ID: {user?.id}</p>
+            <h3 className="text-base sm:text-lg font-semibold mb-2">Account Information</h3>
+            <div className="space-y-2 text-xs sm:text-sm text-muted-foreground">
+              <p className="break-all">User ID: {user?.id}</p>
               <p>Account created: {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>

@@ -232,26 +232,26 @@ export default function Settings() {
   };
 
   return (
-    <div className="flex-1 p-6 max-w-2xl mx-auto">
+    <div className="flex-1 p-4 sm:p-6 max-w-2xl mx-auto w-full">
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Settings</h1>
-          <p className="text-muted-foreground">Manage your adamGPT preferences</p>
+        <div className="text-center sm:text-left">
+          <h1 className="text-xl sm:text-2xl font-semibold">Settings</h1>
+          <p className="text-muted-foreground text-sm sm:text-base">Manage your adamGPT preferences</p>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Appearance</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <Label>Theme</Label>
                 <p className="text-sm text-muted-foreground">
                   Choose your preferred theme
                 </p>
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-center sm:justify-end">
                 <Button variant="outline" size="sm">
                   <Sun className="h-4 w-4" />
                 </Button>
@@ -268,7 +268,7 @@ export default function Settings() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Notifications</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
@@ -305,7 +305,7 @@ export default function Settings() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Chat Settings</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Chat Settings</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -340,7 +340,7 @@ export default function Settings() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Danger Zone</CardTitle>
+            <CardTitle className="text-lg sm:text-xl">Danger Zone</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
@@ -359,8 +359,8 @@ export default function Settings() {
           </CardContent>
         </Card>
 
-        <div className="flex justify-end">
-          <Button onClick={handleSave}>Save Changes</Button>
+        <div className="flex justify-center sm:justify-end">
+          <Button onClick={handleSave} className="w-full sm:w-auto">Save Changes</Button>
         </div>
       </div>
     </div>

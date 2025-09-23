@@ -380,9 +380,14 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
   return (
     <>
-      <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+      <Sidebar 
+        className="border-r border-sidebar-border bg-sidebar" 
+        collapsible="icon"
+        variant="sidebar"
+      >
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
-          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
+          {/* Desktop only trigger - mobile has persistent trigger in MainLayout */}
+          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3 hidden md:flex`}>
             <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
               <Bot className="h-5 w-5 group-hover:hidden" />
               <Menu className="h-4 w-4 hidden group-hover:block" />
