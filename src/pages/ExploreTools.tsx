@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFavoriteTools } from '@/hooks/useFavoriteTools';
-import { useNavigate } from 'react-router-dom';
 import { 
   Bot, 
   ImageIcon, 
@@ -174,8 +174,8 @@ const tools: Tool[] = [
 const categories = ['Popular', 'AI Models', 'Writing', 'Education', 'Lifestyle', 'Programming', 'Image Generation'];
 
 export default function ExploreTools() {
-  const { user } = useAuth();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('Popular');
   const { favoriteTools, addFavorite, removeFavorite, isLoading } = useFavoriteTools();
 
@@ -238,6 +238,7 @@ export default function ExploreTools() {
                 <Card 
                   key={tool.id} 
                   className="group relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:-translate-y-1"
+                  onClick={() => handleToolClick(tool)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <CardHeader className="pb-4 relative z-10">
@@ -280,18 +281,9 @@ export default function ExploreTools() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 relative z-10">
-                    <CardDescription className="text-base text-muted-foreground mb-6 leading-relaxed">
+                    <CardDescription className="text-base text-muted-foreground leading-relaxed">
                       {tool.description}
                     </CardDescription>
-                    <Button 
-                      onClick={() => handleToolClick(tool)}
-                      className="w-full bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground font-semibold py-3 rounded-xl group-hover:shadow-lg group-hover:shadow-primary/25 transition-all duration-300"
-                    >
-                      <span className="flex items-center gap-2">
-                        Use Tool
-                        <Sparkles className="h-4 w-4 group-hover:animate-pulse" />
-                      </span>
-                    </Button>
                   </CardContent>
                 </Card>
               ))}
