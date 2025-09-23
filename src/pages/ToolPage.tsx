@@ -132,6 +132,23 @@ export default function ToolPage() {
       width: '100%'
     };
   };
+
+  // Dynamic positioning for message input to center on available space
+  const getMessageInputStyle = () => {
+    const sidebarWidth = collapsed ? 56 : 240; // sidebar widths
+    const availableWidth = window.innerWidth - sidebarWidth;
+    const inputMaxWidth = 768; // max width of input container
+    const inputWidth = Math.min(availableWidth - 32, inputMaxWidth); // 32px for padding
+    const leftOffset = sidebarWidth + (availableWidth - inputWidth) / 2;
+    
+    return {
+      position: 'fixed' as const,
+      bottom: 0,
+      left: `${leftOffset}px`,
+      width: `${inputWidth}px`,
+      zIndex: 50
+    };
+  };
   
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
@@ -697,10 +714,10 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Input area - fixed at bottom like ChatGPT */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-        <div className="px-4 py-4" style={getContainerStyle()}>
-          <div className="w-full max-w-2xl mx-auto">
+      {/* Input area - dynamically centered on available space */}
+      <div className="bg-background overflow-hidden" style={getMessageInputStyle()}>
+        <div className="px-4 py-4">
+          <div className="w-full">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && (
               <div className="mb-4 flex flex-wrap gap-2">
