@@ -123,7 +123,7 @@ export default function ToolPage() {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
-  // Calculate proper centering based on sidebar state
+  // Calculate proper centering for message input based on sidebar state
   const getContainerStyle = () => {
     const sidebarWidth = collapsed ? 56 : 280;
     const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
@@ -134,6 +134,16 @@ export default function ToolPage() {
       maxWidth: 'none',
       display: 'flex',
       justifyContent: 'center'
+    };
+  };
+
+  // Style for tool header - truly centered on entire page
+  const getHeaderContainerStyle = () => {
+    return {
+      display: 'flex',
+      justifyContent: 'center',
+      width: '100vw',
+      marginLeft: '0'
     };
   };
 
@@ -593,7 +603,7 @@ export default function ToolPage() {
       {/* Tool Header - Only show when no messages */}
       {messages.length === 0 && (
         <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
-          <div style={getContainerStyle()}>
+          <div style={getHeaderContainerStyle()}>
             <div style={getContentStyle()} className="flex items-center gap-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
