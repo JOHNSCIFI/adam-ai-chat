@@ -418,19 +418,59 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               </ProjectModal>
             </div>
           ) : (
-            <div className="mt-1 space-y-2">
+            <div className="mt-1 space-y-1">
               <Button 
                 onClick={handleNewChat}
-                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                 size="sm"
                 variant="ghost"
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
                 <span className="font-medium">New Chat</span>
               </Button>
+              
+              {/* My Tools - moved here */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                    size="sm"
+                    variant="ghost"
+                  >
+                    <Star className="h-5 w-5 flex-shrink-0" />
+                    <span className="font-medium">My Tools</span>
+                    <ChevronDown className="h-4 w-4 ml-auto" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  <div className="p-1">
+                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
+                      <Zap className="h-4 w-4 text-blue-500" />
+                      <span className="text-sm">Calculate Calories</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
+                      <Palette className="h-4 w-4 text-purple-500" />
+                      <span className="text-sm">Generate Image (AI)</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
+                      <Sparkles className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Edit Images</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
+                      <Bot className="h-4 w-4 text-orange-500" />
+                      <span className="text-sm">GPT-4o</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="flex items-center gap-2 px-2 py-1.5">
+                      <FileText className="h-4 w-4 text-red-500" />
+                      <span className="text-sm">Analyze Files</span>
+                    </DropdownMenuItem>
+                  </div>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                   size="sm"
                   variant="ghost"
                 >
@@ -612,15 +652,15 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
             {/* My Tools - only show when collapsed */}
             {collapsed && (
               <SidebarMenuItem>
-                <div className="flex justify-center mb-2">
+                <div className="flex justify-center mb-1">
                   <Button 
                     onClick={handleExploreTools}
-                    className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                    className="h-10 w-10 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
                     size="sm"
                     variant="ghost"
                     title="My Tools"
                   >
-                    <Star className="h-5 w-5 flex-shrink-0" />
+                    <Star className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </div>
               </SidebarMenuItem>
@@ -631,37 +671,13 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               <SidebarMenuItem>
                 <Button 
                   onClick={handleExploreTools}
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-2"
+                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-1"
                   size="sm"
                   variant="ghost"
                 >
-                  <Wrench className="h-5 w-5 flex-shrink-0" />
+                  <Wrench className="h-4 w-4 flex-shrink-0" />
                   <span className="font-medium">Explore Tools</span>
                 </Button>
-              </SidebarMenuItem>
-            )}
-
-            {/* My Tools - expanded */}
-            {!collapsed && (
-              <SidebarMenuItem>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button 
-                      className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-2"
-                      size="sm"
-                      variant="ghost"
-                    >
-                      <Star className="h-5 w-5 flex-shrink-0" />
-                      <span className="font-medium">My Tools</span>
-                      <ChevronDown className="h-4 w-4 ml-auto" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-48">
-                    <div className="p-2 text-sm text-muted-foreground text-center">
-                      No tools purchased yet
-                    </div>
-                  </DropdownMenuContent>
-                </DropdownMenu>
               </SidebarMenuItem>
             )}
 
@@ -670,11 +686,11 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               <SidebarMenuItem>
                 <Button 
                   onClick={handlePricingPlans}
-                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-2"
+                  className="ml-1 h-10 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200 mb-1"
                   size="sm"
                   variant="ghost"
                 >
-                  <CreditCard className="h-5 w-5 flex-shrink-0" />
+                  <CreditCard className="h-4 w-4 flex-shrink-0" />
                   <span className="font-medium">Pricing Plans</span>
                 </Button>
               </SidebarMenuItem>
