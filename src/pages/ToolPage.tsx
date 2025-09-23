@@ -123,21 +123,14 @@ export default function ToolPage() {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
-  // Calculate proper centering based on sidebar state
+  // Always center content on the entire page regardless of sidebar state
   const getContainerStyle = () => {
-    if (collapsed) {
-      return { 
-        marginLeft: 'calc(56px + (100vw - 56px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    } else {
-      return { 
-        marginLeft: 'calc(280px + (100vw - 280px - 768px) / 2)', 
-        marginRight: 'auto',
-        maxWidth: '768px'
-      };
-    }
+    return { 
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      maxWidth: '768px',
+      width: '100%'
+    };
   };
   
   const [messages, setMessages] = useState<Message[]>([]);
