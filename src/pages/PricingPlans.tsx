@@ -32,6 +32,8 @@ interface ComparisonFeature {
 }
 
 export default function PricingPlans() {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
 
   const getPrice = (basePrice: number): number => {
