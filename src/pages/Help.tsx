@@ -17,7 +17,7 @@ export default function Help() {
           <p className="text-muted-foreground">Get help with adamGPT and find answers to common questions</p>
         </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -35,38 +35,54 @@ export default function Help() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <FileText className="h-5 w-5" />
-                Documentation
-              </CardTitle>
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/privacy')}>
+            <CardHeader className="pb-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <Shield className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-lg">Privacy Policy</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Browse our legal documents and policies
+              <p className="text-sm text-muted-foreground mb-6">
+                Learn how we collect, use, and protect your personal information
               </p>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button className="w-full">
-                    View Documents
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-full">
-                  <DropdownMenuItem onClick={() => navigate('/privacy')}>
-                    <Shield className="h-4 w-4 mr-2" />
-                    Privacy Policy
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/terms')}>
-                    <FileText className="h-4 w-4 mr-2" />
-                    Terms of Service
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/cookies')}>
-                    <Cookie className="h-4 w-4 mr-2" />
-                    Cookie Policy
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                Read Policy
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/terms')}>
+            <CardHeader className="pb-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <FileText className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-lg">Terms of Service</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6">
+                Review the terms and conditions for using adamGPT services
+              </p>
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                Read Terms
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/cookies')}>
+            <CardHeader className="pb-3">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+                <Cookie className="h-6 w-6 text-primary" />
+              </div>
+              <CardTitle className="text-lg">Cookie Policy</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-6">
+                Understand how we use cookies and manage your preferences
+              </p>
+              <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                View Cookies
+              </Button>
             </CardContent>
           </Card>
         </div>
