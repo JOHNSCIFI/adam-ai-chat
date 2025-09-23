@@ -785,7 +785,7 @@ export default function ToolPage() {
             </div>
           ) : (
             // Messages
-            <div className="py-8 space-y-6">
+            <div className="py-8 pb-32 space-y-6">
               {messages.map((message, index) => (
                 <div 
                   key={message.id}
