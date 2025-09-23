@@ -689,12 +689,11 @@ export default function ToolPage() {
           if (base64ImageData && imageFileInfo) {
             // Send image analysis format
             webhookData = {
-              type: 'analyse_image',
+              type: toolName, // Use tool name as type
               fileName: imageFileInfo.fileName,
               fileSize: imageFileInfo.fileSize,
               fileType: imageFileInfo.fileType,
               fileData: base64ImageData,
-              path: toolName,
               chat_id: actualChatId,
               user_id: user.id,
               message: input
@@ -702,14 +701,14 @@ export default function ToolPage() {
           } else {
             // Send text message format
             webhookData = {
-              path: toolName,
+              type: toolName, // Use tool name as type
               message: input,
               chat_id: actualChatId,
               user_id: user.id
             };
           }
 
-          console.log('Sending to webhook:', { type: webhookData.type || 'text', hasImage: !!base64ImageData });
+          console.log('Sending to webhook:', { type: webhookData.type, hasImage: !!base64ImageData });
           
           await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
             method: 'POST',
