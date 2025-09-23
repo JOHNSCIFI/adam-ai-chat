@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      anonymous_messages: {
+        Row: {
+          content: string
+          created_at: string
+          file_attachments: Json | null
+          id: string
+          role: string
+          session_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          file_attachments?: Json | null
+          id?: string
+          role: string
+          session_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          file_attachments?: Json | null
+          id?: string
+          role?: string
+          session_id?: string
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
           created_at: string
@@ -48,6 +75,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      favorite_tools: {
+        Row: {
+          created_at: string
+          id: string
+          tool_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          tool_name: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          tool_name?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       image_analyses: {
         Row: {
@@ -96,6 +144,7 @@ export type Database = {
           file_attachments: Json | null
           id: string
           role: string
+          session_id: string | null
         }
         Insert: {
           chat_id: string
@@ -105,6 +154,7 @@ export type Database = {
           file_attachments?: Json | null
           id?: string
           role: string
+          session_id?: string | null
         }
         Update: {
           chat_id?: string
@@ -114,6 +164,7 @@ export type Database = {
           file_attachments?: Json | null
           id?: string
           role?: string
+          session_id?: string | null
         }
         Relationships: [
           {
@@ -186,6 +237,66 @@ export type Database = {
           icon?: string | null
           id?: string
           title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      tool_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string | null
+          title: string
+          tool_id: string
+          tool_name: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          title?: string
+          tool_id: string
+          tool_name: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          title?: string
+          tool_id?: string
+          tool_name?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      user_subscriptions: {
+        Row: {
+          created_at: string
+          id: string
+          plan: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          plan?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          plan?: string
+          status?: string
           updated_at?: string
           user_id?: string
         }

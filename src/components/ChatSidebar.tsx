@@ -33,7 +33,6 @@ import {
   HelpCircle,
   Bot,
   Menu,
-  ImageIcon,
   FolderPlus,
   ChevronDown,
   ChevronRight,
@@ -53,14 +52,17 @@ import {
   Trophy,
   Flame,
   Gem,
-  Sparkles
+  Sparkles,
+  Search,
+  DollarSign,
+  CreditCard
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
-import { ImageGenerationModal } from '@/components/ImageGenerationModal';
+import { useFavoriteTools } from '@/hooks/useFavoriteTools';
 import SettingsModal from './SettingsModal';
 
 interface Chat {
@@ -111,12 +113,13 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState('');
   const [showSettings, setShowSettings] = useState(false);
-  const [showImageGeneration, setShowImageGeneration] = useState(false);
   const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
+  const [showMyTools, setShowMyTools] = useState(false);
   
   const { user, signOut, userProfile } = useAuth();
+  const { favoriteTools } = useFavoriteTools();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -128,6 +131,18 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const location = useLocation();
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
+
+  // Tool definitions for My Tools
+  const availableTools = [
+    { id: 'calculate-calories', name: 'Calculate Calories', icon: '🥗' },
+    { id: 'openai-gpt-4o', name: 'OpenAI GPT-4o', icon: '🤖' },
+    { id: 'deepseek', name: 'DeepSeek', icon: '🧠' },
+    { id: 'google-gemini', name: 'Google Gemini', icon: '✨' },
+    { id: 'generate-image-openai', name: 'Generate Image', icon: '🎨' },
+    { id: 'analyse-image-openai', name: 'Analyse Image', icon: '🔍' }
+  ];
+
+  const myFavoriteTools = availableTools.filter(tool => favoriteTools.includes(tool.id));
 
   // Fetch functions
   const fetchChats = async () => {
@@ -224,8 +239,12 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
     }
   };
 
-  const handleImageGeneration = () => {
-    setShowImageGeneration(true);
+  const handleExploreTools = () => {
+    navigate('/explore-tools');
+  };
+
+  const handlePricingPlans = () => {
+    navigate('/pricing-plans');
   };
 
   const handleDeleteChat = async (chatId: string) => {
@@ -400,15 +419,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
               >
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
-              <Button 
-                onClick={handleImageGeneration}
-                className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                size="sm"
-                variant="ghost"
-                title="Image Generation"
-              >
-                <ImageIcon className="h-5 w-5 flex-shrink-0" />
-              </Button>
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
                   className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
@@ -431,15 +441,44 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <Plus className="h-5 w-5 flex-shrink-0" />
                 <span className="font-medium">New Chat</span>
               </Button>
-              <Button 
-                onClick={handleImageGeneration}
-                className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                size="sm"
-                variant="ghost"
+
+              {/* My Tools Hover Section */}
+              <div 
+                className="relative"
+                onMouseEnter={() => setShowMyTools(true)}
+                onMouseLeave={() => setShowMyTools(false)}
               >
-                <ImageIcon className="h-5 w-5 flex-shrink-0" />
-                <span className="font-medium">Image Generation</span>
-              </Button>
+                <Button 
+                  className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Star className="h-5 w-5 flex-shrink-0" />
+                  <span className="font-medium">My Tools</span>
+                </Button>
+                
+                {showMyTools && myFavoriteTools.length > 0 && (
+                  <div className="absolute left-full top-0 ml-2 bg-popover border rounded-lg shadow-lg p-2 min-w-48 z-50">
+                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Favorite Tools</div>
+                    {myFavoriteTools.map((tool) => (
+                      <Button
+                        key={tool.id}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2 h-8 px-2 text-sm"
+                        onClick={() => {
+                          const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                          navigate(`/${tool.id}/${toolId}`);
+                        }}
+                      >
+                        <span className="text-base">{tool.icon}</span>
+                        {tool.name}
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
                   className="ml-1 h-12 w-full justify-start gap-2 px-3 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
@@ -621,6 +660,37 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
         <SidebarFooter>
           <SidebarMenu>
+            {/* Explore Tools */}
+            {!collapsed && (
+              <SidebarMenuItem>
+                <Button 
+                  onClick={handleExploreTools}
+                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="font-medium">Explore Tools</span>
+                </Button>
+              </SidebarMenuItem>
+            )}
+
+            {/* Pricing Plans */}
+            {!collapsed && (
+              <SidebarMenuItem>
+                <Button 
+                  onClick={handlePricingPlans}
+                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
+                  size="sm"
+                  variant="ghost"
+                >
+                  <CreditCard className="h-4 w-4" />
+                  <span className="font-medium">Pricing Plans</span>
+                </Button>
+              </SidebarMenuItem>
+            )}
+
+            {/* User Profile */}
             <SidebarMenuItem>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -687,25 +757,20 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       {/* Settings Modal */}
       <SettingsModal 
-        open={showSettings} 
-        onOpenChange={setShowSettings} 
-      />
-
-      {/* Image Generation Modal */}
-      <ImageGenerationModal 
-        isOpen={showImageGeneration}
-        onClose={() => setShowImageGeneration(false)}
+        isOpen={showSettings}
+        onClose={() => setShowSettings(false)}
       />
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
         isOpen={confirmDialog.isOpen}
-        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))}
-        onConfirm={confirmDialog.onConfirm}
         title={confirmDialog.title}
         description={confirmDialog.description}
-        variant="destructive"
-        confirmText="Delete"
+        onConfirm={() => {
+          confirmDialog.onConfirm();
+          setConfirmDialog({ isOpen: false, title: '', description: '', onConfirm: () => {} });
+        }}
+        onCancel={() => setConfirmDialog({ isOpen: false, title: '', description: '', onConfirm: () => {} })}
       />
     </>
   );

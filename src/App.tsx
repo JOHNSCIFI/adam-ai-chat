@@ -19,6 +19,9 @@ import Help from '@/pages/Help';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
+import ExploreTools from '@/pages/ExploreTools';
+import PricingPlans from '@/pages/PricingPlans';
+import ToolPage from '@/pages/ToolPage';
 import NotFound from '@/pages/NotFound';
 
 const queryClient = new QueryClient();
@@ -74,6 +77,21 @@ function App() {
                       <Help />
                     </MainLayout>
                   </ProtectedRoute>
+                } />
+                <Route path="/explore-tools" element={
+                  <MainLayout>
+                    <ExploreTools />
+                  </MainLayout>
+                } />
+                <Route path="/pricing-plans" element={
+                  <MainLayout>
+                    <PricingPlans />
+                  </MainLayout>
+                } />
+                <Route path="/:toolName/:toolId" element={
+                  <MainLayout>
+                    <ToolPage />
+                  </MainLayout>
                 } />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

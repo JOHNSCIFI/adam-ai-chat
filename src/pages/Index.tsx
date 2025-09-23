@@ -1,15 +1,11 @@
-import React, { useState, useRef } from 'react';
+import React from 'react';
+import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTheme } from '@/contexts/ThemeContext';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { useMessageLimit } from '@/hooks/useMessageLimit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { Paperclip, X, FileText, ImageIcon, Mic, MicOff, Palette, Image as ImageIcon2 } from 'lucide-react';
-import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
-import { StopIcon } from '@/components/ui/stop-icon';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState } from 'react';
 
 interface FileAttachment {
   id: string;
@@ -20,21 +16,62 @@ interface FileAttachment {
 }
 
 export default function Index() {
-  const { user, loading: authLoading, userProfile } = useAuth();
-  const { actualTheme } = useTheme();
-  const navigate = useNavigate();
-  const { toast } = useToast();
+  const { user, loading: authLoading } = useAuth();
+  const { canSendMessage, isAtLimit } = useMessageLimit();
   const [message, setMessage] = useState('');
-  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [isImageMode, setIsImageMode] = useState(false);
-  const [isStylesOpen, setIsStylesOpen] = useState(false);
-  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  if (authLoading) {
+    return (
+      <div className="flex-1 flex items-center justify-center">
+        <div className="flex items-center space-x-2">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+          <span className="text-gray-600">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user && !canSendMessage) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return (
+    <div className="flex-1 flex items-center justify-center p-6">
+      <Card className="w-full max-w-2xl">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold mb-2">Welcome to AI Chat</CardTitle>
+          <p className="text-muted-foreground">
+            Start a conversation with AI or explore our tools
+          </p>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <Textarea
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            placeholder="Ask me anything..."
+            className="min-h-24 resize-none"
+          />
+          <div className="flex gap-2">
+            <Button className="flex-1" disabled={!canSendMessage}>
+              Start New Chat
+            </Button>
+            <Button variant="outline" onClick={() => window.location.href = '/explore-tools'}>
+              Explore Tools
+            </Button>
+          </div>
+          {isAtLimit && (
+            <p className="text-center text-sm text-muted-foreground">
+              Message limit reached.{' '}
+              <Button variant="link" className="p-0 h-auto" onClick={() => window.location.href = '/pricing-plans'}>
+                Upgrade to continue
+              </Button>
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
 
   // Image styles for create image functionality
   const imageStyles = [
