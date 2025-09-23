@@ -607,8 +607,8 @@ export default function ToolPage() {
               reader.readAsDataURL(file);
             });
 
-            // Save image to Supabase storage
-            const fileName = `${actualChatId}_${Date.now()}_${file.name}`;
+            // Save image to Supabase storage with proper folder structure
+            const fileName = `${user.id}/${actualChatId}_${Date.now()}_${file.name}`;
             console.log('Uploading to storage:', fileName);
             
             const { data: uploadData, error: uploadError } = await supabase.storage
