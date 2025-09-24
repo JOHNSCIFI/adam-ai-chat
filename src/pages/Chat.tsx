@@ -1855,60 +1855,95 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </Popover>
             </div>}
           
-          <div className="relative">
-            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-              {/* Attachment button - left side inside input */}
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+          <div className="relative bg-background border border-border rounded-2xl p-4">
+            <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image..." : "Type a message..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                      <Paperclip className="h-4 w-4" />
+                      Add photos & files
+                    </Button>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                      <ImageIcon2 className="h-4 w-4" />
+                      Create image
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+                
+                {isImageMode ? (
+                  <>
+                    {/* Image mode indicator */}
+                    <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                      <ImageIcon className="h-3 w-3" />
+                      <span>Image</span>
+                      <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                    
+                    {/* Styles dropdown */}
+                    <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
+                          <Palette className="h-3 w-3" />
+                          Styles
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                        <div className="grid grid-cols-3 gap-3">
+                          {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                                <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                  {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                                </span>
+                              </div>
+                              <span className="text-xs font-medium leading-tight">{style.name}</span>
+                            </button>)}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
+                  </>
+                ) : (
+                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
+                    <ImageIcon className="h-4 w-4 mr-1" />Create an image
                   </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                    <Paperclip className="h-4 w-4" />
-                    Add photos & files
-                  </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                    <ImageIcon2 className="h-4 w-4" />
-                    Create image
-                  </Button>
-                </PopoverContent>
-              </Popover>
+                )}
+              </div>
               
-              <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image" : "Message AdamGPT..."} className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              lineHeight: '1.5rem',
-              height: '24px',
-              overflowY: 'hidden'
-            }} disabled={false} rows={1} />
-              
-              <div className="flex items-center gap-1 ml-2 pb-1">
-                {/* Dictation button */}
-                <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
+              <div className="flex items-center gap-2">
+                <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
                 
-                {/* Voice Mode button */}
                 <VoiceModeButton onMessageSent={(messageId, content, role) => {
-                // Mark voice messages as processed to prevent auto-trigger duplicates
-                if (role === 'user' && chatId) {
-                  // Add to processed messages for this specific chat
-                  if (!processedUserMessages.current.has(chatId)) {
-                    processedUserMessages.current.set(chatId, new Set());
-                  }
-                  processedUserMessages.current.get(chatId)!.add(messageId);
-                  console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
-                  // Refresh messages immediately for user voice input
-                  fetchMessages();
-                } else if (role === 'assistant') {
-                  // For assistant messages, refresh after a delay to let audio play
-                  setTimeout(() => {
+                  // Mark voice messages as processed to prevent auto-trigger duplicates
+                  if (role === 'user' && chatId) {
+                    // Add to processed messages for this specific chat
+                    if (!processedUserMessages.current.has(chatId)) {
+                      processedUserMessages.current.set(chatId, new Set());
+                    }
+                    processedUserMessages.current.get(chatId)!.add(messageId);
+                    console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
+                    // Refresh messages immediately for user voice input
                     fetchMessages();
-                  }, 1000);
-                }
-              }} chatId={chatId} actualTheme={actualTheme} />
+                  } else if (role === 'assistant') {
+                    // For assistant messages, refresh after a delay to let audio play
+                    setTimeout(() => {
+                      fetchMessages();
+                    }, 1000);
+                  }
+                }} chatId={chatId} actualTheme={actualTheme} />
               </div>
             </div>
           </div>
