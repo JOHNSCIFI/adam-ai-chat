@@ -798,17 +798,30 @@ export default function ToolPage() {
             console.log('Webhook response data:', responseData);
 
             // If webhook returns response immediately, handle it
+            console.log('Webhook responseData:', JSON.stringify(responseData, null, 2));
             if (responseData && (responseData.text || responseData.content || Array.isArray(responseData))) {
               let responseContent = '';
               if (Array.isArray(responseData) && responseData.length > 0) {
-                const analysisTexts = responseData.map(item => item.text || item.content || '').filter(text => text);
+                console.log('Processing array response:', responseData);
+                // Handle the specific webhook format with message.content structure
+                const analysisTexts = responseData.map(item => {
+                  if (item.message && item.message.content) {
+                    console.log('Found message.content:', item.message.content);
+                    return item.message.content;
+                  }
+                  return item.text || item.content || '';
+                }).filter(text => text);
+                
                 if (analysisTexts.length > 0) {
                   responseContent = analysisTexts.join('\n\n');
+                  console.log('Final response content:', responseContent);
                 }
               } else if (responseData.text) {
                 responseContent = responseData.text;
               } else if (responseData.analysis || responseData.content) {
                 responseContent = responseData.analysis || responseData.content;
+              } else if (responseData.message && responseData.message.content) {
+                responseContent = responseData.message.content;
               }
               if (responseContent) {
                 console.log('Processing immediate webhook response:', responseContent);
