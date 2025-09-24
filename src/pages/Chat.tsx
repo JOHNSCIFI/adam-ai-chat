@@ -22,7 +22,6 @@ import AuthModal from '@/components/AuthModal';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
-
 const models = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
@@ -137,7 +136,6 @@ export default function Chat() {
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
-  
   const selectedModelData = models.find(m => m.id === selectedModel);
   useEffect(() => {
     if (chatId && user) {
@@ -557,14 +555,13 @@ export default function Chat() {
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) return;
-    
+
     // Check if user is authenticated, show auth modal if not
     if (!user) {
       // Show auth modal but preserve the input and files
       setShowAuthModal(true);
       return;
     }
-    
     setLoading(true);
     const userMessage = input.trim();
     const files = [...selectedFiles];
@@ -666,16 +663,16 @@ export default function Chat() {
             } else {
               aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
             }
-        } catch (error) {
-          console.error('Webhook error:', error);
-          // Check for authentication errors from webhook
-          if (error instanceof Error && (error.message?.includes('unauthorized') || error.message?.includes('authentication'))) {
-            setShowAuthModal(true);
-            setLoading(false);
-            return;
+          } catch (error) {
+            console.error('Webhook error:', error);
+            // Check for authentication errors from webhook
+            if (error instanceof Error && (error.message?.includes('unauthorized') || error.message?.includes('authentication'))) {
+              setShowAuthModal(true);
+              setLoading(false);
+              return;
+            }
+            aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
           }
-          aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
-        }
         }
       }
 
@@ -857,13 +854,13 @@ export default function Chat() {
       }, 1000);
     } catch (error: any) {
       console.error('Send message error:', error);
-      
+
       // Check for authentication errors
       if (error?.message?.includes('JWT') || error?.message?.includes('unauthorized') || error?.message?.includes('authentication')) {
         setShowAuthModal(true);
         return;
       }
-      
+
       // Show generic error toast for other errors
       toast.error('Failed to send message. Please try again.');
     } finally {
@@ -1907,15 +1904,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       <Paperclip className="h-4 w-4" />
                       Add photos & files
                     </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                      <ImageIcon2 className="h-4 w-4" />
-                      Create image
-                    </Button>
+                    
                   </PopoverContent>
                 </Popover>
                 
-                {isImageMode ? (
-                  <>
+                {isImageMode ? <>
                     {/* Image mode indicator */}
                     <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                       <ImageIcon className="h-3 w-3" />
@@ -1949,12 +1942,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </div>
                       </PopoverContent>
                     </Popover>
-                  </>
-                ) : (
-                  <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
+                  </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
                     <ImageIcon className="h-4 w-4 mr-1" />Create an image
-                  </Button>
-                )}
+                  </Button>}
               </div>
               
               <div className="flex items-center gap-2">
@@ -1982,23 +1972,23 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </Button>
                 
                 <VoiceModeButton onMessageSent={(messageId, content, role) => {
-                  // Mark voice messages as processed to prevent auto-trigger duplicates
-                  if (role === 'user' && chatId) {
-                    // Add to processed messages for this specific chat
-                    if (!processedUserMessages.current.has(chatId)) {
-                      processedUserMessages.current.set(chatId, new Set());
-                    }
-                    processedUserMessages.current.get(chatId)!.add(messageId);
-                    console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
-                    // Refresh messages immediately for user voice input
-                    fetchMessages();
-                  } else if (role === 'assistant') {
-                    // For assistant messages, refresh after a delay to let audio play
-                    setTimeout(() => {
-                      fetchMessages();
-                    }, 1000);
+                // Mark voice messages as processed to prevent auto-trigger duplicates
+                if (role === 'user' && chatId) {
+                  // Add to processed messages for this specific chat
+                  if (!processedUserMessages.current.has(chatId)) {
+                    processedUserMessages.current.set(chatId, new Set());
                   }
-                }} chatId={chatId} actualTheme={actualTheme} />
+                  processedUserMessages.current.get(chatId)!.add(messageId);
+                  console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
+                  // Refresh messages immediately for user voice input
+                  fetchMessages();
+                } else if (role === 'assistant') {
+                  // For assistant messages, refresh after a delay to let audio play
+                  setTimeout(() => {
+                    fetchMessages();
+                  }, 1000);
+                }
+              }} chatId={chatId} actualTheme={actualTheme} />
               </div>
             </div>
           </div>
@@ -2074,15 +2064,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }} />}
 
       {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          // Focus back to textarea after successful login
-          setTimeout(() => {
-            textareaRef.current?.focus();
-          }, 100);
-        }}
-      />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {
+      // Focus back to textarea after successful login
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+    }} />
     </div>;
 }
