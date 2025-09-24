@@ -5,9 +5,9 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useMessageLimit } from '@/hooks/useMessageLimit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Search, ChevronLeft, ChevronRight, Bot, Brain, Sparkles, Zap } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Image as ImageIcon2 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 export default function Index() {
   const {
@@ -25,39 +25,14 @@ export default function Index() {
   } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
-  const [availableModelsIndex, setAvailableModelsIndex] = useState(0);
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-  const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const availableModelsRef = useRef<HTMLDivElement>(null);
-
-  // Available models data
-  const aiModels = [
-    { id: 'gpt-4o-mini', name: 'GPT-4o mini', icon: <Bot className="h-4 w-4" />, route: '/openai-gpt-4o' },
-    { id: 'gpt-4o', name: 'GPT-4o', icon: <Bot className="h-4 w-4" />, route: '/openai-gpt-4o' },
-    { id: 'gpt-5', name: 'GPT-5', icon: <Bot className="h-4 w-4" />, route: '/openai-gpt-4-1' },
-    { id: 'claude', name: 'Claude', icon: <Brain className="h-4 w-4" />, route: '/deepseek' },
-    { id: 'deepseek', name: 'DeepSeek', icon: <Brain className="h-4 w-4" />, route: '/deepseek' },
-    { id: 'gemini', name: 'Google Gemini', icon: <Sparkles className="h-4 w-4" />, route: '/google-gemini' },
-    { id: 'generate-image', name: 'Generate Image', icon: <ImageIcon className="h-4 w-4" />, route: '/generate-image-openai' },
-    { id: 'ai-search', name: 'AI Search', icon: <Search className="h-4 w-4" />, route: '/ai-search-engine' }
-  ];
-
-  const modelOptions = [
-    { value: 'gpt-4o-mini', label: 'OpenAI GPT-4o mini', subtitle: 'OpenAI\'s Fastest Model' },
-    { value: 'gpt-4o', label: 'OpenAI GPT-4o', subtitle: 'OpenAI\'s Most Accurate Model', pro: true },
-    { value: 'gpt-5', label: 'OpenAI GPT-5', subtitle: 'OpenAI\'s Most Advanced Model', pro: true },
-    { value: 'claude', label: 'Claude', subtitle: 'Anthropic\'s latest AI model', pro: true },
-    { value: 'deepseek', label: 'DeepSeek', subtitle: 'Great for most questions', pro: true },
-    { value: 'gemini', label: 'Google Gemini', subtitle: 'Google\'s most capable AI' }
-  ];
   // Check for pending message from OAuth flow
   useEffect(() => {
     if (user && !pendingMessage) {
@@ -84,33 +59,17 @@ export default function Index() {
       return;
     }
     fileInputRef.current?.click();
+    setIsPopoverOpen(false);
   };
-  
   const handleCreateImageClick = () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
+    setIsPopoverOpen(false);
+    // Navigate to image generation tool
     const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     navigate(`/generate-image-openai/${toolId}`);
-  };
-
-  const handleSearchWebClick = () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`/ai-search-engine/${toolId}`);
-  };
-
-  const handleModelClick = (model: typeof aiModels[0]) => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`${model.route}/${toolId}`);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -145,94 +104,17 @@ export default function Index() {
       handleStartChat();
     }
   };
-  const startRecording = async () => {
+  const startRecording = () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const recorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
-
-      recorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
-        }
-      };
-
-      recorder.onstop = async () => {
-        stream.getTracks().forEach(track => track.stop());
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        await processAudioToText(audioBlob);
-      };
-
-      recorder.start();
-      setMediaRecorder(recorder);
-      setIsRecording(true);
-      setAudioChunks([]);
-    } catch (error) {
-      console.error('Error starting recording:', error);
-    }
+    setIsRecording(true);
+    // Add voice recording logic here
   };
-
   const stopRecording = () => {
-    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-      mediaRecorder.stop();
-    }
     setIsRecording(false);
-    setMediaRecorder(null);
-  };
-
-  const processAudioToText = async (audioBlob: Blob) => {
-    try {
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Audio = (reader.result as string).split(',')[1];
-        
-        const response = await supabase.functions.invoke('speech-to-text', {
-          body: { audio: base64Audio }
-        });
-
-        if (response.error) {
-          throw response.error;
-        }
-
-        const { text } = response.data;
-        if (text) {
-          setMessage(prev => prev + (prev ? ' ' : '') + text);
-          // Auto-resize textarea after adding text
-          setTimeout(() => {
-            if (textareaRef.current) {
-              const textarea = textareaRef.current;
-              textarea.style.height = '24px';
-              const scrollHeight = textarea.scrollHeight;
-              const maxHeight = 200;
-              
-              if (scrollHeight > maxHeight) {
-                textarea.style.height = `${maxHeight}px`;
-                textarea.style.overflowY = 'auto';
-              } else {
-                textarea.style.height = `${scrollHeight}px`;
-                textarea.style.overflowY = 'hidden';
-              }
-            }
-          }, 0);
-        }
-      };
-      reader.readAsDataURL(audioBlob);
-    } catch (error) {
-      console.error('Error processing audio:', error);
-    }
-  };
-
-  const scrollAvailableModels = (direction: 'left' | 'right') => {
-    if (availableModelsRef.current) {
-      const scrollAmount = 200;
-      const newScrollLeft = availableModelsRef.current.scrollLeft + (direction === 'left' ? -scrollAmount : scrollAmount);
-      availableModelsRef.current.scrollTo({ left: newScrollLeft, behavior: 'smooth' });
-    }
+    // Add stop recording logic here
   };
   const handleStartChat = async () => {
     if (!message.trim() || loading) return;
@@ -336,177 +218,68 @@ export default function Index() {
         {!user}
       </div>
 
-      {/* Message Input Area */}
-      <div className="w-full max-w-4xl">
+      {/* Message Input Area - Same design as Chat page */}
+      <div className="w-full max-w-3xl">
         <div className="px-4 py-4">
           {/* File attachments preview */}
-          {selectedFiles.length > 0 && (
-            <div className="mb-4 flex flex-wrap gap-2">
-              {selectedFiles.map((file, index) => (
-                <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+          {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
+              {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   <span className="truncate max-w-32">{file.name}</span>
                   <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-foreground">
                     ×
                   </button>
-                </div>
-              ))}
-            </div>
-          )}
+                </div>)}
+            </div>}
           
-          {/* Main input container */}
-          <div className="relative bg-background border border-border rounded-2xl shadow-sm">
-            {/* Textarea */}
-            <div className="p-4 pb-2">
-              <Textarea 
-                ref={textareaRef} 
-                value={message} 
-                onChange={handleInputChange} 
-                onKeyDown={handleKeyDown} 
-                placeholder="Type a message" 
-                className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground text-base" 
-                style={{
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word',
-                  lineHeight: '1.5rem',
-                  height: '24px',
-                  overflowY: 'hidden'
-                }} 
-                disabled={loading} 
-                rows={1} 
-              />
-            </div>
-            
-            {/* Bottom section with buttons and model selector */}
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border">
-              {/* Left side buttons */}
-              <div className="flex items-center gap-2">
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 px-2 text-muted-foreground hover:text-foreground"
-                  onClick={handleFileUpload}
-                >
-                  <Paperclip className="h-4 w-4 mr-1" />
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 px-3 text-muted-foreground hover:text-foreground border border-border rounded-full"
-                  onClick={handleCreateImageClick}
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  Create an image
-                </Button>
-                
-                <Button 
-                  type="button" 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 px-3 text-muted-foreground hover:text-foreground border border-border rounded-full"
-                  onClick={handleSearchWebClick}
-                >
-                  <Search className="h-4 w-4 mr-2" />
-                  Search the web
-                </Button>
-              </div>
+          <div className="relative">
+            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
+              {/* Attachment button - left side inside input */}
+              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                <PopoverTrigger asChild>
+                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
+                    <Paperclip className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                    <Paperclip className="h-4 w-4" />
+                    Add photos & files
+                  </Button>
+                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                    <ImageIcon2 className="h-4 w-4" />
+                    Create image
+                  </Button>
+                </PopoverContent>
+              </Popover>
               
-              {/* Right side - Model selector and voice button */}
-              <div className="flex items-center gap-3">
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="w-48 h-8 border-0 bg-transparent text-foreground">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border border-border">
-                    {modelOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value} className="hover:bg-muted">
-                        <div className="flex flex-col items-start">
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{option.label}</span>
-                            {option.pro && (
-                              <span className="text-xs bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
-                                Pro
-                              </span>
-                            )}
-                          </div>
-                          <span className="text-xs text-muted-foreground">{option.subtitle}</span>
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {/* Voice button */}
-                <Button 
-                  type="button" 
-                  variant={isRecording ? "default" : "secondary"}
-                  size="sm" 
-                  className={`h-8 w-8 p-0 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' : 'bg-foreground text-background hover:bg-foreground/90'}`}
-                  onClick={isRecording ? stopRecording : startRecording} 
-                  disabled={loading}
-                >
-                  <Mic className="h-4 w-4" />
+              <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Message AI..." className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
+              wordWrap: 'break-word',
+              overflowWrap: 'break-word',
+              lineHeight: '1.5rem',
+              height: '24px',
+              overflowY: 'hidden'
+            }} disabled={loading} rows={1} />
+              
+              <div className="flex items-center gap-1 ml-2 pb-1">
+                {/* Dictation button */}
+                <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
+                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
+          
+          
 
-          {/* Available Models Section */}
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-sm font-medium text-muted-foreground">Available models</h3>
-              <div className="flex items-center gap-1">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-full"
-                  onClick={() => scrollAvailableModels('left')}
-                >
-                  <ChevronLeft className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-8 w-8 p-0 rounded-full"
-                  onClick={() => scrollAvailableModels('right')}
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </div>
-            </div>
-            
-            <div 
-              ref={availableModelsRef}
-              className="flex gap-3 overflow-x-auto scrollbar-hide pb-2"
-              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
-            >
-              {aiModels.map((model) => (
-                <Button
-                  key={model.id}
-                  variant="outline"
-                  size="sm"
-                  className="flex-shrink-0 h-10 px-4 bg-background hover:bg-muted border-border rounded-full"
-                  onClick={() => handleModelClick(model)}
-                >
-                  <div className="flex items-center gap-2">
-                    {model.icon}
-                    <span className="text-sm font-medium">{model.name}</span>
-                  </div>
-                </Button>
-              ))}
-            </div>
-          </div>
+          {/* Action buttons below input */}
+          
 
-          {isAtLimit && (
-            <p className="text-center text-sm text-muted-foreground mt-4">
+          {isAtLimit && <p className="text-center text-sm text-muted-foreground mt-4">
               Message limit reached.{' '}
               <Button variant="link" className="p-0 h-auto" onClick={() => navigate('/pricing-plans')}>
                 Upgrade to continue
               </Button>
-            </p>
-          )}
+            </p>}
         </div>
       </div>
 
