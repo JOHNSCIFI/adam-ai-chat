@@ -13,6 +13,8 @@ interface AuthModalProps {
 
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [userSignupMethod, setUserSignupMethod] = useState<string | null>(null);
@@ -67,13 +69,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     e.preventDefault();
     if (!email) return;
     
+    if (!showPassword) {
+      setShowPassword(true);
+      return;
+    }
+    
+    if (!password) return;
+    
     setLoading(true);
     try {
       // Try to sign in first, if it fails, try sign up
-      const { error: signInError } = await signIn(email, 'temp');
+      const { error: signInError } = await signIn(email, password);
       if (signInError) {
-        // If sign in fails, try sign up (this is simplified for the ChatGPT-like flow)
-        const { error: signUpError } = await signUp(email, 'temp', '');
+        // If sign in fails, try sign up
+        const { error: signUpError } = await signUp(email, password, '');
         if (signUpError && !signUpError.message.includes('User already registered')) {
           toast({
             title: "Authentication failed",
@@ -134,18 +143,31 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </p>
           </div>
 
-          {/* Email Form */}
+          {/* Email/Password Form */}
           <form onSubmit={handleEmailSubmit} className="mb-4">
-            <div className="mb-4">
+            <div className="mb-4 space-y-3">
               <input
                 type="email"
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="w-full h-12 px-4 text-base border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                disabled={showPassword}
+                className="w-full h-12 px-4 text-base border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors disabled:opacity-50"
               />
-              {email && userSignupMethod && (
+              {showPassword && (
+                <input
+                  type="password"
+                  placeholder="Password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full h-12 px-4 text-base border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                  autoFocus
+                />
+              )}
+              {email && userSignupMethod && !showPassword && (
                 <p className="text-sm text-muted-foreground mt-2">
                   {userSignupMethod === 'google' 
                     ? 'This email is registered with Google. Please use Google sign-in.'
@@ -154,18 +176,30 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 </p>
               )}
             </div>
+            {showPassword && (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowPassword(false);
+                  setPassword('');
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground mb-4"
+              >
+                ← Back to email
+              </button>
+            )}
             <Button
               type="submit"
-              disabled={loading || !email || (userSignupMethod === 'google')}
+              disabled={loading || !email || (userSignupMethod === 'google' && !showPassword) || (showPassword && !password)}
               className="w-full h-12 rounded-lg font-medium"
             >
               {loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                  Continue
+                  {showPassword ? 'Signing in...' : 'Continue'}
                 </>
               ) : (
-                'Continue'
+                showPassword ? 'Continue' : 'Continue'
               )}
             </Button>
           </form>
