@@ -326,26 +326,18 @@ export default function ChatSidebar({
               <Button onClick={handleNewChat} className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Chat">
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
-              <Button 
-                className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
-                size="sm" 
-                variant="ghost" 
-                title="New Project"
-                onClick={() => {
-                  if (!user) {
-                    setShowAuthModal(true);
-                  }
-                }}
-              >
+              <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project" onClick={() => {
+            if (!user) {
+              setShowAuthModal(true);
+            }
+          }}>
                 <FolderPlus className="h-5 w-5 flex-shrink-0" />
               </Button>
-              {user && (
-                <ProjectModal onProjectCreated={handleProjectCreated}>
+              {user && <ProjectModal onProjectCreated={handleProjectCreated}>
                   <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project">
                     <FolderPlus className="h-5 w-5 flex-shrink-0" />
                   </Button>
-                </ProjectModal>
-              )}
+                </ProjectModal>}
             </div> : <div className="mt-1 space-y-2">
               <Button onClick={handleNewChat} className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
                 <Plus className="h-4 w-4 flex-shrink-0" />
@@ -353,27 +345,13 @@ export default function ChatSidebar({
               </Button>
 
 
-              <Button 
-                className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
-                size="sm" 
-                variant="ghost"
-                onClick={() => {
-                  if (!user) {
-                    setShowAuthModal(true);
-                  }
-                }}
-              >
-                <FolderPlus className="h-4 w-4 flex-shrink-0" />
-                <span className="font-medium">New Project</span>
-              </Button>
-              {user && (
-                <ProjectModal onProjectCreated={handleProjectCreated}>
+              
+              {user && <ProjectModal onProjectCreated={handleProjectCreated}>
                   <Button className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
                     <FolderPlus className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium">New Project</span>
                   </Button>
-                </ProjectModal>
-              )}
+                </ProjectModal>}
             </div>}
         </SidebarHeader>
 
@@ -585,13 +563,9 @@ export default function ChatSidebar({
       <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
 
       {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          setShowAuthModal(false);
-        }}
-      />
+      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {
+      setShowAuthModal(false);
+    }} />
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} description={confirmDialog.description} onConfirm={() => {
