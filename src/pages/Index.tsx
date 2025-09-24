@@ -688,12 +688,16 @@ export default function Index() {
         <div className="w-full max-w-3xl mb-6">
           <div className="space-y-4">
             {suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].map((prompt, index) => (
-              <div
-                key={index}
-                onClick={() => handlePromptClick(prompt)}
-                className="cursor-pointer"
-              >
-                <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">{prompt}</span>
+              <div key={index}>
+                <div
+                  onClick={() => handlePromptClick(prompt)}
+                  className="cursor-pointer"
+                >
+                  <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">{prompt}</span>
+                </div>
+                {index < suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].length - 1 && (
+                  <hr className="mt-4 border-border/50" />
+                )}
               </div>
             ))}
           </div>
