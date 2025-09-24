@@ -171,9 +171,42 @@ const availableModels = [{
   icon: '💎'
 }];
 export default function Index() {
+  // Helper function to get time-based greeting
+  const getTimeBasedGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 5 && hour < 12) {
+      return 'Good morning';
+    } else if (hour >= 12 && hour < 17) {
+      return 'Good afternoon';
+    } else if (hour >= 17 && hour < 22) {
+      return 'Good evening';
+    } else {
+      return 'Good night';
+    }
+  };
+
+  const getDisplayName = () => {
+    if (userProfile?.display_name) {
+      return userProfile.display_name;
+    }
+    if (user?.user_metadata?.display_name) {
+      return user.user_metadata.display_name;
+    }
+    if (user?.user_metadata?.full_name) {
+      return user.user_metadata.full_name;
+    }
+    if (user?.email) {
+      return user.email.split('@')[0];
+    }
+    return 'there';
+  };
+
+  const timeGreeting = getTimeBasedGreeting();
+  const displayName = getDisplayName();
   const {
     user,
-    loading: authLoading
+    loading: authLoading,
+    userProfile
   } = useAuth();
   const {
     actualTheme
@@ -496,8 +529,17 @@ export default function Index() {
   };
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
       <div className="text-center mb-8">
-        <h1 className="text-4xl font-bold mb-4">Welcome to AI Chat</h1>
-        <p className="text-muted-foreground text-lg">Start a conversation with AI or explore our tools</p>
+        {user ? (
+          <>
+            <h1 className="text-4xl font-bold mb-2">{timeGreeting}, {displayName}</h1>
+            <p className="text-muted-foreground text-lg">How can I help you today?</p>
+          </>
+        ) : (
+          <>
+            <h1 className="text-4xl font-bold mb-4">{timeGreeting}</h1>
+            <p className="text-muted-foreground text-lg">How can I help you today?</p>
+          </>
+        )}
       </div>
 
       <div className="w-full max-w-3xl mb-6">
