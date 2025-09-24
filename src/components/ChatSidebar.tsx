@@ -535,14 +535,7 @@ export default function ChatSidebar({
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
-                  <div className={`flex gap-2 mt-2 ${collapsed ? 'flex-col items-center' : ''}`}>
-                    <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all duration-200`} size="sm">
-                      {collapsed ? <User className="h-4 w-4" /> : 'Sign Up'}
-                    </Button>
-                    <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border border-border rounded-lg transition-all duration-200`} size="sm" variant="outline">
-                      {collapsed ? <LogOut className="h-4 w-4" /> : 'Sign In'}
-                    </Button>
-                  </div>
+                  
                 </>}
             </SidebarMenuItem>
           </SidebarMenu>
