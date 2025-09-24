@@ -509,14 +509,41 @@ export default function ChatSidebar({
                        Sign Out
                      </DropdownMenuItem>
                   </DropdownMenuContent>
-                </DropdownMenu> : <div className={`flex gap-2 ${collapsed ? 'flex-col items-center' : ''}`}>
-                  <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all duration-200`} size="sm">
-                    {collapsed ? <User className="h-4 w-4" /> : 'Sign Up'}
-                  </Button>
-                  <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border border-border rounded-lg transition-all duration-200`} size="sm" variant="outline">
-                    {collapsed ? <LogOut className="h-4 w-4" /> : 'Sign In'}
-                  </Button>
-                </div>}
+                </DropdownMenu> : <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className={`flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full ${collapsed ? 'justify-center' : ''}`}>
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {!collapsed && <div className="flex-1 min-w-0">
+                            <p className="text-sm text-sidebar-foreground font-medium truncate">Guest</p>
+                            <p className="text-xs text-sidebar-foreground/60 truncate">Not signed in</p>
+                          </div>}
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/help')}>
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Help
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  <div className={`flex gap-2 mt-2 ${collapsed ? 'flex-col items-center' : ''}`}>
+                    <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg transition-all duration-200`} size="sm">
+                      {collapsed ? <User className="h-4 w-4" /> : 'Sign Up'}
+                    </Button>
+                    <Button onClick={() => navigate('/auth')} className={`${collapsed ? 'h-8 w-8 p-0' : 'flex-1'} bg-transparent hover:bg-sidebar-accent text-sidebar-foreground border border-border rounded-lg transition-all duration-200`} size="sm" variant="outline">
+                      {collapsed ? <LogOut className="h-4 w-4" /> : 'Sign In'}
+                    </Button>
+                  </div>
+                </>}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>

@@ -404,11 +404,42 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                 </Select>
               </div>
 
+              {user && (
+                <>
+                  <Separator />
+                  
+                  {/* Show additional settings only for authenticated users */}
+                  <div className="space-y-4 opacity-50 pointer-events-none">
+                    <div className="flex items-center justify-between py-3">
+                      <div>
+                        <p className="font-medium text-foreground">Language</p>
+                        <p className="text-sm text-muted-foreground">Interface language</p>
+                      </div>
+                      <p className="text-sm text-muted-foreground">English</p>
+                    </div>
+                  </div>
+                </>
+              )}
+
             </div>
           </div>
         );
 
       case 'profile':
+        if (!user) {
+          return (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Profile</h2>
+                <p className="text-muted-foreground">Sign in to manage your account information</p>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">You need to be signed in to access profile settings.</p>
+                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="space-y-6">
             <div>
@@ -485,6 +516,20 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         );
 
       case 'security':
+        if (!user) {
+          return (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Security</h2>
+                <p className="text-muted-foreground">Sign in to manage your account security</p>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">You need to be signed in to access security settings.</p>
+                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="space-y-6">
             <div>
@@ -563,6 +608,20 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
         );
 
       case 'data':
+        if (!user) {
+          return (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
+                <p className="text-muted-foreground">Sign in to manage your data and privacy</p>
+              </div>
+              <div className="text-center py-8">
+                <p className="text-muted-foreground mb-4">You need to be signed in to access data control settings.</p>
+                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+              </div>
+            </div>
+          );
+        }
         return (
           <div className="space-y-6">
             <div>
@@ -680,13 +739,17 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             <nav className="p-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
+                const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
                 return (
                   <button
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
+                    disabled={isDisabled}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
                       activeTab === item.id
                         ? 'bg-accent text-accent-foreground font-medium'
+                        : isDisabled
+                        ? 'text-muted-foreground/50 cursor-not-allowed'
                         : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
                     }`}
                   >
