@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
@@ -64,6 +64,85 @@ const suggestionButtons = [{
   label: 'See More',
   action: 'see-more'
 }];
+
+const additionalButtons = [{
+  icon: Lightbulb,
+  label: 'Brainstorm',
+  action: 'brainstorm'
+}, {
+  icon: Settings,
+  label: 'Improve Writing',
+  action: 'improve-writing'
+}, {
+  icon: Globe,
+  label: 'Translate',
+  action: 'translate'
+}, {
+  icon: Zap,
+  label: 'Generate Ideas',
+  action: 'generate-ideas'
+}, {
+  icon: BarChart3,
+  label: 'Analyze Data',
+  action: 'analyze-data'
+}];
+
+const suggestionPrompts = {
+  'help-write': [
+    'Help me write an essay',
+    'Help me write a cover letter',
+    'Help me write a bedtime story',
+    'Help me write a poem'
+  ],
+  'learn-about': [
+    'Learn about time management',
+    'Learn about stock trading',
+    'Learn about negotiation skills for business deals',
+    'Learn about handling difficult conversations'
+  ],
+  'analyze-image': [
+    'Help me understand where this picture was taken',
+    'Help me identify the plant in this image',
+    'Help me understand the calories in the foods in this image',
+    'Help me find the color codes used in this image'
+  ],
+  'summarize-text': [
+    'Summarize text in a few sentences',
+    'Summarize text by highlighting the key points',
+    'Summarize text and provide the main takeaway',
+    'Summarize text by condensing the most important information'
+  ],
+  'analyze-data': [
+    'Help me find patterns in my data',
+    'Help me understand trends in my data',
+    'Help me summarize key insights from my data',
+    'Help me create a bar chart'
+  ],
+  'brainstorm': [
+    'Brainstorm ideas for a new product or service',
+    'Brainstorm fun team-building activities',
+    'Brainstorm ways to improve your productivity',
+    'Brainstorm unique gift ideas for a loved one'
+  ],
+  'improve-writing': [
+    'Improve writing by making it clearer and more concise',
+    'Improve writing by adding more engaging details',
+    'Improve writing to enhance the flow and readability',
+    'Improve writing by simplifying complex sentences'
+  ],
+  'translate': [
+    'Translate text by maintaining the length',
+    'Translate text in a natural and local way',
+    'Translate text while keeping the original meaning intact',
+    'Translate text into multiple languages'
+  ],
+  'generate-ideas': [
+    'Generate ideas for an innovative business model',
+    'Generate ideas for a creative marketing campaign',
+    'Generate ideas for a podcast episode',
+    'Generate ideas for a unique bucket list'
+  ]
+};
 const availableModels = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
@@ -121,6 +200,8 @@ export default function Index() {
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [voiceChatId, setVoiceChatId] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
+  const [showMoreButtons, setShowMoreButtons] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -170,6 +251,11 @@ export default function Index() {
     const textarea = e.target;
     textarea.style.height = 'auto';
     textarea.style.height = `${Math.min(textarea.scrollHeight, 120)}px`;
+    
+    // Hide suggestions and show available models when text is cleared
+    if (e.target.value.trim() === '') {
+      setShowSuggestions(null);
+    }
   };
   const startRecording = () => {
     if (!user) {
@@ -294,17 +380,23 @@ export default function Index() {
     }
   };
   const handleSuggestionClick = (action: string) => {
-    const suggestions = {
-      'help-write': 'Help me write ',
-      'learn-about': 'Tell me about ',
-      'analyze-image': 'Analyze this image: ',
-      'summarize-text': 'Summarize this text: ',
-      'see-more': ''
-    };
-    if (action !== 'see-more') {
-      setMessage(suggestions[action as keyof typeof suggestions]);
-      textareaRef.current?.focus();
+    if (action === 'see-more') {
+      setShowMoreButtons(!showMoreButtons);
+      return;
     }
+    
+    // Show specific suggestions for the clicked button
+    setShowSuggestions(action);
+    textareaRef.current?.focus();
+  };
+
+  const handlePromptClick = (prompt: string) => {
+    setMessage(prompt);
+    textareaRef.current?.focus();
+  };
+
+  const handleSeeAllModels = () => {
+    navigate('/explore-tools');
   };
   const handleModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
@@ -499,32 +591,73 @@ export default function Index() {
       </div>
 
       {/* Suggestion buttons - compact design */}
-      <div className="flex flex-wrap gap-2 mb-6 w-full max-w-3xl justify-center">
-        {suggestionButtons.map((suggestion, index) => (
-          <Button
-            key={index}
-            onClick={() => handleSuggestionClick(suggestion.action)}
-            variant="ghost"
-            size="sm"
-            className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
-          >
-            <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-            <span className="text-xs font-medium">{suggestion.label}</span>
-          </Button>
-        ))}
+      <div className="w-full max-w-3xl mb-6">
+        <div className="flex flex-wrap gap-2 justify-center">
+          {suggestionButtons.map((suggestion, index) => (
+            <Button
+              key={index}
+              onClick={() => handleSuggestionClick(suggestion.action)}
+              variant="ghost"
+              size="sm"
+              className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+            >
+              <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">{suggestion.label}</span>
+            </Button>
+          ))}
+        </div>
+        
+        {/* Additional buttons when "See More" is clicked */}
+        {showMoreButtons && (
+          <div className="flex flex-wrap gap-2 justify-center mt-2">
+            {additionalButtons.map((button, index) => (
+              <Button
+                key={index}
+                onClick={() => handleSuggestionClick(button.action)}
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+              >
+                <button.icon className="h-3.5 w-3.5 mr-1.5" />
+                <span className="text-xs font-medium">{button.label}</span>
+              </Button>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Available Models Section */}
-      <div className="w-full max-w-3xl mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <h2 className="text-lg font-semibold">Available Models</h2>
+      {/* Suggestion prompts */}
+      {showSuggestions && suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts] && (
+        <div className="w-full max-w-3xl mb-6">
+          <div className="space-y-2">
+            {suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].map((prompt, index) => (
+              <div
+                key={index}
+                onClick={() => handlePromptClick(prompt)}
+                className="p-3 rounded-lg border border-border/50 hover:border-border bg-card hover:bg-accent/50 cursor-pointer transition-all"
+              >
+                <span className="text-sm">{prompt}</span>
+              </div>
+            ))}
           </div>
-          <button className="text-sm text-muted-foreground hover:text-foreground">
-            See All
-          </button>
         </div>
+      )}
+
+      {/* Available Models Section - only show when no suggestions are active */}
+      {!showSuggestions && (
+        <div className="w-full max-w-3xl mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+              <h2 className="text-lg font-semibold">Available Models</h2>
+            </div>
+            <button 
+              onClick={handleSeeAllModels}
+              className="text-sm text-muted-foreground hover:text-foreground"
+            >
+              See All
+            </button>
+          </div>
         <div className="relative">
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
             {availableModels.map((model) => (
@@ -568,7 +701,8 @@ export default function Index() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-      </div>
+        </div>
+      )}
 
       
 
