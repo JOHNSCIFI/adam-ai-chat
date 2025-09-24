@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
-import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+
 import { 
   Bot, 
   ImageIcon, 
@@ -15,7 +15,6 @@ import {
   Zap, 
   Combine, 
   Edit3,
-  Heart,
   FileImage,
   FileText,
   Sparkles,
@@ -177,7 +176,6 @@ export default function ExploreTools() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('Popular');
-  const { favoriteTools, addFavorite, removeFavorite, isLoading } = useFavoriteTools();
 
   const filteredTools = tools.filter(tool => tool.category === selectedCategory);
 
@@ -191,24 +189,6 @@ export default function ExploreTools() {
     navigate(`${tool.route}/${toolId}`);
   };
 
-  const toggleFavorite = async (toolId: string) => {
-    if (!user) {
-      toast.info('Please sign in to save favorite tools');
-      return;
-    }
-
-    try {
-      if (favoriteTools.includes(toolId)) {
-        await removeFavorite(toolId);
-        toast.success('Removed from favorites');
-      } else {
-        await addFavorite(toolId);
-        toast.success('Added to favorites');
-      }
-    } catch (error) {
-      toast.error('Failed to update favorites');
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
@@ -262,26 +242,6 @@ export default function ExploreTools() {
                           </CardTitle>
                         </div>
                       </div>
-                      {user && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            toggleFavorite(tool.id);
-                          }}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity p-1 h-8 w-8"
-                          disabled={isLoading}
-                        >
-                          <Heart 
-                            className={`h-4 w-4 ${
-                              favoriteTools.includes(tool.id) 
-                                ? 'fill-red-500 text-red-500' 
-                                : 'text-muted-foreground'
-                            }`} 
-                          />
-                        </Button>
-                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 relative z-10">

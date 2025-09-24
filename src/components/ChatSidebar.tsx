@@ -62,7 +62,7 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
-import { useFavoriteTools } from '@/hooks/useFavoriteTools';
+
 import SettingsModal from './SettingsModal';
 
 interface Chat {
@@ -118,11 +118,8 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
-  const [showMyTools, setShowMyTools] = useState(false);
-  const [myToolsTimeout, setMyToolsTimeout] = useState<NodeJS.Timeout | null>(null);
   
   const { user, signOut, userProfile } = useAuth();
-  const { favoriteTools } = useFavoriteTools();
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -135,23 +132,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
-  // Tool definitions for My Tools
-  const availableTools = [
-    { id: 'calculate-calories', name: 'Calculate Calories', icon: '🥗' },
-    { id: 'openai-gpt-4o', name: 'OpenAI GPT-4o', icon: '🤖' },
-    { id: 'deepseek', name: 'DeepSeek', icon: '🧠' },
-    { id: 'google-gemini', name: 'Google Gemini', icon: '✨' },
-    { id: 'generate-image-openai', name: 'Generate Image', icon: '🎨' },
-    { id: 'analyse-image-openai', name: 'Analyse Image', icon: '🔍' }
-  ];
-
-  // Helper function to get tool icon by tool_id
-  const getToolIcon = (toolId: string) => {
-    const tool = availableTools.find(t => t.id === toolId);
-    return tool?.icon || '🔧';
-  };
-
-  const myFavoriteTools = availableTools.filter(tool => favoriteTools.includes(tool.id));
 
   // Fetch functions
   const fetchChats = async () => {
@@ -455,67 +435,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                 <span className="font-medium">New Chat</span>
               </Button>
 
-              {/* My Tools Hover Section */}
-              <div 
-                className="relative"
-                onMouseEnter={() => {
-                  if (myToolsTimeout) {
-                    clearTimeout(myToolsTimeout);
-                    setMyToolsTimeout(null);
-                  }
-                  setShowMyTools(true);
-                }}
-                onMouseLeave={() => {
-                  const timeout = setTimeout(() => {
-                    setShowMyTools(false);
-                  }, 2000);
-                  setMyToolsTimeout(timeout);
-                }}
-              >
-                <Button 
-                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200"
-                  size="sm"
-                  variant="ghost"
-                >
-                  <Star className="h-4 w-4 flex-shrink-0" />
-                  <span className="font-medium">My Tools</span>
-                </Button>
-                
-                {showMyTools && myFavoriteTools.length > 0 && (
-                  <div 
-                    className="absolute left-full top-0 ml-2 bg-popover border rounded-lg shadow-lg p-2 min-w-48 z-50"
-                    onMouseEnter={() => {
-                      if (myToolsTimeout) {
-                        clearTimeout(myToolsTimeout);
-                        setMyToolsTimeout(null);
-                      }
-                    }}
-                    onMouseLeave={() => {
-                      const timeout = setTimeout(() => {
-                        setShowMyTools(false);
-                      }, 2000);
-                      setMyToolsTimeout(timeout);
-                    }}
-                  >
-                    <div className="text-xs font-medium text-muted-foreground mb-2 px-2">Favorite Tools</div>
-                    {myFavoriteTools.map((tool) => (
-                      <Button
-                        key={tool.id}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2 h-8 px-2 text-sm"
-                        onClick={() => {
-                          const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-                          navigate(`/${tool.id}/${toolId}`);
-                        }}
-                      >
-                        <span className="text-base">{tool.icon}</span>
-                        {tool.name}
-                      </Button>
-                    ))}
-                  </div>
-                )}
-              </div>
 
               <ProjectModal onProjectCreated={handleProjectCreated}>
                 <Button 
@@ -658,9 +577,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
                               }`
                             }
                           >
-                            {chat.tool_id && (
-                              <span className="text-sm">{getToolIcon(chat.tool_id)}</span>
-                            )}
                             <span className="flex-1 truncate text-sm">{chat.title || 'New Chat'}</span>
                           </NavLink>
                       )}
