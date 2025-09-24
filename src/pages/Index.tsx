@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
+import VoiceModeButton from '@/components/VoiceModeButton';
+import { toast } from 'sonner';
 const models = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
@@ -108,6 +110,7 @@ export default function Index() {
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
+  const [voiceChatId, setVoiceChatId] = useState<string | null>(null);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -212,6 +215,43 @@ export default function Index() {
       console.error('Error starting chat:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVoiceMessageSent = async (messageId: string, content: string, role: 'user' | 'assistant') => {
+    console.log('Voice message sent:', { messageId, content, role });
+    
+    if (role === 'user') {
+      // For user voice messages, create chat if needed and navigate
+      if (!user) return;
+      
+      if (!voiceChatId) {
+        // Create new chat with voice message
+        try {
+          const { data: chatData, error: chatError } = await supabase
+            .from('chats')
+            .insert({
+              user_id: user.id,
+              title: content.length > 50 ? content.substring(0, 47) + '...' : content
+            })
+            .select()
+            .single();
+
+          if (chatError) {
+            console.error('Error creating voice chat:', chatError);
+            return;
+          }
+
+          setVoiceChatId(chatData.id);
+          // Navigate to the new chat
+          navigate(`/chat/${chatData.id}`);
+        } catch (error) {
+          console.error('Error creating voice chat:', error);
+        }
+      } else {
+        // Navigate to existing voice chat
+        navigate(`/chat/${voiceChatId}`);
+      }
     }
   };
   const createChatWithMessage = async (userId: string, messageToSend: string) => {
@@ -417,7 +457,7 @@ export default function Index() {
             
             <div className="flex items-center gap-2">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[200px] h-8 bg-transparent border border-border/50 rounded-full">
+                <SelectTrigger className="w-[180px] h-8 bg-transparent border border-border/50 rounded-full">
                   <SelectValue>
                     <span className="text-sm font-medium">{selectedModelData?.name}</span>
                   </SelectValue>
@@ -438,6 +478,12 @@ export default function Index() {
               <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
                 {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
+              
+              <VoiceModeButton 
+                onMessageSent={handleVoiceMessageSent}
+                chatId={voiceChatId || 'temp'}
+                actualTheme={actualTheme}
+              />
             </div>
           </div>
         </div>
