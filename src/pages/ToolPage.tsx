@@ -18,13 +18,7 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import VoiceModeButton from '@/components/VoiceModeButton';
 
-// Type declarations for Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
+// Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 interface Message {
   id: string;

@@ -19,13 +19,7 @@ import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator'
 import VoiceModeButton from '@/components/VoiceModeButton';
 import AuthModal from '@/components/AuthModal';
 
-// Type declarations for Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
+// Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 interface Message {
   id: string;
@@ -1195,7 +1189,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     console.log('🎤 Starting speech recognition...');
     try {
       // Check if browser supports Web Speech API
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
         console.error('❌ Speech recognition not supported in this browser');
         toast.error('Speech recognition not supported in this browser');

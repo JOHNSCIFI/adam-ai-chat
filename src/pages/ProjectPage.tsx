@@ -594,7 +594,7 @@ export default function ProjectPage() {
         toast.error('Speech recognition not supported in this browser');
         return;
       }
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       const recognition = new SpeechRecognition();
       recognition.continuous = false;
       recognition.interimResults = true;

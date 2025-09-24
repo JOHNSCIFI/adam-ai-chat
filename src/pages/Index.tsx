@@ -185,6 +185,26 @@ export default function Index() {
     }
   };
 
+  const handleSuggestionClick = (action: string) => {
+    const suggestions = {
+      'help-write': 'Help me write ',
+      'learn-about': 'Tell me about ',
+      'analyze-image': 'Analyze this image: ',
+      'summarize-text': 'Summarize this text: ',
+      'see-more': ''
+    };
+    
+    if (action !== 'see-more') {
+      setMessage(suggestions[action as keyof typeof suggestions]);
+      textareaRef.current?.focus();
+    }
+  };
+
+  const handleModelSelect = (modelId: string) => {
+    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    navigate(`/${modelId}/${toolId}`);
+  };
+
   const selectedModelData = models.find(m => m.id === selectedModel);
 
   return (
@@ -258,7 +278,7 @@ export default function Index() {
           {suggestionButtons.map((suggestion, index) => {
             const Icon = suggestion.icon;
             return (
-              <Button key={index} variant="outline" size="sm" className="h-10 px-4">
+              <Button key={index} variant="outline" size="sm" className="h-10 px-4" onClick={() => handleSuggestionClick(suggestion.action)}>
                 <Icon className="h-4 w-4 mr-2" />{suggestion.label}
               </Button>
             );
@@ -278,7 +298,7 @@ export default function Index() {
         <div className="relative">
           <div className="flex gap-4 overflow-x-auto px-8" ref={modelsContainerRef}>
             {availableModels.map((model) => (
-              <div key={model.id} className={`flex-shrink-0 w-80 p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${model.selected ? 'border-primary bg-primary/5' : 'border-border bg-background'}`}>
+              <div key={model.id} className={`flex-shrink-0 w-80 p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md ${model.selected ? 'border-primary bg-primary/5' : 'border-border bg-background'}`} onClick={() => handleModelSelect(model.id)}>
                 <div className="flex items-start gap-3">
                   <div className="text-2xl">{model.icon}</div>
                   <div className="flex-1">
@@ -300,7 +320,38 @@ export default function Index() {
       <AuthModal 
         isOpen={showAuthModal} 
         onClose={() => { setShowAuthModal(false); setPendingMessage(''); localStorage.removeItem('pendingChatMessage'); }}
-        onSuccess={() => setShowAuthModal(false)}
+        onSuccess={async () => {
+          setShowAuthModal(false);
+          if (pendingMessage.trim()) {
+            const messageToSend = pendingMessage;
+            setMessage(pendingMessage);
+            setPendingMessage('');
+            
+            setTimeout(async () => {
+              const { data: { session: currentSession } } = await supabase.auth.getSession();
+              const currentUser = currentSession?.user;
+              
+              if (!currentUser) {
+                console.error('No user found after auth, retrying...');
+                setTimeout(async () => {
+                  const { data: { session: retrySession } } = await supabase.auth.getSession();
+                  if (retrySession?.user) {
+                    await createChatWithMessage(retrySession.user.id, messageToSend);
+                  } else {
+                    console.error('Still no user found after retry');
+                  }
+                }, 500);
+                return;
+              }
+              
+              await createChatWithMessage(currentUser.id, messageToSend);
+            }, 300);
+          } else {
+            setTimeout(() => {
+              textareaRef.current?.focus();
+            }, 100);
+          }
+        }}
       />
     </div>
   );

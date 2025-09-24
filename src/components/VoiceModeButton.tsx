@@ -6,13 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
 import AuthModal from './AuthModal';
 
-// Type declarations for Web Speech API
-declare global {
-  interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
-  }
-}
+// Speech recognition will be accessed with type casting to avoid global conflicts
 
 interface VoiceModeButtonProps {
   onMessageSent: (messageId: string, content: string, role: 'user' | 'assistant') => void;
@@ -52,7 +46,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     
     try {
       // Check if browser supports Web Speech API
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
         console.error('❌ Speech recognition not supported in this browser');
@@ -399,7 +393,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
     
     // Create new recognition instance for continuous conversation
     try {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       
       if (!SpeechRecognition) {
         console.error('❌ Speech recognition not supported');
