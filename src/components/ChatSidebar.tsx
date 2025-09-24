@@ -327,11 +327,23 @@ export default function ChatSidebar({
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
               
-              {user && <ProjectModal onProjectCreated={handleProjectCreated}>
+              {user ? (
+                <ProjectModal onProjectCreated={handleProjectCreated}>
                   <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project">
                     <FolderPlus className="h-5 w-5 flex-shrink-0" />
                   </Button>
-                </ProjectModal>}
+                </ProjectModal>
+              ) : (
+                <Button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
+                  size="sm" 
+                  variant="ghost" 
+                  title="New Project"
+                >
+                  <FolderPlus className="h-5 w-5 flex-shrink-0" />
+                </Button>
+              )}
             </div> : <div className="mt-1 space-y-2">
               <Button onClick={handleNewChat} className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
                 <Plus className="h-4 w-4 flex-shrink-0" />
@@ -340,12 +352,24 @@ export default function ChatSidebar({
 
 
               
-              {user && <ProjectModal onProjectCreated={handleProjectCreated}>
+              {user ? (
+                <ProjectModal onProjectCreated={handleProjectCreated}>
                   <Button className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
                     <FolderPlus className="h-4 w-4 flex-shrink-0" />
                     <span className="font-medium">New Project</span>
                   </Button>
-                </ProjectModal>}
+                </ProjectModal>
+              ) : (
+                <Button 
+                  onClick={() => setShowAuthModal(true)}
+                  className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
+                  size="sm" 
+                  variant="ghost"
+                >
+                  <FolderPlus className="h-4 w-4 flex-shrink-0" />
+                  <span className="font-medium">New Project</span>
+                </Button>
+              )}
             </div>}
         </SidebarHeader>
 
