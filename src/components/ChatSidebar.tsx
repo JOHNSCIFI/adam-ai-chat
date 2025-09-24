@@ -152,7 +152,7 @@ export default function ChatSidebar({
   }, []);
   const handleNewChat = async () => {
     if (!user) {
-      setShowAuthModal(true);
+      navigate('/');
       return;
     }
     try {
