@@ -132,8 +132,17 @@ export function ProjectModal({
     }
   };
 
+  const handleOpenChange = (open: boolean) => {
+    if (open && !user && !isEditing) {
+      // If trying to open for new project creation and user is not signed in
+      navigate('/pricing-plans');
+      return;
+    }
+    setIsOpen(open);
+  };
+
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>

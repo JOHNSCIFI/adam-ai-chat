@@ -39,10 +39,18 @@ export default function Index() {
       </div>;
   }
   const handleFileUpload = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     fileInputRef.current?.click();
     setIsPopoverOpen(false);
   };
   const handleCreateImageClick = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setIsPopoverOpen(false);
     // Navigate to image generation tool
     const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
@@ -82,6 +90,10 @@ export default function Index() {
     }
   };
   const startRecording = () => {
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     setIsRecording(true);
     // Add voice recording logic here
   };
