@@ -255,6 +255,7 @@ export default function Index() {
     // Hide suggestions and show available models when text is cleared
     if (e.target.value.trim() === '') {
       setShowSuggestions(null);
+      setShowMoreButtons(false);
     }
   };
   const startRecording = () => {
@@ -392,6 +393,8 @@ export default function Index() {
 
   const handlePromptClick = (prompt: string) => {
     setMessage(prompt);
+    setShowSuggestions(null);
+    setShowMoreButtons(false);
     textareaRef.current?.focus();
   };
 
@@ -590,41 +593,56 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Suggestion buttons - compact design */}
-      <div className="w-full max-w-3xl mb-6">
-        <div className="flex flex-wrap gap-2 justify-center">
-          {suggestionButtons.map((suggestion, index) => (
-            <Button
-              key={index}
-              onClick={() => handleSuggestionClick(suggestion.action)}
-              variant="ghost"
-              size="sm"
-              className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
-            >
-              <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-              <span className="text-xs font-medium">{suggestion.label}</span>
-            </Button>
-          ))}
-        </div>
-        
-        {/* Additional buttons when "See More" is clicked */}
-        {showMoreButtons && (
-          <div className="flex flex-wrap gap-2 justify-center mt-2">
-            {additionalButtons.map((button, index) => (
+      {/* Suggestion buttons - compact design - only show when no suggestions are active */}
+      {!showSuggestions && (
+        <div className="w-full max-w-3xl mb-6">
+          <div className="flex flex-wrap gap-2 justify-center">
+            {suggestionButtons.slice(0, showMoreButtons ? suggestionButtons.length : suggestionButtons.length - 1).map((suggestion, index) => (
               <Button
                 key={index}
-                onClick={() => handleSuggestionClick(button.action)}
+                onClick={() => handleSuggestionClick(suggestion.action)}
                 variant="ghost"
                 size="sm"
                 className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
               >
-                <button.icon className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs font-medium">{button.label}</span>
+                <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
+                <span className="text-xs font-medium">{suggestion.label}</span>
               </Button>
             ))}
+            
+            {/* Show "See More" button only when additional buttons are not shown */}
+            {!showMoreButtons && (
+              <Button
+                onClick={() => handleSuggestionClick('see-more')}
+                variant="ghost"
+                size="sm"
+                className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                <span className="text-xs font-medium">See More</span>
+              </Button>
+            )}
           </div>
-        )}
-      </div>
+          
+          {/* Additional buttons when "See More" is clicked */}
+          {showMoreButtons && (
+            <div className="flex flex-wrap gap-2 justify-center mt-2">
+              {additionalButtons.map((button, index) => (
+                <Button
+                  key={index}
+                  onClick={() => handleSuggestionClick(button.action)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+                >
+                  <button.icon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs font-medium">{button.label}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Suggestion prompts */}
       {showSuggestions && suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts] && (
