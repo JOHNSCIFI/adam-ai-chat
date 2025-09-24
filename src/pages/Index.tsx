@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 const models = [{
   id: 'gpt-4o-mini',
@@ -105,6 +106,9 @@ export default function Index() {
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
+  const [isImageMode, setIsImageMode] = useState(false);
+  const [isStylesOpen, setIsStylesOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -268,6 +272,84 @@ export default function Index() {
     }
   };
   const selectedModelData = models.find(m => m.id === selectedModel);
+
+  const imageStyles = [{
+    name: 'Cyberpunk',
+    prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.'
+  }, {
+    name: 'Anime',
+    prompt: 'Create an image in an anime art style: clean lines, vibrant colors, expressive characters, and detailed backgrounds with a Japanese animation aesthetic.'
+  }, {
+    name: 'Minimalist',
+    prompt: 'Create an image in a minimalist style: clean, simple composition with plenty of white space, limited color palette, and focus on essential elements only.'
+  }, {
+    name: 'Watercolor',
+    prompt: 'Create an image in a watercolor painting style: soft, flowing colors that blend naturally, visible brush strokes, and delicate, artistic textures.'
+  }, {
+    name: 'Vintage',
+    prompt: 'Create an image with a vintage aesthetic: sepia tones, aged textures, classic composition, and nostalgic mood reminiscent of old photographs.'
+  }, {
+    name: 'Photorealistic',
+    prompt: 'Create a photorealistic image: highly detailed, accurate lighting, realistic textures, and lifelike appearance as if captured by a professional camera.'
+  }, {
+    name: 'Abstract',
+    prompt: 'Create an abstract image: non-representational forms, bold colors, geometric or fluid shapes, and expressive artistic interpretation.'
+  }, {
+    name: 'Coloring Book',
+    prompt: 'Create an image in a coloring book style: black line art on white background, clear outlines, simple shapes perfect for coloring.'
+  }, {
+    name: 'Synthwave',
+    prompt: 'Create an image in a synthwave aesthetic: retro-futuristic 1980s vibe with neon grids, glowing sunset, vibrant magenta-and-cyan gradients, chrome highlights, and a nostalgic outrun atmosphere.'
+  }];
+
+  const handleStyleSelect = (style: typeof imageStyles[0]) => {
+    setMessage(style.prompt);
+    setSelectedStyle(style.name);
+    setIsStylesOpen(false);
+    
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleCreateImageClick = () => {
+    setIsImageMode(true);
+    setMessage('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
+  const handleExitImageMode = () => {
+    setIsImageMode(false);
+    setSelectedStyle(null);
+    setMessage('');
+  };
+
+  const getStyleBackground = (styleName: string) => {
+    switch (styleName) {
+      case 'Cyberpunk':
+        return 'bg-gradient-to-br from-cyan-500/30 to-purple-600/40 border border-cyan-400/20';
+      case 'Anime':
+        return 'bg-gradient-to-br from-pink-400/30 to-orange-400/40 border border-pink-300/20';
+      case 'Minimalist':
+        return 'bg-gradient-to-br from-gray-100/50 to-gray-200/50 border border-gray-300/20';
+      case 'Watercolor':
+        return 'bg-gradient-to-br from-blue-300/30 to-green-300/40 border border-blue-200/20';
+      case 'Vintage':
+        return 'bg-gradient-to-br from-amber-400/30 to-orange-400/40 border border-amber-300/20';
+      case 'Photorealistic':
+        return 'bg-gradient-to-br from-slate-400/30 to-slate-600/40 border border-slate-300/20';
+      case 'Abstract':
+        return 'bg-gradient-to-br from-purple-400/30 to-red-400/40 border border-purple-300/20';
+      case 'Coloring Book':
+        return 'bg-gradient-to-br from-white to-gray-50 border border-gray-200';
+      case 'Synthwave':
+        return 'bg-gradient-to-br from-purple-500/30 to-pink-500/40 border border-purple-400/20';
+      default:
+        return 'bg-muted border border-border';
+    }
+  };
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Welcome to AI Chat</h1>
@@ -276,19 +358,55 @@ export default function Index() {
 
       <div className="w-full max-w-3xl mb-6">
         <div className="relative bg-background border border-border rounded-2xl p-4">
+          {/* Image mode indicator */}
+          {isImageMode && <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+              <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                <ImageIcon className="h-3 w-3" />
+                <span>Image</span>
+                <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+              
+              {/* Styles dropdown */}
+              <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80">
+                    <Palette className="h-3 w-3" />
+                    Styles
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                  <div className="grid grid-cols-3 gap-3">
+                    {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                          <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                            {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                          </span>
+                        </div>
+                        <span className="text-xs font-medium leading-tight">{style.name}</span>
+                      </button>)}
+                  </div>
+                </PopoverContent>
+              </Popover>
+            </div>}
+
           <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleStartChat();
           }
-        }} placeholder="Type a message..." className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
+        }} placeholder={isImageMode ? "Describe an image..." : "Type a message..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
                 <Paperclip className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImage}>
+              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
                 <ImageIcon className="h-4 w-4 mr-1" />Create an image
               </Button>
               
