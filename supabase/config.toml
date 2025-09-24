@@ -47,6 +47,3 @@ verify_jwt = false
 
 [functions.delete-all-user-images]
 verify_jwt = false
-
-[functions.webhook-handler]
-verify_jwt = false
