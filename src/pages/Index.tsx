@@ -256,15 +256,11 @@ export default function Index() {
   const handleModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
   };
-  
   const scrollModels = (direction: 'left' | 'right') => {
     if (modelsContainerRef.current) {
       const scrollAmount = 300;
       const currentScroll = modelsContainerRef.current.scrollLeft;
-      const newScroll = direction === 'left' 
-        ? currentScroll - scrollAmount 
-        : currentScroll + scrollAmount;
-      
+      const newScroll = direction === 'left' ? currentScroll - scrollAmount : currentScroll + scrollAmount;
       modelsContainerRef.current.scrollTo({
         left: newScroll,
         behavior: 'smooth'
@@ -328,68 +324,7 @@ export default function Index() {
 
       
 
-      <div className="w-full max-w-3xl">
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-            <h2 className="text-xl font-semibold">Available Models</h2>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-full border border-border/50"
-              onClick={() => scrollModels('left')}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 w-8 p-0 rounded-full border border-border/50"
-              onClick={() => scrollModels('right')}
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <div className="relative overflow-hidden">
-          <div className="flex gap-4 overflow-x-auto scrollbar-hide" ref={modelsContainerRef} style={{ scrollBehavior: 'smooth' }}>
-            {availableModels.map(model => (
-              <div 
-                key={model.id} 
-                className={`flex-shrink-0 w-72 p-5 rounded-xl border cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] ${
-                  model.selected 
-                    ? 'border-primary/30 bg-primary/5 shadow-md' 
-                    : 'border-border/60 bg-card hover:border-border hover:bg-accent/50'
-                }`} 
-                onClick={() => handleModelSelect(model.id)}
-              >
-                <div className="flex items-start gap-4">
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-muted/50 flex items-center justify-center border border-border/30">
-                    <span className="text-lg">{model.icon}</span>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-sm truncate">{model.name}</h3>
-                      {model.selected && (
-                        <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">
-                          Active
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2">
-                      {model.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      
 
       <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
       
