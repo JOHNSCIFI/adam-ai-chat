@@ -35,11 +35,9 @@ function App() {
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <Index />
-                    </MainLayout>
-                  </ProtectedRoute>
+                  <MainLayout>
+                    <Index />
+                  </MainLayout>
                 } />
                 <Route path="/chat/:chatId" element={
                   <ProtectedRoute>

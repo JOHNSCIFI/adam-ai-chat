@@ -91,6 +91,10 @@ export default function Index() {
   };
   const handleStartChat = async () => {
     if (!message.trim() || loading) return;
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
     if (!canSendMessage) {
       navigate('/pricing-plans');
       return;
