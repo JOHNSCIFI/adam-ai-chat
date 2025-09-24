@@ -371,9 +371,7 @@ export default function Index() {
               <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
                 <Paperclip className="h-4 w-4" />
               </Button>
-            </div>
-            
-            <div className="flex items-center gap-2">
+              
               {isImageMode ? (
                 <>
                   {/* Image mode indicator */}
@@ -396,7 +394,7 @@ export default function Index() {
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="end">
+                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
                       <div className="grid grid-cols-3 gap-3">
                         {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
                             <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
@@ -415,7 +413,9 @@ export default function Index() {
                   <ImageIcon className="h-4 w-4 mr-1" />Create an image
                 </Button>
               )}
-              
+            </div>
+            
+            <div className="flex items-center gap-2">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="w-[200px] h-8 bg-transparent border border-border/50 rounded-full">
                   <SelectValue>
