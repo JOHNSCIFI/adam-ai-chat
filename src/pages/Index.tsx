@@ -358,41 +358,6 @@ export default function Index() {
 
       <div className="w-full max-w-3xl mb-6">
         <div className="relative bg-background border border-border rounded-2xl p-4">
-          {/* Image mode indicator */}
-          {isImageMode && <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
-              <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                <ImageIcon className="h-3 w-3" />
-                <span>Image</span>
-                <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
-                  <X className="h-3 w-3" />
-                </button>
-              </div>
-              
-              {/* Styles dropdown */}
-              <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80">
-                    <Palette className="h-3 w-3" />
-                    Styles
-                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                  <div className="grid grid-cols-3 gap-3">
-                    {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                        <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                          <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                            {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                          </span>
-                        </div>
-                        <span className="text-xs font-medium leading-tight">{style.name}</span>
-                      </button>)}
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>}
 
           <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
           if (e.key === 'Enter' && !e.shiftKey) {
@@ -406,14 +371,51 @@ export default function Index() {
               <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
                 <Paperclip className="h-4 w-4" />
               </Button>
-              {!isImageMode && (
+            </div>
+            
+            <div className="flex items-center gap-2">
+              {isImageMode ? (
+                <>
+                  {/* Image mode indicator */}
+                  <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                    <ImageIcon className="h-3 w-3" />
+                    <span>Image</span>
+                    <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                  
+                  {/* Styles dropdown */}
+                  <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                    <PopoverTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
+                        <Palette className="h-3 w-3" />
+                        Styles
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="end">
+                      <div className="grid grid-cols-3 gap-3">
+                        {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                              <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                              </span>
+                            </div>
+                            <span className="text-xs font-medium leading-tight">{style.name}</span>
+                          </button>)}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
+                </>
+              ) : (
                 <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
                   <ImageIcon className="h-4 w-4 mr-1" />Create an image
                 </Button>
               )}
-            </div>
-            
-            <div className="flex items-center gap-2">
+              
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger className="w-[200px] h-8 bg-transparent border border-border/50 rounded-full">
                   <SelectValue>
