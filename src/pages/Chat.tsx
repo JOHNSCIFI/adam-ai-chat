@@ -109,6 +109,7 @@ export default function Chat() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
   const [isImageMode, setIsImageMode] = useState(false);
@@ -516,6 +517,7 @@ export default function Chat() {
   };
   const handleCreateImageClick = () => {
     setIsImageMode(true);
+    setIsPopoverOpen(false);
     setInput('');
     setTimeout(() => {
       textareaRef.current?.focus();
@@ -1173,6 +1175,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
   const handleFileUpload = () => {
     fileInputRef.current?.click();
+    setIsPopoverOpen(false);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -1844,7 +1847,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   {getFileIcon(file.type)}
                   <span className="truncate max-w-32">{file.name}</span>
                   <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-foreground">
-                    <X className="h-3 w-3" />
+                    
                   </button>
                 </div>)}
             </div>}
@@ -1890,14 +1893,20 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" 
-                  onClick={handleFileUpload}
-                >
-                  <Paperclip className="h-4 w-4" />
-                </Button>
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
+                      <Paperclip className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                      <Paperclip className="h-4 w-4" />
+                      Add photos & files
+                    </Button>
+                    
+                  </PopoverContent>
+                </Popover>
                 
                 {isImageMode ? <>
                     {/* Image mode indicator */}
