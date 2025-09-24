@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from '@/components/AuthModal';
 
 import { 
   Bot, 
@@ -176,12 +177,13 @@ export default function ExploreTools() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState('Popular');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const filteredTools = tools.filter(tool => tool.category === selectedCategory);
 
   const handleToolClick = (tool: Tool) => {
     if (!user) {
-      navigate('/pricing-plans');
+      setShowAuthModal(true);
       return;
     }
     // Generate unique ID for this tool session
@@ -254,8 +256,17 @@ export default function ExploreTools() {
             </div>
           </TabsContent>
         ))}
-      </Tabs>
+        </Tabs>
       </div>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+        }}
+      />
     </div>
   );
 }

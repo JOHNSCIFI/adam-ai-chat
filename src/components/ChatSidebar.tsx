@@ -11,6 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
 import SettingsModal from './SettingsModal';
+import AuthModal from './AuthModal';
 interface Chat {
   id: string;
   title: string;
@@ -62,6 +63,7 @@ export default function ChatSidebar({
   const [addToProjectModalOpen, setAddToProjectModalOpen] = useState<string | null>(null);
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [editingProjectTitle, setEditingProjectTitle] = useState('');
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const {
     user,
     signOut,
@@ -150,7 +152,7 @@ export default function ChatSidebar({
   }, []);
   const handleNewChat = async () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthModal(true);
       return;
     }
     try {
@@ -302,7 +304,7 @@ export default function ChatSidebar({
   const handleSignOut = async () => {
     try {
       await signOut();
-      navigate('/auth');
+      navigate('/');
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -324,11 +326,26 @@ export default function ChatSidebar({
               <Button onClick={handleNewChat} className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Chat">
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
-              <ProjectModal onProjectCreated={handleProjectCreated}>
-                <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project">
-                  <FolderPlus className="h-5 w-5 flex-shrink-0" />
-                </Button>
-              </ProjectModal>
+              <Button 
+                className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
+                size="sm" 
+                variant="ghost" 
+                title="New Project"
+                onClick={() => {
+                  if (!user) {
+                    setShowAuthModal(true);
+                  }
+                }}
+              >
+                <FolderPlus className="h-5 w-5 flex-shrink-0" />
+              </Button>
+              {user && (
+                <ProjectModal onProjectCreated={handleProjectCreated}>
+                  <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project">
+                    <FolderPlus className="h-5 w-5 flex-shrink-0" />
+                  </Button>
+                </ProjectModal>
+              )}
             </div> : <div className="mt-1 space-y-2">
               <Button onClick={handleNewChat} className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
                 <Plus className="h-4 w-4 flex-shrink-0" />
@@ -336,12 +353,27 @@ export default function ChatSidebar({
               </Button>
 
 
-              <ProjectModal onProjectCreated={handleProjectCreated}>
-                <Button className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
-                  <FolderPlus className="h-4 w-4 flex-shrink-0" />
-                  <span className="font-medium">New Project</span>
-                </Button>
-              </ProjectModal>
+              <Button 
+                className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" 
+                size="sm" 
+                variant="ghost"
+                onClick={() => {
+                  if (!user) {
+                    setShowAuthModal(true);
+                  }
+                }}
+              >
+                <FolderPlus className="h-4 w-4 flex-shrink-0" />
+                <span className="font-medium">New Project</span>
+              </Button>
+              {user && (
+                <ProjectModal onProjectCreated={handleProjectCreated}>
+                  <Button className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
+                    <FolderPlus className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium">New Project</span>
+                  </Button>
+                </ProjectModal>
+              )}
             </div>}
         </SidebarHeader>
 
@@ -520,7 +552,7 @@ export default function ChatSidebar({
                         </Avatar>
                         {!collapsed && <div className="flex-1 min-w-0">
                             <p className="text-sm text-sidebar-foreground font-medium truncate">Guest</p>
-                            <p className="text-xs text-sidebar-foreground/60 truncate">Not signed in</p>
+                            <p className="text-xs text-sidebar-foreground/60 truncate">Guest user</p>
                           </div>}
                       </div>
                     </DropdownMenuTrigger>
@@ -551,6 +583,15 @@ export default function ChatSidebar({
 
       {/* Settings Modal */}
       <SettingsModal open={showSettings} onOpenChange={setShowSettings} />
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+        }}
+      />
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog isOpen={confirmDialog.isOpen} title={confirmDialog.title} description={confirmDialog.description} onConfirm={() => {

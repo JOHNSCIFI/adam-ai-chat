@@ -8,7 +8,6 @@ import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import MainLayout from '@/layouts/MainLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import AuthPage from '@/pages/AuthPage';
 import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
@@ -32,7 +31,6 @@ function App() {
           <ThemeProvider>
             <Router>
               <Routes>
-                <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/" element={
                   <MainLayout>

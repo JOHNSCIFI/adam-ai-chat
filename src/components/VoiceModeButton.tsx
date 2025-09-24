@@ -4,6 +4,7 @@ import { Radio, Square, Volume2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { v4 as uuidv4 } from 'uuid';
+import AuthModal from './AuthModal';
 
 // Type declarations for Web Speech API
 declare global {
@@ -28,6 +29,7 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   
   const recognitionRef = useRef<any>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
@@ -38,6 +40,12 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
 
   const startVoiceMode = async () => {
     console.log('🎤 Starting voice mode...');
+    
+    // Check authentication first
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
     
     // Reset cancellation flag
     isCancelledRef.current = false;
@@ -618,74 +626,86 @@ const VoiceModeButton: React.FC<VoiceModeButtonProps> = ({
   };
 
   return (
-    <Button
-      variant={getButtonVariant()}
-      size="icon"
-      onClick={handleClick}
-      disabled={isProcessing}
-      className={`
-        relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu
-        ${isListening 
-          ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-110 ring-4 ring-red-500/20 animate-pulse' 
-          : isVoiceModeActive
-            ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105 ring-2 ring-primary/30'
-            : 'hover:scale-105 bg-background border-2 border-border hover:bg-accent hover:text-accent-foreground'
+    <>
+      <Button
+        variant={getButtonVariant()}
+        size="icon"
+        onClick={handleClick}
+        disabled={isProcessing}
+        className={`
+          relative w-12 h-12 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu
+          ${isListening 
+            ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-110 ring-4 ring-red-500/20 animate-pulse' 
+            : isVoiceModeActive
+              ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105 ring-2 ring-primary/30'
+              : 'hover:scale-105 bg-background border-2 border-border hover:bg-accent hover:text-accent-foreground'
+          }
+          ${isProcessing 
+            ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white animate-spin' 
+            : ''
+          }
+          ${isPlaying 
+            ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105' 
+            : ''
+          }
+          focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+          before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
+        `}
+        title={
+          isPlaying 
+            ? 'AI is speaking... Click to stop' 
+            : isProcessing 
+              ? 'Processing your speech...' 
+              : isListening 
+                ? 'Listening... Speak now!'
+                : isVoiceModeActive 
+                  ? 'Voice mode active - Click to stop' 
+                  : 'Start voice conversation'
         }
-        ${isProcessing 
-          ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white animate-spin' 
-          : ''
-        }
-        ${isPlaying 
-          ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105' 
-          : ''
-        }
-        focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
-        before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
-      `}
-      title={
-        isPlaying 
-          ? 'AI is speaking... Click to stop' 
-          : isProcessing 
-            ? 'Processing your speech...' 
-            : isListening 
-              ? 'Listening... Speak now!'
-              : isVoiceModeActive 
-                ? 'Voice mode active - Click to stop' 
-                : 'Start voice conversation'
-      }
-    >
-      <div className="relative z-10 flex items-center justify-center">
-        {getButtonIcon()}
+      >
+        <div className="relative z-10 flex items-center justify-center">
+          {getButtonIcon()}
+          
+          {/* Listening animation */}
+          {isListening && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-white/30 rounded-full animate-ping"></div>
+              <div className="absolute w-6 h-6 border-2 border-white/50 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+            </div>
+          )}
+          
+          {/* Speaking animation */}
+          {isPlaying && (
+            <div className="absolute -inset-1 flex items-center justify-center">
+              <div className="w-10 h-10 border border-green-300/50 rounded-full animate-pulse"></div>
+              <div className="absolute w-12 h-12 border border-green-300/30 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+            </div>
+          )}
+          
+          {/* Processing animation */}
+          {isProcessing && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
+            </div>
+          )}
+        </div>
         
-        {/* Listening animation */}
-        {isListening && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-8 h-8 border-2 border-white/30 rounded-full animate-ping"></div>
-            <div className="absolute w-6 h-6 border-2 border-white/50 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
-          </div>
+        {/* Glowing effect when active */}
+        {isVoiceModeActive && !isListening && !isPlaying && !isProcessing && (
+          <div className="absolute inset-0 bg-primary/10 animate-pulse rounded-full"></div>
         )}
-        
-        {/* Speaking animation */}
-        {isPlaying && (
-          <div className="absolute -inset-1 flex items-center justify-center">
-            <div className="w-10 h-10 border border-green-300/50 rounded-full animate-pulse"></div>
-            <div className="absolute w-12 h-12 border border-green-300/30 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
-          </div>
-        )}
-        
-        {/* Processing animation */}
-        {isProcessing && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="w-3 h-3 bg-white rounded-full animate-bounce"></div>
-          </div>
-        )}
-      </div>
+      </Button>
       
-      {/* Glowing effect when active */}
-      {isVoiceModeActive && !isListening && !isPlaying && !isProcessing && (
-        <div className="absolute inset-0 bg-primary/10 animate-pulse rounded-full"></div>
-      )}
-    </Button>
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          startVoiceMode(); // Start voice mode after successful auth
+        }}
+      />
+    </>
   );
 };
 
