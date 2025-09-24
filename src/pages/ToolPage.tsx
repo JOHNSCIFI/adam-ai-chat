@@ -696,7 +696,8 @@ export default function ToolPage() {
               fileData: base64ImageData,
               chat_id: actualChatId,
               user_id: user.id,
-              message: input
+              message: input,
+              webhook_handler_url: `${window.location.origin.replace('95b51062-fa36-4119-b593-1ae2ac8718b2.lovableproject.com', 'lciaiunzacgvvbvcshdh.supabase.co')}/functions/v1/webhook-handler`
             };
           } else {
             // Send text message format
@@ -704,11 +705,17 @@ export default function ToolPage() {
               type: toolName, // Use tool name as type
               message: input,
               chat_id: actualChatId,
-              user_id: user.id
+              user_id: user.id,
+              webhook_handler_url: `${window.location.origin.replace('95b51062-fa36-4119-b593-1ae2ac8718b2.lovableproject.com', 'lciaiunzacgvvbvcshdh.supabase.co')}/functions/v1/webhook-handler`
             };
           }
 
-          console.log('Sending to webhook:', { type: webhookData.type, hasImage: !!base64ImageData });
+          console.log('Sending to webhook:', { 
+            type: webhookData.type, 
+            hasImage: !!base64ImageData, 
+            webhook_handler_url: webhookData.webhook_handler_url,
+            chat_id: actualChatId 
+          });
           
           await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
             method: 'POST',
