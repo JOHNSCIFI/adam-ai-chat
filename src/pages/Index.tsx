@@ -686,14 +686,14 @@ export default function Index() {
       {/* Suggestion prompts */}
       {showSuggestions && suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts] && (
         <div className="w-full max-w-3xl mb-6">
-          <div className="space-y-2">
+          <div className="space-y-4">
             {suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].map((prompt, index) => (
               <div
                 key={index}
                 onClick={() => handlePromptClick(prompt)}
-                className="p-3 rounded-lg border border-border/50 hover:border-border bg-card hover:bg-accent/50 cursor-pointer transition-all"
+                className="cursor-pointer"
               >
-                <span className="text-sm">{prompt}</span>
+                <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">{prompt}</span>
               </div>
             ))}
           </div>
