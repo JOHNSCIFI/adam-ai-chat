@@ -664,9 +664,9 @@ export default function ProjectPage() {
                 {chats.length > 0 && <div className="space-y-3 mb-8" style={getChatListStyle()}>
                     {chats.map(chat => <div key={chat.id} className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group">
                       <div className="flex-1 cursor-pointer" onClick={() => {
-                        const targetPath = chat.tool_id ? `/${chat.tool_id}/${chat.id}` : `/chat/${chat.id}`;
-                        navigate(targetPath);
-                      }}>
+                    const targetPath = chat.tool_id ? `/${chat.tool_id}/${chat.id}` : `/chat/${chat.id}`;
+                    navigate(targetPath);
+                  }}>
                         <div className="flex flex-col gap-1">
                           {editingChatId === chat.id ? <input value={editingChatTitle} onChange={e => setEditingChatTitle(e.target.value)} onBlur={() => saveRename(chat.id)} onKeyDown={e => {
                         if (e.key === 'Enter') saveRename(chat.id);
@@ -793,9 +793,7 @@ export default function ProjectPage() {
                 </div>
               </div>
               
-              <p className="text-xs text-muted-foreground text-center mt-3">
-                AdamGPT can make mistakes. Check important info.
-              </p>
+              
             </div>
           </div>
         </div>
