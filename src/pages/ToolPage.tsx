@@ -1033,18 +1033,20 @@ export default function ToolPage() {
                       </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
-                       <Button
-                         variant="ghost"
-                         size="sm"
-                         className="w-full justify-start gap-2"
-                         onClick={() => {
-                           handleFileUpload();
-                           setIsPopoverOpen(false);
-                         }}
-                       >
-                         <Paperclip className="h-4 w-4" />
-                         Add photos & files
-                       </Button>
+                       {toolConfig.id !== 'generate-image-openai' && (
+                         <Button
+                           variant="ghost"
+                           size="sm"
+                           className="w-full justify-start gap-2"
+                           onClick={() => {
+                             handleFileUpload();
+                             setIsPopoverOpen(false);
+                           }}
+                         >
+                           <Paperclip className="h-4 w-4" />
+                           Add photos & files
+                         </Button>
+                       )}
                         <Button
                           variant="ghost"
                           size="sm"
