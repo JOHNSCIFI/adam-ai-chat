@@ -498,6 +498,22 @@ export default function Index() {
         </div>
       </div>
 
+      {/* Suggestion buttons - compact design */}
+      <div className="flex flex-wrap gap-2 mb-6 w-full max-w-3xl justify-center">
+        {suggestionButtons.map((suggestion, index) => (
+          <Button
+            key={index}
+            onClick={() => handleSuggestionClick(suggestion.action)}
+            variant="ghost"
+            size="sm"
+            className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+          >
+            <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
+            <span className="text-xs font-medium">{suggestion.label}</span>
+          </Button>
+        ))}
+      </div>
+
       {/* Available Models Section */}
       <div className="w-full max-w-3xl mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -552,21 +568,6 @@ export default function Index() {
             <ChevronRight className="h-4 w-4" />
           </button>
         </div>
-      </div>
-
-      {/* Suggestion buttons */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8 w-full max-w-3xl">
-        {suggestionButtons.map((suggestion, index) => (
-          <Button
-            key={index}
-            onClick={() => handleSuggestionClick(suggestion.action)}
-            variant="outline"
-            className="p-4 h-auto flex flex-col items-center gap-2 hover:bg-muted/50 border-border/50"
-          >
-            <suggestion.icon className="h-5 w-5" />
-            <span className="text-sm">{suggestion.label}</span>
-          </Button>
-        ))}
       </div>
 
       
