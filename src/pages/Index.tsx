@@ -67,23 +67,32 @@ const suggestionButtons = [{
 const availableModels = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
-  description: 'GPT-4o mini, developed by OpenAI, stands as o...',
-  icon: '🔄',
-  selected: true
+  description: 'GPT-4o mini, developed by OpenAI, stands as one of the most efficient AI models available.',
+  icon: '🔄'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
-  description: 'GPT-4o, OpenAI\'s newest flagship model, is...',
+  description: 'GPT-4o, OpenAI\'s newest flagship model, is designed for complex reasoning tasks.',
   icon: '🔄'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
-  description: 'OpenAI\'s GPT-5 sets a new standard in...',
+  description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
   icon: '🔄'
+}, {
+  id: 'claude',
+  name: 'Claude',
+  description: 'Claude, Anthropic\'s advanced AI model, excels at detailed analysis and reasoning.',
+  icon: '🤖'
+}, {
+  id: 'deepseek',
+  name: 'DeepSeek',
+  description: 'DeepSeek offers powerful AI capabilities for a wide range of applications.',
+  icon: '🔍'
 }, {
   id: 'google-gemini',
   name: 'Google Gemini',
-  description: 'Gemini, Google\'s most advanced AI, is designe...',
+  description: 'Gemini, Google\'s most advanced AI, is designed for multimodal understanding.',
   icon: '💎'
 }];
 export default function Index() {
@@ -487,6 +496,77 @@ export default function Index() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Available Models Section */}
+      <div className="w-full max-w-3xl mb-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+            <h2 className="text-lg font-semibold">Available Models</h2>
+          </div>
+          <button className="text-sm text-muted-foreground hover:text-foreground">
+            See All
+          </button>
+        </div>
+        <div className="relative">
+          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+            {availableModels.map((model) => (
+              <div
+                key={model.id}
+                onClick={() => handleModelSelect(model.id)}
+                className={`flex-shrink-0 w-64 p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+                  selectedModel === model.id
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border bg-card hover:border-border/80'
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="text-2xl">{model.icon}</div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-sm mb-1">{model.name}</h3>
+                    <p className="text-xs text-muted-foreground line-clamp-2">
+                      {model.description}
+                    </p>
+                    {selectedModel === model.id && (
+                      <div className="mt-2">
+                        <span className="text-xs text-primary font-medium">Selected</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          {/* Navigation buttons */}
+          <button
+            onClick={() => scrollModels('left')}
+            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+          <button
+            onClick={() => scrollModels('right')}
+            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Suggestion buttons */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-8 w-full max-w-3xl">
+        {suggestionButtons.map((suggestion, index) => (
+          <Button
+            key={index}
+            onClick={() => handleSuggestionClick(suggestion.action)}
+            variant="outline"
+            className="p-4 h-auto flex flex-col items-center gap-2 hover:bg-muted/50 border-border/50"
+          >
+            <suggestion.icon className="h-5 w-5" />
+            <span className="text-sm">{suggestion.label}</span>
+          </Button>
+        ))}
       </div>
 
       
