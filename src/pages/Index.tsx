@@ -385,7 +385,7 @@ export default function Index() {
   };
   const handleSuggestionClick = (action: string) => {
     if (action === 'see-more') {
-      setShowMoreButtons(!showMoreButtons);
+      setShowMoreButtons(true);
       return;
     }
     
