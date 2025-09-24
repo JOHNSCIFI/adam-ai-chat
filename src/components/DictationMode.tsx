@@ -1,124 +1,143 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Mic, Check, X, MicOff } from 'lucide-react';
+import { Check, X } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DictationModeProps {
-  isActive: boolean;
-  onStart: () => void;
-  onStop: (transcribedText: string) => void;
+  onTextReady: (text: string) => void;
   onCancel: () => void;
 }
 
-export const DictationMode: React.FC<DictationModeProps> = ({
-  isActive,
-  onStart,
-  onStop,
-  onCancel
-}) => {
-  const [isListening, setIsListening] = useState(false);
-  const [transcribedText, setTranscribedText] = useState('');
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [volumeLevel, setVolumeLevel] = useState(0);
+interface AudioAnalyzer {
+  analyser: AnalyserNode;
+  dataArray: Uint8Array;
+}
+
+const DictationMode: React.FC<DictationModeProps> = ({ onTextReady, onCancel }) => {
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [audioLevel, setAudioLevel] = useState(0);
+  const [accumulatedText, setAccumulatedText] = useState('');
   
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+  const analyzerRef = useRef<AudioAnalyzer | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const volumeAnimationRef = useRef<number | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
-  // Start dictation
+  useEffect(() => {
+    startDictation();
+    return () => {
+      cleanup();
+    };
+  }, []);
+
+  const cleanup = () => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+    }
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+    }
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    }
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+    }
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
   const startDictation = async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      streamRef.current = stream;
-      
-      // Set up audio analysis for volume visualization
-      audioContextRef.current = new AudioContext();
-      analyserRef.current = audioContextRef.current.createAnalyser();
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      source.connect(analyserRef.current);
-      
-      analyserRef.current.fftSize = 256;
-      const bufferLength = analyserRef.current.frequencyBinCount;
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          sampleRate: 24000,
+          channelCount: 1,
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true
+        }
+      });
+
+      // Set up audio context for visualization
+      audioContextRef.current = new AudioContext({ sampleRate: 24000 });
+      const analyser = audioContextRef.current.createAnalyser();
+      analyser.fftSize = 256;
+      const bufferLength = analyser.frequencyBinCount;
       const dataArray = new Uint8Array(bufferLength);
       
-      // Start volume monitoring
-      const updateVolume = () => {
-        if (analyserRef.current && isListening) {
-          analyserRef.current.getByteFrequencyData(dataArray);
-          const average = dataArray.reduce((a, b) => a + b) / bufferLength;
-          setVolumeLevel(Math.min(100, (average / 255) * 100));
-          volumeAnimationRef.current = requestAnimationFrame(updateVolume);
-        }
-      };
-      updateVolume();
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      source.connect(analyser);
+      
+      analyzerRef.current = { analyser, dataArray };
 
-      // Set up MediaRecorder for speech-to-text
-      mediaRecorderRef.current = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
+      // Set up MediaRecorder for audio capture
+      mediaRecorderRef.current = new MediaRecorder(stream, {
+        mimeType: 'audio/webm;codecs=opus'
+      });
 
+      audioChunksRef.current = [];
+      
       mediaRecorderRef.current.ondataavailable = (event) => {
         if (event.data.size > 0) {
-          chunks.push(event.data);
+          audioChunksRef.current.push(event.data);
         }
       };
 
       mediaRecorderRef.current.onstop = async () => {
-        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-        await processAudioForTranscription(audioBlob);
-        chunks.length = 0;
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm;codecs=opus' });
+        await processAudioChunk(audioBlob);
       };
 
-      mediaRecorderRef.current.start();
-      setIsListening(true);
-      
-      // Start timer
-      timerRef.current = setInterval(() => {
-        setElapsedTime(prev => prev + 1);
-      }, 1000);
+      // Set up speech recognition for real-time transcription
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        recognitionRef.current = new SpeechRecognition();
+        recognitionRef.current.continuous = true;
+        recognitionRef.current.interimResults = true;
+        recognitionRef.current.lang = 'en-US';
+
+        recognitionRef.current.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            if (event.results[i].isFinal) {
+              transcript += event.results[i][0].transcript + ' ';
+            }
+          }
+          if (transcript.trim()) {
+            setAccumulatedText(prev => prev + transcript);
+          }
+        };
+
+        recognitionRef.current.start();
+      }
+
+      // Start recording and timer
+      mediaRecorderRef.current.start(1000); // Collect data every second
+      setIsRecording(true);
+      startTimer();
+      startVisualization();
 
     } catch (error) {
       console.error('Error starting dictation:', error);
+      onCancel();
     }
   };
 
-  // Stop dictation
-  const stopDictation = () => {
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
-      mediaRecorderRef.current.stop();
-    }
-    
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-    }
-    
-    if (audioContextRef.current) {
-      audioContextRef.current.close();
-    }
-    
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-    }
-    
-    if (volumeAnimationRef.current) {
-      cancelAnimationFrame(volumeAnimationRef.current);
-    }
-    
-    setIsListening(false);
-    setVolumeLevel(0);
-  };
-
-  // Process audio for transcription
-  const processAudioForTranscription = async (audioBlob: Blob) => {
+  const processAudioChunk = async (audioBlob: Blob) => {
     try {
       // Convert blob to base64
       const reader = new FileReader();
       reader.onload = async () => {
         const base64Audio = (reader.result as string).split(',')[1];
         
-        // Send to Supabase function for transcription
+        // Send to speech-to-text edge function
         const { data, error } = await supabase.functions.invoke('speech-to-text', {
           body: { audio: base64Audio }
         });
@@ -129,123 +148,139 @@ export const DictationMode: React.FC<DictationModeProps> = ({
         }
 
         if (data?.text) {
-          setTranscribedText(prev => prev + (prev ? ' ' : '') + data.text);
+          setAccumulatedText(prev => prev + ' ' + data.text);
         }
       };
       reader.readAsDataURL(audioBlob);
     } catch (error) {
-      console.error('Error processing audio:', error);
+      console.error('Error processing audio chunk:', error);
     }
   };
 
-  // Handle dictation start/stop
-  useEffect(() => {
-    if (isActive && !isListening) {
-      startDictation();
-    } else if (!isActive && isListening) {
-      stopDictation();
-    }
-  }, [isActive]);
+  const startTimer = () => {
+    timerRef.current = setInterval(() => {
+      setRecordingTime(prev => prev + 1);
+    }, 1000);
+  };
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopDictation();
+  const startVisualization = () => {
+    const updateVisualization = () => {
+      if (analyzerRef.current) {
+        const { analyser, dataArray } = analyzerRef.current;
+        analyser.getByteFrequencyData(dataArray);
+        
+        // Calculate average audio level
+        let sum = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          sum += dataArray[i];
+        }
+        const average = sum / dataArray.length;
+        setAudioLevel(average);
+      }
+      
+      if (isRecording) {
+        animationRef.current = requestAnimationFrame(updateVisualization);
+      }
     };
-  }, []);
+    updateVisualization();
+  };
 
-  // Format time display
+  const handleDone = () => {
+    cleanup();
+    onTextReady(accumulatedText.trim());
+  };
+
+  const handleCancel = () => {
+    cleanup();
+    onCancel();
+  };
+
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Handle done button
-  const handleDone = () => {
-    stopDictation();
-    onStop(transcribedText);
-    setTranscribedText('');
-    setElapsedTime(0);
+  // Generate waveform bars based on audio level
+  const generateWaveform = () => {
+    const bars = [];
+    const numBars = 20;
+    const baseHeight = 2;
+    const maxHeight = 24;
+    
+    for (let i = 0; i < numBars; i++) {
+      // Create variation in bar heights based on audio level and position
+      const variation = Math.sin((i / numBars) * Math.PI * 2 + Date.now() * 0.01) * 0.5 + 0.5;
+      const height = baseHeight + (audioLevel / 255) * maxHeight * variation;
+      
+      bars.push(
+        <div
+          key={i}
+          className="bg-primary rounded-full transition-all duration-75"
+          style={{
+            width: '2px',
+            height: `${Math.max(baseHeight, height)}px`,
+            opacity: 0.7 + (audioLevel / 255) * 0.3
+          }}
+        />
+      );
+    }
+    return bars;
   };
-
-  // Handle cancel button
-  const handleCancel = () => {
-    stopDictation();
-    onCancel();
-    setTranscribedText('');
-    setElapsedTime(0);
-  };
-
-  if (!isActive) return null;
 
   return (
-    <div className="space-y-3">
-      {/* Waveform visualization */}
-      <div className="h-12 bg-muted/30 rounded-lg flex items-center justify-center relative overflow-hidden">
-        <div className="flex items-center space-x-1 h-full">
-          {Array.from({ length: 20 }).map((_, i) => {
-            const height = Math.max(4, (volumeLevel / 100) * 40 * (0.5 + 0.5 * Math.sin((i * Math.PI) / 10)));
-            return (
-              <div
-                key={i}
-                className="bg-primary rounded-full transition-all duration-75 ease-out"
-                style={{
-                  width: '3px',
-                  height: `${height}px`,
-                  opacity: isListening ? 0.3 + (volumeLevel / 100) * 0.7 : 0.3
-                }}
-              />
-            );
-          })}
-        </div>
-        
-        {/* Recording indicator */}
-        {isListening && (
-          <div className="absolute top-2 left-2 flex items-center space-x-2">
-            <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-            <span className="text-xs text-muted-foreground">Recording</span>
+    <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 p-6">
+        <div className="max-w-md mx-auto">
+          {/* Close button */}
+          <div className="flex justify-between items-center mb-6">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleCancel}
+              className="h-8 w-8 rounded-full p-0"
+            >
+              <X className="h-4 w-4" />
+            </Button>
+            <span className="text-sm text-muted-foreground">Dictation Mode</span>
+            <div className="w-8" /> {/* Spacer */}
           </div>
-        )}
-        
-        {/* Timer */}
-        <div className="absolute top-2 right-2">
-          <span className="text-xs font-mono text-muted-foreground">
-            {formatTime(elapsedTime)}
-          </span>
-        </div>
-      </div>
 
-      {/* Control buttons */}
-      <div className="flex items-center justify-center space-x-3">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCancel}
-          className="h-8 px-3"
-        >
-          <X className="h-4 w-4 mr-1" />
-          Cancel
-        </Button>
-        
-        <Button
-          variant="default"
-          size="sm"
-          onClick={handleDone}
-          disabled={!transcribedText.trim()}
-          className="h-8 px-3"
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Done
-        </Button>
-      </div>
-      
-      {/* Debug: Show accumulated text (hidden from user) */}
-      {transcribedText && (
-        <div className="text-xs text-muted-foreground opacity-0 pointer-events-none">
-          Accumulated: {transcribedText}
+          {/* Waveform visualization */}
+          <div className="flex items-center justify-center gap-1 mb-6 h-8">
+            {generateWaveform()}
+          </div>
+
+          {/* Timer */}
+          <div className="text-center mb-6">
+            <span className="text-2xl font-mono font-medium">
+              {formatTime(recordingTime)}
+            </span>
+          </div>
+
+          {/* Done button */}
+          <div className="flex justify-center">
+            <Button
+              onClick={handleDone}
+              className="h-12 w-12 rounded-full bg-primary hover:bg-primary/90"
+              disabled={!accumulatedText.trim()}
+            >
+              <Check className="h-6 w-6" />
+            </Button>
+          </div>
+
+          {/* Preview text (optional, can be hidden) */}
+          {accumulatedText && (
+            <div className="mt-4 p-3 bg-muted rounded-lg max-h-32 overflow-y-auto">
+              <p className="text-sm text-muted-foreground">
+                {accumulatedText || 'Start speaking...'}
+              </p>
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
+
+export default DictationMode;
