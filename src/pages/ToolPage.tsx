@@ -799,7 +799,7 @@ export default function ToolPage() {
 
             // If webhook returns response immediately, handle it
             console.log('Webhook responseData:', JSON.stringify(responseData, null, 2));
-            if (responseData && (responseData.text || responseData.content || Array.isArray(responseData))) {
+            if (responseData && (responseData.text || responseData.content || Array.isArray(responseData) || (responseData.message && responseData.message.content))) {
               let responseContent = '';
               if (Array.isArray(responseData) && responseData.length > 0) {
                 console.log('Processing array response:', responseData);
