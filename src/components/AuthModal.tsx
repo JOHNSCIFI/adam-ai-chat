@@ -4,7 +4,6 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { X } from 'lucide-react';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -119,18 +118,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader className="relative">
+        <DialogHeader>
           <DialogTitle className="text-center text-xl font-semibold">
             AdamGPT
           </DialogTitle>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="absolute right-0 top-0 h-6 w-6 p-0"
-            onClick={onClose}
-          >
-            <X className="h-4 w-4" />
-          </Button>
         </DialogHeader>
 
         <div className="px-6 pb-6">

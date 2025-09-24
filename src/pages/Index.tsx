@@ -29,6 +29,7 @@ export default function Index() {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [pendingMessage, setPendingMessage] = useState('');
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,11 +72,6 @@ export default function Index() {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
 
-    // Show auth modal if user starts typing and isn't authenticated
-    if (!user && e.target.value.trim()) {
-      setShowAuthModal(true);
-    }
-
     // Auto-resize textarea
     const textarea = e.target;
     textarea.style.height = '24px';
@@ -111,6 +107,7 @@ export default function Index() {
   const handleStartChat = async () => {
     if (!message.trim() || loading) return;
     if (!user) {
+      setPendingMessage(message);
       setShowAuthModal(true);
       return;
     }
@@ -241,12 +238,60 @@ export default function Index() {
       {/* Auth Modal */}
       <AuthModal 
         isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)}
-        onSuccess={() => {
-          // Focus back to textarea after successful login
-          setTimeout(() => {
-            textareaRef.current?.focus();
-          }, 100);
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingMessage('');
+        }}
+        onSuccess={async () => {
+          setShowAuthModal(false);
+           // If there's a pending message, send it
+           if (pendingMessage.trim()) {
+             const messageToSend = pendingMessage;
+             setMessage(pendingMessage);
+             setPendingMessage('');
+             
+             // Wait a bit for the user state to update, then start the chat
+             setTimeout(async () => {
+               if (!canSendMessage) {
+                 navigate('/pricing-plans');
+                 return;
+               }
+               
+               setLoading(true);
+               try {
+                 const { data: chatData, error: chatError } = await supabase
+                   .from('chats')
+                   .insert([{
+                     user_id: user?.id,
+                     title: messageToSend.slice(0, 50) || 'New Chat'
+                   }])
+                   .select()
+                   .single();
+                 
+                 if (chatError) throw chatError;
+                 
+                 const { error: messageError } = await supabase
+                   .from('messages')
+                   .insert({
+                     chat_id: chatData.id,
+                     content: messageToSend,
+                     role: 'user'
+                   });
+                 
+                 if (messageError) throw messageError;
+                 navigate(`/chat/${chatData.id}`);
+               } catch (error) {
+                 console.error('Error starting chat:', error);
+               } finally {
+                 setLoading(false);
+               }
+             }, 100);
+          } else {
+            // Focus back to textarea after successful login
+            setTimeout(() => {
+              textareaRef.current?.focus();
+            }, 100);
+          }
         }}
       />
     </div>;
