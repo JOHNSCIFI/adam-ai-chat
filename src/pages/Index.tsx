@@ -160,9 +160,7 @@ export default function Index() {
         <p className="text-muted-foreground text-lg">
           Start a conversation with AI or explore our tools
         </p>
-        {!user && <p className="text-sm text-muted-foreground mt-2">
-            You can send up to 15 messages as a guest. Sign up for unlimited access.
-          </p>}
+        {!user}
       </div>
 
       {/* Message Input Area - Same design as Chat page */}
