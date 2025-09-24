@@ -1879,7 +1879,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </PopoverContent>
                 </Popover>
                 
-                {isImageMode ? <>
+                {isImageMode && !selectedStyle ? <>
                     {/* Image mode indicator */}
                     <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                       <ImageIcon className="h-3 w-3" />
@@ -1889,38 +1889,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       </button>
                     </div>
                     
-                    {selectedStyle ? (
-                      /* Show Create Image button after style selection */
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-primary hover:bg-primary/90 text-primary-foreground rounded-full border border-border/50">
-                        <ImageIcon className="h-3 w-3" />
-                        Create Image
-                      </Button>
-                    ) : (
-                      /* Show Styles dropdown before style selection */
-                      <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
-                        <PopoverTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
-                            <Palette className="h-3 w-3" />
-                            Styles
-                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                          <div className="grid grid-cols-3 gap-3">
-                            {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                                <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                                  <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                                    {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                                  </span>
-                                </div>
-                                <span className="text-xs font-medium leading-tight">{style.name}</span>
-                              </button>)}
-                          </div>
-                        </PopoverContent>
-                      </Popover>
-                    )}
+                    {/* Show Styles dropdown before style selection */}
+                    <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
+                          <Palette className="h-3 w-3" />
+                          Styles
+                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                        <div className="grid grid-cols-3 gap-3">
+                          {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                                <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                  {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                                </span>
+                              </div>
+                              <span className="text-xs font-medium leading-tight">{style.name}</span>
+                            </button>)}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
                     <ImageIcon className="h-4 w-4 mr-1" />Create an image
                   </Button>}
