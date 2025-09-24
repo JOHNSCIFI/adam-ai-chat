@@ -136,6 +136,21 @@ export default function Index() {
       }
     }
   }, [user]);
+
+  // Cleanup on unmount only (remove dependency to prevent interference)
+  React.useEffect(() => {
+    return () => {
+      // Only cleanup when component actually unmounts, not on state changes
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []); // Empty dependency array - only run on mount/unmount
+
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -706,7 +721,7 @@ export default function Index() {
     return <Radio className="h-4 w-4" />;
   };
 
-  const getVoiceButtonVariant = () => {
+   const getVoiceButtonVariant = () => {
     if (isPlaying) {
       return actualTheme === 'dark' ? 'secondary' : 'outline';
     } else if (isProcessing) {
@@ -717,19 +732,6 @@ export default function Index() {
     return 'outline';
   };
 
-  // Cleanup on unmount only (remove dependency to prevent interference)
-  React.useEffect(() => {
-    return () => {
-      // Only cleanup when component actually unmounts, not on state changes
-      if (recognitionRef.current) {
-        recognitionRef.current.stop();
-        recognitionRef.current = null;
-      }
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, []); // Empty dependency array - only run on mount/unmount
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Welcome to AI Chat</h1>
