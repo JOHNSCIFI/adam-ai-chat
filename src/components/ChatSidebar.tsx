@@ -326,13 +326,7 @@ export default function ChatSidebar({
               <Button onClick={handleNewChat} className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Chat">
                 <Plus className="h-5 w-5 flex-shrink-0" />
               </Button>
-              <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project" onClick={() => {
-            if (!user) {
-              setShowAuthModal(true);
-            }
-          }}>
-                <FolderPlus className="h-5 w-5 flex-shrink-0" />
-              </Button>
+              
               {user && <ProjectModal onProjectCreated={handleProjectCreated}>
                   <Button className="h-12 w-12 p-0 rounded-full bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost" title="New Project">
                     <FolderPlus className="h-5 w-5 flex-shrink-0" />
