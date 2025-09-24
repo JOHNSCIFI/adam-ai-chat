@@ -222,15 +222,28 @@ export default function ToolPage() {
             filter: `chat_id=eq.${toolId}`
           }, 
           (payload) => {
-            console.log(`[REALTIME] Message received for tool ${toolId}:`, payload);
+            console.log(`🔔 [REALTIME] Message received for tool ${toolId}:`, payload);
+            console.log(`🔔 [REALTIME] Payload new:`, payload.new);
+            console.log(`🔔 [REALTIME] Current messages count:`, prev => prev.length);
+            
             const newMessage = payload.new as Message;
             
+            console.log(`🔍 [REALTIME] New message details:`, {
+              id: newMessage.id,
+              chat_id: newMessage.chat_id,
+              role: newMessage.role,
+              content: newMessage.content?.substring(0, 100) + '...',
+              created_at: newMessage.created_at
+            });
+            
             if (newMessage.chat_id !== toolId) {
-              console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current tool ${toolId}, ignoring`);
+              console.warn(`⚠️ [REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current tool ${toolId}, ignoring`);
               return;
             }
             
             setMessages(prev => {
+              console.log(`📊 [REALTIME] Current messages in state:`, prev.length);
+              
               const existsById = prev.find(msg => msg.id === newMessage.id);
               const existsByContent = prev.find(msg => 
                 msg.content === newMessage.content && 
@@ -238,14 +251,21 @@ export default function ToolPage() {
                 Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000
               );
               
-              if (existsById || existsByContent) {
-                console.log(`[REALTIME] Message already exists in tool ${toolId}, skipping`);
+              if (existsById) {
+                console.log(`🔄 [REALTIME] Message with same ID already exists, skipping`);
                 return prev;
               }
               
-              console.log(`[REALTIME] Adding new message to tool ${toolId}`);
+              if (existsByContent) {
+                console.log(`🔄 [REALTIME] Message with same content already exists, skipping`);
+                return prev;
+              }
+              
+              console.log(`✅ [REALTIME] Adding new message to tool ${toolId}`);
               const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === toolId);
-              return [...filteredPrev, newMessage];
+              const newMessages = [...filteredPrev, newMessage];
+              console.log(`📈 [REALTIME] New messages count:`, newMessages.length);
+              return newMessages;
             });
             scrollToBottom();
           }
