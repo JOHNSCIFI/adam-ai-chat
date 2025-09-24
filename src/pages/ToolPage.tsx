@@ -350,6 +350,13 @@ export default function ToolPage() {
           console.warn(`[AUTO-TRIGGER] Message chat_id ${lastMessage.chat_id} doesn't match current tool ${toolId}, skipping`);
           return;
         }
+        
+        // Skip AI response for calculate-calories tool - it only uses webhook
+        if (toolConfig.id === 'calculate-calories') {
+          console.log(`[AUTO-TRIGGER] Skipping AI response for calculate-calories tool`);
+          return;
+        }
+        
         const hasAssistantResponseAfter = currentToolMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
         if (!hasAssistantResponseAfter && !toolProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(toolId)) {
           console.log(`[AUTO-TRIGGER] Processing user message in tool ${toolId}:`, lastMessage.id);
@@ -1008,10 +1015,12 @@ export default function ToolPage() {
                          <Paperclip className="h-4 w-4" />
                          Add photos & files
                        </Button>
-                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                          <ImageIcon2 className="h-4 w-4" />
-                          Create image
-                        </Button>
+                        {toolConfig.id !== 'calculate-calories' && (
+                          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                            <ImageIcon2 className="h-4 w-4" />
+                            Create image
+                          </Button>
+                        )}
                      </PopoverContent>
                   </Popover>}
                 
