@@ -697,7 +697,7 @@ export default function ToolPage() {
               chat_id: actualChatId,
               user_id: user.id,
               message: input,
-              webhook_handler_url: `${window.location.origin.replace('95b51062-fa36-4119-b593-1ae2ac8718b2.lovableproject.com', 'lciaiunzacgvvbvcshdh.supabase.co')}/functions/v1/webhook-handler`
+              webhook_handler_url: `https://lciaiunzacgvvbvcshdh.supabase.co/functions/v1/webhook-handler`
             };
           } else {
             // Send text message format
@@ -706,7 +706,7 @@ export default function ToolPage() {
               message: input,
               chat_id: actualChatId,
               user_id: user.id,
-              webhook_handler_url: `${window.location.origin.replace('95b51062-fa36-4119-b593-1ae2ac8718b2.lovableproject.com', 'lciaiunzacgvvbvcshdh.supabase.co')}/functions/v1/webhook-handler`
+              webhook_handler_url: `https://lciaiunzacgvvbvcshdh.supabase.co/functions/v1/webhook-handler`
             };
           }
 
@@ -717,7 +717,7 @@ export default function ToolPage() {
             chat_id: actualChatId 
           });
           
-          await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+          const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -725,7 +725,49 @@ export default function ToolPage() {
             body: JSON.stringify(webhookData)
           });
           
-          console.log('Webhook sent successfully');
+          console.log('Webhook response status:', webhookResponse.status);
+          
+          if (webhookResponse.ok) {
+            const responseData = await webhookResponse.json();
+            console.log('Webhook response data:', responseData);
+            
+            // If webhook returns response immediately, handle it
+            if (responseData && (responseData.text || responseData.content || Array.isArray(responseData))) {
+              let responseContent = '';
+              
+              if (Array.isArray(responseData) && responseData.length > 0) {
+                const analysisTexts = responseData.map(item => item.text || item.content || '').filter(text => text);
+                if (analysisTexts.length > 0) {
+                  responseContent = analysisTexts.join('\n\n');
+                }
+              } else if (responseData.text) {
+                responseContent = responseData.text;
+              } else if (responseData.analysis || responseData.content) {
+                responseContent = responseData.analysis || responseData.content;
+              }
+              
+              if (responseContent) {
+                console.log('Processing immediate webhook response:', responseContent);
+                
+                // Save AI response directly
+                const { error: saveError } = await supabase
+                  .from('messages')
+                  .insert({
+                    chat_id: actualChatId,
+                    content: responseContent,
+                    role: 'assistant'
+                  });
+                  
+                if (saveError) {
+                  console.error('Error saving immediate AI response:', saveError);
+                } else {
+                  console.log('Immediate AI response saved successfully');
+                }
+              }
+            }
+          } else {
+            console.error('Webhook failed with status:', webhookResponse.status);
+          }
         } catch (webhookError) {
           console.error('Error sending webhook:', webhookError);
         }
