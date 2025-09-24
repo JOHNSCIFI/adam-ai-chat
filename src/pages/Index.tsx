@@ -59,10 +59,6 @@ const suggestionButtons = [{
   icon: FileText,
   label: 'Summarize text',
   action: 'summarize-text'
-}, {
-  icon: Plus,
-  label: 'See More',
-  action: 'see-more'
 }];
 
 const additionalButtons = [{
@@ -601,7 +597,7 @@ export default function Index() {
       {!showSuggestions && (
         <div className="w-full max-w-3xl mb-6">
           <div className="flex flex-wrap gap-2 justify-center">
-            {suggestionButtons.slice(0, showMoreButtons ? suggestionButtons.length : suggestionButtons.length - 1).map((suggestion, index) => (
+            {suggestionButtons.map((suggestion, index) => (
               <Button
                 key={index}
                 onClick={() => handleSuggestionClick(suggestion.action)}
