@@ -350,13 +350,12 @@ export default function ToolPage() {
           console.warn(`[AUTO-TRIGGER] Message chat_id ${lastMessage.chat_id} doesn't match current tool ${toolId}, skipping`);
           return;
         }
-        
+
         // Skip AI response for calculate-calories tool - it only uses webhook
         if (toolConfig.id === 'calculate-calories') {
           console.log(`[AUTO-TRIGGER] Skipping AI response for calculate-calories tool`);
           return;
         }
-        
         const hasAssistantResponseAfter = currentToolMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
         if (!hasAssistantResponseAfter && !toolProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(toolId)) {
           console.log(`[AUTO-TRIGGER] Processing user message in tool ${toolId}:`, lastMessage.id);
@@ -799,7 +798,7 @@ export default function ToolPage() {
 
             // If webhook returns response immediately, handle it
             console.log('Webhook responseData:', JSON.stringify(responseData, null, 2));
-            if (responseData && (responseData.text || responseData.content || Array.isArray(responseData) || (responseData.message && responseData.message.content))) {
+            if (responseData && (responseData.text || responseData.content || Array.isArray(responseData) || responseData.message && responseData.message.content)) {
               let responseContent = '';
               if (Array.isArray(responseData) && responseData.length > 0) {
                 console.log('Processing array response:', responseData);
@@ -811,7 +810,6 @@ export default function ToolPage() {
                   }
                   return item.text || item.content || '';
                 }).filter(text => text);
-                
                 if (analysisTexts.length > 0) {
                   responseContent = analysisTexts.join('\n\n');
                   console.log('Final response content:', responseContent);
@@ -1028,12 +1026,10 @@ export default function ToolPage() {
                          <Paperclip className="h-4 w-4" />
                          Add photos & files
                        </Button>
-                        {toolConfig.id !== 'calculate-calories' && (
-                          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                        {toolConfig.id !== 'calculate-calories' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                             <ImageIcon2 className="h-4 w-4" />
                             Create image
-                          </Button>
-                        )}
+                          </Button>}
                      </PopoverContent>
                   </Popover>}
                 
@@ -1056,9 +1052,7 @@ export default function ToolPage() {
               </div>
             </div>
             
-            <p className="text-xs text-muted-foreground text-center mt-3">
-              {toolConfig.name} can make mistakes. Check important info.
-            </p>
+            
           </div>
         </div>
       </div>
