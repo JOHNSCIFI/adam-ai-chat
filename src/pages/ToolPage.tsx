@@ -1020,7 +1020,7 @@ export default function ToolPage() {
             <div className="relative">
               <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
-                {(toolConfig.allowImages || toolConfig.allowFiles) && (
+                {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && (
                   <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button
