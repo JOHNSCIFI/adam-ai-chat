@@ -222,7 +222,10 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
   }, []);
 
   const handleNewChat = async () => {
-    if (!user) return;
+    if (!user) {
+      navigate('/auth');
+      return;
+    }
 
     try {
       const { data: newChat, error } = await supabase
@@ -236,7 +239,6 @@ export default function ChatSidebar({ isOpen, onClose }: ChatSidebarProps) {
 
       if (error) {
         console.error('Error creating chat:', error);
-      console.error('Error creating chat:', error);
         return;
       }
 

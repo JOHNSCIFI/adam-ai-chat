@@ -71,9 +71,11 @@ function App() {
                   </MainLayout>
                 } />
                 <Route path="/:toolName/:toolId" element={
-                  <MainLayout>
-                    <ToolPage />
-                  </MainLayout>
+                  <ProtectedRoute>
+                    <MainLayout>
+                      <ToolPage />
+                    </MainLayout>
+                  </ProtectedRoute>
                 } />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />

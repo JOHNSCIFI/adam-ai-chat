@@ -182,6 +182,10 @@ export default function ExploreTools() {
   const filteredTools = tools.filter(tool => tool.category === selectedCategory);
 
   const handleToolClick = (tool: Tool) => {
+    if (!user) {
+      navigate('/pricing-plans');
+      return;
+    }
     // Generate unique ID for this tool session
     const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     navigate(`${tool.route}/${toolId}`);
