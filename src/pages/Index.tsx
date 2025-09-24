@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -33,6 +33,18 @@ export default function Index() {
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // Check for pending message from OAuth flow
+  useEffect(() => {
+    if (user && !pendingMessage) {
+      const storedMessage = localStorage.getItem('pendingChatMessage');
+      if (storedMessage) {
+        localStorage.removeItem('pendingChatMessage');
+        // Create chat with the stored message
+        createChatWithMessage(user.id, storedMessage);
+      }
+    }
+  }, [user]);
+
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -108,6 +120,8 @@ export default function Index() {
     if (!message.trim() || loading) return;
     if (!user) {
       setPendingMessage(message);
+      // Store message in localStorage for OAuth flows
+      localStorage.setItem('pendingChatMessage', message);
       setShowAuthModal(true);
       return;
     }
@@ -278,6 +292,8 @@ export default function Index() {
         onClose={() => {
           setShowAuthModal(false);
           setPendingMessage('');
+          // Clear stored message if modal is closed without auth
+          localStorage.removeItem('pendingChatMessage');
         }}
         onSuccess={async () => {
           setShowAuthModal(false);
