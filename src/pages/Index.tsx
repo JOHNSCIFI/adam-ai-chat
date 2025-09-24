@@ -7,8 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, Radio, Square, Volume2 } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { v4 as uuidv4 } from 'uuid';
 import AuthModal from '@/components/AuthModal';
 const models = [{
   id: 'gpt-4o-mini',
@@ -109,11 +110,23 @@ export default function Index() {
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  
+  // Voice mode states
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [isVoiceModeActive, setIsVoiceModeActive] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  
+  // Voice mode refs
+  const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const isCancelledRef = useRef(false);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   useEffect(() => {
     if (user && !pendingMessage) {
       const storedMessage = localStorage.getItem('pendingChatMessage');
@@ -326,7 +339,7 @@ export default function Index() {
     setMessage('');
   };
 
-  const getStyleBackground = (styleName: string) => {
+   const getStyleBackground = (styleName: string) => {
     switch (styleName) {
       case 'Cyberpunk':
         return 'bg-gradient-to-br from-cyan-500/30 to-purple-600/40 border border-cyan-400/20';
@@ -350,6 +363,373 @@ export default function Index() {
         return 'bg-muted border border-border';
     }
   };
+
+  // Voice mode functions
+  const startVoiceMode = async () => {
+    console.log('🎤 Starting voice mode...');
+    
+    // Check authentication first
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    // Reset cancellation flag
+    isCancelledRef.current = false;
+    
+    try {
+      // Check if browser supports Web Speech API
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      
+      if (!SpeechRecognition) {
+        console.error('❌ Speech recognition not supported in this browser');
+        return;
+      }
+
+      // Check for HTTPS requirement
+      const isSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+      if (!isSecureContext) {
+        console.error('❌ Speech recognition requires HTTPS');
+        return;
+      }
+
+      console.log('✅ Speech recognition supported, creating instance...');
+      const recognition = new SpeechRecognition();
+      
+      // Configure recognition
+      recognition.continuous = false; // Process one phrase at a time
+      recognition.interimResults = false; // Only final results
+      recognition.lang = 'en-US';
+      recognition.maxAlternatives = 1;
+      
+      recognitionRef.current = recognition;
+      
+      // Set up event handlers
+      recognition.onstart = () => {
+        console.log('🎤 Speech recognition started');
+        setIsListening(true);
+      };
+      
+      recognition.onresult = async (event: any) => {
+        const result = event.results[0];
+        if (result.isFinal) {
+          const transcript = result[0].transcript.trim();
+          console.log('📝 Speech recognized:', transcript);
+          
+          // Check if cancelled before processing
+          if (isCancelledRef.current) {
+            console.log('🛑 Voice mode cancelled - ignoring transcript');
+            return;
+          }
+          
+          if (transcript) {
+            setIsListening(false);
+            setIsProcessing(true);
+            await processUserSpeech(transcript);
+          }
+        }
+      };
+      
+      recognition.onerror = (event: any) => {
+        console.error('❌ Speech recognition error:', event.error);
+        setIsListening(false);
+        
+        // Restart on certain errors
+        if (event.error === 'no-speech') {
+          setTimeout(() => {
+            if (isVoiceModeActive && !isProcessing && !isPlaying) {
+              try {
+                recognition.start();
+              } catch (restartError) {
+                console.error('❌ Error restarting recognition:', restartError);
+              }
+            }
+          }, 1000);
+        }
+      };
+      
+      recognition.onend = () => {
+        console.log('🛑 Speech recognition ended');
+        setIsListening(false);
+      };
+      
+      setIsVoiceModeActive(true);
+      recognition.start();
+      
+    } catch (error) {
+      console.error('❌ Error starting voice mode:', error);
+      setIsVoiceModeActive(false);
+    }
+  };
+
+  const stopVoiceMode = () => {
+    console.log('🛑 Stopping voice mode...');
+    
+    // Set cancellation flag
+    isCancelledRef.current = true;
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+      recognitionRef.current = null;
+    }
+    
+    // Stop any ongoing speech synthesis
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    
+    // Stop current audio if playing
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    
+    setIsVoiceModeActive(false);
+    setIsListening(false);
+    setIsProcessing(false);
+    setIsPlaying(false);
+  };
+
+  const speakText = async (text: string) => {
+    console.log('🔊 Speaking text with OpenAI TTS:', text.substring(0, 50) + '...');
+    
+    // Check if cancelled before starting
+    if (isCancelledRef.current) {
+      console.log('🛑 Voice mode cancelled - not speaking');
+      return;
+    }
+    
+    setIsPlaying(true);
+    
+    try {
+      console.log('🤖 Calling OpenAI TTS...');
+      const { data: ttsResponse, error: ttsError } = await supabase.functions.invoke('text-to-speech', {
+        body: {
+          text: text,
+          voice: 'alloy'
+        }
+      });
+
+      console.log('🎵 TTS Response:', { 
+        hasData: !!ttsResponse, 
+        hasAudio: !!ttsResponse?.audioContent,
+        error: ttsError,
+        audioLength: ttsResponse?.audioContent?.length 
+      });
+
+      // Check if cancelled after TTS call
+      if (isCancelledRef.current) {
+        console.log('🛑 Voice mode cancelled - not playing audio');
+        setIsPlaying(false);
+        return;
+      }
+
+      if (ttsError || !ttsResponse?.audioContent) {
+        console.error('❌ TTS error, falling back to browser TTS:', ttsError);
+        fallbackToBrowserTTS(text);
+        return;
+      }
+
+      // Create audio with proper format
+      const audioFormat = ttsResponse.format || 'wav';
+      const audioData = `data:audio/${audioFormat};base64,${ttsResponse.audioContent}`;
+      const audio = new Audio(audioData);
+      currentAudioRef.current = audio;
+      
+      console.log('🎵 Audio created with format:', audioFormat, 'Size:', ttsResponse.size);
+      
+      // Set up audio event handlers
+      audio.onloadstart = () => console.log('🎵 Audio loading started');
+      audio.oncanplay = () => console.log('🎵 Audio can play');
+      audio.onloadeddata = () => console.log('🎵 Audio data loaded');
+      
+      audio.onended = () => {
+        console.log('✅ OpenAI TTS playbook finished');
+        currentAudioRef.current = null;
+        
+        // Check if cancelled before resuming
+        if (isCancelledRef.current) {
+          console.log('🛑 Voice mode cancelled - not resuming listening');
+          setIsPlaying(false);
+          return;
+        }
+        
+        setIsPlaying(false);
+        
+        // Simply set voice mode back to active and start listening
+        setTimeout(() => {
+          if (!isProcessing && !isCancelledRef.current) {
+            startVoiceMode();
+          }
+        }, 500);
+      };
+      
+      audio.onerror = (error) => {
+        console.error('❌ Audio playback error:', error);
+        currentAudioRef.current = null;
+        setIsPlaying(false);
+        
+        if (!isCancelledRef.current) {
+          fallbackToBrowserTTS(text);
+        }
+      };
+      
+      // Play the audio
+      try {
+        console.log('🎵 Starting audio playback...');
+        await audio.play();
+      } catch (playError) {
+        console.error('❌ Audio play failed:', playError);
+        currentAudioRef.current = null;
+        setIsPlaying(false);
+        
+        if (!isCancelledRef.current) {
+          fallbackToBrowserTTS(text);
+        }
+      }
+      
+    } catch (error) {
+      console.error('❌ TTS function call error:', error);
+      setIsPlaying(false);
+      
+      if (!isCancelledRef.current) {
+        fallbackToBrowserTTS(text);
+      }
+    }
+  };
+
+  const fallbackToBrowserTTS = (text: string) => {
+    console.log('🔊 Using browser TTS as fallback');
+    
+    // Check if cancelled before starting
+    if (isCancelledRef.current) {
+      console.log('🛑 Voice mode cancelled - not using browser TTS');
+      return;
+    }
+    
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      synthesisRef.current = utterance;
+      
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const preferredVoice = voices.find(voice => 
+        voice.name.includes('Samantha') || 
+        voice.name.includes('Alex') || 
+        voice.name.includes('Karen') ||
+        voice.lang.startsWith('en')
+      );
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+      }
+      
+      utterance.onend = () => {
+        console.log('✅ Browser TTS finished');
+        synthesisRef.current = null;
+        
+        // Check if cancelled before resuming
+        if (isCancelledRef.current) {
+          console.log('🛑 Voice mode cancelled - not resuming listening');
+          setIsPlaying(false);
+          return;
+        }
+        
+        setIsPlaying(false);
+        
+        // Simply set voice mode back to active and start listening
+        setTimeout(() => {
+          if (!isProcessing && !isCancelledRef.current) {
+            startVoiceMode();
+          }
+        }, 500);
+      };
+      
+      utterance.onerror = (error) => {
+        console.error('❌ Browser TTS error:', error);
+        synthesisRef.current = null;
+        setIsPlaying(false);
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('❌ No TTS available');
+      setIsPlaying(false);
+    }
+  };
+
+  const processUserSpeech = async (transcript: string) => {
+    console.log('🎤 Processing user speech:', transcript);
+    
+    try {
+      // Check if cancelled before processing
+      if (isCancelledRef.current) {
+        console.log('🛑 Voice mode cancelled - stopping user speech processing');
+        return;
+      }
+
+      // For index page, just set the message and handle start chat
+      setMessage(transcript);
+      
+      // Simulate message sent handling
+      await handleStartChat();
+      
+    } catch (error) {
+      console.error('❌ Error in processUserSpeech:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Main voice mode toggle function
+  const handleVoiceModeToggle = () => {
+    if (isVoiceModeActive) {
+      stopVoiceMode();
+    } else {
+      startVoiceMode();
+    }
+  };
+
+  // Helper functions for voice button styling
+  const getVoiceButtonIcon = () => {
+    if (isPlaying) {
+      return <Volume2 className="h-4 w-4" />;
+    } else if (isProcessing) {
+      return <Square className="h-4 w-4 animate-pulse" />;
+    } else if (isListening || isVoiceModeActive) {
+      return <Radio className="h-4 w-4 animate-pulse" />;
+    }
+    return <Radio className="h-4 w-4" />;
+  };
+
+  const getVoiceButtonVariant = () => {
+    if (isPlaying) {
+      return actualTheme === 'dark' ? 'secondary' : 'outline';
+    } else if (isProcessing) {
+      return 'secondary';
+    } else if (isListening || isVoiceModeActive) {
+      return 'default';
+    }
+    return 'outline';
+  };
+
+  // Cleanup on unmount only (remove dependency to prevent interference)
+  React.useEffect(() => {
+    return () => {
+      // Only cleanup when component actually unmounts, not on state changes
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []); // Empty dependency array - only run on mount/unmount
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
       <div className="text-center mb-8">
         <h1 className="text-4xl font-bold mb-4">Welcome to AI Chat</h1>
@@ -435,8 +815,74 @@ export default function Index() {
                 </SelectContent>
               </Select>
               
-              <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
-                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              {/* Voice Mode Button */}
+              <Button
+                variant={getVoiceButtonVariant()}
+                size="sm"
+                onClick={handleVoiceModeToggle}
+                disabled={isProcessing}
+                className={`
+                  relative h-8 w-8 rounded-full overflow-hidden transition-all duration-300 ease-in-out transform-gpu border border-border/50
+                  ${isListening 
+                    ? 'bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/30 scale-110 ring-4 ring-red-500/20 animate-pulse' 
+                    : isVoiceModeActive
+                      ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg shadow-primary/30 scale-105 ring-2 ring-primary/30'
+                      : 'hover:scale-105 bg-background border-2 border-border hover:bg-accent hover:text-accent-foreground'
+                  }
+                  ${isProcessing 
+                    ? 'bg-gradient-to-br from-yellow-500 to-yellow-600 text-white animate-spin' 
+                    : ''
+                  }
+                  ${isPlaying 
+                    ? 'bg-gradient-to-br from-green-500 to-green-600 text-white shadow-lg shadow-green-500/30 scale-105' 
+                    : ''
+                  }
+                  focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2
+                  before:absolute before:inset-0 before:rounded-full before:bg-gradient-to-br before:from-white/20 before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
+                `}
+                title={
+                  isPlaying 
+                    ? 'AI is speaking... Click to stop' 
+                    : isProcessing 
+                      ? 'Processing your speech...' 
+                      : isListening 
+                        ? 'Listening... Speak now!'
+                        : isVoiceModeActive 
+                          ? 'Voice mode active - Click to stop' 
+                          : 'Start voice conversation'
+                }
+              >
+                <div className="relative z-10 flex items-center justify-center">
+                  {getVoiceButtonIcon()}
+                  
+                  {/* Listening animation */}
+                  {isListening && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-6 h-6 border-2 border-white/30 rounded-full animate-ping"></div>
+                      <div className="absolute w-4 h-4 border-2 border-white/50 rounded-full animate-ping" style={{ animationDelay: '0.5s' }}></div>
+                    </div>
+                  )}
+                  
+                  {/* Speaking animation */}
+                  {isPlaying && (
+                    <div className="absolute -inset-1 flex items-center justify-center">
+                      <div className="w-8 h-8 border border-green-300/50 rounded-full animate-pulse"></div>
+                      <div className="absolute w-10 h-10 border border-green-300/30 rounded-full animate-pulse" style={{ animationDelay: '0.3s' }}></div>
+                    </div>
+                  )}
+                  
+                  {/* Processing animation */}
+                  {isProcessing && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-2 h-2 bg-white rounded-full animate-bounce"></div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Glowing effect when active */}
+                {isVoiceModeActive && !isListening && !isPlaying && !isProcessing && (
+                  <div className="absolute inset-0 bg-primary/10 animate-pulse rounded-full"></div>
+                )}
               </Button>
             </div>
           </div>
