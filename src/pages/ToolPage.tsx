@@ -25,9 +25,7 @@ declare global {
     webkitSpeechRecognition: any;
   }
 }
-
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
-
 interface Message {
   id: string;
   chat_id: string;
@@ -37,7 +35,6 @@ interface Message {
   file_attachments?: FileAttachment[];
   image_analysis?: ImageAnalysisResult[];
 }
-
 interface FileAttachment {
   id: string;
   name: string;
@@ -45,7 +42,6 @@ interface FileAttachment {
   type: string;
   url: string;
 }
-
 interface ToolInfo {
   id: string;
   name: string;
@@ -55,7 +51,6 @@ interface ToolInfo {
   allowImages?: boolean;
   allowFiles?: boolean;
 }
-
 const imageStyles = [{
   name: 'Cyberpunk',
   prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.'
@@ -84,7 +79,6 @@ const imageStyles = [{
   name: 'Synthwave',
   prompt: 'Create an image in a synthwave aesthetic: retro-futuristic 1980s vibe with neon grids, glowing sunset, vibrant magenta-and-cyan gradients, chrome highlights, and a nostalgic outrun atmosphere.'
 }];
-
 const toolConfigs: Record<string, ToolInfo> = {
   'calculate-calories': {
     id: 'calculate-calories',
@@ -186,20 +180,31 @@ const toolConfigs: Record<string, ToolInfo> = {
     allowFiles: true
   }
 };
-
 import { ImageEditModal } from '@/components/ImageEditModal';
-
 export default function ToolPage() {
-  const { toolName, toolId } = useParams<{ toolName: string; toolId: string }>();
+  const {
+    toolName,
+    toolId
+  } = useParams<{
+    toolName: string;
+    toolId: string;
+  }>();
   const navigate = useNavigate();
-  const { user, userProfile } = useAuth();
-  const { actualTheme } = useTheme();
-  const { state: sidebarState } = useSidebar();
+  const {
+    user,
+    userProfile
+  } = useAuth();
+  const {
+    actualTheme
+  } = useTheme();
+  const {
+    state: sidebarState
+  } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
   // Always center content on the entire page regardless of sidebar state
   const getContainerStyle = () => {
-    return { 
+    return {
       marginLeft: 'auto',
       marginRight: 'auto',
       maxWidth: '768px',
@@ -214,7 +219,6 @@ export default function ToolPage() {
     const inputMaxWidth = 768; // max width of input container
     const inputWidth = Math.min(availableWidth - 32, inputMaxWidth); // 32px for padding
     const leftOffset = sidebarWidth + (availableWidth - inputWidth) / 2;
-    
     return {
       position: 'fixed' as const,
       bottom: 0,
@@ -223,7 +227,6 @@ export default function ToolPage() {
       zIndex: 50
     };
   };
-  
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -238,29 +241,27 @@ export default function ToolPage() {
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
-  const [selectedImage, setSelectedImage] = useState<{ url: string; name: string } | null>(null);
+  const [selectedImage, setSelectedImage] = useState<{
+    url: string;
+    name: string;
+  } | null>(null);
   const [fileAnalyses, setFileAnalyses] = useState<Map<string, string>>(new Map());
   const [currentImagePrompts, setCurrentImagePrompts] = useState<Map<string, string>>(new Map());
   const [imageAnalysisResults, setImageAnalysisResults] = useState<Map<string, ImageAnalysisResult>>(new Map());
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
-  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
-
   const toolConfig = toolName ? toolConfigs[toolName] : null;
-
   useEffect(() => {
     if (toolId && user && toolConfig) {
       if (!processedUserMessages.current.has(toolId)) {
         processedUserMessages.current.set(toolId, new Set());
       }
-      console.log(`[TOOL-INIT] Initialized tool ${toolId}, processed messages:`, 
-        Array.from(processedUserMessages.current.get(toolId) || []));
-      
+      console.log(`[TOOL-INIT] Initialized tool ${toolId}, processed messages:`, Array.from(processedUserMessages.current.get(toolId) || []));
       setMessages([]);
       setIsGeneratingResponse(false);
       setCurrentImagePrompts(prev => {
@@ -274,7 +275,6 @@ export default function ToolPage() {
       setPendingImageGenerations(new Set());
       setLoading(false);
       fetchMessages();
-
       const handleImageGenerationChat = (event: CustomEvent) => {
         if (event.detail?.chatId === toolId) {
           imageGenerationChats.current.add(toolId);
@@ -283,49 +283,32 @@ export default function ToolPage() {
           }, 2000);
         }
       };
-
       window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
-      
-      const subscription = supabase
-        .channel(`messages-${toolId}`)
-        .on('postgres_changes', 
-          { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'messages',
-            filter: `chat_id=eq.${toolId}`
-          }, 
-          (payload) => {
-            console.log(`[REALTIME] Message received for tool ${toolId}:`, payload);
-            const newMessage = payload.new as Message;
-            
-            if (newMessage.chat_id !== toolId) {
-              console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current tool ${toolId}, ignoring`);
-              return;
-            }
-            
-            setMessages(prev => {
-              const existsById = prev.find(msg => msg.id === newMessage.id);
-              const existsByContent = prev.find(msg => 
-                msg.content === newMessage.content && 
-                msg.role === newMessage.role &&
-                Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000
-              );
-              
-              if (existsById || existsByContent) {
-                console.log(`[REALTIME] Message already exists in tool ${toolId}, skipping`);
-                return prev;
-              }
-              
-              console.log(`[REALTIME] Adding new message to tool ${toolId}`);
-              const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === toolId);
-              return [...filteredPrev, newMessage];
-            });
-            scrollToBottom();
+      const subscription = supabase.channel(`messages-${toolId}`).on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'messages',
+        filter: `chat_id=eq.${toolId}`
+      }, payload => {
+        console.log(`[REALTIME] Message received for tool ${toolId}:`, payload);
+        const newMessage = payload.new as Message;
+        if (newMessage.chat_id !== toolId) {
+          console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current tool ${toolId}, ignoring`);
+          return;
+        }
+        setMessages(prev => {
+          const existsById = prev.find(msg => msg.id === newMessage.id);
+          const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000);
+          if (existsById || existsByContent) {
+            console.log(`[REALTIME] Message already exists in tool ${toolId}, skipping`);
+            return prev;
           }
-        )
-        .subscribe();
-
+          console.log(`[REALTIME] Adding new message to tool ${toolId}`);
+          const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === toolId);
+          return [...filteredPrev, newMessage];
+        });
+        scrollToBottom();
+      }).subscribe();
       return () => {
         console.log(`[CLEANUP] Cleaning up tool ${toolId} - removing event listener and unsubscribing`);
         window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
@@ -333,32 +316,27 @@ export default function ToolPage() {
       };
     }
   }, [toolId, user, toolConfig]);
-
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
-    console.log('Auto-trigger effect:', { 
-      messagesLength: messages.length, 
-      loading, 
-      isGeneratingResponse, 
+    console.log('Auto-trigger effect:', {
+      messagesLength: messages.length,
+      loading,
+      isGeneratingResponse,
       toolId,
       lastMessage: messages[messages.length - 1]
     });
-    
     if (messages.length > 0 && !loading && !isGeneratingResponse && toolId && toolConfig) {
       const currentToolMessages = messages.filter(msg => msg.chat_id === toolId);
-      
       if (currentToolMessages.length === 0) {
         console.log(`[AUTO-TRIGGER] No messages for current tool ${toolId}, skipping`);
         return;
       }
-      
       const lastMessage = currentToolMessages[currentToolMessages.length - 1];
       const toolProcessedMessages = processedUserMessages.current.get(toolId) || new Set();
-      
       console.log(`[AUTO-TRIGGER] Tool ${toolId} - Last message:`, {
         id: lastMessage.id,
         content: lastMessage.content.substring(0, 50),
@@ -367,30 +345,18 @@ export default function ToolPage() {
         alreadyProcessed: toolProcessedMessages.has(lastMessage.id),
         processedCount: toolProcessedMessages.size
       });
-      
-      if (lastMessage.role === 'user' && 
-          (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
-        
+      if (lastMessage.role === 'user' && (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         if (lastMessage.chat_id && lastMessage.chat_id !== toolId) {
           console.warn(`[AUTO-TRIGGER] Message chat_id ${lastMessage.chat_id} doesn't match current tool ${toolId}, skipping`);
           return;
         }
-        
-        const hasAssistantResponseAfter = currentToolMessages.some(msg => 
-          msg.role === 'assistant' && 
-          new Date(msg.created_at) > new Date(lastMessage.created_at)
-        );
-        
-        if (!hasAssistantResponseAfter && 
-            !toolProcessedMessages.has(lastMessage.id) &&
-            !imageGenerationChats.current.has(toolId)) {
+        const hasAssistantResponseAfter = currentToolMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
+        if (!hasAssistantResponseAfter && !toolProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(toolId)) {
           console.log(`[AUTO-TRIGGER] Processing user message in tool ${toolId}:`, lastMessage.id);
-          
           if (!processedUserMessages.current.has(toolId)) {
             processedUserMessages.current.set(toolId, new Set());
           }
           processedUserMessages.current.get(toolId)!.add(lastMessage.id);
-          
           setTimeout(() => {
             console.log('Executing AI response trigger for:', lastMessage.content);
             triggerAIResponse(lastMessage.content, lastMessage.id);
@@ -405,37 +371,37 @@ export default function ToolPage() {
       console.log('Conditions not met for auto-trigger');
     }
   }, [messages, loading, isGeneratingResponse, toolId, toolConfig]);
-
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    console.log('triggerAIResponse called:', { userMessage, userMessageId, isGeneratingResponse, loading });
-    
+    console.log('triggerAIResponse called:', {
+      userMessage,
+      userMessageId,
+      isGeneratingResponse,
+      loading
+    });
     if (isGeneratingResponse || loading || !toolConfig) {
       console.log('Skipping AI response - already in progress');
       return;
     }
-    
     const originalToolId = toolId;
     if (!originalToolId) {
       console.error('No tool ID available for AI response');
       return;
     }
-    
     setIsGeneratingResponse(true);
-    
     try {
       console.log('Starting AI response generation for tool:', originalToolId);
-      
+
       // Prepend tool instructions to user message
       const enhancedMessage = `${toolConfig.instructions}\n\nUser: ${userMessage}`;
-      
       const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
-      
       if (isImageRequest) {
         setCurrentImagePrompts(prev => new Map(prev).set(originalToolId, userMessage));
       }
-      
       console.log('Invoking chat-with-ai-optimized function...');
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+      const {
+        data: aiResponse,
+        error: aiError
+      } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: enhancedMessage,
           chat_id: originalToolId,
@@ -444,15 +410,14 @@ export default function ToolPage() {
           image_context: []
         }
       });
-
-      console.log('AI response received:', { aiResponse, aiError });
-
+      console.log('AI response received:', {
+        aiResponse,
+        aiError
+      });
       if (aiError) throw aiError;
-
       if (aiResponse?.response || aiResponse?.content) {
         const responseContent = aiResponse.response || aiResponse.content;
         console.log('Processing AI response content:', responseContent);
-        
         let fileAttachments: FileAttachment[] = [];
         if (aiResponse.image_url) {
           console.log('Image URL found in AI response:', aiResponse.image_url);
@@ -464,7 +429,6 @@ export default function ToolPage() {
             url: aiResponse.image_url
           }];
         }
-        
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
           chat_id: originalToolId,
@@ -473,12 +437,10 @@ export default function ToolPage() {
           created_at: new Date().toISOString(),
           file_attachments: fileAttachments
         };
-        
         if (toolId === originalToolId) {
           setMessages(prev => [...prev, assistantMessage]);
           scrollToBottom();
         }
-        
         if (isImageRequest) {
           setCurrentImagePrompts(prev => {
             const newMap = new Map(prev);
@@ -486,32 +448,29 @@ export default function ToolPage() {
             return newMap;
           });
         }
-        
         console.log('Saving AI message to database for tool:', originalToolId);
-        const { error: saveError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: originalToolId,
-            content: responseContent,
-            role: 'assistant',
-            file_attachments: fileAttachments as any
-          });
-          
+        const {
+          error: saveError
+        } = await supabase.from('messages').insert({
+          chat_id: originalToolId,
+          content: responseContent,
+          role: 'assistant',
+          file_attachments: fileAttachments as any
+        });
         if (saveError) {
           console.error('Error saving AI message:', saveError);
         } else {
           console.log('AI message saved successfully to tool:', originalToolId);
-          
+
           // Update chat title based on AI response if this is a new chat
           const firstWords = responseContent.split(' ').slice(0, 6).join(' ');
           const newTitle = firstWords.length > 30 ? firstWords.substring(0, 30) + '...' : firstWords;
-          
           if (newTitle && newTitle !== `${toolConfig.name} Chat`) {
-            const { error: titleError } = await supabase
-              .from('chats')
-              .update({ title: newTitle })
-              .eq('id', originalToolId);
-              
+            const {
+              error: titleError
+            } = await supabase.from('chats').update({
+              title: newTitle
+            }).eq('id', originalToolId);
             if (titleError) {
               console.error('Error updating chat title:', titleError);
             } else {
@@ -524,7 +483,6 @@ export default function ToolPage() {
       }
     } catch (error) {
       console.error('Error triggering AI response:', error);
-      
       if (toolId === originalToolId) {
         const errorMessage: Message = {
           id: crypto.randomUUID(),
@@ -534,7 +492,6 @@ export default function ToolPage() {
           created_at: new Date().toISOString(),
           file_attachments: []
         };
-        
         setMessages(prev => [...prev, errorMessage]);
         scrollToBottom();
       }
@@ -543,26 +500,24 @@ export default function ToolPage() {
       setIsGeneratingResponse(false);
     }
   };
-
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    messagesEndRef.current?.scrollIntoView({
+      behavior: 'smooth'
+    });
   };
-
   const fetchMessages = async () => {
     if (!toolId || !user) return;
-
-    const { data, error } = await supabase
-      .from('messages')
-      .select('*')
-      .eq('chat_id', toolId)
-      .order('created_at', { ascending: true });
-
+    const {
+      data,
+      error
+    } = await supabase.from('messages').select('*').eq('chat_id', toolId).order('created_at', {
+      ascending: true
+    });
     if (!error && data) {
       const typedMessages = data.map(msg => ({
         ...msg,
-        file_attachments: (msg.file_attachments as any) || []
+        file_attachments: msg.file_attachments as any || []
       })) as Message[];
-      
       typedMessages.forEach(msg => {
         if (msg.file_attachments && msg.file_attachments.length > 0) {
           console.log('Message with file attachments:', {
@@ -572,7 +527,6 @@ export default function ToolPage() {
           });
         }
       });
-      
       setMessages(typedMessages);
     }
   };
@@ -581,7 +535,6 @@ export default function ToolPage() {
   const handleFileUpload = () => {
     fileInputRef.current?.click();
   };
-
   const handleCreateImageClick = () => {
     setIsImageMode(true);
     setIsPopoverOpen(false);
@@ -590,13 +543,11 @@ export default function ToolPage() {
       textareaRef.current?.focus();
     }, 0);
   };
-
   const handleExitImageMode = () => {
     setIsImageMode(false);
     setSelectedStyle(null);
     setInput('');
   };
-
   const handleStyleSelect = (style: typeof imageStyles[0]) => {
     setInput(style.prompt);
     setSelectedStyle(style.name);
@@ -607,7 +558,6 @@ export default function ToolPage() {
       textareaRef.current?.focus();
     }, 0);
   };
-
   const getStyleBackground = (styleName: string) => {
     switch (styleName) {
       case 'Cyberpunk':
@@ -632,7 +582,6 @@ export default function ToolPage() {
         return 'bg-muted border border-border/40';
     }
   };
-
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
@@ -645,11 +594,9 @@ export default function ToolPage() {
       event.target.value = '';
     }
   };
-
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
-
   const copyToClipboard = async (text: string, messageId: string) => {
     try {
       await navigator.clipboard.writeText(text);
@@ -669,59 +616,55 @@ export default function ToolPage() {
       textareaRef.current.style.height = Math.min(scrollHeight, maxHeight) + 'px';
     }
   };
-
   useEffect(() => {
     adjustTextareaHeight();
   }, [input]);
-
   const handleSubmit = async () => {
-    if ((!input.trim() && selectedFiles.length === 0) || loading || !toolConfig) return;
-
+    if (!input.trim() && selectedFiles.length === 0 || loading || !toolConfig) return;
     setLoading(true);
-    
+
     // Check if this is the first message in this tool session
     const isFirstMessage = messages.length === 0;
     let actualChatId = toolId!;
-    
+
     // If this is the first message, create a new chat with proper UUID
     if (isFirstMessage) {
       actualChatId = crypto.randomUUID();
-      
-      // Create the chat entry
-      const { error: chatError } = await supabase
-        .from('chats')
-        .insert({
-          id: actualChatId,
-          user_id: user.id,
-          title: `${toolConfig.name} Chat`,
-          tool_id: toolName,
-          tool_name: toolConfig.name,
-          updated_at: new Date().toISOString()
-        });
 
+      // Create the chat entry
+      const {
+        error: chatError
+      } = await supabase.from('chats').insert({
+        id: actualChatId,
+        user_id: user.id,
+        title: `${toolConfig.name} Chat`,
+        tool_id: toolName,
+        tool_name: toolConfig.name,
+        updated_at: new Date().toISOString()
+      });
       if (chatError) {
         console.error('Error creating chat:', chatError);
         setLoading(false);
         return;
       }
-      
-      // Navigate to the new chat URL
-      navigate(`/${toolName}/${actualChatId}`, { replace: true });
-    }
 
+      // Navigate to the new chat URL
+      navigate(`/${toolName}/${actualChatId}`, {
+        replace: true
+      });
+    }
     try {
       // Process file uploads first
       let fileAttachments: FileAttachment[] = [];
       let base64ImageData: string | null = null;
       let imageFileInfo: any = null;
-
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
           if (file.type.startsWith('image/')) {
             console.log('Processing image file:', file.name);
-            
+
             // Convert image to base64
-            base64ImageData = await new Promise<string>((resolve) => {
+            base64ImageData = await new Promise<string>(resolve => {
               const reader = new FileReader();
               reader.onload = () => {
                 const result = reader.result as string;
@@ -735,29 +678,25 @@ export default function ToolPage() {
             // Save image to Supabase storage with proper folder structure
             const fileName = `${user.id}/${actualChatId}_${Date.now()}_${file.name}`;
             console.log('Uploading to storage:', fileName);
-            
-            const { data: uploadData, error: uploadError } = await supabase.storage
-              .from('chat-images')
-              .upload(fileName, file, {
-                cacheControl: '3600',
-                upsert: false
-              });
-
+            const {
+              data: uploadData,
+              error: uploadError
+            } = await supabase.storage.from('chat-images').upload(fileName, file, {
+              cacheControl: '3600',
+              upsert: false
+            });
             if (uploadError) {
               console.error('Error uploading image:', uploadError);
               toast.error('Failed to upload image');
               continue;
             }
-
             console.log('Upload successful:', uploadData);
 
             // Get public URL
-            const { data: urlData } = supabase.storage
-              .from('chat-images')
-              .getPublicUrl(fileName);
-
+            const {
+              data: urlData
+            } = supabase.storage.from('chat-images').getPublicUrl(fileName);
             console.log('Public URL:', urlData.publicUrl);
-
             const fileAttachment: FileAttachment = {
               id: crypto.randomUUID(),
               name: file.name,
@@ -765,7 +704,6 @@ export default function ToolPage() {
               type: file.type,
               url: urlData.publicUrl
             };
-
             fileAttachments.push(fileAttachment);
 
             // Store image info for webhook
@@ -787,34 +725,33 @@ export default function ToolPage() {
         created_at: new Date().toISOString(),
         file_attachments: fileAttachments
       };
-      
+
       // Display message in chat first
       setMessages(prev => [...prev, userMessage]);
       console.log('Message displayed with attachments:', fileAttachments);
 
       // Save user message to database
-      const { error: saveError } = await supabase
-        .from('messages')
-        .insert({
-          chat_id: actualChatId,
-          content: input,
-          role: 'user',
-          file_attachments: fileAttachments as any
-        });
-
+      const {
+        error: saveError
+      } = await supabase.from('messages').insert({
+        chat_id: actualChatId,
+        content: input,
+        role: 'user',
+        file_attachments: fileAttachments as any
+      });
       if (saveError) {
         console.error('Error saving user message:', saveError);
       } else {
         console.log('Message saved to database');
-        
+
         // Send webhook notification
         try {
           let webhookData: any;
-          
           if (base64ImageData && imageFileInfo) {
             // Send image analysis format
             webhookData = {
-              type: toolName, // Use tool name as type
+              type: toolName,
+              // Use tool name as type
               fileName: imageFileInfo.fileName,
               fileSize: imageFileInfo.fileSize,
               fileType: imageFileInfo.fileType,
@@ -827,39 +764,35 @@ export default function ToolPage() {
           } else {
             // Send text message format
             webhookData = {
-              type: toolName, // Use tool name as type
+              type: toolName,
+              // Use tool name as type
               message: input,
               chat_id: actualChatId,
               user_id: user.id,
               webhook_handler_url: `https://lciaiunzacgvvbvcshdh.supabase.co/functions/v1/webhook-handler`
             };
           }
-
-          console.log('Sending to webhook:', { 
-            type: webhookData.type, 
-            hasImage: !!base64ImageData, 
+          console.log('Sending to webhook:', {
+            type: webhookData.type,
+            hasImage: !!base64ImageData,
             webhook_handler_url: webhookData.webhook_handler_url,
-            chat_id: actualChatId 
+            chat_id: actualChatId
           });
-          
           const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
             method: 'POST',
             headers: {
-              'Content-Type': 'application/json',
+              'Content-Type': 'application/json'
             },
             body: JSON.stringify(webhookData)
           });
-          
           console.log('Webhook response status:', webhookResponse.status);
-          
           if (webhookResponse.ok) {
             const responseData = await webhookResponse.json();
             console.log('Webhook response data:', responseData);
-            
+
             // If webhook returns response immediately, handle it
             if (responseData && (responseData.text || responseData.content || Array.isArray(responseData))) {
               let responseContent = '';
-              
               if (Array.isArray(responseData) && responseData.length > 0) {
                 const analysisTexts = responseData.map(item => item.text || item.content || '').filter(text => text);
                 if (analysisTexts.length > 0) {
@@ -870,19 +803,17 @@ export default function ToolPage() {
               } else if (responseData.analysis || responseData.content) {
                 responseContent = responseData.analysis || responseData.content;
               }
-              
               if (responseContent) {
                 console.log('Processing immediate webhook response:', responseContent);
-                
+
                 // Save AI response directly
-                const { error: saveError } = await supabase
-                  .from('messages')
-                  .insert({
-                    chat_id: actualChatId,
-                    content: responseContent,
-                    role: 'assistant'
-                  });
-                  
+                const {
+                  error: saveError
+                } = await supabase.from('messages').insert({
+                  chat_id: actualChatId,
+                  content: responseContent,
+                  role: 'assistant'
+                });
                 if (saveError) {
                   console.error('Error saving immediate AI response:', saveError);
                 } else {
@@ -897,7 +828,6 @@ export default function ToolPage() {
           console.error('Error sending webhook:', webhookError);
         }
       }
-
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Failed to send message. Please try again.');
@@ -907,10 +837,8 @@ export default function ToolPage() {
       setLoading(false);
     }
   };
-
   if (!toolConfig) {
-    return (
-      <div style={getContainerStyle()} className="flex-1 flex items-center justify-center min-h-screen">
+    return <div style={getContainerStyle()} className="flex-1 flex items-center justify-center min-h-screen">
         <div className="text-center">
           <h1 className="text-2xl font-bold mb-2">Tool Not Found</h1>
           <p className="text-muted-foreground mb-4">The requested tool could not be found.</p>
@@ -918,15 +846,11 @@ export default function ToolPage() {
             Back to Explore Tools
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="h-screen flex flex-col bg-background relative">
+  return <div className="h-screen flex flex-col bg-background relative">
       {/* Tool Header - Only show when no messages */}
-      {messages.length === 0 && (
-        <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
+      {messages.length === 0 && <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
           <div style={getContainerStyle()} className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -938,15 +862,14 @@ export default function ToolPage() {
               </div>
             </div>
           </div>
-        </div>
-      )}
+        </div>}
 
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto">
         <div style={getContainerStyle()}>
-          {messages.length === 0 ? (
-            // Welcome message
-            <div className="flex items-center justify-center min-h-[60vh]">
+          {messages.length === 0 ?
+        // Welcome message
+        <div className="flex items-center justify-center min-h-[60vh]">
               <div className="text-center max-w-2xl mx-auto p-8">
                 <div className="mb-6 p-4 rounded-2xl bg-primary/10 w-fit mx-auto">
                   {toolConfig.icon}
@@ -956,46 +879,23 @@ export default function ToolPage() {
                   {toolConfig.instructions}
                 </p>
               </div>
-            </div>
-          ) : (
-            // Messages
-            <div className="py-8 pb-32 space-y-6">
-              {messages.map((message, index) => (
-                <div 
-                  key={message.id}
-                  className={`flex flex-col gap-2 px-4 ${
-                    message.role === 'user' ? 'items-end' : 'items-start'
-                  }`}
-                >
-                  <div 
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      message.role === 'user' 
-                        ? 'bg-primary text-primary-foreground' 
-                        : ''
-                    }`}
-                  >
+            </div> :
+        // Messages
+        <div className="py-8 pb-32 space-y-6">
+              {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-2 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
                     {/* File attachments for user messages - show before text */}
-                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && (
-                      <div className="mb-3 space-y-2">
-                        {message.file_attachments.map((file) => (
-                          <div key={file.id} className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? (
-                              <img 
-                                src={file.url} 
-                                alt={file.name}
-                                className="max-w-full h-auto rounded-lg cursor-pointer"
-                                onClick={() => setSelectedImage({ url: file.url, name: file.name })}
-                              />
-                            ) : (
-                              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-2">
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-full h-auto rounded-lg cursor-pointer" onClick={() => setSelectedImage({
+                    url: file.url,
+                    name: file.name
+                  })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                                 <FileText className="h-4 w-4" />
                                 <span className="text-sm">{file.name}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                              </div>}
+                          </div>)}
+                      </div>}
 
                     <div className="prose prose-sm max-w-none dark:prose-invert">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
@@ -1004,61 +904,36 @@ export default function ToolPage() {
                     </div>
                     
                     {/* File attachments for assistant messages - show after text */}
-                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {message.file_attachments.map((file) => (
-                          <div key={file.id} className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? (
-                              <img 
-                                src={file.url} 
-                                alt={file.name}
-                                className="max-w-full h-auto rounded-lg cursor-pointer"
-                                onClick={() => setSelectedImage({ url: file.url, name: file.name })}
-                              />
-                            ) : (
-                              <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
+                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-3 space-y-2">
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2">
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-full h-auto rounded-lg cursor-pointer" onClick={() => setSelectedImage({
+                    url: file.url,
+                    name: file.name
+                  })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
                                 <FileText className="h-4 w-4" />
                                 <span className="text-sm">{file.name}</span>
-                              </div>
-                            )}
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                              </div>}
+                          </div>)}
+                      </div>}
                   </div>
                   
                   {/* Copy button - always visible, positioned based on message role */}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`h-6 w-6 p-0 text-muted-foreground hover:text-foreground ${
-                      message.role === 'user' ? 'self-end' : 'self-start'
-                    }`}
-                    onClick={() => copyToClipboard(message.content, message.id)}
-                  >
-                    {copiedMessageId === message.id ? (
-                      <Check className="h-3 w-3 text-green-500" />
-                    ) : (
-                      <Copy className="h-3 w-3" />
-                    )}
+                  <Button variant="ghost" size="sm" className={`h-6 w-6 p-0 text-muted-foreground hover:text-foreground ${message.role === 'user' ? 'self-end' : 'self-start'}`} onClick={() => copyToClipboard(message.content, message.id)}>
+                    {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                   </Button>
-                </div>
-              ))}
+                </div>)}
               
               {/* Loading indicator */}
-              {(loading || isGeneratingResponse) && (
-                <div className="flex justify-start px-4">
+              {(loading || isGeneratingResponse) && <div className="flex justify-start px-4">
                   <div className="bg-muted rounded-2xl px-4 py-3 max-w-[85%]">
                     <div className="flex items-center gap-2 text-muted-foreground">
                       <div className="animate-pulse">Thinking...</div>
                     </div>
                   </div>
-                </div>
-              )}
+                </div>}
               
               <div ref={messagesEndRef} />
-            </div>
-          )}
+            </div>}
         </div>
       </div>
 
@@ -1067,84 +942,25 @@ export default function ToolPage() {
         <div className="px-4 py-4">
           <div className="w-full">
             {/* File attachments preview */}
-            {selectedFiles.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {selectedFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
-                    {file.type.startsWith('image/') ? (
-                      <ImageIcon className="h-4 w-4" />
-                    ) : (
-                      <FileText className="h-4 w-4" />
-                    )}
+            {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
+                {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                    {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                     <span className="truncate max-w-32">{file.name}</span>
-                    <button 
-                      onClick={() => removeFile(index)}
-                      className="text-muted-foreground hover:text-foreground"
-                    >
+                    <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-foreground">
                       <X className="h-3 w-3" />
                     </button>
-                  </div>
-                ))}
-              </div>
-            )}
+                  </div>)}
+              </div>}
             
             {/* Image mode indicator */}
-            {isImageMode && (
-              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
-                <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                  <ImageIcon2 className="h-3 w-3" />
-                  <span>Image</span>
-                  <button 
-                    onClick={handleExitImageMode} 
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </div>
-                
-                {/* Styles dropdown */}
-                <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80">
-                      <Palette className="h-3 w-3" />
-                      Styles
-                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                    <div className="grid grid-cols-3 gap-3">
-                      {imageStyles.map(style => (
-                        <button 
-                          key={style.name} 
-                          onClick={() => handleStyleSelect(style)} 
-                          className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center"
-                        >
-                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                            <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                              {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                            </span>
-                          </div>
-                          <span className="text-xs font-medium leading-tight">{style.name}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-              </div>
-            )}
+            {isImageMode}
             
             {/* Image mode indicator */}
-            {isImageMode && (
-              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+            {isImageMode && <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
                 <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                   <ImageIcon2 className="h-3 w-3" />
                   <span>Image</span>    
-                  <button 
-                    onClick={handleExitImageMode} 
-                    className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5"
-                  >
+                  <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
                     <X className="h-3 w-3" />
                   </button>
                 </div>
@@ -1162,97 +978,56 @@ export default function ToolPage() {
                   </PopoverTrigger>
                   <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
                     <div className="grid grid-cols-3 gap-3">
-                      {imageStyles.map(style => (
-                        <button 
-                          key={style.name} 
-                          onClick={() => handleStyleSelect(style)} 
-                          className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center"
-                        >
+                      {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
                           <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
                             <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
                               {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
                             </span>
                           </div>
                           <span className="text-xs font-medium leading-tight">{style.name}</span>
-                        </button>
-                      ))}
+                        </button>)}
                     </div>
                   </PopoverContent>
                 </Popover>
-              </div>
-            )}
+              </div>}
             
             <div className="relative">
               <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
-                {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && (
-                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
-                      >
+                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
                         <Paperclip className="h-4 w-4 text-muted-foreground" />
                       </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
-                       <Button
-                         variant="ghost"
-                         size="sm"
-                         className="w-full justify-start gap-2"
-                         onClick={() => {
-                           handleFileUpload();
-                           setIsPopoverOpen(false);
-                         }}
-                       >
+                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => {
+                    handleFileUpload();
+                    setIsPopoverOpen(false);
+                  }}>
                          <Paperclip className="h-4 w-4" />
                          Add photos & files
                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="w-full justify-start gap-2"
-                          onClick={handleCreateImageClick}
-                        >
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                           <ImageIcon2 className="h-4 w-4" />
                           Create image
                         </Button>
                      </PopoverContent>
-                  </Popover>
-                )}
+                  </Popover>}
                 
-                <Textarea
-                  ref={textareaRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  placeholder={`Message ${toolConfig.name}...`}
-                  className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left"
-                  style={{
-                    wordWrap: 'break-word',
-                    overflowWrap: 'break-word'
-                  }}
-                  disabled={loading}
-                  rows={1}
-                />
+                <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }} placeholder={`Message ${toolConfig.name}...`} className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
+                wordWrap: 'break-word',
+                overflowWrap: 'break-word'
+              }} disabled={loading} rows={1} />
                 
                 <div className="flex items-center gap-1 ml-2 pb-1">
                   {/* Dictation button */}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`}
-                    onClick={isRecording ? () => {} : () => {}}
-                    disabled={loading}
-                  >
+                  <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? () => {} : () => {}} disabled={loading}>
                     {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
                 </div>
@@ -1267,23 +1042,9 @@ export default function ToolPage() {
       </div>
 
       {/* File input */}
-      <input
-        ref={fileInputRef}
-        type="file"
-        className="hidden"
-        onChange={handleFileChange}
-        multiple
-        accept={toolConfig.allowImages && !toolConfig.allowFiles ? "image/*" : "*"}
-      />
+      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple accept={toolConfig.allowImages && !toolConfig.allowFiles ? "image/*" : "*"} />
 
       {/* Image popup modal */}
-      {selectedImage && (
-        <ImagePopupModal
-          isOpen={true}
-          imageUrl={selectedImage.url}
-          onClose={() => setSelectedImage(null)}
-        />
-      )}
-    </div>
-  );
+      {selectedImage && <ImagePopupModal isOpen={true} imageUrl={selectedImage.url} onClose={() => setSelectedImage(null)} />}
+    </div>;
 }
