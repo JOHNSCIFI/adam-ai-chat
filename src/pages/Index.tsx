@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Image as ImageIcon2 } from 'lucide-react';
+import AuthModal from '@/components/AuthModal';
 export default function Index() {
   const {
     user,
@@ -27,6 +28,7 @@ export default function Index() {
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -40,7 +42,7 @@ export default function Index() {
   }
   const handleFileUpload = () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthModal(true);
       return;
     }
     fileInputRef.current?.click();
@@ -48,7 +50,7 @@ export default function Index() {
   };
   const handleCreateImageClick = () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthModal(true);
       return;
     }
     setIsPopoverOpen(false);
@@ -68,6 +70,11 @@ export default function Index() {
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
+
+    // Show auth modal if user starts typing and isn't authenticated
+    if (!user && e.target.value.trim()) {
+      setShowAuthModal(true);
+    }
 
     // Auto-resize textarea
     const textarea = e.target;
@@ -91,7 +98,7 @@ export default function Index() {
   };
   const startRecording = () => {
     if (!user) {
-      navigate('/auth');
+      setShowAuthModal(true);
       return;
     }
     setIsRecording(true);
@@ -104,7 +111,7 @@ export default function Index() {
   const handleStartChat = async () => {
     if (!message.trim() || loading) return;
     if (!user) {
-      navigate('/auth');
+      setShowAuthModal(true);
       return;
     }
     if (!canSendMessage) {
@@ -230,5 +237,17 @@ export default function Index() {
 
       {/* Hidden file input */}
       <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
+      
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          // Focus back to textarea after successful login
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 100);
+        }}
+      />
     </div>;
 }

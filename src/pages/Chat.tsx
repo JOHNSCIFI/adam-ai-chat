@@ -17,6 +17,7 @@ import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import VoiceModeButton from '@/components/VoiceModeButton';
+import AuthModal from '@/components/AuthModal';
 
 // Type declarations for Web Speech API
 declare global {
@@ -101,6 +102,7 @@ export default function Chat() {
   const [imageAnalysisResults, setImageAnalysisResults] = useState<Map<string, ImageAnalysisResult>>(new Map());
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -300,7 +302,17 @@ export default function Chat() {
         aiResponse,
         aiError
       });
-      if (aiError) throw aiError;
+      if (aiError) {
+        // Check for authentication errors
+        if (aiError.message?.includes('unauthorized') || aiError.message?.includes('JWT')) {
+          // Show auth modal for unauthorized access
+          if (chatId === originalChatId) {
+            setShowAuthModal(true);
+          }
+          return;
+        }
+        throw aiError;
+      }
       if (aiResponse?.response || aiResponse?.content) {
         const responseContent = aiResponse.response || aiResponse.content;
         console.log('Processing AI response content:', responseContent);
@@ -353,6 +365,13 @@ export default function Chat() {
           file_attachments: fileAttachments as any
         });
         if (saveError) {
+          // Check for authentication errors
+          if (saveError.message?.includes('JWT') || saveError.message?.includes('unauthorized')) {
+            if (chatId === originalChatId) {
+              setShowAuthModal(true);
+            }
+            return;
+          }
           console.error('Error saving AI message:', saveError);
         } else {
           console.log('AI message saved successfully to chat:', originalChatId);
@@ -507,7 +526,15 @@ export default function Chat() {
   };
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() && selectedFiles.length === 0 || !chatId || !user || loading) return;
+    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) return;
+    
+    // Check if user is authenticated, show auth modal if not
+    if (!user) {
+      // Show auth modal but preserve the input and files
+      setShowAuthModal(true);
+      return;
+    }
+    
     setLoading(true);
     const userMessage = input.trim();
     const files = [...selectedFiles];
@@ -609,10 +636,16 @@ export default function Chat() {
             } else {
               aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
             }
-          } catch (error) {
-            console.error('Webhook error:', error);
-            aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
+        } catch (error) {
+          console.error('Webhook error:', error);
+          // Check for authentication errors from webhook
+          if (error instanceof Error && (error.message?.includes('unauthorized') || error.message?.includes('authentication'))) {
+            setShowAuthModal(true);
+            setLoading(false);
+            return;
           }
+          aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
+        }
         }
       }
 
@@ -694,7 +727,14 @@ export default function Chat() {
         file_attachments: newUserMessage.file_attachments as any,
         embedding: null // Will be updated by background process
       }).select().single();
-      if (userError) throw userError;
+      if (userError) {
+        // Check for authentication errors
+        if (userError.message?.includes('JWT') || userError.message?.includes('unauthorized')) {
+          setShowAuthModal(true);
+          return;
+        }
+        throw userError;
+      }
 
       // Only mark as processed if there are files (since file messages get AI analysis above)
       // Messages without files should be handled by auto-trigger
@@ -753,6 +793,14 @@ export default function Chat() {
           role: 'assistant',
           embedding: null
         }).select().single();
+        if (aiError) {
+          // Check for authentication errors
+          if (aiError.message?.includes('JWT') || aiError.message?.includes('unauthorized')) {
+            setShowAuthModal(true);
+            return;
+          }
+          console.error('Error saving AI analysis message:', aiError);
+        }
         if (aiMessage) {
           setMessages(prev => prev.map(msg => msg.id === analysisMessage.id ? {
             ...msg,
@@ -779,6 +827,15 @@ export default function Chat() {
       }, 1000);
     } catch (error: any) {
       console.error('Send message error:', error);
+      
+      // Check for authentication errors
+      if (error?.message?.includes('JWT') || error?.message?.includes('unauthorized') || error?.message?.includes('authentication')) {
+        setShowAuthModal(true);
+        return;
+      }
+      
+      // Show generic error toast for other errors
+      toast.error('Failed to send message. Please try again.');
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
@@ -1931,5 +1988,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         toast.error('Failed to save edited image');
       }
     }} />}
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          // Focus back to textarea after successful login
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 100);
+        }}
+      />
     </div>;
 }
