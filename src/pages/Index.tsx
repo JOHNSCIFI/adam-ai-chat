@@ -254,8 +254,7 @@ export default function Index() {
     }
   };
   const handleModelSelect = (modelId: string) => {
-    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`/${modelId}/${toolId}`);
+    setSelectedModel(modelId);
   };
   
   const scrollModels = (direction: 'left' | 'right') => {
@@ -286,14 +285,14 @@ export default function Index() {
             e.preventDefault();
             handleStartChat();
           }
-        }} placeholder="Type a message..." className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 px-0 py-0 mb-3" rows={1} />
+        }} placeholder="Type a message..." className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
           
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 px-3 text-muted-foreground" onClick={handleFileUpload}>
-                <Paperclip className="h-4 w-4 mr-1" />Add photos & files
+              <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
+                <Paperclip className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-3 text-muted-foreground" onClick={handleCreateImage}>
+              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImage}>
                 <ImageIcon className="h-4 w-4 mr-1" />Create an image
               </Button>
               
@@ -301,7 +300,7 @@ export default function Index() {
             
             <div className="flex items-center gap-2">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[200px] h-8 bg-transparent border-0">
+                <SelectTrigger className="w-[200px] h-8 bg-transparent border border-border/50 rounded-full">
                   <SelectValue>
                     <span className="text-sm font-medium">{selectedModelData?.name}</span>
                   </SelectValue>
@@ -319,7 +318,7 @@ export default function Index() {
                 </SelectContent>
               </Select>
               
-              <Button size="sm" className={`h-8 w-8 rounded-full ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
+              <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
                 {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
             </div>
