@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,6 +22,38 @@ import AuthModal from '@/components/AuthModal';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
+
+const models = [{
+  id: 'gpt-4o-mini',
+  name: 'OpenAI GPT-4o mini',
+  description: "OpenAI's Fastest Model",
+  type: 'free'
+}, {
+  id: 'gpt-4o',
+  name: 'OpenAI GPT-4o',
+  description: "OpenAI's Most Accurate Model",
+  type: 'pro'
+}, {
+  id: 'gpt-5',
+  name: 'OpenAI GPT-5',
+  description: "OpenAI's Most Advanced Model",
+  type: 'pro'
+}, {
+  id: 'claude',
+  name: 'Claude',
+  description: "Anthropic's latest AI model",
+  type: 'pro'
+}, {
+  id: 'deepseek',
+  name: 'DeepSeek',
+  description: "Great for most questions",
+  type: 'pro'
+}, {
+  id: 'gemini',
+  name: 'Google Gemini',
+  description: "Google's most capable AI",
+  type: 'free'
+}];
 interface Message {
   id: string;
   chat_id: string;
@@ -97,12 +130,15 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
+  
+  const selectedModelData = models.find(m => m.id === selectedModel);
   useEffect(() => {
     if (chatId && user) {
       // Initialize processed messages Set for this chat if it doesn't exist
@@ -1922,6 +1958,25 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </div>
               
               <div className="flex items-center gap-2">
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
+                    <SelectValue>
+                      <span className="text-sm font-medium">{selectedModelData?.name}</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="z-50 bg-background border shadow-lg">
+                    {models.map(model => <SelectItem key={model.id} value={model.id}>
+                        <div className="flex items-center gap-2">
+                          <div>
+                            <div className="font-medium">{model.name}</div>
+                            <div className="text-xs text-muted-foreground">{model.description}</div>
+                          </div>
+                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                        </div>
+                      </SelectItem>)}
+                  </SelectContent>
+                </Select>
+                
                 <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
