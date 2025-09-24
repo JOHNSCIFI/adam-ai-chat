@@ -157,6 +157,43 @@ export default function Index() {
       setLoading(false);
     }
   };
+
+  const createChatWithMessage = async (userId: string, messageToSend: string) => {
+    if (!canSendMessage) {
+      navigate('/pricing-plans');
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { data: chatData, error: chatError } = await supabase
+        .from('chats')
+        .insert([{
+          user_id: userId,
+          title: messageToSend.slice(0, 50) || 'New Chat'
+        }])
+        .select()
+        .single();
+      
+      if (chatError) throw chatError;
+      
+      const { error: messageError } = await supabase
+        .from('messages')
+        .insert({
+          chat_id: chatData.id,
+          content: messageToSend,
+          role: 'user'
+        });
+      
+      if (messageError) throw messageError;
+      navigate(`/chat/${chatData.id}`);
+    } catch (error) {
+      console.error('Error starting chat with message:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen">
       {/* Header */}
       <div className="text-center mb-8">
@@ -250,49 +287,35 @@ export default function Index() {
              setMessage(pendingMessage);
              setPendingMessage('');
              
-             // Wait a bit for the user state to update, then start the chat
+             // Wait longer for the auth state to fully update
              setTimeout(async () => {
-               if (!canSendMessage) {
-                 navigate('/pricing-plans');
+               // Get fresh session to ensure we have the latest user data
+               const { data: { session: currentSession } } = await supabase.auth.getSession();
+               const currentUser = currentSession?.user;
+               
+               if (!currentUser) {
+                 console.error('No user found after auth, retrying...');
+                 // Retry once more after additional delay
+                 setTimeout(async () => {
+                   const { data: { session: retrySession } } = await supabase.auth.getSession();
+                   if (retrySession?.user) {
+                     await createChatWithMessage(retrySession.user.id, messageToSend);
+                   } else {
+                     console.error('Still no user found after retry');
+                   }
+                 }, 500);
                  return;
                }
                
-               setLoading(true);
-               try {
-                 const { data: chatData, error: chatError } = await supabase
-                   .from('chats')
-                   .insert([{
-                     user_id: user?.id,
-                     title: messageToSend.slice(0, 50) || 'New Chat'
-                   }])
-                   .select()
-                   .single();
-                 
-                 if (chatError) throw chatError;
-                 
-                 const { error: messageError } = await supabase
-                   .from('messages')
-                   .insert({
-                     chat_id: chatData.id,
-                     content: messageToSend,
-                     role: 'user'
-                   });
-                 
-                 if (messageError) throw messageError;
-                 navigate(`/chat/${chatData.id}`);
-               } catch (error) {
-                 console.error('Error starting chat:', error);
-               } finally {
-                 setLoading(false);
-               }
+               await createChatWithMessage(currentUser.id, messageToSend);
+             }, 300);
+           } else {
+             // Focus back to textarea after successful login
+             setTimeout(() => {
+               textareaRef.current?.focus();
              }, 100);
-          } else {
-            // Focus back to textarea after successful login
-            setTimeout(() => {
-              textareaRef.current?.focus();
-            }, 100);
-          }
-        }}
+           }
+         }}
       />
     </div>;
 }
