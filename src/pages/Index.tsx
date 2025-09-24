@@ -169,7 +169,7 @@ const availableModels = [{
   description: 'DeepSeek offers powerful AI capabilities for a wide range of applications.',
   icon: '🔍'
 }, {
-  id: 'google-gemini',
+  id: 'gemini',
   name: 'Google Gemini',
   description: 'Gemini, Google\'s most advanced AI, is designed for multimodal understanding.',
   icon: '💎'
