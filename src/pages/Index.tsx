@@ -86,6 +86,8 @@ const availableModels = [{
   icon: '💎'
 }];
 export default function Index() {
+  console.log('🔍 Index component render start - checking for hook order issues');
+  
   const {
     user,
     loading: authLoading
