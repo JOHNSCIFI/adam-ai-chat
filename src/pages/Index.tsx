@@ -559,8 +559,7 @@ export default function Index() {
                 <Paperclip className="h-4 w-4" />
               </Button>
               
-              {isImageMode ? (
-                <>
+                {isImageMode && !selectedStyle ? <>
                   {/* Image mode indicator */}
                   <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                     <ImageIcon className="h-3 w-3" />
@@ -594,12 +593,9 @@ export default function Index() {
                       </div>
                     </PopoverContent>
                   </Popover>
-                </>
-              ) : (
-                <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
+                </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
                   <ImageIcon className="h-4 w-4 mr-1" />Create an image
-                </Button>
-              )}
+                </Button>}
             </div>
             
             <div className="flex items-center gap-2">
