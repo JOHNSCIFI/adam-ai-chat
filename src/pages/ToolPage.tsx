@@ -963,38 +963,40 @@ export default function ToolPage() {
               </div>
             )}
             
+            {/* Attachment button - moved above input */}
+            {(toolConfig.allowImages || toolConfig.allowFiles) && (
+              <div className="mb-2">
+                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                  <PopoverTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0"
+                    >
+                      <Paperclip className="h-4 w-4 text-muted-foreground" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={() => {
+                        handleFileUpload();
+                        setIsPopoverOpen(false);
+                      }}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      Add photos & files
+                    </Button>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+            
             <div className="relative">
               <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
-                {/* Attachment button */}
-                {(toolConfig.allowImages || toolConfig.allowFiles) && (
-                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2"
-                      >
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start gap-2"
-                        onClick={() => {
-                          handleFileUpload();
-                          setIsPopoverOpen(false);
-                        }}
-                      >
-                        <Paperclip className="h-4 w-4" />
-                        Add photos & files
-                      </Button>
-                    </PopoverContent>
-                  </Popover>
-                )}
-                
                 <Textarea
                   ref={textareaRef}
                   value={input}
