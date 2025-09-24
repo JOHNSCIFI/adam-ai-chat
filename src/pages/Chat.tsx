@@ -509,6 +509,7 @@ export default function Chat() {
     setInput(style.prompt);
     setSelectedStyle(style.name);
     setIsStylesOpen(false);
+    setIsImageMode(false); // Reset to original state after selecting style
 
     // Focus the textarea after setting the style
     setTimeout(() => {
