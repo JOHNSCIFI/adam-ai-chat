@@ -19,6 +19,7 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import AuthModal from '@/components/AuthModal';
+import DictationMode from '@/components/DictationMode';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -130,6 +131,7 @@ export default function Chat() {
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [isDictationMode, setIsDictationMode] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1864,104 +1866,112 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image..." : "Type a message..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
             
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                  <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
-                      <Paperclip className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                      <Paperclip className="h-4 w-4" />
-                      Add photos & files
-                    </Button>
-                    
-                  </PopoverContent>
-                </Popover>
-                
-                {isImageMode && !selectedStyle ? <>
-                    {/* Image mode indicator */}
-                    <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                      <ImageIcon className="h-3 w-3" />
-                      <span>Image</span>
-                      <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
-                    
-                    {/* Show Styles dropdown before style selection */}
-                    <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+              {!isDictationMode && (
+                <>
+                  <div className="flex items-center gap-2">
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
-                          <Palette className="h-3 w-3" />
-                          Styles
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
+                          <Paperclip className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                        <div className="grid grid-cols-3 gap-3">
-                          {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                                <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                                  {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                                </span>
-                              </div>
-                              <span className="text-xs font-medium leading-tight">{style.name}</span>
-                            </button>)}
-                        </div>
+                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                          <Paperclip className="h-4 w-4" />
+                          Add photos & files
+                        </Button>
+                        
                       </PopoverContent>
                     </Popover>
-                  </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
-                    <ImageIcon className="h-4 w-4 mr-1" />Create an image
-                  </Button>}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
-                    <SelectValue>
-                      <span className="text-sm font-medium">{selectedModelData?.name}</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-background border shadow-lg">
-                    {models.map(model => <SelectItem key={model.id} value={model.id}>
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-xs text-muted-foreground">{model.description}</div>
-                          </div>
-                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                    
+                    {isImageMode && !selectedStyle ? <>
+                        {/* Image mode indicator */}
+                        <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                          <ImageIcon className="h-3 w-3" />
+                          <span>Image</span>
+                          <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                            <X className="h-3 w-3" />
+                          </button>
                         </div>
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-                
-                <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                
-                <VoiceModeButton onMessageSent={(messageId, content, role) => {
-                // Mark voice messages as processed to prevent auto-trigger duplicates
-                if (role === 'user' && chatId) {
-                  // Add to processed messages for this specific chat
-                  if (!processedUserMessages.current.has(chatId)) {
-                    processedUserMessages.current.set(chatId, new Set());
-                  }
-                  processedUserMessages.current.get(chatId)!.add(messageId);
-                  console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
-                  // Refresh messages immediately for user voice input
-                  fetchMessages();
-                } else if (role === 'assistant') {
-                  // For assistant messages, refresh after a delay to let audio play
-                  setTimeout(() => {
-                    fetchMessages();
-                  }, 1000);
-                }
-              }} chatId={chatId} actualTheme={actualTheme} />
-              </div>
+                        
+                        {/* Show Styles dropdown before style selection */}
+                        <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                          <PopoverTrigger asChild>
+                            <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
+                              <Palette className="h-3 w-3" />
+                              Styles
+                              <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                            <div className="grid grid-cols-3 gap-3">
+                              {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                                  <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                                    <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                      {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                                    </span>
+                                  </div>
+                                  <span className="text-xs font-medium leading-tight">{style.name}</span>
+                                </button>)}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
+                        <ImageIcon className="h-4 w-4 mr-1" />Create an image
+                      </Button>}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
+                        <SelectValue>
+                          <span className="text-sm font-medium">{selectedModelData?.name}</span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-background border shadow-lg">
+                        {models.map(model => <SelectItem key={model.id} value={model.id}>
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <div className="font-medium">{model.name}</div>
+                                <div className="text-xs text-muted-foreground">{model.description}</div>
+                              </div>
+                              {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                            </div>
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      size="sm" 
+                      className="h-8 w-8 rounded-full border border-border/50 bg-foreground hover:bg-foreground/90 text-background" 
+                      onClick={() => setIsDictationMode(true)}
+                    >
+                      <Mic className="h-4 w-4" />
+                    </Button>
+                    
+                    <VoiceModeButton onMessageSent={(messageId, content, role) => {
+                    // Mark voice messages as processed to prevent auto-trigger duplicates
+                    if (role === 'user' && chatId) {
+                      // Add to processed messages for this specific chat
+                      if (!processedUserMessages.current.has(chatId)) {
+                        processedUserMessages.current.set(chatId, new Set());
+                      }
+                      processedUserMessages.current.get(chatId)!.add(messageId);
+                      console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
+                      // Refresh messages immediately for user voice input
+                      fetchMessages();
+                    } else if (role === 'assistant') {
+                      // For assistant messages, refresh after a delay to let audio play
+                      setTimeout(() => {
+                        fetchMessages();
+                      }, 1000);
+                    }
+                  }} chatId={chatId} actualTheme={actualTheme} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           
@@ -2034,6 +2044,21 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         toast.error('Failed to save edited image');
       }
     }} />}
+
+      {/* Dictation Mode */}
+      {isDictationMode && (
+        <DictationMode
+          onTextReady={(text) => {
+            setInput(prev => prev + (prev ? ' ' : '') + text);
+            setIsDictationMode(false);
+            setTimeout(() => textareaRef.current?.focus(), 100);
+          }}
+          onCancel={() => {
+            setIsDictationMode(false);
+            setTimeout(() => textareaRef.current?.focus(), 100);
+          }}
+        />
+      )}
 
       {/* Auth Modal */}
       <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {
