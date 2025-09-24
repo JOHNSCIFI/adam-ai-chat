@@ -5,9 +5,10 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useMessageLimit } from '@/hooks/useMessageLimit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Image as ImageIcon2 } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Search, Bot, Brain, Sparkles, Zap, ChevronDown, Calculator, FileImage, FileText, Palette, Combine, Edit3 } from 'lucide-react';
 import AuthModal from '@/components/AuthModal';
 export default function Index() {
   const {
@@ -25,11 +26,11 @@ export default function Index() {
   } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
+  const [selectedModel, setSelectedModel] = useState('OpenAI GPT-4o mini');
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -59,17 +60,25 @@ export default function Index() {
       return;
     }
     fileInputRef.current?.click();
-    setIsPopoverOpen(false);
   };
   const handleCreateImageClick = () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    setIsPopoverOpen(false);
     // Navigate to image generation tool
     const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     navigate(`/generate-image-openai/${toolId}`);
+  };
+
+  const handleSearchWebClick = () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    // Navigate to AI search engine tool
+    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    navigate(`/ai-search-engine/${toolId}`);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -172,6 +181,61 @@ export default function Index() {
     }
   };
 
+  // Available models from explore tools (AI Models category)
+  const availableModels = [
+    {
+      id: 'openai-gpt-4o',
+      name: 'OpenAI GPT-4o',
+      description: 'Access to OpenAI\'s powerful GPT-4o model for complex tasks',
+      icon: <Bot className="h-4 w-4" />,
+      route: '/openai-gpt-4o'
+    },
+    {
+      id: 'openai-gpt-4-1',
+      name: 'OpenAI GPT-4.1',
+      description: 'The flagship GPT-4 model for reliable and accurate responses',
+      icon: <Bot className="h-4 w-4" />,
+      route: '/openai-gpt-4-1'
+    },
+    {
+      id: 'deepseek',
+      name: 'DeepSeek',
+      description: 'Advanced AI model great for most questions and tasks',
+      icon: <Brain className="h-4 w-4" />,
+      route: '/deepseek'
+    },
+    {
+      id: 'google-gemini',
+      name: 'Google Gemini',
+      description: 'Google\'s most capable AI for a wide range of tasks',
+      icon: <Sparkles className="h-4 w-4" />,
+      route: '/google-gemini'
+    },
+    {
+      id: 'grok-3-mini',
+      name: 'Grok-3 Mini',
+      description: 'Fast and lightweight AI model built for speed',
+      icon: <Zap className="h-4 w-4" />,
+      route: '/grok-3-mini'
+    },
+    {
+      id: 'grok-4',
+      name: 'Grok-4',
+      description: 'Advanced AI model for tackling intricate challenges',
+      icon: <Zap className="h-4 w-4" />,
+      route: '/grok-4'
+    }
+  ];
+
+  const handleModelClick = (model: any) => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    navigate(`${model.route}/${toolId}`);
+  };
+
   const createChatWithMessage = async (userId: string, messageToSend: string) => {
     if (!canSendMessage) {
       navigate('/pricing-plans');
@@ -215,11 +279,10 @@ export default function Index() {
         <p className="text-muted-foreground text-lg">
           Start a conversation with AI or explore our tools
         </p>
-        {!user}
       </div>
 
-      {/* Message Input Area - Same design as Chat page */}
-      <div className="w-full max-w-3xl">
+      {/* Message Input Area */}
+      <div className="w-full max-w-4xl">
         <div className="px-4 py-4">
           {/* File attachments preview */}
           {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
@@ -231,48 +294,121 @@ export default function Index() {
                 </div>)}
             </div>}
           
+          {/* Main Input Container */}
           <div className="relative">
-            <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-              {/* Attachment button - left side inside input */}
-              <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
-                    <Paperclip className="h-4 w-4 text-muted-foreground" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                    <Paperclip className="h-4 w-4" />
-                    Add photos & files
-                  </Button>
-                  <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                    <ImageIcon2 className="h-4 w-4" />
-                    Create image
-                  </Button>
-                </PopoverContent>
-              </Popover>
-              
-              <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder="Message AI..." className="flex-1 min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
-              wordWrap: 'break-word',
-              overflowWrap: 'break-word',
-              lineHeight: '1.5rem',
-              height: '24px',
-              overflowY: 'hidden'
-            }} disabled={loading} rows={1} />
-              
-              <div className="flex items-center gap-1 ml-2 pb-1">
-                {/* Dictation button */}
-                <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
+            <Textarea 
+              ref={textareaRef} 
+              value={message} 
+              onChange={handleInputChange} 
+              onKeyDown={handleKeyDown} 
+              placeholder="Type a message" 
+              className={`w-full min-h-[120px] border rounded-2xl px-4 py-4 pb-16 resize-none bg-transparent focus-visible:ring-1 focus-visible:ring-ring text-foreground placeholder:text-muted-foreground ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}
+              disabled={loading} 
+            />
+            
+            {/* Bottom toolbar inside textarea */}
+            <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {/* Attachment button */}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0"
+                  onClick={handleFileUpload}
+                  disabled={loading}
+                >
+                  <Paperclip className="h-4 w-4 text-muted-foreground" />
+                </Button>
+
+                {/* Create image button */}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 px-3 hover:bg-muted/20 rounded-full flex items-center gap-2"
+                  onClick={handleCreateImageClick}
+                  disabled={loading}
+                >
+                  <ImageIcon className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Create an image</span>
+                </Button>
+
+                {/* Search web button */}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 px-3 hover:bg-muted/20 rounded-full flex items-center gap-2"
+                  onClick={handleSearchWebClick}
+                  disabled={loading}
+                >
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm text-muted-foreground">Search the web</span>
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Model selector */}
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger className="h-8 w-auto min-w-[180px] bg-transparent border-0 focus:ring-0 text-sm">
+                    <SelectValue />
+                    <ChevronDown className="h-4 w-4 ml-2" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="OpenAI GPT-4o mini">
+                      <div className="flex flex-col items-start">
+                        <span>OpenAI GPT-4o mini</span>
+                        <span className="text-xs text-muted-foreground">OpenAI's Fastest Model</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="OpenAI GPT-4o">
+                      <div className="flex flex-col items-start">
+                        <span>OpenAI GPT-4o</span>
+                        <span className="text-xs text-muted-foreground">Pro • OpenAI's Most Accurate Model</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="OpenAI GPT-5">
+                      <div className="flex flex-col items-start">
+                        <span>OpenAI GPT-5</span>
+                        <span className="text-xs text-muted-foreground">Pro • OpenAI's Most Advanced Model</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Claude">
+                      <div className="flex flex-col items-start">
+                        <span>Claude</span>
+                        <span className="text-xs text-muted-foreground">Pro • Anthropic's latest AI model</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="DeepSeek">
+                      <div className="flex flex-col items-start">
+                        <span>DeepSeek</span>
+                        <span className="text-xs text-muted-foreground">Pro • Great for most questions</span>
+                      </div>
+                    </SelectItem>
+                    <SelectItem value="Google Gemini">
+                      <div className="flex flex-col items-start">
+                        <span>Google Gemini</span>
+                        <span className="text-xs text-muted-foreground">Google's most capable AI</span>
+                      </div>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* Voice button */}
+                <Button 
+                  type="button" 
+                  variant="ghost" 
+                  size="sm" 
+                  className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} 
+                  onClick={isRecording ? stopRecording : startRecording} 
+                  disabled={loading}
+                >
                   {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                 </Button>
               </div>
             </div>
           </div>
-          
-          
-
-          {/* Action buttons below input */}
-          
 
           {isAtLimit && <p className="text-center text-sm text-muted-foreground mt-4">
               Message limit reached.{' '}
@@ -280,6 +416,30 @@ export default function Index() {
                 Upgrade to continue
               </Button>
             </p>}
+        </div>
+      </div>
+
+      {/* Available Models Section */}
+      <div className="w-full max-w-4xl mt-8">
+        <div className="px-4">
+          <h3 className="text-lg font-semibold mb-4">Available models:</h3>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {availableModels.map((model) => (
+              <Card 
+                key={model.id} 
+                className="cursor-pointer hover:shadow-md transition-shadow bg-card border-border"
+                onClick={() => handleModelClick(model)}
+              >
+                <CardContent className="p-4 flex flex-col items-center text-center">
+                  <div className="mb-2 text-muted-foreground">
+                    {model.icon}
+                  </div>
+                  <h4 className="text-sm font-medium mb-1">{model.name}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{model.description}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
       </div>
 
