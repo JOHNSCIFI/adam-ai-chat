@@ -41,7 +41,7 @@ const models = [{
   id: 'gemini',
   name: 'Google Gemini',
   description: "Google's most capable AI",
-  type: 'free'
+  type: 'pro'
 }];
 const suggestionButtons = [{
   icon: Edit3,
@@ -317,6 +317,9 @@ export default function Index() {
   const handleVoiceMessageSent = async (messageId: string, content: string, role: 'user' | 'assistant') => {
     console.log('Voice message sent:', { messageId, content, role });
     
+    // Change model to Google Gemini when voice mode is used
+    setSelectedModel('gemini');
+    
     if (role === 'user') {
       // For user voice messages, create chat if needed and navigate
       if (!user) return;
@@ -450,6 +453,7 @@ export default function Index() {
     setMessage(style.prompt);
     setSelectedStyle(style.name);
     setIsStylesOpen(false);
+    setIsImageMode(false); // Exit image mode when style is selected
     
     setTimeout(() => {
       textareaRef.current?.focus();
