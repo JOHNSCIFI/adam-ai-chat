@@ -171,6 +171,21 @@ const availableModels = [{
   icon: '💎'
 }];
 export default function Index() {
+  const {
+    user,
+    loading: authLoading,
+    userProfile
+  } = useAuth();
+  const {
+    actualTheme
+  } = useTheme();
+  const {
+    canSendMessage,
+    isAtLimit,
+    sessionId,
+    incrementMessageCount
+  } = useMessageLimit();
+
   // Helper function to get time-based greeting
   const getTimeBasedGreeting = () => {
     const hour = new Date().getHours();
@@ -203,20 +218,6 @@ export default function Index() {
 
   const timeGreeting = getTimeBasedGreeting();
   const displayName = getDisplayName();
-  const {
-    user,
-    loading: authLoading,
-    userProfile
-  } = useAuth();
-  const {
-    actualTheme
-  } = useTheme();
-  const {
-    canSendMessage,
-    isAtLimit,
-    sessionId,
-    incrementMessageCount
-  } = useMessageLimit();
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
