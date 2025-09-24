@@ -110,6 +110,51 @@ const toolConfigs: Record<string, ToolInfo> = {
     icon: <span className="text-2xl">🔍</span>,
     allowImages: true,
     allowFiles: false
+  },
+  'generate-image-nanobanana': {
+    id: 'generate-image-nanobanana',
+    name: 'Generate Image with NanoBanana',
+    description: 'Create images using advanced NanoBanana AI technology',
+    instructions: 'Describe the image you want to create in detail, and I\'ll generate it for you using NanoBanana\'s advanced AI technology.',
+    icon: <span className="text-2xl">🍌</span>,
+    allowImages: false,
+    allowFiles: false
+  },
+  'combine-images-openai': {
+    id: 'combine-images-openai',
+    name: 'Combine Images with OpenAI',
+    description: 'Merge and blend multiple images together using AI',
+    instructions: 'Upload multiple images and describe how you want them combined, merged, or blended together.',
+    icon: <span className="text-2xl">🔗</span>,
+    allowImages: true,
+    allowFiles: false
+  },
+  'edit-image-nanobanana': {
+    id: 'edit-image-nanobanana',
+    name: 'Edit Image with NanoBanana',
+    description: 'Professional image editing powered by AI',
+    instructions: 'Upload an image and describe the edits you want to make. I can adjust colors, add effects, remove objects, and more.',
+    icon: <span className="text-2xl">✏️</span>,
+    allowImages: true,
+    allowFiles: false
+  },
+  'analyse-files-openai': {
+    id: 'analyse-files-openai',
+    name: 'Analyse Files with OpenAI',
+    description: 'Extract insights and information from various file types',
+    instructions: 'Upload documents, PDFs, or other files and I\'ll analyze their content, extract key information, and answer questions about them.',
+    icon: <span className="text-2xl">📄</span>,
+    allowImages: false,
+    allowFiles: true
+  },
+  'grok-4': {
+    id: 'grok-4',
+    name: 'Grok-4',
+    description: 'Advanced AI model for tackling intricate challenges',
+    instructions: 'I\'m Grok-4, designed to tackle complex problems with advanced reasoning and analysis capabilities.',
+    icon: <span className="text-2xl">⚡</span>,
+    allowImages: true,
+    allowFiles: true
   }
 };
 
