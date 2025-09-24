@@ -406,10 +406,11 @@ export default function Index() {
               <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
                 <Paperclip className="h-4 w-4" />
               </Button>
-              <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
-                <ImageIcon className="h-4 w-4 mr-1" />Create an image
-              </Button>
-              
+              {!isImageMode && (
+                <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
+                  <ImageIcon className="h-4 w-4 mr-1" />Create an image
+                </Button>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
