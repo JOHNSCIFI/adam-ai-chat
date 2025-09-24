@@ -553,6 +553,15 @@ export default function ToolPage() {
     fileInputRef.current?.click();
   };
 
+  const handleCreateImageClick = () => {
+    setIsImageMode(true);
+    setIsPopoverOpen(false);
+    setInput('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
@@ -1036,17 +1045,15 @@ export default function ToolPage() {
                          <Paperclip className="h-4 w-4" />
                          Add photos & files
                        </Button>
-                       <Button
-                         variant="ghost"
-                         size="sm"
-                         className="w-full justify-start gap-2"
-                         onClick={() => {
-                           setIsPopoverOpen(false);
-                         }}
-                       >
-                         <ImageIcon2 className="h-4 w-4" />
-                         Create image
-                       </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="w-full justify-start gap-2"
+                          onClick={handleCreateImageClick}
+                        >
+                          <ImageIcon2 className="h-4 w-4" />
+                          Create image
+                        </Button>
                      </PopoverContent>
                   </Popover>
                 )}
