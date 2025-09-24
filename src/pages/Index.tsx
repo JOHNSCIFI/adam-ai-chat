@@ -200,9 +200,7 @@ export default function Index() {
             </div>
           </div>
           
-          <p className="text-xs text-muted-foreground text-center mt-3">
-            AI can make mistakes. Check important info.
-          </p>
+          
 
           {/* Action buttons below input */}
           
