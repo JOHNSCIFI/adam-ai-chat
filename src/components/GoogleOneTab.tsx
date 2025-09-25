@@ -41,31 +41,37 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
       if (isInitialized.current) return;
       
       try {
-        // Get Google Client ID from Supabase settings
-        const { data: { session } } = await supabase.auth.getSession();
+        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
         
-        // For now, we'll get the client ID from environment or use a placeholder
-        // In production, this should come from your Google OAuth app settings
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "your-google-client-id.apps.googleusercontent.com";
-        
-        if (!clientId || clientId === "your-google-client-id.apps.googleusercontent.com") {
+        if (!clientId || clientId.includes("your-google-client-id")) {
           console.warn('Google Client ID not configured for One Tap');
           return;
         }
+
+        console.log('Initializing Google One Tap with Client ID:', clientId.substring(0, 20) + '...');
+        console.log('Current origin:', window.location.origin);
 
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true, // Enable FedCM for better compatibility
           prompt_parent_id: oneTabRef.current?.id,
         });
 
-        // Display the One Tap prompt
+        // Display the One Tap prompt with detailed error handling
         window.google.accounts.id.prompt((notification: any) => {
           console.log('Google One Tap notification:', notification);
-          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
-            console.log('Google One Tap was not displayed or was skipped');
+          
+          if (notification.isNotDisplayed()) {
+            console.warn('Google One Tap not displayed. Reason:', notification.getNotDisplayedReason());
+          } else if (notification.isSkippedMoment()) {
+            console.warn('Google One Tap skipped. Reason:', notification.getSkippedReason());
+          } else if (notification.isDismissedMoment()) {
+            console.log('Google One Tap dismissed by user');
+          } else {
+            console.log('Google One Tap displayed successfully');
           }
         });
 
