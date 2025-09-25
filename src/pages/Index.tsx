@@ -564,7 +564,41 @@ export default function Index() {
             aria-label="Open sidebar menu"
           />
           <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
-          <div className="w-9" /> {/* Spacer for balance */}
+          
+          {/* Model selector in mobile navbar */}
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger 
+              className="w-[120px] h-8 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs"
+              aria-label="Select AI model"
+            >
+              <SelectValue>
+                <span className="font-medium truncate">{selectedModelData?.name?.split(' ')[0]}</span>
+              </SelectValue>
+            </SelectTrigger>
+            <SelectContent className="z-50">
+              {models.map(model => {
+                const modelData = availableModels.find(m => m.id === model.id);
+                return (
+                  <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                        <img 
+                          src={getModelIcon(modelData?.icon || 'openai')} 
+                          alt={`${model.name} icon`} 
+                          className="w-4 h-4 object-contain" 
+                        />
+                      </div>
+                      <div>
+                        <div className="font-medium">{model.name}</div>
+                        <div className="text-xs text-muted-foreground">{model.description}</div>
+                      </div>
+                      {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
         </div>
       )}
       
@@ -605,26 +639,56 @@ export default function Index() {
               }
             }}
             placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
-            className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+            className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60" 
             rows={1}
+            style={{ boxShadow: 'none', border: 'none' }}
             aria-label={isImageMode ? "Describe an image" : "Type your message"}
           />
           
           {/* Mobile-first redesigned input controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2">
-            {/* Top row on mobile: File upload and image controls */}
+            {/* Top row on mobile: Combined upload button and image controls */}
             <div className="flex items-center gap-2 order-2 sm:order-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
-                onClick={handleFileUpload}
-                aria-label="Upload file"
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
+              {/* Combined File/Image Upload Button */}
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 gap-2" 
+                    aria-label="Upload options"
+                    aria-haspopup="true"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                    <span className="text-sm">Add</span>
+                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      onClick={handleFileUpload}
+                      className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-muted transition-colors text-left focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Upload file or photo"
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      <span className="text-sm">Add file & photo</span>
+                    </button>
+                    <button
+                      onClick={handleCreateImageClick}
+                      className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-muted transition-colors text-left focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Create an image"
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      <span className="text-sm">Create image</span>
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
               
-              {isImageMode && !selectedStyle ? (
+              {isImageMode && !selectedStyle && (
                 <div className="flex items-center gap-2">
                   {/* Image mode indicator */}
                   <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
@@ -678,55 +742,47 @@ export default function Index() {
                     </PopoverContent>
                   </Popover>
                 </div>
-              ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" 
-                  onClick={handleCreateImageClick}
-                  aria-label="Create an image"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  <span>Create image</span>
-                </Button>
               )}
             </div>
             
-            {/* Bottom row on mobile: Model select, mic, voice mode */}
+            {/* Bottom row on mobile: Mic and voice mode (model selector moved to navbar on mobile) */}
             <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger 
-                  className="flex-1 sm:w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
-                  aria-label="Select AI model"
-                >
-                  <SelectValue>
-                    <span className="font-medium truncate">{selectedModelData?.name}</span>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="z-50">
-                  {models.map(model => {
-                    const modelData = availableModels.find(m => m.id === model.id);
-                    return (
-                      <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
-                            <img 
-                              src={getModelIcon(modelData?.icon || 'openai')} 
-                              alt={`${model.name} icon`} 
-                              className="w-4 h-4 object-contain" 
-                            />
+              {/* Desktop model selector - hidden on mobile */}
+              {!isMobile && (
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger 
+                    className="w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-sm"
+                    aria-label="Select AI model"
+                  >
+                    <SelectValue>
+                      <span className="font-medium truncate">{selectedModelData?.name}</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    {models.map(model => {
+                      const modelData = availableModels.find(m => m.id === model.id);
+                      return (
+                        <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                              <img 
+                                src={getModelIcon(modelData?.icon || 'openai')} 
+                                alt={`${model.name} icon`} 
+                                className="w-4 h-4 object-contain" 
+                              />
+                            </div>
+                            <div>
+                              <div className="font-medium">{model.name}</div>
+                              <div className="text-xs text-muted-foreground">{model.description}</div>
+                            </div>
+                            {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
                           </div>
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-xs text-muted-foreground">{model.description}</div>
-                          </div>
-                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
               
               <Button 
                 size="sm" 
