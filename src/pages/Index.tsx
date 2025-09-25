@@ -563,8 +563,47 @@ export default function Index() {
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
           />
-          <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
-          <div className="w-9" /> {/* Spacer for balance */}
+          <h1 className="text-lg font-semibold truncate flex-1 text-center">AdamGPT</h1>
+          <div className="w-9 flex justify-end">
+            {/* Mobile Model Selector */}
+            <Select value={selectedModel} onValueChange={setSelectedModel}>
+              <SelectTrigger 
+                className="w-8 h-8 bg-transparent border-0 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-full p-0"
+                aria-label="Select AI model"
+              >
+                <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                  <img 
+                    src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
+                    alt="Model icon" 
+                    className="w-4 h-4 object-contain" 
+                  />
+                </div>
+              </SelectTrigger>
+              <SelectContent className="z-50" align="end">
+                {models.map(model => {
+                  const modelData = availableModels.find(m => m.id === model.id);
+                  return (
+                    <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
+                      <div className="flex items-center gap-3">
+                        <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                          <img 
+                            src={getModelIcon(modelData?.icon || 'openai')} 
+                            alt={`${model.name} icon`} 
+                            className="w-4 h-4 object-contain" 
+                          />
+                        </div>
+                        <div>
+                          <div className="font-medium text-sm">{model.name}</div>
+                          <div className="text-xs text-muted-foreground">{model.description}</div>
+                        </div>
+                        {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       )}
       
@@ -605,128 +644,169 @@ export default function Index() {
               }
             }}
             placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
-            className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+            className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
             rows={1}
             aria-label={isImageMode ? "Describe an image" : "Type your message"}
           />
           
           {/* Mobile-first redesigned input controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2">
-            {/* Top row on mobile: File upload and image controls */}
+            {/* Top row on mobile: File upload dropdown */}
             <div className="flex items-center gap-2 order-2 sm:order-1">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
-                onClick={handleFileUpload}
-                aria-label="Upload file"
-              >
-                <Paperclip className="h-4 w-4" />
-              </Button>
-              
-              {isImageMode && !selectedStyle ? (
-                <div className="flex items-center gap-2">
-                  {/* Image mode indicator */}
-                  <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
-                    <ImageIcon className="h-3 w-3" />
-                    <span>Image</span>
-                    <button 
-                      onClick={handleExitImageMode} 
-                      className="opacity-70 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label="Exit image mode"
+              {isMobile ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                      aria-label="Upload or create content"
                     >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </div>
-                  
-                  {/* Styles dropdown */}
-                  <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
-                    <PopoverTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-9 px-3 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
-                        aria-label="Select image style"
-                        aria-expanded={isStylesOpen}
-                        aria-haspopup="true"
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
+                    <div className="flex flex-col gap-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-10 px-3 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+                        onClick={handleFileUpload}
                       >
-                        <Palette className="h-3 w-3" />
-                        <span>Styles</span>
-                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
+                        <Paperclip className="h-4 w-4 mr-2" />
+                        Add File & Photo
                       </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg z-50" align="start">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-                        {imageStyles.map(style => 
-                          <button 
-                            key={style.name} 
-                            onClick={() => handleStyleSelect(style)} 
-                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-muted"
-                            aria-label={`Select ${style.name} style`}
-                          >
-                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                              <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                                {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                              </span>
-                            </div>
-                            <span className="text-xs font-medium leading-tight">{style.name}</span>
-                          </button>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-10 px-3 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+                        onClick={handleCreateImageClick}
+                      >
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Create Image
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               ) : (
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" 
-                  onClick={handleCreateImageClick}
-                  aria-label="Create an image"
-                >
-                  <ImageIcon className="h-4 w-4 mr-2" />
-                  <span>Create image</span>
-                </Button>
+                <>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                    onClick={handleFileUpload}
+                    aria-label="Upload file"
+                  >
+                    <Paperclip className="h-4 w-4" />
+                  </Button>
+                  
+                  {isImageMode && !selectedStyle ? (
+                    <div className="flex items-center gap-2">
+                      {/* Image mode indicator */}
+                      <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
+                        <ImageIcon className="h-3 w-3" />
+                        <span>Image</span>
+                        <button 
+                          onClick={handleExitImageMode} 
+                          className="opacity-70 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary"
+                          aria-label="Exit image mode"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      </div>
+                      
+                      {/* Styles dropdown */}
+                      <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                        <PopoverTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-9 px-3 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
+                            aria-label="Select image style"
+                            aria-expanded={isStylesOpen}
+                            aria-haspopup="true"
+                          >
+                            <Palette className="h-3 w-3" />
+                            <span>Styles</span>
+                            <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg z-50" align="start">
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                            {imageStyles.map(style => 
+                              <button 
+                                key={style.name} 
+                                onClick={() => handleStyleSelect(style)} 
+                                className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-muted"
+                                aria-label={`Select ${style.name} style`}
+                              >
+                                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                                  <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                    {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                                  </span>
+                                </div>
+                                <span className="text-xs font-medium leading-tight">{style.name}</span>
+                              </button>
+                            )}
+                          </div>
+                        </PopoverContent>
+                      </Popover>
+                    </div>
+                  ) : (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" 
+                      onClick={handleCreateImageClick}
+                      aria-label="Create an image"
+                    >
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                      <span>Create image</span>
+                    </Button>
+                  )}
+                </>
               )}
             </div>
             
-            {/* Bottom row on mobile: Model select, mic, voice mode */}
+            {/* Bottom row on mobile: mic, voice mode only */}
             <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger 
-                  className="flex-1 sm:w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
-                  aria-label="Select AI model"
-                >
-                  <SelectValue>
-                    <span className="font-medium truncate">{selectedModelData?.name}</span>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent className="z-50">
-                  {models.map(model => {
-                    const modelData = availableModels.find(m => m.id === model.id);
-                    return (
-                      <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                        <div className="flex items-center gap-3">
-                          <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
-                            <img 
-                              src={getModelIcon(modelData?.icon || 'openai')} 
-                              alt={`${model.name} icon`} 
-                              className="w-4 h-4 object-contain" 
-                            />
+              {!isMobile && (
+                <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <SelectTrigger 
+                    className="flex-1 sm:w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
+                    aria-label="Select AI model"
+                  >
+                    <SelectValue>
+                      <span className="font-medium truncate">{selectedModelData?.name}</span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="z-50">
+                    {models.map(model => {
+                      const modelData = availableModels.find(m => m.id === model.id);
+                      return (
+                        <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
+                          <div className="flex items-center gap-3">
+                            <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                              <img 
+                                src={getModelIcon(modelData?.icon || 'openai')} 
+                                alt={`${model.name} icon`} 
+                                className="w-4 h-4 object-contain" 
+                              />
+                            </div>
+                            <div>
+                              <div className="font-medium">{model.name}</div>
+                              <div className="text-xs text-muted-foreground">{model.description}</div>
+                            </div>
+                            {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
                           </div>
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-xs text-muted-foreground">{model.description}</div>
-                          </div>
-                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                        </div>
-                      </SelectItem>
-                    );
-                  })}
-                </SelectContent>
-              </Select>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
               
               <Button 
                 size="sm" 
