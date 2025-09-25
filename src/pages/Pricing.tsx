@@ -2,7 +2,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Check, Brain, Sparkles, ChevronDown, Shield, Users, X } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, Shield, Users, X } from 'lucide-react';
+import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 
@@ -14,7 +15,7 @@ const Pricing = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Brain className="h-7 w-7 text-primary" />
+            <AdamGptLogo className="h-7 w-7" />
             <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
@@ -54,7 +55,7 @@ const Pricing = () => {
           <div className="animate-fade-in">
             <div className="flex items-center space-x-2 mb-6">
               <div className="relative">
-                <Brain className="h-7 w-7 text-primary" />
+                <AdamGptLogo className="h-7 w-7" />
                 <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>

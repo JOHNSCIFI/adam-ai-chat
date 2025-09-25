@@ -2,7 +2,8 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Brain, Sparkles, ChevronDown, Shield, Users, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import { Sparkles, ChevronDown, Shield, Users, ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
+import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
@@ -23,7 +24,7 @@ const Models = () => {
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="relative">
-            <Brain className="h-7 w-7 text-primary" />
+            <AdamGptLogo className="h-7 w-7" />
             <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
           </div>
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
@@ -63,7 +64,7 @@ const Models = () => {
           <div className="animate-fade-in">
             <div className="flex items-center space-x-2 mb-6">
               <div className="relative">
-                <Brain className="h-7 w-7 text-primary" />
+                <AdamGptLogo className="h-7 w-7" />
                 <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
@@ -141,10 +142,20 @@ const Models = () => {
 
           {/* Navigation Arrows */}
           <div className="flex justify-center gap-4 mb-16">
-            <Button variant="outline" size="icon" className="rounded-full">
+            <Button variant="outline" size="icon" className="rounded-full" onClick={() => {
+              const modelsSection = document.querySelector('#models-grid');
+              if (modelsSection) {
+                modelsSection.scrollBy({ left: -300, behavior: 'smooth' });
+              }
+            }}>
               <ChevronLeft className="h-4 w-4" />
             </Button>
-            <Button variant="outline" size="icon" className="rounded-full">
+            <Button variant="outline" size="icon" className="rounded-full" onClick={() => {
+              const modelsSection = document.querySelector('#models-grid');
+              if (modelsSection) {
+                modelsSection.scrollBy({ left: 300, behavior: 'smooth' });
+              }
+            }}>
               <ChevronRight className="h-4 w-4" />
             </Button>
           </div>
@@ -154,40 +165,64 @@ const Models = () => {
       {/* Models Showcase */}
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {/* OpenAI GPT-4o mini */}
-            <div className="text-center animate-fade-in">
-              <h3 className="text-2xl font-bold mb-8">OpenAI GPT-4o mini</h3>
-              <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                    <img src={chatgptLogoSrc} alt="OpenAI GPT-4o" className="w-8 h-8" />
+          <div id="models-grid" className="overflow-x-auto">
+            <div className="flex gap-8 min-w-max px-4 mb-16">
+              {/* OpenAI GPT-4o */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64">
+                <h3 className="text-2xl font-bold mb-8">OpenAI GPT-4o</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <img src={chatgptLogoSrc} alt="OpenAI GPT-4o" className="w-12 h-12" />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* OpenAI o-3 mini */}
-            <div className="text-center animate-fade-in" style={{animationDelay: '0.1s'}}>
-              <h3 className="text-2xl font-bold mb-8">OpenAI o-3 mini</h3>
-              <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center">
-                  <div className="w-12 h-12 bg-white rounded-lg flex items-center justify-center">
-                    <img src={chatgptLogoSrc} alt="OpenAI o-3 mini" className="w-8 h-8" />
+              {/* Google Gemini */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.1s'}}>
+                <h3 className="text-2xl font-bold mb-8">Google Gemini</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-blue-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <img src={geminiLogo} alt="Google Gemini" className="w-12 h-12" />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* FLUX */}
-            <div className="text-center animate-fade-in" style={{animationDelay: '0.2s'}}>
-              <h3 className="text-2xl font-bold mb-8">FLUX</h3>
-              <div className="w-32 h-32 bg-gradient-to-br from-primary/10 to-purple-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8">
-                <div className="w-20 h-20 bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl flex items-center justify-center">
-                  <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-gray-700 to-black rounded flex items-center justify-center">
-                      <span className="text-white text-xs font-bold">▲</span>
-                    </div>
+              {/* Anthropic Claude */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.2s'}}>
+                <h3 className="text-2xl font-bold mb-8">Anthropic Claude</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-orange-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <img src={claudeLogo} alt="Anthropic Claude" className="w-12 h-12" />
+                  </div>
+                </div>
+              </div>
+
+              {/* DeepSeek */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.3s'}}>
+                <h3 className="text-2xl font-bold mb-8">DeepSeek</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <img src={deepseekLogo} alt="DeepSeek" className="w-12 h-12" />
+                  </div>
+                </div>
+              </div>
+
+              {/* OpenAI o-3 mini */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.4s'}}>
+                <h3 className="text-2xl font-bold mb-8">OpenAI o-3 mini</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <img src={chatgptLogoSrc} alt="OpenAI o-3 mini" className="w-12 h-12" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Grok */}
+              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.5s'}}>
+                <h3 className="text-2xl font-bold mb-8">Grok</h3>
+                <div className="w-32 h-32 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-gray-500/20">
+                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
+                    <div className="text-2xl font-bold text-gray-800">X</div>
                   </div>
                 </div>
               </div>
@@ -196,7 +231,7 @@ const Models = () => {
 
           <div className="text-center mb-16">
             <p className="text-lg text-muted-foreground">
-              OpenAI's O3 Mini is a lightweight model
+              Access the world's most advanced AI models in one platform
             </p>
           </div>
         </div>
@@ -208,20 +243,17 @@ const Models = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="animate-fade-in">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-8 h-8 bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg flex items-center justify-center">
-                  <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5" />
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                  <img src={chatgptLogoSrc} alt="OpenAI GPT-4o" className="w-6 h-6" />
                 </div>
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">◆</span>
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                  <img src={geminiLogo} alt="Google Gemini" className="w-6 h-6" />
                 </div>
-                <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">✱</span>
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                  <img src={claudeLogo} alt="Anthropic Claude" className="w-6 h-6" />
                 </div>
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">🐋</span>
-                </div>
-                <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
-                  <span className="text-white text-xs font-bold">M</span>
+                <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center p-1 shadow-sm">
+                  <img src={deepseekLogo} alt="DeepSeek" className="w-6 h-6" />
                 </div>
               </div>
               

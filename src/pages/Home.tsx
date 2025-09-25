@@ -4,6 +4,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Check, Brain, Image, FileText, PenTool, Mic, Globe, Zap, Target, ChevronDown, Sparkles, Users, Shield, Clock, Bot } from 'lucide-react';
+import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
@@ -26,7 +27,7 @@ const Home = () => {
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center space-x-2">
             <div className="relative">
-              <Brain className="h-7 w-7 text-primary" />
+              <AdamGptLogo className="h-7 w-7" />
               <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
             </div>
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
@@ -552,7 +553,7 @@ const Home = () => {
             <div className="animate-fade-in">
               <div className="flex items-center space-x-2 mb-6">
                 <div className="relative">
-                  <Brain className="h-7 w-7 text-primary" />
+                  <AdamGptLogo className="h-7 w-7" />
                   <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
                 </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
