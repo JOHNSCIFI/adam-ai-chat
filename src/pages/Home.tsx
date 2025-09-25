@@ -3,11 +3,13 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Check, Brain, Image, FileText, PenTool, Mic, Globe, Zap, Target, ChevronDown, Sparkles, Users, Shield, Clock } from 'lucide-react';
+import { Check, Brain, Image, FileText, PenTool, Mic, Globe, Zap, Target, ChevronDown, Sparkles, Users, Shield, Clock, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const Home = () => {
   const navigate = useNavigate();
+  
+  // Fixed Bot import issue
 
   return (
     <div className="min-h-screen bg-background">
