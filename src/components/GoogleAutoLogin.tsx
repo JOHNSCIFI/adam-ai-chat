@@ -2,36 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-
 interface GoogleAutoLoginProps {
   onClose: () => void;
 }
-
 interface GoogleAccount {
   id: string;
   name: string;
   email: string;
   picture?: string;
 }
-
 declare global {
   interface Window {
     google: any;
   }
 }
-
-export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
-  const { signInWithGoogle } = useAuth();
+export default function GoogleAutoLogin({
+  onClose
+}: GoogleAutoLoginProps) {
+  const {
+    signInWithGoogle
+  } = useAuth();
   const [isVisible, setIsVisible] = useState(false);
   const [googleAccounts, setGoogleAccounts] = useState<GoogleAccount[]>([]);
   const [isLoadingAccounts, setIsLoadingAccounts] = useState(true);
-
   useEffect(() => {
     // Show popup after a short delay for smooth animation
     const timer = setTimeout(() => setIsVisible(true), 100);
     return () => clearTimeout(timer);
   }, []);
-
   useEffect(() => {
     // Load Google Identity Services library
     const script = document.createElement('script');
@@ -40,21 +38,19 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
     script.defer = true;
     script.onload = initializeGoogleOneTap;
     document.head.appendChild(script);
-
     return () => {
       if (document.head.contains(script)) {
         document.head.removeChild(script);
       }
     };
   }, []);
-
   const initializeGoogleOneTap = () => {
     if (window.google) {
       // Initialize Google Identity Services
       window.google.accounts.id.initialize({
         client_id: process.env.GOOGLE_CLIENT_ID || '951036895540-4fpamfc4o55vm8pdbcvdd25gd5fsbsu4.apps.googleusercontent.com',
         callback: handleCredentialResponse,
-        auto_select: false,
+        auto_select: false
       });
 
       // Try to show Google One Tap first (shows user's signed-in accounts)
@@ -79,21 +75,17 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
 
       // Also render One Tap UI directly in the component
       setTimeout(() => {
-        window.google.accounts.id.renderButton(
-          document.getElementById('google-signin-button'),
-          { 
-            type: 'standard',
-            theme: 'outline', 
-            size: 'large',
-            text: 'signin_with',
-            shape: 'rectangular',
-            width: '280'
-          }
-        );
+        window.google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text: 'signin_with',
+          shape: 'rectangular',
+          width: '280'
+        });
       }, 100);
     }
   };
-
   const showAccountChooser = () => {
     if (window.google) {
       // Use Google's account chooser to show real user accounts
@@ -108,7 +100,6 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
       }).requestAccessToken();
     }
   };
-
   const fetchGoogleAccounts = async (accessToken: string) => {
     try {
       // Fetch user's Google account info using People API
@@ -117,7 +108,6 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
           'Authorization': `Bearer ${accessToken}`
         }
       });
-      
       if (response.ok) {
         const data = await response.json();
         const account = {
@@ -136,15 +126,16 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
       setIsLoadingAccounts(false);
     }
   };
-
   const handleCredentialResponse = async (response: any) => {
     // Handle the credential response from Google One Tap
     try {
       // Decode the JWT token to get user info
       const payload = JSON.parse(atob(response.credential.split('.')[1]));
-      
+
       // Sign in with the Google credential
-      const { error } = await signInWithGoogle();
+      const {
+        error
+      } = await signInWithGoogle();
       if (!error) {
         // Store the user account info
         const account = {
@@ -160,10 +151,11 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
       console.error('Error processing Google credential:', error);
     }
   };
-
   const handleAccountSelect = async (account: GoogleAccount) => {
     // Prompt for Google sign-in for the selected account
-    const { error } = await signInWithGoogle();
+    const {
+      error
+    } = await signInWithGoogle();
     if (!error) {
       // Store the selected account for future reference
       const updatedAccounts = [account, ...googleAccounts.filter(a => a.id !== account.id)];
@@ -171,115 +163,27 @@ export default function GoogleAutoLogin({ onClose }: GoogleAutoLoginProps) {
       onClose();
     }
   };
-
   const handleClose = () => {
     setIsVisible(false);
     setTimeout(onClose, 200);
   };
-
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
-
-  return (
-    <div className="fixed top-4 right-4 z-50">
-      <div 
-        className={`
+  return <div className="fixed top-4 right-4 z-50">
+      <div className={`
           bg-white dark:bg-white border border-gray-200 rounded-2xl shadow-lg w-80 overflow-hidden
           transition-all duration-200 ease-out
           ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2'}
-        `}
-        style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
-      >
+        `} style={{
+      boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
+    }}>
 
         {/* Subtitle */}
-        <div className="px-6 pt-4 pb-2">
-          <p className="text-sm text-gray-600">Choose an account to continue to <span className="font-medium">Adam AI</span></p>
-        </div>
+        
 
         {/* Account List */}
-        <div className="px-6 pb-6">
-          {isLoadingAccounts ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 border-gray-200 border-t-blue-500 rounded-full animate-spin"></div>
-              <span className="ml-2 text-sm text-gray-500">Loading accounts...</span>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {googleAccounts.length > 0 ? (
-                <>
-                  {googleAccounts.map((account, index) => (
-                    <div
-                      key={account.id}
-                      onClick={() => handleAccountSelect(account)}
-                      className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors group animate-fade-in border border-gray-100 hover:border-gray-200"
-                      style={{ animationDelay: `${index * 100}ms` }}
-                    >
-                      <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 bg-gray-200 flex items-center justify-center">
-                        {account.picture ? (
-                          <img 
-                            src={account.picture} 
-                            alt={account.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = 'none';
-                              const parent = target.parentElement;
-                              if (parent) {
-                                parent.innerHTML = `<div class="w-full h-full bg-blue-500 flex items-center justify-center text-white font-medium text-sm">${getInitials(account.name)}</div>`;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-blue-500 flex items-center justify-center text-white font-medium text-sm">
-                            {getInitials(account.name)}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-gray-900 text-sm font-medium truncate">
-                          {account.name}
-                        </div>
-                        <div className="text-gray-500 text-xs truncate">
-                          {account.email}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </>
-              ) : (
-                <>
-                  {/* Google Sign-in Button when no accounts found */}
-                  <div id="google-signin-button" className="mb-4"></div>
-                  
-                  <div className="text-center py-4">
-                    <p className="text-sm text-gray-500 mb-3">
-                      Sign in with your Google account to continue
-                    </p>
-                  </div>
-                </>
-              )}
-              
-              {/* Use another account option */}
-              <div
-                onClick={() => signInWithGoogle()}
-                className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50 cursor-pointer transition-colors border border-gray-100 hover:border-gray-200 mt-4"
-              >
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-5 h-5 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                  </svg>
-                </div>
-                <div className="flex-1">
-                  <div className="text-gray-700 text-sm font-medium">
-                    Use another account
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
+        
       </div>
-    </div>
-  );
+    </div>;
 }
