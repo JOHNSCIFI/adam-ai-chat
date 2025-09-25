@@ -564,14 +564,14 @@ export default function Index() {
             aria-label="Open sidebar menu"
           />
           <h1 className="text-lg font-semibold truncate flex-1 text-center">AdamGPT</h1>
-          <div className="w-9 flex justify-end">
+          <div className="w-10 flex justify-end">
             {/* Mobile Model Selector */}
             <Select value={selectedModel} onValueChange={setSelectedModel}>
               <SelectTrigger 
-                className="w-8 h-8 bg-transparent border-0 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-full p-0"
+                className="w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-accent hover:border-border shadow-sm focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
                 aria-label="Select AI model"
               >
-                <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-full flex items-center justify-center">
+                <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
                   <img 
                     src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
                     alt="Model icon" 
@@ -579,24 +579,32 @@ export default function Index() {
                   />
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-50" align="end">
+              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[280px]" align="end">
                 {models.map(model => {
                   const modelData = availableModels.find(m => m.id === model.id);
                   return (
-                    <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                      <div className="flex items-center gap-3">
-                        <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                    <SelectItem 
+                      key={model.id} 
+                      value={model.id} 
+                      className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center gap-3 w-full">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
                           <img 
                             src={getModelIcon(modelData?.icon || 'openai')} 
                             alt={`${model.name} icon`} 
-                            className="w-4 h-4 object-contain" 
+                            className="w-5 h-5 object-contain" 
                           />
                         </div>
-                        <div>
-                          <div className="font-medium text-sm">{model.name}</div>
-                          <div className="text-xs text-muted-foreground">{model.description}</div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-foreground">{model.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{model.description}</div>
                         </div>
-                        {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                        {model.type === 'pro' && (
+                          <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
+                            Pro
+                          </span>
+                        )}
                       </div>
                     </SelectItem>
                   );
@@ -741,31 +749,48 @@ export default function Index() {
                 <div className="flex items-center gap-2">
                   <Select value={selectedModel} onValueChange={setSelectedModel}>
                     <SelectTrigger 
-                      className="w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
+                      className="w-[200px] h-10 bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl focus-visible:ring-2 focus-visible:ring-primary text-sm shadow-sm hover:bg-accent/50 transition-all duration-200"
                       aria-label="Select AI model"
                     >
                       <SelectValue>
-                        <span className="font-medium truncate">{selectedModelData?.name}</span>
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
+                            <img 
+                              src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
+                              alt={`${selectedModelData?.name} icon`} 
+                              className="w-4 h-4 object-contain" 
+                            />
+                          </div>
+                          <span className="font-medium truncate">{selectedModelData?.name}</span>
+                        </div>
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="z-50">
+                    <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[320px]">
                       {models.map(model => {
                         const modelData = availableModels.find(m => m.id === model.id);
                         return (
-                          <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                            <div className="flex items-center gap-3">
-                              <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                          <SelectItem 
+                            key={model.id} 
+                            value={model.id} 
+                            className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
                                 <img 
                                   src={getModelIcon(modelData?.icon || 'openai')} 
                                   alt={`${model.name} icon`} 
-                                  className="w-4 h-4 object-contain" 
+                                  className="w-5 h-5 object-contain" 
                                 />
                               </div>
-                              <div>
-                                <div className="font-medium">{model.name}</div>
-                                <div className="text-xs text-muted-foreground">{model.description}</div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm">{model.name}</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
                               </div>
-                              {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                              {model.type === 'pro' && (
+                                <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium">
+                                  Pro
+                                </span>
+                              )}
                             </div>
                           </SelectItem>
                         );
@@ -810,25 +835,35 @@ export default function Index() {
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-44 p-1.5 bg-background border shadow-lg z-50" align="start">
-                    <div className="flex flex-col gap-0.5">
+                  <PopoverContent className="w-52 p-2 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl z-50" align="start">
+                    <div className="flex flex-col gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                        className="h-11 px-3 justify-start text-sm hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
                         onClick={handleFileUpload}
                       >
-                        <Paperclip className="h-3.5 w-3.5 mr-2" />
-                        Add File & Photo
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-blue-600/20 rounded-lg flex items-center justify-center mr-3">
+                          <Paperclip className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium">Add File & Photo</div>
+                          <div className="text-xs text-muted-foreground">Upload documents or images</div>
+                        </div>
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                        className="h-11 px-3 justify-start text-sm hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
                         onClick={handleCreateImageClick}
                       >
-                        <ImageIcon className="h-3.5 w-3.5 mr-2" />
-                        Create Image
+                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500/10 to-purple-600/20 rounded-lg flex items-center justify-center mr-3">
+                          <ImageIcon className="h-4 w-4 text-purple-600" />
+                        </div>
+                        <div className="text-left">
+                          <div className="font-medium">Create Image</div>
+                          <div className="text-xs text-muted-foreground">Generate AI artwork</div>
+                        </div>
                       </Button>
                     </div>
                   </PopoverContent>
