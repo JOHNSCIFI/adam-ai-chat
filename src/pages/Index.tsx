@@ -553,37 +553,52 @@ export default function Index() {
         return 'bg-muted border border-border';
     }
   };
-  return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
+  return <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 min-h-screen max-w-4xl mx-auto">
       {/* Google One Tap for unauthenticated users */}
       <GoogleOneTab />
       
-      <div className="text-center mb-8">
+      <div className="text-center mb-6 sm:mb-8">
         {user ? (
           <>
-            <h1 className="text-4xl font-bold mb-2">{timeGreeting}, {displayName}</h1>
-            <p className="text-muted-foreground text-lg">How can I help you today?</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-2">{timeGreeting}, {displayName}</h1>
+            <p className="text-muted-foreground text-base sm:text-lg">How can I help you today?</p>
           </>
         ) : (
           <>
-            <h1 className="text-4xl font-bold mb-4">{timeGreeting}</h1>
-            <p className="text-muted-foreground text-lg">How can I help you today?</p>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">{timeGreeting}</h1>
+            <p className="text-muted-foreground text-base sm:text-lg">How can I help you today?</p>
           </>
         )}
       </div>
 
-      <div className="w-full max-w-3xl mb-6">
-        <div className="relative bg-background border border-border rounded-2xl p-4">
+      <div className="w-full max-w-3xl mb-4 sm:mb-6">
+        <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
 
-          <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            handleStartChat();
-          }
-        }} placeholder={isImageMode ? "Describe an image..." : "Type a message..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
+          <Textarea 
+            ref={textareaRef} 
+            value={message} 
+            onChange={handleInputChange} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleStartChat();
+              }
+            }} 
+            placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
+            className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+            rows={1}
+            aria-label={isImageMode ? "Describe an image" : "Type your message"}
+          />
           
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground" onClick={handleFileUpload}>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" 
+                onClick={handleFileUpload}
+                aria-label="Upload file"
+              >
                 <Paperclip className="h-4 w-4" />
               </Button>
               
@@ -592,7 +607,11 @@ export default function Index() {
                   <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                     <ImageIcon className="h-3 w-3" />
                     <span>Image</span>
-                    <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                    <button 
+                      onClick={handleExitImageMode} 
+                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary"
+                      aria-label="Exit image mode"
+                    >
                       <X className="h-3 w-3" />
                     </button>
                   </div>
@@ -600,49 +619,75 @@ export default function Index() {
                   {/* Styles dropdown */}
                   <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
+                        aria-label="Select image style"
+                        aria-expanded={isStylesOpen}
+                        aria-haspopup="true"
+                      >
                         <Palette className="h-3 w-3" />
-                        Styles
-                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <span className="hidden sm:inline">Styles</span>
+                        <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                      <div className="grid grid-cols-3 gap-3">
-                        {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                    <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg" align="start">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                        {imageStyles.map(style => 
+                          <button 
+                            key={style.name} 
+                            onClick={() => handleStyleSelect(style)} 
+                            className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-muted"
+                            aria-label={`Select ${style.name} style`}
+                          >
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
                               <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
                                 {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
                               </span>
                             </div>
                             <span className="text-xs font-medium leading-tight">{style.name}</span>
-                          </button>)}
+                          </button>
+                        )}
                       </div>
                     </PopoverContent>
                   </Popover>
-                </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
-                  <ImageIcon className="h-4 w-4 mr-1" />Create an image
+                </> : 
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-8 px-2 sm:px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm" 
+                  onClick={handleCreateImageClick}
+                  aria-label="Create an image"
+                >
+                  <ImageIcon className="h-4 w-4 mr-1" />
+                  <span className="hidden sm:inline">Create an image</span>
+                  <span className="sm:hidden">Image</span>
                 </Button>}
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
-                <SelectTrigger className="w-[180px] h-8 bg-transparent border border-border/50 rounded-full">
+                <SelectTrigger 
+                  className="w-[140px] sm:w-[180px] h-8 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
+                  aria-label="Select AI model"
+                >
                   <SelectValue>
-                    <span className="text-sm font-medium">{selectedModelData?.name}</span>
+                    <span className="font-medium truncate">{selectedModelData?.name}</span>
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {models.map(model => {
                     const modelData = availableModels.find(m => m.id === model.id);
                     return (
-                      <SelectItem key={model.id} value={model.id}>
+                      <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
                         <div className="flex items-center gap-3">
                           <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
                             <img 
                               src={getModelIcon(modelData?.icon || 'openai')} 
-                              alt={model.name} 
+                              alt={`${model.name} icon`} 
                               className="w-4 h-4 object-contain" 
                             />
                           </div>
@@ -658,7 +703,17 @@ export default function Index() {
                 </SelectContent>
               </Select>
               
-              <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
+              <Button 
+                size="sm" 
+                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                  isRecording 
+                    ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                    : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                } text-background`} 
+                onClick={isRecording ? stopRecording : startRecording}
+                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                aria-pressed={isRecording}
+              >
                 {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
               </Button>
               
@@ -674,7 +729,7 @@ export default function Index() {
 
       {/* Suggestion buttons - compact design - only show when no suggestions are active */}
       {!showSuggestions && (
-        <div className="w-full max-w-3xl mb-6">
+        <div className="w-full max-w-3xl mb-4 sm:mb-6">
           <div className="flex flex-wrap gap-2 justify-center">
             {suggestionButtons.map((suggestion, index) => (
               <Button
@@ -682,10 +737,11 @@ export default function Index() {
                 onClick={() => handleSuggestionClick(suggestion.action)}
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+                className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
+                aria-label={`${suggestion.label} suggestion`}
               >
                 <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs font-medium">{suggestion.label}</span>
+                <span className="text-xs sm:text-sm font-medium">{suggestion.label}</span>
               </Button>
             ))}
             
@@ -695,27 +751,30 @@ export default function Index() {
                 onClick={() => handleSuggestionClick('see-more')}
                 variant="ghost"
                 size="sm"
-                className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+                className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
+                aria-label="Show more suggestions"
+                aria-expanded={showMoreButtons}
               >
                 <Plus className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs font-medium">See More</span>
+                <span className="text-xs sm:text-sm font-medium">See More</span>
               </Button>
             )}
           </div>
           
           {/* Additional buttons when "See More" is clicked */}
           {showMoreButtons && (
-            <div className="flex flex-wrap gap-2 justify-center mt-2">
+            <div className="flex flex-wrap gap-2 justify-center mt-2" role="group" aria-label="Additional suggestions">
               {additionalButtons.map((button, index) => (
                 <Button
                   key={index}
                   onClick={() => handleSuggestionClick(button.action)}
                   variant="ghost"
                   size="sm"
-                  className="h-8 px-3 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all"
+                  className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
+                  aria-label={`${button.label} suggestion`}
                 >
                   <button.icon className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs font-medium">{button.label}</span>
+                  <span className="text-xs sm:text-sm font-medium">{button.label}</span>
                 </Button>
               ))}
             </div>
@@ -725,16 +784,17 @@ export default function Index() {
 
       {/* Suggestion prompts */}
       {showSuggestions && suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts] && (
-        <div className="w-full max-w-3xl mb-6">
-          <div className="space-y-4">
+        <div className="w-full max-w-3xl mb-4 sm:mb-6">
+          <div className="space-y-4" role="list" aria-label="Suggested prompts">
             {suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].map((prompt, index) => (
-              <div key={index}>
-                <div
+              <div key={index} role="listitem">
+                <button
                   onClick={() => handlePromptClick(prompt)}
-                  className="cursor-pointer"
+                  className="w-full text-left p-3 rounded-lg hover:bg-accent/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-accent/50 min-h-[44px] flex items-center"
+                  aria-label={`Use prompt: ${prompt}`}
                 >
-                  <span className="text-sm text-muted-foreground hover:text-foreground transition-colors">{prompt}</span>
-                </div>
+                  <span className="text-sm sm:text-base text-muted-foreground hover:text-foreground transition-colors">{prompt}</span>
+                </button>
                 {index < suggestionPrompts[showSuggestions as keyof typeof suggestionPrompts].length - 1 && (
                   <hr className="mt-4 border-border/50" />
                 )}
@@ -746,37 +806,42 @@ export default function Index() {
 
       {/* Available Models Section - only show when no suggestions are active */}
       {!showSuggestions && (
-        <div className="w-full max-w-3xl mb-6">
+        <div className="w-full max-w-3xl mb-4 sm:mb-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <h2 className="text-lg font-semibold">Available Models</h2>
+              <div className="w-2 h-2 bg-green-500 rounded-full" aria-hidden="true"></div>
+              <h2 className="text-base sm:text-lg font-semibold">Available Models</h2>
             </div>
             <button 
               onClick={handleSeeAllModels}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="text-sm text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary rounded px-2 py-1"
+              aria-label="View all available models"
             >
               See All
             </button>
           </div>
-        <div className="relative">
-          <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+        <div className="relative" role="region" aria-label="Available AI models">
+          <div className="flex gap-3 sm:gap-4 overflow-x-auto pb-2 scrollbar-hide" role="tablist">
             {availableModels.map((model) => (
-              <div
+              <button
                 key={model.id}
                 onClick={() => handleModelSelect(model.id)}
-                className={`flex-shrink-0 w-64 p-4 rounded-xl border cursor-pointer transition-all hover:shadow-md ${
+                className={`flex-shrink-0 w-56 sm:w-64 p-3 sm:p-4 rounded-xl border transition-all hover:shadow-md focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 text-left min-h-[120px] ${
                   selectedModel === model.id
                     ? 'border-primary bg-primary/5'
                     : 'border-border bg-card hover:border-border/80'
                 }`}
+                role="tab"
+                aria-selected={selectedModel === model.id}
+                aria-label={`Select ${model.name} model`}
               >
                 <div className="flex items-start gap-3">
                   <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center p-2">
                     <img 
                       src={getModelIcon(model.icon)} 
-                      alt={model.name} 
+                      alt="" 
                       className="w-6 h-6 object-contain" 
+                      aria-hidden="true"
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -791,19 +856,21 @@ export default function Index() {
                     )}
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
-          {/* Navigation buttons */}
+          {/* Navigation buttons - hidden on mobile, shown only when needed */}
           <button
             onClick={() => scrollModels('left')}
-            className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+            className="hidden sm:flex absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 w-8 h-8 bg-background border border-border rounded-full items-center justify-center shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Scroll models left"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
           <button
             onClick={() => scrollModels('right')}
-            className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 bg-background border border-border rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-shadow"
+            className="hidden sm:flex absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 w-8 h-8 bg-background border border-border rounded-full items-center justify-center shadow-sm hover:shadow-md transition-shadow focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Scroll models right"
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -815,48 +882,59 @@ export default function Index() {
 
       
 
-      <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        multiple 
+        className="sr-only" 
+        accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md"
+        aria-label="File upload input"
+      />
       
-      <AuthModal isOpen={showAuthModal} onClose={() => {
-      setShowAuthModal(false);
-      setPendingMessage('');
-      localStorage.removeItem('pendingChatMessage');
-    }} onSuccess={async () => {
-      setShowAuthModal(false);
-      if (pendingMessage.trim()) {
-        const messageToSend = pendingMessage;
-        setMessage(pendingMessage);
-        setPendingMessage('');
-        setTimeout(async () => {
-          const {
-            data: {
-              session: currentSession
-            }
-          } = await supabase.auth.getSession();
-          const currentUser = currentSession?.user;
-          if (!currentUser) {
-            console.error('No user found after auth, retrying...');
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => {
+          setShowAuthModal(false);
+          setPendingMessage('');
+          localStorage.removeItem('pendingChatMessage');
+        }} 
+        onSuccess={async () => {
+          setShowAuthModal(false);
+          if (pendingMessage.trim()) {
+            const messageToSend = pendingMessage;
+            setMessage(pendingMessage);
+            setPendingMessage('');
             setTimeout(async () => {
               const {
                 data: {
-                  session: retrySession
+                  session: currentSession
                 }
               } = await supabase.auth.getSession();
-              if (retrySession?.user) {
-                await createChatWithMessage(retrySession.user.id, messageToSend);
-              } else {
-                console.error('Still no user found after retry');
+              const currentUser = currentSession?.user;
+              if (!currentUser) {
+                console.error('No user found after auth, retrying...');
+                setTimeout(async () => {
+                  const {
+                    data: {
+                      session: retrySession
+                    }
+                  } = await supabase.auth.getSession();
+                  if (retrySession?.user) {
+                    await createChatWithMessage(retrySession.user.id, messageToSend);
+                  } else {
+                    console.error('Still no user found after retry');
+                  }
+                }, 500);
+                return;
               }
-            }, 500);
-            return;
+              await createChatWithMessage(currentUser.id, messageToSend);
+            }, 300);
+          } else {
+            setTimeout(() => {
+              textareaRef.current?.focus();
+            }, 100);
           }
-          await createChatWithMessage(currentUser.id, messageToSend);
-        }, 300);
-      } else {
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 100);
-      }
-    }} />
+        }} 
+      />
     </div>;
 }
