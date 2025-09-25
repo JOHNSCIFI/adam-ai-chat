@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
+import GoogleAutoLogin from '@/components/GoogleAutoLogin';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import { toast } from 'sonner';
 const models = [{
@@ -223,6 +224,7 @@ export default function Index() {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showGoogleAutoLogin, setShowGoogleAutoLogin] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
@@ -246,6 +248,16 @@ export default function Index() {
       }
     }
   }, [user]);
+
+  // Show Google auto login for unauthenticated users
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const timer = setTimeout(() => {
+        setShowGoogleAutoLogin(true);
+      }, 2000); // Show after 2 seconds on the page
+      return () => clearTimeout(timer);
+    }
+  }, [authLoading, user]);
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -781,29 +793,25 @@ export default function Index() {
         const messageToSend = pendingMessage;
         setMessage(pendingMessage);
         setPendingMessage('');
-        setTimeout(async () => {
-          const {
-            data: {
-              session: currentSession
+        localStorage.removeItem('pendingChatMessage');
+        
+        const { data: { session } } = await supabase.auth.getSession();
+        const currentUser = session?.user;
+        
+        if (!currentUser) {
+          console.error('No user found after auth, retrying...');
+          setTimeout(async () => {
+            const { data: { session: retrySession } } = await supabase.auth.getSession();
+            if (retrySession?.user) {
+              await createChatWithMessage(retrySession.user.id, messageToSend);
+            } else {
+              console.error('Still no user found after retry');
             }
-          } = await supabase.auth.getSession();
-          const currentUser = currentSession?.user;
-          if (!currentUser) {
-            console.error('No user found after auth, retrying...');
-            setTimeout(async () => {
-              const {
-                data: {
-                  session: retrySession
-                }
-              } = await supabase.auth.getSession();
-              if (retrySession?.user) {
-                await createChatWithMessage(retrySession.user.id, messageToSend);
-              } else {
-                console.error('Still no user found after retry');
-              }
-            }, 500);
-            return;
-          }
+          }, 500);
+          return;
+        }
+        
+        setTimeout(async () => {
           await createChatWithMessage(currentUser.id, messageToSend);
         }, 300);
       } else {
@@ -812,5 +820,9 @@ export default function Index() {
         }, 100);
       }
     }} />
+
+    {showGoogleAutoLogin && !user && (
+      <GoogleAutoLogin onClose={() => setShowGoogleAutoLogin(false)} />
+    )}
     </div>;
 }
