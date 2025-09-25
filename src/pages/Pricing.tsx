@@ -6,128 +6,138 @@ import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-
 const Pricing = () => {
   const navigate = useNavigate();
   const [isYearly, setIsYearly] = useState(false);
-
-  const plans = [
-    {
-      name: "Free",
-      price: 0,
-      yearlyPrice: 0,
-      icon: Zap,
-      description: "Start free, upgrade anytime.",
-      popular: false,
-      features: [
-        { text: "Access to OpenAI's GPT-4o Mini", included: true },
-        { text: "Access to multiple top AI models", included: false },
-        { text: "Chat with all Models", included: false },
-        { text: "Custom bots built for specific use cases", included: false },
-        { text: "Unlimited file uploads", included: false },
-        { text: "Advanced web search capabilities", included: false },
-        { text: "Image Generation", included: false },
-        { text: "Chat with PDF files", included: false }
-      ],
-      buttonText: "Get started",
-      buttonVariant: "outline" as const
-    },
-    {
-      name: "Pro",
-      price: 19.99,
-      yearlyPrice: 15.99,
-      icon: Star,
-      description: "$0.67 Per day",
-      popular: true,
-      features: [
-        { text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)", included: true },
-        { text: "Chat with all Models", included: true },
-        { text: "Extended limits on messages, uploads, and analysis", included: true },
-        { text: "Text-to-speech voice mode", included: true },
-        { text: "Custom bots built for specific use cases", included: true },
-        { text: "Unlimited file uploads", included: true },
-        { text: "Advanced web search capabilities", included: true },
-        { text: "Chat with PDF files", included: true },
-        { text: "Access to image analysis", included: true },
-        { text: "3,600 image generations per month", included: true }
-      ],
-      buttonText: "Subscribe",
-      buttonVariant: "default" as const
-    },
-    {
-      name: "Ultra Pro",
-      price: 39.99,
-      yearlyPrice: 31.99,
-      icon: Crown,
-      description: "$1.33 Per day",
-      popular: false,
-      features: [
-        { text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)", included: true },
-        { text: "Chat with all Models", included: true },
-        { text: "Extended limits on messages, uploads, and analysis", included: true },
-        { text: "Text-to-speech voice mode", included: true },
-        { text: "Custom bots built for specific use cases", included: true },
-        { text: "Unlimited file uploads", included: true },
-        { text: "Advanced web search capabilities", included: true },
-        { text: "Extended limits for Chat with PDF files", included: true },
-        { text: "Access to image analysis", included: true },
-        { text: "14,000 image generations per month", included: true },
-        { text: "Priority support", included: true }
-      ],
-      buttonText: "Subscribe",
-      buttonVariant: "outline" as const
-    }
-  ];
-
+  const plans = [{
+    name: "Free",
+    price: 0,
+    yearlyPrice: 0,
+    icon: Zap,
+    description: "Start free, upgrade anytime.",
+    popular: false,
+    features: [{
+      text: "Access to OpenAI's GPT-4o Mini",
+      included: true
+    }, {
+      text: "Access to multiple top AI models",
+      included: false
+    }, {
+      text: "Chat with all Models",
+      included: false
+    }, {
+      text: "Custom bots built for specific use cases",
+      included: false
+    }, {
+      text: "Unlimited file uploads",
+      included: false
+    }, {
+      text: "Advanced web search capabilities",
+      included: false
+    }, {
+      text: "Image Generation",
+      included: false
+    }, {
+      text: "Chat with PDF files",
+      included: false
+    }],
+    buttonText: "Get started",
+    buttonVariant: "outline" as const
+  }, {
+    name: "Pro",
+    price: 19.99,
+    yearlyPrice: 15.99,
+    icon: Star,
+    description: "$0.67 Per day",
+    popular: true,
+    features: [{
+      text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)",
+      included: true
+    }, {
+      text: "Chat with all Models",
+      included: true
+    }, {
+      text: "Extended limits on messages, uploads, and analysis",
+      included: true
+    }, {
+      text: "Text-to-speech voice mode",
+      included: true
+    }, {
+      text: "Custom bots built for specific use cases",
+      included: true
+    }, {
+      text: "Unlimited file uploads",
+      included: true
+    }, {
+      text: "Advanced web search capabilities",
+      included: true
+    }, {
+      text: "Chat with PDF files",
+      included: true
+    }, {
+      text: "Access to image analysis",
+      included: true
+    }, {
+      text: "3,600 image generations per month",
+      included: true
+    }],
+    buttonText: "Subscribe",
+    buttonVariant: "default" as const
+  }, {
+    name: "Ultra Pro",
+    price: 39.99,
+    yearlyPrice: 31.99,
+    icon: Crown,
+    description: "$1.33 Per day",
+    popular: false,
+    features: [{
+      text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)",
+      included: true
+    }, {
+      text: "Chat with all Models",
+      included: true
+    }, {
+      text: "Extended limits on messages, uploads, and analysis",
+      included: true
+    }, {
+      text: "Text-to-speech voice mode",
+      included: true
+    }, {
+      text: "Custom bots built for specific use cases",
+      included: true
+    }, {
+      text: "Unlimited file uploads",
+      included: true
+    }, {
+      text: "Advanced web search capabilities",
+      included: true
+    }, {
+      text: "Extended limits for Chat with PDF files",
+      included: true
+    }, {
+      text: "Access to image analysis",
+      included: true
+    }, {
+      text: "14,000 image generations per month",
+      included: true
+    }, {
+      text: "Priority support",
+      included: true
+    }],
+    buttonText: "Subscribe",
+    buttonVariant: "outline" as const
+  }];
   const getPrice = (plan: typeof plans[0]) => {
     return isYearly ? plan.yearlyPrice : plan.price;
   };
-
   const getSavings = (plan: typeof plans[0]) => {
     if (plan.price === 0) return 0;
-    return Math.round(((plan.price - plan.yearlyPrice) / plan.price) * 100);
+    return Math.round((plan.price - plan.yearlyPrice) / plan.price * 100);
   };
-
-  const NavBar = () => (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <AdamGptLogo className="h-7 w-7" />
-            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
-        </div>
-        <div className="hidden md:flex items-center space-x-6">
-          <button onClick={() => navigate('/models')} className="text-sm font-medium hover:text-primary transition-colors">Models</button>
-          <button onClick={() => navigate('/features')} className="text-sm font-medium hover:text-primary transition-colors">Features</button>
-          <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-primary">Pricing</button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium hover:text-primary transition-colors">
-              Terms <ChevronDown className="ml-1 h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-popover border shadow-lg">
-              <DropdownMenuItem onClick={() => navigate('/privacy')}>
-                Privacy Policy
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/terms')}>
-                Terms of Service
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/cookie-policy')}>
-                Cookie Policy
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-          Sign in
-        </Button>
-      </div>
-    </nav>
-  );
-
-  const Footer = () => (
-    <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
+  const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      
+    </nav>;
+  const Footer = () => <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
       <div className="container max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="animate-fade-in">
@@ -143,7 +153,9 @@ const Pricing = () => {
             </p>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.1s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Product</h3>
             <div className="space-y-3">
               <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
@@ -153,7 +165,9 @@ const Pricing = () => {
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.2s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Company</h3>
             <div className="space-y-3">
               <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
@@ -162,7 +176,9 @@ const Pricing = () => {
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.3s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Legal</h3>
             <div className="space-y-3">
               <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
@@ -172,7 +188,9 @@ const Pricing = () => {
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
+        <div className="border-t border-border pt-8 animate-fade-in" style={{
+        animationDelay: '0.4s'
+      }}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-muted-foreground">
               &copy; 2024 AdamGpt. All rights reserved.
@@ -190,11 +208,8 @@ const Pricing = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
-
-  return (
-    <div className="min-h-screen bg-background">
+    </footer>;
+  return <div className="min-h-screen bg-background">
       <NavBar />
       
       {/* Hero Section */}
@@ -213,34 +228,29 @@ const Pricing = () => {
             <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AI Journey</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-16 max-w-3xl mx-auto animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <p className="text-xl text-muted-foreground mb-16 max-w-3xl mx-auto animate-fade-in" style={{
+          animationDelay: '0.1s'
+        }}>
             Start free and scale with powerful AI models that grow with your needs.
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
+          <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{
+          animationDelay: '0.2s'
+        }}>
             <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-primary' : 'text-muted-foreground'}`}>
               Monthly
             </span>
-            <button
-              onClick={() => setIsYearly(!isYearly)}
-              className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${
-                isYearly ? 'bg-primary' : 'bg-muted'
-              }`}
-            >
-              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                isYearly ? 'translate-x-8' : 'translate-x-0'
-              }`}></div>
+            <button onClick={() => setIsYearly(!isYearly)} className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${isYearly ? 'bg-primary' : 'bg-muted'}`}>
+              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${isYearly ? 'translate-x-8' : 'translate-x-0'}`}></div>
             </button>
             <div className="flex items-center gap-2">
               <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-primary' : 'text-muted-foreground'}`}>
                 Yearly
               </span>
-              {isYearly && (
-                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 animate-scale-in">
+              {isYearly && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 animate-scale-in">
                   Save up to 20%
-                </Badge>
-              )}
+                </Badge>}
             </div>
           </div>
         </div>
@@ -251,35 +261,21 @@ const Pricing = () => {
         <div className="container max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
             {plans.map((plan, index) => {
-              const IconComponent = plan.icon;
-              const currentPrice = getPrice(plan);
-              const savings = getSavings(plan);
-              
-              return (
-                <div
-                  key={plan.name}
-                  className={`group relative p-8 rounded-3xl transition-all duration-500 hover:scale-105 animate-fade-in ${
-                    plan.popular
-                      ? 'bg-gradient-to-b from-primary/5 to-primary/10 border-2 border-primary shadow-2xl shadow-primary/20'
-                      : 'bg-card border border-border hover:border-primary/30 hover:shadow-xl'
-                  }`}
-                  style={{animationDelay: `${index * 0.1}s`}}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+            const IconComponent = plan.icon;
+            const currentPrice = getPrice(plan);
+            const savings = getSavings(plan);
+            return <div key={plan.name} className={`group relative p-8 rounded-3xl transition-all duration-500 hover:scale-105 animate-fade-in ${plan.popular ? 'bg-gradient-to-b from-primary/5 to-primary/10 border-2 border-primary shadow-2xl shadow-primary/20' : 'bg-card border border-border hover:border-primary/30 hover:shadow-xl'}`} style={{
+              animationDelay: `${index * 0.1}s`
+            }}>
+                  {plan.popular && <div className="absolute -top-4 left-1/2 -translate-x-1/2">
                       <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-1 text-sm font-semibold">
                         Most Popular
                       </Badge>
-                    </div>
-                  )}
+                    </div>}
                   
                   <div className="flex items-center gap-4 mb-6">
-                    <div className={`p-3 rounded-2xl ${
-                      plan.popular ? 'bg-primary/20' : 'bg-muted'
-                    }`}>
-                      <IconComponent className={`h-6 w-6 ${
-                        plan.popular ? 'text-primary' : 'text-muted-foreground'
-                      }`} />
+                    <div className={`p-3 rounded-2xl ${plan.popular ? 'bg-primary/20' : 'bg-muted'}`}>
+                      <IconComponent className={`h-6 w-6 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
                     </div>
                     <h3 className="text-2xl font-bold">{plan.name}</h3>
                   </div>
@@ -289,51 +285,32 @@ const Pricing = () => {
                       <span className="text-5xl font-bold">
                         ${currentPrice}
                       </span>
-                      {plan.price > 0 && (
-                        <span className="text-muted-foreground">
+                      {plan.price > 0 && <span className="text-muted-foreground">
                           /{isYearly ? 'year' : 'month'}
-                        </span>
-                      )}
+                        </span>}
                     </div>
                     
-                    {isYearly && savings > 0 && (
-                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 mb-2">
+                    {isYearly && savings > 0 && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 mb-2">
                         Save {savings}%
-                      </Badge>
-                    )}
+                      </Badge>}
                     
                     <p className="text-muted-foreground">{plan.description}</p>
                   </div>
                   
                   <div className="space-y-4 mb-8">
-                    {plan.features.map((feature, featureIndex) => (
-                      <div key={featureIndex} className="flex items-start gap-3">
-                        {feature.included ? (
-                          <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
-                        ) : (
-                          <X className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
-                        )}
+                    {plan.features.map((feature, featureIndex) => <div key={featureIndex} className="flex items-start gap-3">
+                        {feature.included ? <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" /> : <X className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />}
                         <span className={feature.included ? '' : 'text-muted-foreground'}>
                           {feature.text}
                         </span>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                   
-                  <Button
-                    className={`w-full h-12 text-lg font-semibold ${
-                      plan.popular
-                        ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg'
-                        : ''
-                    }`}
-                    variant={plan.buttonVariant}
-                    onClick={() => navigate('/chat')}
-                  >
+                  <Button className={`w-full h-12 text-lg font-semibold ${plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''}`} variant={plan.buttonVariant} onClick={() => navigate('/chat')}>
                     {plan.buttonText} {plan.price > 0 && '→'}
                   </Button>
-                </div>
-              );
-            })}
+                </div>;
+          })}
           </div>
 
           {/* Comparison Table */}
@@ -486,8 +463,6 @@ const Pricing = () => {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Pricing;
