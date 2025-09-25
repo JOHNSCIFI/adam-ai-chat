@@ -41,7 +41,7 @@ export default function Cookies() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => navigate('/chat')} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 font-medium">
+        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
           Try Here
         </Button>
       </div>
@@ -156,8 +156,11 @@ export default function Cookies() {
               <CardContent className="space-y-8">
                 <div>
                   <div className="flex items-center gap-3 mb-4">
+                    <div className="w-6 h-6 bg-red-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">!</span>
+                    </div>
                     <h3 className="text-lg font-semibold text-foreground">Essential Cookies</h3>
-                    <Badge variant="secondary" className="text-xs">Required</Badge>
+                    <Badge variant="destructive" className="text-xs">Required</Badge>
                   </div>
                   <p className="mb-4 text-muted-foreground">These cookies are necessary for the website to function properly and cannot be disabled.</p>
                   
@@ -193,8 +196,11 @@ export default function Cookies() {
 
                 <div>
                   <div className="flex items-center gap-3 mb-4">
+                    <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center">
+                      <span className="text-white text-xs">⚙</span>
+                    </div>
                     <h3 className="text-lg font-semibold text-foreground">Functional Cookies</h3>
-                    <Badge variant="outline" className="text-xs">Optional</Badge>
+                    <Badge variant="secondary" className="text-xs">Optional</Badge>
                   </div>
                   <p className="mb-4 text-muted-foreground">These cookies enable enhanced functionality and personalization.</p>
                   
@@ -236,7 +242,7 @@ export default function Cookies() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-4 rounded-xl bg-muted/20 border border-muted hover:border-muted-foreground/30 transition-colors">
                     <h3 className="text-lg font-semibold mb-3 text-foreground">Google OAuth</h3>
                     <p className="mb-3 text-muted-foreground text-sm">When you sign in with Google, Google may set cookies for authentication purposes. These are governed by Google's privacy policy.</p>
                     <p className="text-xs text-muted-foreground">
@@ -244,7 +250,7 @@ export default function Cookies() {
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-4 rounded-xl bg-muted/20 border border-muted hover:border-muted-foreground/30 transition-colors">
                     <h3 className="text-lg font-semibold mb-3 text-foreground">Supabase</h3>
                     <p className="mb-3 text-muted-foreground text-sm">Our infrastructure provider may set cookies for security and performance monitoring.</p>
                     <p className="text-xs text-muted-foreground">
@@ -261,14 +267,14 @@ export default function Cookies() {
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-3 gap-6">
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-4 rounded-xl bg-muted/20 border border-muted">
                     <h3 className="text-lg font-semibold mb-3 text-foreground">Cookie Consent</h3>
                     <p className="text-sm text-muted-foreground">
                       When you first visit our website, you'll see a cookie banner where you can choose to accept all cookies, reject non-essential cookies, or manage your preferences in detail.
                     </p>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-4 rounded-xl bg-muted/20 border border-muted">
                     <h3 className="text-lg font-semibold mb-3 text-foreground">Browser Settings</h3>
                     <p className="text-sm mb-3 text-muted-foreground">You can also control cookies through your browser settings:</p>
                     <ul className="text-xs space-y-1 text-muted-foreground">
@@ -279,7 +285,7 @@ export default function Cookies() {
                     </ul>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-4 rounded-xl bg-muted/20 border border-muted">
                     <h3 className="text-lg font-semibold mb-3 text-foreground">Impact of Disabling</h3>
                     <p className="text-sm mb-3 text-muted-foreground">Disabling certain cookies may affect functionality:</p>
                     <ul className="text-xs space-y-1 text-muted-foreground">

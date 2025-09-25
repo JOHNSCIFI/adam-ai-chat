@@ -42,7 +42,7 @@ export default function Privacy() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => navigate('/chat')} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 font-medium">
+        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
           Try Here
         </Button>
       </div>
@@ -199,34 +199,36 @@ export default function Privacy() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            {/* ... keep existing cards with similar conservative styling ... */}
+
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">How We Use Your Information</CardTitle>
+                <CardTitle className="text-2xl">How We Use Your Information</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <h3 className="text-lg font-semibold text-foreground mb-4">Legal Bases and Purposes:</h3>
-                <div className="space-y-4">
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-3 text-foreground">Contract Performance:</p>
-                    <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
+              <CardContent className="space-y-4">
+                <h3 className="text-xl font-semibold text-primary">Legal Bases and Purposes:</h3>
+                <div className="space-y-6">
+                  <div className="p-6 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/20">
+                    <p className="text-lg font-semibold mb-3 text-green-600 dark:text-green-400">Contract Performance:</p>
+                    <ul className="list-disc pl-6 mt-2 space-y-1">
                       <li>Providing AI chat services</li>
                       <li>Processing your messages and files</li>
                       <li>Maintaining your account and preferences</li>
                     </ul>
                   </div>
                   
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-3 text-foreground">Legitimate Interest:</p>
-                    <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
+                  <div className="p-6 rounded-xl bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/20">
+                    <p className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">Legitimate Interest:</p>
+                    <ul className="list-disc pl-6 mt-2 space-y-1">
                       <li>Improving our AI models and services</li>
                       <li>Ensuring platform security and preventing abuse</li>
                       <li>Technical maintenance and optimization</li>
                     </ul>
                   </div>
 
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-3 text-foreground">Consent:</p>
-                    <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
+                  <div className="p-6 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/20">
+                    <p className="text-lg font-semibold mb-3 text-purple-600 dark:text-purple-400">Consent:</p>
+                    <ul className="list-disc pl-6 mt-2 space-y-1">
                       <li>Non-essential cookies and analytics (where applicable)</li>
                       <li>Marketing communications (if opted in)</li>
                     </ul>
@@ -235,87 +237,87 @@ export default function Privacy() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Third-Party Processors</CardTitle>
+                <CardTitle className="text-2xl">Third-Party Processors</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="text-lg font-semibold mb-3 text-foreground">Supabase</h3>
+                  <div className="p-6 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
+                    <h3 className="text-lg font-semibold mb-3">Supabase</h3>
                     <p className="text-sm text-muted-foreground mb-2">Location: United States</p>
-                    <p className="text-sm mb-2 text-muted-foreground">Purpose: Database hosting, authentication, file storage</p>
-                    <p className="text-sm text-muted-foreground">Privacy Policy: <a href="https://supabase.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">supabase.com/privacy</a></p>
+                    <p className="text-sm mb-2">Purpose: Database hosting, authentication, file storage</p>
+                    <p className="text-sm">Privacy Policy: <a href="https://supabase.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">supabase.com/privacy</a></p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="text-lg font-semibold mb-3 text-foreground">OpenAI</h3>
+                  <div className="p-6 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors">
+                    <h3 className="text-lg font-semibold mb-3">OpenAI</h3>
                     <p className="text-sm text-muted-foreground mb-2">Location: United States</p>
-                    <p className="text-sm mb-2 text-muted-foreground">Purpose: AI chat responses, image generation and analysis</p>
-                    <p className="text-sm text-muted-foreground">Privacy Policy: <a href="https://openai.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">openai.com/privacy</a></p>
+                    <p className="text-sm mb-2">Purpose: AI chat responses, image generation and analysis</p>
+                    <p className="text-sm">Privacy Policy: <a href="https://openai.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">openai.com/privacy</a></p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border md:col-span-2">
-                    <h3 className="text-lg font-semibold mb-3 text-foreground">Google OAuth</h3>
+                  <div className="p-6 rounded-xl bg-muted/50 hover:bg-muted/80 transition-colors md:col-span-2">
+                    <h3 className="text-lg font-semibold mb-3">Google OAuth</h3>
                     <p className="text-sm text-muted-foreground mb-2">Location: Global</p>
-                    <p className="text-sm mb-2 text-muted-foreground">Purpose: Google sign-in authentication</p>
-                    <p className="text-sm text-muted-foreground">Privacy Policy: <a href="https://policies.google.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
+                    <p className="text-sm mb-2">Purpose: Google sign-in authentication</p>
+                    <p className="text-sm">Privacy Policy: <a href="https://policies.google.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener">policies.google.com/privacy</a></p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Data Retention</CardTitle>
+                <CardTitle className="text-2xl">Data Retention</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-2 text-foreground">Account Data</p>
-                    <p className="text-sm text-muted-foreground">Retained while your account is active and for 30 days after deletion</p>
+                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
+                    <p className="font-semibold mb-2">Account Data</p>
+                    <p className="text-sm">Retained while your account is active and for 30 days after deletion</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-2 text-foreground">Chat Messages</p>
-                    <p className="text-sm text-muted-foreground">Retained while your account is active, deleted when you delete chats or account</p>
+                  <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                    <p className="font-semibold mb-2">Chat Messages</p>
+                    <p className="text-sm">Retained while your account is active, deleted when you delete chats or account</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-2 text-foreground">File Uploads</p>
-                    <p className="text-sm text-muted-foreground">Retained for the lifetime of associated chats</p>
+                  <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                    <p className="font-semibold mb-2">File Uploads</p>
+                    <p className="text-sm">Retained for the lifetime of associated chats</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                    <p className="font-semibold mb-2 text-foreground">Usage Logs</p>
-                    <p className="text-sm text-muted-foreground">Retained for 90 days for security and performance monitoring</p>
+                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                    <p className="font-semibold mb-2">Usage Logs</p>
+                    <p className="text-sm">Retained for 90 days for security and performance monitoring</p>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Your Rights</CardTitle>
+                <CardTitle className="text-2xl">Your Rights</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <p className="text-muted-foreground">Under GDPR and CCPA, you have the following rights:</p>
+                <p className="text-lg">Under GDPR and CCPA, you have the following rights:</p>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border">
-                    <h3 className="font-semibold text-foreground">Access & Portability</h3>
+                  <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <h3 className="font-semibold text-primary">Access & Portability</h3>
                     <p className="text-sm text-muted-foreground mt-2">Request a copy of your personal data</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border">
-                    <h3 className="font-semibold text-foreground">Rectification</h3>
+                  <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <h3 className="font-semibold text-primary">Rectification</h3>
                     <p className="text-sm text-muted-foreground mt-2">Correct inaccurate personal data</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border">
-                    <h3 className="font-semibold text-foreground">Erasure</h3>
+                  <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <h3 className="font-semibold text-primary">Erasure</h3>
                     <p className="text-sm text-muted-foreground mt-2">Delete your personal data</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border">
-                    <h3 className="font-semibold text-foreground">Restrict Processing</h3>
+                  <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <h3 className="font-semibold text-primary">Restrict Processing</h3>
                     <p className="text-sm text-muted-foreground mt-2">Limit how we use your data</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-muted/20 border border-border">
-                    <h3 className="font-semibold text-foreground">Object</h3>
+                  <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">
+                    <h3 className="font-semibold text-primary">Object</h3>
                     <p className="text-sm text-muted-foreground mt-2">Object to certain processing activities</p>
                   </div>
                   <div className="p-4 rounded-lg border border-border hover:border-primary/30 transition-colors">

@@ -41,7 +41,7 @@ export default function Terms() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => navigate('/chat')} className="bg-primary text-primary-foreground hover:bg-primary/90 px-6 py-2 font-medium">
+        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
           Try Here
         </Button>
       </div>
@@ -181,14 +181,16 @@ export default function Terms() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            {/* ... keep existing cards with similar conservative styling ... */}
+
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">User Accounts and Obligations</CardTitle>
+                <CardTitle className="text-2xl">User Accounts and Obligations</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="font-semibold mb-4 text-foreground">Account Requirements</h3>
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                  <h3 className="text-xl font-semibold mb-4 text-primary">Account Requirements</h3>
+                  <ul className="list-disc pl-6 space-y-2 text-lg">
                     <li>You must provide accurate and complete information when creating an account</li>
                     <li>You are responsible for maintaining the security of your account credentials</li>
                     <li>You must be at least 13 years old to use this Service</li>
@@ -197,8 +199,8 @@ export default function Terms() {
                 </div>
 
                 <div>
-                  <h3 className="font-semibold mb-4 text-foreground">User Responsibilities</h3>
-                  <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                  <h3 className="text-xl font-semibold mb-4 text-primary">User Responsibilities</h3>
+                  <ul className="list-disc pl-6 space-y-2 text-lg">
                     <li>Use the Service in compliance with all applicable laws and regulations</li>
                     <li>Respect the intellectual property rights of others</li>
                     <li>Maintain the confidentiality of your account information</li>
@@ -208,25 +210,25 @@ export default function Terms() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Prohibited Content and Conduct</CardTitle>
+                <CardTitle className="text-2xl">Prohibited Content and Conduct</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <p className="text-muted-foreground">You agree not to use the Service to create, upload, transmit, or distribute content that:</p>
+                <p className="text-lg">You agree not to use the Service to create, upload, transmit, or distribute content that:</p>
                 <div className="grid md:grid-cols-2 gap-6">
                   <div className="space-y-3">
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <p className="font-semibold text-foreground mb-2">Illegal Content</p>
-                      <ul className="text-sm space-y-1 text-muted-foreground">
+                    <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20">
+                      <p className="font-semibold text-red-600 dark:text-red-400">🚫 Illegal Content</p>
+                      <ul className="text-sm mt-2 space-y-1">
                         <li>Is illegal, harmful, or violates any laws</li>
                         <li>Infringes on intellectual property rights</li>
                         <li>Contains hate speech or discriminatory content</li>
                       </ul>
                     </div>
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <p className="font-semibold text-foreground mb-2">Harmful Content</p>
-                      <ul className="text-sm space-y-1 text-muted-foreground">
+                    <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
+                      <p className="font-semibold text-orange-600 dark:text-orange-400">⚠️ Harmful Content</p>
+                      <ul className="text-sm mt-2 space-y-1">
                         <li>Promotes violence or illegal activities</li>
                         <li>Contains malware or malicious code</li>
                         <li>Is sexually explicit or inappropriate</li>
@@ -234,17 +236,17 @@ export default function Terms() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <p className="font-semibold text-foreground mb-2">Privacy Violations</p>
-                      <ul className="text-sm space-y-1 text-muted-foreground">
+                    <div className="p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/20">
+                      <p className="font-semibold text-yellow-600 dark:text-yellow-400">🔒 Privacy Violations</p>
+                      <ul className="text-sm mt-2 space-y-1">
                         <li>Includes personal information of others without consent</li>
                         <li>Violates privacy or publicity rights</li>
                         <li>Attempts to harm or exploit minors</li>
                       </ul>
                     </div>
-                    <div className="p-4 rounded-lg bg-muted/30 border border-border">
-                      <p className="font-semibold text-foreground mb-2">Deceptive Content</p>
-                      <ul className="text-sm space-y-1 text-muted-foreground">
+                    <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                      <p className="font-semibold text-purple-600 dark:text-purple-400">🎭 Deceptive Content</p>
+                      <ul className="text-sm mt-2 space-y-1">
                         <li>Is spam, fraudulent, or deceptive</li>
                         <li>Impersonates others</li>
                         <li>Contains false information</li>
@@ -254,14 +256,14 @@ export default function Terms() {
                 </div>
                 
                 <div className="mt-8">
-                  <h3 className="font-semibold mb-4 text-foreground">Prohibited Activities</h3>
+                  <h3 className="text-xl font-semibold mb-4 text-primary">Prohibited Activities</h3>
                   <div className="grid md:grid-cols-2 gap-4">
-                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <ul className="list-disc pl-6 space-y-2">
                       <li>Attempting to gain unauthorized access to our systems</li>
                       <li>Interfering with or disrupting the Service</li>
                       <li>Using automated tools to access the Service without permission</li>
                     </ul>
-                    <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
+                    <ul className="list-disc pl-6 space-y-2">
                       <li>Reverse engineering or attempting to extract source code</li>
                       <li>Reselling or redistributing the Service without authorization</li>
                       <li>Violating any applicable laws or regulations</li>
@@ -271,21 +273,21 @@ export default function Terms() {
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Account Termination</CardTitle>
+                <CardTitle className="text-2xl">Account Termination</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-2 gap-6">
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="font-semibold mb-3 text-foreground">Termination by You</h3>
-                    <p className="text-muted-foreground">You may terminate your account at any time through your account settings. Upon termination, your access to the Service will cease immediately.</p>
+                  <div className="p-6 rounded-xl bg-green-500/10 border border-green-500/20">
+                    <h3 className="text-lg font-semibold mb-3 text-green-600 dark:text-green-400">Termination by You</h3>
+                    <p>You may terminate your account at any time through your account settings. Upon termination, your access to the Service will cease immediately.</p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="font-semibold mb-3 text-foreground">Termination by Us</h3>
-                    <p className="text-muted-foreground mb-2">We reserve the right to suspend or terminate your account if you:</p>
-                    <ul className="list-disc pl-4 space-y-1 text-sm text-muted-foreground">
+                  <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20">
+                    <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Termination by Us</h3>
+                    <p>We reserve the right to suspend or terminate your account if you:</p>
+                    <ul className="list-disc pl-4 mt-2 space-y-1 text-sm">
                       <li>Violate these Terms of Service</li>
                       <li>Engage in prohibited content or conduct</li>
                       <li>Fail to pay applicable fees (if any)</li>
@@ -294,34 +296,34 @@ export default function Terms() {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-lg bg-muted/20 border border-border">
-                  <h3 className="font-semibold mb-3 text-foreground">Effect of Termination</h3>
-                  <p className="text-muted-foreground">Upon termination, your right to use the Service will cease immediately. We may retain certain information as required by law or for legitimate business purposes.</p>
+                <div className="p-6 rounded-xl bg-muted/50 border border-border">
+                  <h3 className="text-lg font-semibold mb-3">Effect of Termination</h3>
+                  <p>Upon termination, your right to use the Service will cease immediately. We may retain certain information as required by law or for legitimate business purposes.</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-md transition-shadow">
+            <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-xl text-foreground">Intellectual Property</CardTitle>
+                <CardTitle className="text-2xl">Intellectual Property</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid md:grid-cols-3 gap-6">
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="font-semibold mb-3 text-foreground">Our IP Rights</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <h3 className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">Our IP Rights</h3>
+                    <p className="text-sm">
                       The Service and its original content, features, and functionality are owned by Adam AI Chat and are protected by international intellectual property laws.
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
-                    <h3 className="font-semibold mb-3 text-foreground">Your Content</h3>
-                    <p className="text-sm text-muted-foreground">
+                  <div className="p-6 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                    <h3 className="text-lg font-semibold mb-3 text-purple-600 dark:text-purple-400">Your Content</h3>
+                    <p className="text-sm">
                       You retain ownership of any content you submit to the Service. By submitting content, you grant us a non-exclusive license to use it for providing the Service.
                     </p>
                   </div>
 
-                  <div className="p-6 rounded-lg bg-muted/30 border border-border">
+                  <div className="p-6 rounded-xl bg-orange-500/10 border border-orange-500/20">
                     <h3 className="text-lg font-semibold mb-3 text-orange-600 dark:text-orange-400">AI-Generated Content</h3>
                     <p className="text-sm">
                       Content generated by our AI systems in response to your prompts is provided to you under a non-exclusive license for your use.
