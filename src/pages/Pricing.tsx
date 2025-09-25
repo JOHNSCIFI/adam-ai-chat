@@ -1,14 +1,92 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Check, Sparkles, ChevronDown, Shield, Users, X } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Pricing = () => {
   const navigate = useNavigate();
+  const [isYearly, setIsYearly] = useState(false);
+
+  const plans = [
+    {
+      name: "Free",
+      price: 0,
+      yearlyPrice: 0,
+      icon: Zap,
+      description: "Start free, upgrade anytime.",
+      popular: false,
+      features: [
+        { text: "Access to OpenAI's GPT-4o Mini", included: true },
+        { text: "Access to multiple top AI models", included: false },
+        { text: "Chat with all Models", included: false },
+        { text: "Custom bots built for specific use cases", included: false },
+        { text: "Unlimited file uploads", included: false },
+        { text: "Advanced web search capabilities", included: false },
+        { text: "Image Generation", included: false },
+        { text: "Chat with PDF files", included: false }
+      ],
+      buttonText: "Get started",
+      buttonVariant: "outline" as const
+    },
+    {
+      name: "Pro",
+      price: 19.99,
+      yearlyPrice: 15.99,
+      icon: Star,
+      description: "$0.67 Per day",
+      popular: true,
+      features: [
+        { text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)", included: true },
+        { text: "Chat with all Models", included: true },
+        { text: "Extended limits on messages, uploads, and analysis", included: true },
+        { text: "Text-to-speech voice mode", included: true },
+        { text: "Custom bots built for specific use cases", included: true },
+        { text: "Unlimited file uploads", included: true },
+        { text: "Advanced web search capabilities", included: true },
+        { text: "Chat with PDF files", included: true },
+        { text: "Access to image analysis", included: true },
+        { text: "3,600 image generations per month", included: true }
+      ],
+      buttonText: "Subscribe",
+      buttonVariant: "default" as const
+    },
+    {
+      name: "Ultra Pro",
+      price: 39.99,
+      yearlyPrice: 31.99,
+      icon: Crown,
+      description: "$1.33 Per day",
+      popular: false,
+      features: [
+        { text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)", included: true },
+        { text: "Chat with all Models", included: true },
+        { text: "Extended limits on messages, uploads, and analysis", included: true },
+        { text: "Text-to-speech voice mode", included: true },
+        { text: "Custom bots built for specific use cases", included: true },
+        { text: "Unlimited file uploads", included: true },
+        { text: "Advanced web search capabilities", included: true },
+        { text: "Extended limits for Chat with PDF files", included: true },
+        { text: "Access to image analysis", included: true },
+        { text: "14,000 image generations per month", included: true },
+        { text: "Priority support", included: true }
+      ],
+      buttonText: "Subscribe",
+      buttonVariant: "outline" as const
+    }
+  ];
+
+  const getPrice = (plan: typeof plans[0]) => {
+    return isYearly ? plan.yearlyPrice : plan.price;
+  };
+
+  const getSavings = (plan: typeof plans[0]) => {
+    if (plan.price === 0) return 0;
+    return Math.round(((plan.price - plan.yearlyPrice) / plan.price) * 100);
+  };
 
   const NavBar = () => (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -120,305 +198,288 @@ const Pricing = () => {
       <NavBar />
       
       {/* Hero Section */}
-      <section className="relative py-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent"></div>
+      <section className="relative py-32 px-4 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-purple-500/5 to-transparent"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        
         <div className="container max-w-6xl mx-auto text-center relative z-10">
-          <Badge variant="secondary" className="mb-6 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30 text-green-600 dark:text-green-400">
-            Pricing
+          <Badge variant="secondary" className="mb-8 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 text-primary animate-fade-in">
+            Flexible Pricing
           </Badge>
           
-          <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-            Get started with <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">Chatbot App</span> today
+          <h1 className="text-6xl md:text-7xl font-bold mb-8 animate-fade-in">
+            Choose Your <br />
+            <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AI Journey</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-12 max-w-3xl mx-auto animate-fade-in">
-            Unlock the full potential of Chatbot App with advanced plans.
+          <p className="text-xl text-muted-foreground mb-16 max-w-3xl mx-auto animate-fade-in" style={{animationDelay: '0.1s'}}>
+            Start free and scale with powerful AI models that grow with your needs.
           </p>
 
           {/* Billing Toggle */}
-          <div className="flex items-center justify-center gap-4 mb-8">
-            <span className="text-sm font-medium">Monthly</span>
-            <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10">
-              <span className="text-sm font-medium">Quarterly</span>
-              <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">-70%</Badge>
+          <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{animationDelay: '0.2s'}}>
+            <span className={`text-sm font-medium transition-colors ${!isYearly ? 'text-primary' : 'text-muted-foreground'}`}>
+              Monthly
+            </span>
+            <button
+              onClick={() => setIsYearly(!isYearly)}
+              className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${
+                isYearly ? 'bg-primary' : 'bg-muted'
+              }`}
+            >
+              <div className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                isYearly ? 'translate-x-8' : 'translate-x-0'
+              }`}></div>
+            </button>
+            <div className="flex items-center gap-2">
+              <span className={`text-sm font-medium transition-colors ${isYearly ? 'text-primary' : 'text-muted-foreground'}`}>
+                Yearly
+              </span>
+              {isYearly && (
+                <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 animate-scale-in">
+                  Save up to 20%
+                </Badge>
+              )}
             </div>
-            <span className="text-sm font-medium">Yearly</span>
           </div>
-
-          <p className="text-lg text-muted-foreground mb-16">Save 70% with yearly</p>
         </div>
       </section>
 
       {/* Pricing Cards */}
-      <section className="py-16 px-4">
+      <section className="py-20 px-4 relative">
         <div className="container max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-            {/* Free Plan */}
-            <div className="group relative p-8 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-xl animate-fade-in">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">Free</h3>
-                <div className="text-4xl font-bold mb-2">$0</div>
-                <p className="text-muted-foreground">Start free, upgrade anytime.</p>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+            {plans.map((plan, index) => {
+              const IconComponent = plan.icon;
+              const currentPrice = getPrice(plan);
+              const savings = getSavings(plan);
               
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Access to OpenAI's GPT-4o Mini</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Access to multiple top AI models</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Chat with all Models</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Custom bots built for specific use cases</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Unlimited file uploads</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Advanced web search capabilities</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Image Generation</span>
-                </div>
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <X className="h-5 w-5 flex-shrink-0" />
-                  <span>Chat with PDF files</span>
-                </div>
-              </div>
-              
-              <Button className="w-full" variant="outline" onClick={() => navigate('/chat')}>
-                Get started →
-              </Button>
-            </div>
-
-            {/* Pro Plan */}
-            <div className="group relative p-8 rounded-2xl bg-card border-2 border-primary hover:border-primary/50 transition-all duration-500 hover:scale-[1.02] hover:shadow-xl animate-fade-in">
-              <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-orange-500 to-red-500 text-white">
-                Popular
-              </Badge>
-              
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">Pro</h3>
-                <div className="text-4xl font-bold mb-1">$19.99</div>
-                <p className="text-sm text-muted-foreground mb-2">$0.67 Per day</p>
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-sm">save on annual billings</span>
-                  <div className="w-8 h-4 bg-primary rounded-full relative">
-                    <div className="w-4 h-4 bg-white rounded-full absolute right-0 top-0 shadow"></div>
+              return (
+                <div
+                  key={plan.name}
+                  className={`group relative p-8 rounded-3xl transition-all duration-500 hover:scale-105 animate-fade-in ${
+                    plan.popular
+                      ? 'bg-gradient-to-b from-primary/5 to-primary/10 border-2 border-primary shadow-2xl shadow-primary/20'
+                      : 'bg-card border border-border hover:border-primary/30 hover:shadow-xl'
+                  }`}
+                  style={{animationDelay: `${index * 0.1}s`}}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <Badge className="bg-gradient-to-r from-primary to-purple-600 text-white px-6 py-1 text-sm font-semibold">
+                        Most Popular
+                      </Badge>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className={`p-3 rounded-2xl ${
+                      plan.popular ? 'bg-primary/20' : 'bg-muted'
+                    }`}>
+                      <IconComponent className={`h-6 w-6 ${
+                        plan.popular ? 'text-primary' : 'text-muted-foreground'
+                      }`} />
+                    </div>
+                    <h3 className="text-2xl font-bold">{plan.name}</h3>
                   </div>
-                </div>
-                <p className="text-muted-foreground">month/billed monthly</p>
-              </div>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Access to multiple AI models, including OpenAI GPT-4o, Anthropic Claude, Google Gemini, Grok, and DeepSeek</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Chat with all Models</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Extended limits on messages, file uploads, advanced data analysis, and image generation</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Text-to-speech voice mode</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Custom bots built for specific use cases</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Unlimited file uploads</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Advanced web search capabilities</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Chat with PDF files</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Access to image analysis</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>3,600 image generations per month</span>
-                </div>
-              </div>
-              
-              <Button className="w-full bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" onClick={() => navigate('/chat')}>
-                Subscribe
-              </Button>
-            </div>
-
-            {/* Ultra Pro Plan */}
-            <div className="group relative p-8 rounded-2xl bg-card border border-border hover:border-primary/30 transition-all duration-500 hover:scale-[1.02] hover:shadow-xl animate-fade-in">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-2">Ultra Pro</h3>
-                <div className="text-4xl font-bold mb-1">$39.99</div>
-                <p className="text-sm text-muted-foreground mb-2">$1.33 Per day</p>
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <span className="text-sm">save on annual billings</span>
-                  <div className="w-8 h-4 bg-primary rounded-full relative">
-                    <div className="w-4 h-4 bg-white rounded-full absolute right-0 top-0 shadow"></div>
+                  
+                  <div className="mb-8">
+                    <div className="flex items-baseline gap-2 mb-2">
+                      <span className="text-5xl font-bold">
+                        ${currentPrice}
+                      </span>
+                      {plan.price > 0 && (
+                        <span className="text-muted-foreground">
+                          /{isYearly ? 'year' : 'month'}
+                        </span>
+                      )}
+                    </div>
+                    
+                    {isYearly && savings > 0 && (
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 mb-2">
+                        Save {savings}%
+                      </Badge>
+                    )}
+                    
+                    <p className="text-muted-foreground">{plan.description}</p>
                   </div>
+                  
+                  <div className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <div key={featureIndex} className="flex items-start gap-3">
+                        {feature.included ? (
+                          <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" />
+                        ) : (
+                          <X className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                        )}
+                        <span className={feature.included ? '' : 'text-muted-foreground'}>
+                          {feature.text}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <Button
+                    className={`w-full h-12 text-lg font-semibold ${
+                      plan.popular
+                        ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg'
+                        : ''
+                    }`}
+                    variant={plan.buttonVariant}
+                    onClick={() => navigate('/chat')}
+                  >
+                    {plan.buttonText} {plan.price > 0 && '→'}
+                  </Button>
                 </div>
-                <p className="text-muted-foreground">month/billed monthly</p>
-              </div>
-              
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Access to multiple AI models, including OpenAI GPT-4o, Anthropic Claude, Google Gemini, Grok, and DeepSeek</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Chat with all Models</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Extended limits on messages, file uploads, advanced data analysis, and image generation</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Text-to-speech voice mode</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Custom bots built for specific use cases</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Unlimited file uploads</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Advanced web search capabilities</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Extended limits for Chat with PDF files</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>Access to image analysis</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-green-500 flex-shrink-0" />
-                  <span>14,000 image generations per month</span>
-                </div>
-              </div>
-              
-              <Button className="w-full" variant="outline" onClick={() => navigate('/chat')}>
-                Subscribe →
-              </Button>
-            </div>
+              );
+            })}
           </div>
 
           {/* Comparison Table */}
-          <div className="bg-card rounded-2xl border border-border p-8 mb-16 animate-fade-in">
-            <h3 className="text-3xl font-bold text-center mb-8">Compare plans</h3>
-            <p className="text-center text-muted-foreground mb-12">Get an overview of what is included.</p>
+          <div className="bg-gradient-to-br from-card to-muted/20 rounded-3xl border border-border p-10 mb-20 animate-fade-in">
+            <div className="text-center mb-12">
+              <h3 className="text-4xl font-bold mb-4">Compare Plans</h3>
+              <p className="text-lg text-muted-foreground">Choose the perfect plan for your AI journey</p>
+            </div>
             
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left py-4 px-6"></th>
-                    <th className="text-center py-4 px-6">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg">Free</div>
-                        <Button variant="outline" size="sm" onClick={() => navigate('/chat')}>Get started →</Button>
+                  <tr className="border-b-2 border-primary/20">
+                    <th className="text-left py-6 px-6 font-semibold text-lg">Features</th>
+                    <th className="text-center py-6 px-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <Zap className="h-5 w-5" />
+                          <span className="font-bold text-lg">Free</span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/chat')}>
+                          Get started
+                        </Button>
                       </div>
                     </th>
-                    <th className="text-center py-4 px-6">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg">Pro</div>
-                        <Button size="sm" className="bg-gradient-to-r from-primary to-purple-600" onClick={() => navigate('/chat')}>Subscribe</Button>
+                    <th className="text-center py-6 px-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <Star className="h-5 w-5 text-primary" />
+                          <span className="font-bold text-lg">Pro</span>
+                          <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/30 text-xs">
+                            Popular
+                          </Badge>
+                        </div>
+                        <Button size="sm" className="bg-gradient-to-r from-primary to-purple-600" onClick={() => navigate('/chat')}>
+                          Subscribe
+                        </Button>
                       </div>
                     </th>
-                    <th className="text-center py-4 px-6">
-                      <div className="space-y-2">
-                        <div className="font-bold text-lg">Ultra Pro</div>
-                        <Button variant="outline" size="sm" onClick={() => navigate('/chat')}>Subscribe →</Button>
+                    <th className="text-center py-6 px-6">
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <Crown className="h-5 w-5" />
+                          <span className="font-bold text-lg">Ultra Pro</span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => navigate('/chat')}>
+                          Subscribe
+                        </Button>
                       </div>
                     </th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr className="border-b border-border">
-                    <td className="py-4 px-6 font-medium">Core</td>
-                    <td className="py-4 px-6"></td>
-                    <td className="py-4 px-6"></td>
-                    <td className="py-4 px-6"></td>
+                <tbody className="divide-y divide-border/50">
+                  <tr className="hover:bg-muted/30 transition-colors">
+                    <td className="py-5 px-6 font-medium text-primary">AI Models</td>
+                    <td className="py-5 px-6"></td>
+                    <td className="py-5 px-6"></td>
+                    <td className="py-5 px-6"></td>
                   </tr>
-                  <tr className="border-b border-border">
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6">OpenAI GPT-4o</td>
-                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center">
+                      <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">Mini</Badge>
+                    </td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="border-b border-border">
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6">Anthropic Claude</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="border-b border-border">
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6">Google Gemini</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="border-b border-border">
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6">DeepSeek</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
-                  <tr className="border-b border-border">
+                  <tr className="hover:bg-muted/30 transition-colors">
+                    <td className="py-5 px-6 font-medium text-primary">Features</td>
+                    <td className="py-5 px-6"></td>
+                    <td className="py-5 px-6"></td>
+                    <td className="py-5 px-6"></td>
+                  </tr>
+                  <tr className="hover:bg-muted/30 transition-colors">
                     <td className="py-4 px-6">Image Generation</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
-                    <td className="py-4 px-6 text-center">3,600/month</td>
-                    <td className="py-4 px-6 text-center">14,000/month</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                    <td className="py-4 px-6 text-center">
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/30">3.6K/mo</Badge>
+                    </td>
+                    <td className="py-4 px-6 text-center">
+                      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/30">14K/mo</Badge>
+                    </td>
                   </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-4 px-6">Image Analysis</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
+                  <tr className="hover:bg-muted/30 transition-colors">
+                    <td className="py-4 px-6">Voice Mode</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center">Advanced</td>
-                  </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-4 px-6">Chat with PDF files</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
-                    <td className="py-4 px-6 text-center">Extended Limits</td>
                   </tr>
-                  <tr className="border-b border-border">
-                    <td className="py-4 px-6">AI Search Engine</td>
-                    <td className="py-4 px-6 text-center text-muted-foreground">-</td>
+                  <tr className="hover:bg-muted/30 transition-colors">
+                    <td className="py-4 px-6">Chat with Files</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
+                    <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
+                    <td className="py-4 px-6 text-center">
+                      <Badge variant="secondary" className="bg-orange-500/10 text-orange-600 border-orange-500/30">Extended</Badge>
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-muted/30 transition-colors">
+                    <td className="py-4 px-6">Web Search</td>
+                    <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                     <td className="py-4 px-6 text-center"><Check className="h-5 w-5 text-green-500 mx-auto" /></td>
                   </tr>
                 </tbody>
               </table>
+            </div>
+          </div>
+
+          {/* FAQ Section */}
+          <div className="text-center mb-16 animate-fade-in">
+            <h3 className="text-3xl font-bold mb-6">Frequently Asked Questions</h3>
+            <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <h4 className="font-semibold mb-3">Can I change plans anytime?</h4>
+                <p className="text-muted-foreground">Yes, you can upgrade or downgrade your plan at any time. Changes take effect immediately.</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <h4 className="font-semibold mb-3">Is there a free trial?</h4>
+                <p className="text-muted-foreground">Our Free plan gives you access to GPT-4o Mini with no time limit. Upgrade when ready for more features.</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <h4 className="font-semibold mb-3">What payment methods do you accept?</h4>
+                <p className="text-muted-foreground">We accept all major credit cards, PayPal, and other secure payment methods.</p>
+              </div>
+              <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
+                <h4 className="font-semibold mb-3">How does billing work?</h4>
+                <p className="text-muted-foreground">You'll be charged monthly or yearly based on your chosen plan. No hidden fees or surprises.</p>
+              </div>
             </div>
           </div>
         </div>
