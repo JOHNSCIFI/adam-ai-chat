@@ -557,7 +557,7 @@ export default function ChatSidebar({
                         <Settings className="mr-2 h-4 w-4" />
                         Settings
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate('/help')}>
+                      <DropdownMenuItem onClick={() => navigate('/home')}>
                         <HelpCircle className="mr-2 h-4 w-4" />
                         Help
                       </DropdownMenuItem>
