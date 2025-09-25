@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
 interface GoogleOneTabProps {
@@ -45,35 +46,68 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
       
       initialized.current = true;
 
+      // Get Google Client ID from environment
+      const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+      
+      if (!googleClientId || googleClientId === '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com') {
+        console.error('Google Client ID not configured. Please set VITE_GOOGLE_CLIENT_ID in your .env file');
+        toast.error('Google authentication not configured properly');
+        return;
+      }
+
+      console.log('Initializing Google One Tap with Client ID:', googleClientId);
+
       try {
         window.google.accounts.id.initialize({
-          client_id: process.env.GOOGLE_CLIENT_ID || '1234567890-abcdefghijklmnopqrstuvwxyz.apps.googleusercontent.com',
+          client_id: googleClientId,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: true,
+          use_fedcm_for_prompt: true, // Enable FedCM
         });
 
-        // Prompt for One Tap
+        console.log('Google One Tap initialized, prompting...');
+
+        // Prompt for One Tap with better error handling
         window.google.accounts.id.prompt((notification: any) => {
-          if (notification.isNotDisplayed() || notification.isSkippedMomentByUser()) {
-            console.log('Google One Tap was not displayed or was skipped');
+          console.log('Google One Tap prompt notification:', notification);
+          
+          if (notification && typeof notification.isNotDisplayed === 'function' && notification.isNotDisplayed()) {
+            console.log('Google One Tap was not displayed');
+            toast.error('Google One Tap is not available. Please use the regular sign-in button.');
+          } else if (notification && typeof notification.isSkippedMomentByUser === 'function' && notification.isSkippedMomentByUser()) {
+            console.log('Google One Tap was skipped by user');
+          } else if (notification && notification.isDismissedMoment && typeof notification.isDismissedMoment === 'function' && notification.isDismissedMoment()) {
+            console.log('Google One Tap was dismissed');
           }
         });
       } catch (error) {
         console.error('Error initializing Google One Tap:', error);
+        toast.error('Failed to initialize Google authentication');
       }
     };
 
     const handleCredentialResponse = async (response: any) => {
+      console.log('Google One Tap credential response received:', response);
+      
       try {
-        // For Google One Tap, we need to use the Supabase OAuth flow
-        // The JWT token from Google One Tap needs to be handled differently
-        const { error } = await signInWithGoogle();
-        
+        if (!response.credential) {
+          console.error('No credential in response');
+          toast.error('Invalid Google sign-in response');
+          return;
+        }
+
+        // Use Supabase's signInWithIdToken for Google One Tap
+        const { data, error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: response.credential,
+        });
+
         if (error) {
-          console.error('Google sign-in error:', error);
-          toast.error('Failed to sign in with Google');
+          console.error('Supabase Google sign-in error:', error);
+          toast.error('Failed to sign in with Google: ' + error.message);
         } else {
+          console.log('Successfully signed in with Google One Tap:', data);
           toast.success('Successfully signed in with Google!');
           onSuccess?.();
         }
@@ -90,7 +124,8 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         try {
           window.google.accounts.id.cancel();
         } catch (error) {
-          console.error('Error canceling Google One Tap:', error);
+          // Ignore cancellation errors as they're often due to API changes
+          console.log('Google One Tap cleanup completed');
         }
       }
     };
