@@ -171,19 +171,6 @@ export default function GoogleAutoLogin({
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
   return <div className="fixed top-4 right-4 z-50">
-      <div className={`
-          bg-white dark:bg-white border border-gray-200 rounded-2xl shadow-lg w-80 overflow-hidden
-          transition-all duration-200 ease-out
-          ${isVisible ? 'opacity-100 scale-100 translate-y-0' : 'opacity-0 scale-95 -translate-y-2'}
-        `} style={{
-      boxShadow: '0 4px 16px rgba(0,0,0,0.15)'
-    }}>
-
-        {/* Subtitle */}
-        
-
-        {/* Account List */}
-        
-      </div>
+      
     </div>;
 }
