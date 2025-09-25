@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -258,12 +259,14 @@ export default function Index() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [showMoreButtons, setShowMoreButtons] = useState(false);
+  const [isUploadPopoverOpen, setIsUploadPopoverOpen] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { isMobile } = useSidebar();
+  const isMobileDevice = useIsMobile();
   useEffect(() => {
     if (user && !pendingMessage) {
       const storedMessage = localStorage.getItem('pendingChatMessage');
@@ -286,6 +289,7 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
+    setIsUploadPopoverOpen(false); // Close the popover when file upload is triggered
     fileInputRef.current?.click();
   };
   const handleCreateImage = () => {
@@ -520,6 +524,7 @@ export default function Index() {
   const handleCreateImageClick = () => {
     setIsImageMode(true);
     setMessage('');
+    setIsUploadPopoverOpen(false); // Close the popover when image mode is activated
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 0);
@@ -557,7 +562,7 @@ export default function Index() {
   };
   return <div className="flex-1 flex flex-col min-h-screen">
       {/* Mobile Header with Sidebar Trigger */}
-      {isMobile && (
+      {isMobileDevice && (
         <div className="flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <SidebarTrigger 
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
@@ -622,35 +627,64 @@ export default function Index() {
 
       <div className="w-full max-w-3xl mb-4 sm:mb-6">
         <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
-          <Textarea 
-            ref={textareaRef} 
-            value={message} 
-            onChange={handleInputChange} 
-            onKeyDown={e => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleStartChat();
-              }
-            }}
-            onFocus={e => {
-              // Prevent default scroll behavior on mobile
-              if (window.innerWidth < 768) {
-                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-              }
-            }}
-            placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
-            className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60"
-            style={{ fontSize: '16px', boxShadow: 'none', border: 'none' }}
-            rows={1}
-            aria-label={isImageMode ? "Describe an image" : "Type your message"}
-          />
+          <div className="relative">
+            <Textarea 
+              ref={textareaRef} 
+              value={message} 
+              onChange={handleInputChange} 
+              onKeyDown={e => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleStartChat();
+                }
+              }}
+              onFocus={e => {
+                // Prevent default scroll behavior on mobile
+                if (window.innerWidth < 768) {
+                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+              }}
+              placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
+              className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60 pr-20 sm:pr-0"
+              style={{ fontSize: '16px', boxShadow: 'none', border: 'none' }}
+              rows={1}
+              aria-label={isImageMode ? "Describe an image" : "Type your message"}
+            />
+            
+            {/* Mobile voice buttons positioned at bottom right of textarea */}
+            {isMobileDevice && !isImageMode && !isUploadPopoverOpen && (
+              <div className="absolute bottom-2 right-2 flex items-center gap-2">
+                <Button 
+                  size="sm" 
+                  className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                    isRecording 
+                      ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                      : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                  } text-background`} 
+                  onClick={isRecording ? stopRecording : startRecording}
+                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                  aria-pressed={isRecording}
+                >
+                  {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                </Button>
+                
+                <div className="h-8">
+                  <VoiceModeButton 
+                    onMessageSent={handleVoiceMessageSent}
+                    chatId={voiceChatId || 'temp'}
+                    actualTheme={actualTheme}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
           
           {/* Mobile-first redesigned input controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2">
             {/* Top row on mobile: Combined upload button and image controls */}
             <div className="flex items-center gap-2 order-2 sm:order-1">
               {/* Combined File/Image Upload Button */}
-              <Popover>
+              <Popover open={isUploadPopoverOpen} onOpenChange={setIsUploadPopoverOpen}>
                 <PopoverTrigger asChild>
                   <Button 
                     variant="ghost" 
@@ -783,30 +817,32 @@ export default function Index() {
                 </Select>
               )}
               
-              {/* Voice buttons on the right side of message input */}
-              <div className="flex items-center gap-2 ml-auto">
-                <Button 
-                  size="sm" 
-                  className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                    isRecording 
-                      ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
-                      : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
-                  } text-background`} 
-                  onClick={isRecording ? stopRecording : startRecording}
-                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                  aria-pressed={isRecording}
-                >
-                  {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                </Button>
-                
-                <div className="h-8">
-                  <VoiceModeButton 
-                    onMessageSent={handleVoiceMessageSent}
-                    chatId={voiceChatId || 'temp'}
-                    actualTheme={actualTheme}
-                  />
-                </div>
-              </div>
+               {/* Desktop voice buttons on the right side of message input */}
+               {!isMobileDevice && (
+                 <div className="flex items-center gap-2 ml-auto">
+                   <Button 
+                     size="sm" 
+                     className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                       isRecording 
+                         ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                         : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                     } text-background`} 
+                     onClick={isRecording ? stopRecording : startRecording}
+                     aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                     aria-pressed={isRecording}
+                   >
+                     {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                   </Button>
+                   
+                   <div className="h-8">
+                     <VoiceModeButton 
+                       onMessageSent={handleVoiceMessageSent}
+                       chatId={voiceChatId || 'temp'}
+                       actualTheme={actualTheme}
+                     />
+                   </div>
+                 </div>
+               )}
             </div>
           </div>
         </div>
