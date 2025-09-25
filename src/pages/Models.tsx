@@ -15,9 +15,6 @@ import deepseekLogo from '@/assets/deepseek-logo.png';
 const Models = () => {
   const navigate = useNavigate();
   const { actualTheme } = useTheme();
-  
-  // Choose the appropriate ChatGPT logo based on theme
-  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
 
   const NavBar = () => (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -172,7 +169,7 @@ const Models = () => {
                 <h3 className="text-2xl font-bold mb-8">OpenAI GPT-4o</h3>
                 <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
                   <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={chatgptLogoSrc} alt="OpenAI GPT-4o" className="w-12 h-12" />
+                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI GPT-4o" className="w-12 h-12" />
                   </div>
                 </div>
               </div>
@@ -212,7 +209,7 @@ const Models = () => {
                 <h3 className="text-2xl font-bold mb-8">OpenAI o-3 mini</h3>
                 <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
                   <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={chatgptLogoSrc} alt="OpenAI o-3 mini" className="w-12 h-12" />
+                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI o-3 mini" className="w-12 h-12" />
                   </div>
                 </div>
               </div>
@@ -344,7 +341,7 @@ const Models = () => {
               <div className="relative z-10 text-center">
                 <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
                   <img 
-                    src={chatgptLogoSrc} 
+                    src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
                     alt="OpenAI ChatGPT" 
                     className="w-12 h-12 object-contain" 
                   />
