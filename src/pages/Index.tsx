@@ -564,18 +564,18 @@ export default function Index() {
             aria-label="Open sidebar menu"
           />
           <h1 className="text-lg font-semibold truncate flex-1 text-center">AdamGPT</h1>
-          <div className="w-10 flex justify-end">
+          <div className="w-12 flex justify-end">
             {/* Mobile Model Selector */}
             <Select value={selectedModel} onValueChange={setSelectedModel}>
               <SelectTrigger 
-                className="w-10 h-10 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-accent hover:border-border shadow-sm focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
+                className="w-12 h-12 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-accent hover:border-border shadow-sm focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200 [&>svg]:hidden"
                 aria-label="Select AI model"
               >
-                <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
                   <img 
                     src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
                     alt="Model icon" 
-                    className="w-4 h-4 object-contain" 
+                    className="w-6 h-6 object-contain" 
                   />
                 </div>
               </SelectTrigger>
