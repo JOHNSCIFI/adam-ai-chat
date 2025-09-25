@@ -136,33 +136,13 @@ const Models = () => {
           <p className="text-xl text-muted-foreground mb-16 max-w-4xl mx-auto animate-fade-in leading-relaxed">
             Experience the capabilities of multiple AI models integrated into a single application. Effortlessly engage in conversations, generate content, and create with a user-friendly platform designed for versatility.
           </p>
-
-          {/* Navigation Arrows */}
-          <div className="flex justify-center gap-4 mb-16">
-            <Button variant="outline" size="icon" className="rounded-full" onClick={() => {
-              const modelsSection = document.querySelector('#models-grid');
-              if (modelsSection) {
-                modelsSection.scrollBy({ left: -300, behavior: 'smooth' });
-              }
-            }}>
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="rounded-full" onClick={() => {
-              const modelsSection = document.querySelector('#models-grid');
-              if (modelsSection) {
-                modelsSection.scrollBy({ left: 300, behavior: 'smooth' });
-              }
-            }}>
-              <ChevronRight className="h-4 w-4" />
-            </Button>
-          </div>
         </div>
       </section>
 
       {/* Models Showcase */}
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
-          <div id="models-grid" className="overflow-x-auto">
+          <div id="models-grid" className="overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             <div className="flex gap-8 min-w-max px-4 mb-16">
               {/* OpenAI GPT-4o */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64">
