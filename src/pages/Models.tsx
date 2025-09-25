@@ -167,7 +167,7 @@ const Models = () => {
               {/* OpenAI GPT-4o */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64">
                 <h3 className="text-2xl font-bold mb-8">OpenAI GPT-4o</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20 p-8">
+                <div className="w-48 h-48 flex items-center justify-center mx-auto mb-8 p-8">
                   <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI GPT-4o" className="w-full h-full object-contain" />
                 </div>
               </div>
@@ -175,7 +175,7 @@ const Models = () => {
               {/* Google Gemini */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.1s'}}>
                 <h3 className="text-2xl font-bold mb-8">Google Gemini</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-blue-500/20 p-8">
+                <div className="w-48 h-48 flex items-center justify-center mx-auto mb-8 p-8">
                   <img src={geminiLogo} alt="Google Gemini" className="w-full h-full object-contain" />
                 </div>
               </div>
@@ -183,7 +183,7 @@ const Models = () => {
               {/* Anthropic Claude */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.2s'}}>
                 <h3 className="text-2xl font-bold mb-8">Anthropic Claude</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-orange-500/20 p-8">
+                <div className="w-48 h-48 flex items-center justify-center mx-auto mb-8 p-8">
                   <img src={claudeLogo} alt="Anthropic Claude" className="w-full h-full object-contain" />
                 </div>
               </div>
@@ -191,7 +191,7 @@ const Models = () => {
               {/* DeepSeek */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.3s'}}>
                 <h3 className="text-2xl font-bold mb-8">DeepSeek</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20 p-8">
+                <div className="w-48 h-48 flex items-center justify-center mx-auto mb-8 p-8">
                   <img src={deepseekLogo} alt="DeepSeek" className="w-full h-full object-contain" />
                 </div>
               </div>
@@ -199,7 +199,7 @@ const Models = () => {
               {/* OpenAI o-3 mini */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.4s'}}>
                 <h3 className="text-2xl font-bold mb-8">OpenAI o-3 mini</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20 p-8">
+                <div className="w-48 h-48 flex items-center justify-center mx-auto mb-8 p-8">
                   <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI o-3 mini" className="w-full h-full object-contain" />
                 </div>
               </div>
