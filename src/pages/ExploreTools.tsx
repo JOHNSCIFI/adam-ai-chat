@@ -255,7 +255,7 @@ export default function ExploreTools() {
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-4">
                           <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
-                            {tool.id.includes('openai') || tool.id.includes('gpt') ? getModelIcon(tool.id) : 
+                            {tool.id.includes('openai') || tool.id.includes('gpt') || tool.id.includes('nanobanana') ? getModelIcon(tool.id) : 
                              tool.category === 'AI Models' ? getModelIcon(tool.id) : tool.icon}
                           </div>
                         <div className="flex-1">
