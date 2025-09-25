@@ -10,8 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
-import GoogleAutoLogin from '@/components/GoogleAutoLogin';
 import VoiceModeButton from '@/components/VoiceModeButton';
+import GoogleOneTab from '@/components/GoogleOneTab';
 import { toast } from 'sonner';
 const models = [{
   id: 'gpt-4o-mini',
@@ -224,7 +224,6 @@ export default function Index() {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [showGoogleAutoLogin, setShowGoogleAutoLogin] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
@@ -248,16 +247,6 @@ export default function Index() {
       }
     }
   }, [user]);
-
-  // Show Google auto login for unauthenticated users
-  useEffect(() => {
-    if (!authLoading && !user) {
-      const timer = setTimeout(() => {
-        setShowGoogleAutoLogin(true);
-      }, 2000); // Show after 2 seconds on the page
-      return () => clearTimeout(timer);
-    }
-  }, [authLoading, user]);
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -783,6 +772,12 @@ export default function Index() {
 
       <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
       
+      {/* Google One Tap - only show when user is not signed in */}
+      {!user && <GoogleOneTab onSuccess={() => {
+        setShowAuthModal(false);
+        toast.success('Successfully signed in with Google!');
+      }} />}
+      
       <AuthModal isOpen={showAuthModal} onClose={() => {
       setShowAuthModal(false);
       setPendingMessage('');
@@ -793,25 +788,29 @@ export default function Index() {
         const messageToSend = pendingMessage;
         setMessage(pendingMessage);
         setPendingMessage('');
-        localStorage.removeItem('pendingChatMessage');
-        
-        const { data: { session } } = await supabase.auth.getSession();
-        const currentUser = session?.user;
-        
-        if (!currentUser) {
-          console.error('No user found after auth, retrying...');
-          setTimeout(async () => {
-            const { data: { session: retrySession } } = await supabase.auth.getSession();
-            if (retrySession?.user) {
-              await createChatWithMessage(retrySession.user.id, messageToSend);
-            } else {
-              console.error('Still no user found after retry');
-            }
-          }, 500);
-          return;
-        }
-        
         setTimeout(async () => {
+          const {
+            data: {
+              session: currentSession
+            }
+          } = await supabase.auth.getSession();
+          const currentUser = currentSession?.user;
+          if (!currentUser) {
+            console.error('No user found after auth, retrying...');
+            setTimeout(async () => {
+              const {
+                data: {
+                  session: retrySession
+                }
+              } = await supabase.auth.getSession();
+              if (retrySession?.user) {
+                await createChatWithMessage(retrySession.user.id, messageToSend);
+              } else {
+                console.error('Still no user found after retry');
+              }
+            }, 500);
+            return;
+          }
           await createChatWithMessage(currentUser.id, messageToSend);
         }, 300);
       } else {
@@ -820,9 +819,5 @@ export default function Index() {
         }, 100);
       }
     }} />
-
-    {showGoogleAutoLogin && !user && (
-      <GoogleAutoLogin onClose={() => setShowGoogleAutoLogin(false)} />
-    )}
     </div>;
 }
