@@ -6,8 +6,9 @@ import { useMessageLimit } from '@/hooks/useMessageLimit';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
@@ -262,6 +263,7 @@ export default function Index() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const { isMobile } = useSidebar();
   useEffect(() => {
     if (user && !pendingMessage) {
       const storedMessage = localStorage.getItem('pendingChatMessage');
@@ -553,9 +555,22 @@ export default function Index() {
         return 'bg-muted border border-border';
     }
   };
-  return <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 min-h-screen max-w-4xl mx-auto">
-      {/* Google One Tap for unauthenticated users */}
-      <GoogleOneTab />
+  return <div className="flex-1 flex flex-col min-h-screen">
+      {/* Mobile Header with Sidebar Trigger */}
+      {isMobile && (
+        <div className="flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+          <SidebarTrigger 
+            className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Open sidebar menu"
+          />
+          <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
+          <div className="w-9" /> {/* Spacer for balance */}
+        </div>
+      )}
+      
+      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full">
+        {/* Google One Tap for unauthenticated users */}
+        <GoogleOneTab />
       
       <div className="text-center mb-6 sm:mb-8">
         {user ? (
@@ -936,5 +951,6 @@ export default function Index() {
           }
         }} 
       />
+      </div>
     </div>;
 }
