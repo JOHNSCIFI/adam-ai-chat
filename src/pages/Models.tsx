@@ -266,38 +266,59 @@ const Models = () => {
             </div>
             
             <div className="relative">
-              <div className="bg-card border border-border rounded-2xl p-8 animate-fade-in">
-                <div className="flex items-start justify-between mb-6">
-                  <div className="flex items-center gap-3">
-                    <p className="text-sm">I'd like to buy a new car. Start by asking me about my budget and which features I care most about, then provide a recommendation.</p>
+              <div className="bg-card border border-border rounded-2xl p-6 animate-fade-in shadow-lg">
+                {/* User Message */}
+                <div className="flex items-start gap-3 mb-6">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0">
+                    <span className="text-xs text-white font-medium">U</span>
                   </div>
-                  <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
-                    <span className="text-xs">👤</span>
+                  <div className="flex-1">
+                    <div className="bg-muted/50 rounded-2xl rounded-tl-sm p-4 max-w-[80%]">
+                      <p className="text-sm">I'd like to buy a new car. Start by asking me about my budget and which features I care most about, then provide a recommendation.</p>
+                    </div>
                   </div>
                 </div>
                 
-                <div className="flex items-center gap-2 mb-4">
-                  <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/30">
-                    <span className="mr-1">🔽</span>
-                    Gemini
-                  </Badge>
+                {/* AI Response */}
+                <div className="flex items-start gap-3 mb-4">
+                  <div className="w-8 h-8 rounded-full bg-white border border-border flex items-center justify-center flex-shrink-0 p-1">
+                    <img src={geminiLogo} alt="Gemini" className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/30 text-xs">
+                        <img src={geminiLogo} alt="Gemini" className="w-3 h-3 mr-1" />
+                        Gemini
+                      </Badge>
+                    </div>
+                    <div className="bg-background/50 rounded-2xl rounded-tl-sm p-4 border">
+                      <p className="text-sm mb-3">
+                        Great! Let's start by narrowing down some details. What's your budget range for the new car? Once I know these details, I can recommend the best car options for you!
+                      </p>
+                      
+                      <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                        <button className="hover:text-foreground transition-colors">
+                          👍
+                        </button>
+                        <button className="hover:text-foreground transition-colors">
+                          👎  
+                        </button>
+                        <button className="hover:text-foreground transition-colors">
+                          🔄
+                        </button>
+                        <span className="text-xs bg-muted px-2 py-1 rounded">2.5 Flash ⚡</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
                 
-                <p className="text-sm text-muted-foreground mb-4">
-                  Great! Let's start by narrowing down some details. What's your budget range for the new car? Once I know these details, I can recommend the best car options for you!
-                </p>
-                
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>👍</span>
-                  <span>👎</span>
-                  <span>🔄</span>
-                  <span>2.5 Flash ⚡</span>
-                </div>
-                
-                <div className="mt-4 pt-4 border-t border-border">
+                <div className="flex items-center justify-between pt-4 border-t border-border">
                   <Button variant="outline" size="sm" className="text-xs">
                     Switch model
                   </Button>
+                  <div className="text-xs text-muted-foreground">
+                    Just now
+                  </div>
                 </div>
               </div>
             </div>
