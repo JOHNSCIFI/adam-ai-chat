@@ -588,7 +588,6 @@ export default function Index() {
 
       <div className="w-full max-w-3xl mb-4 sm:mb-6">
         <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
-
           <Textarea 
             ref={textareaRef} 
             value={message} 
@@ -598,33 +597,42 @@ export default function Index() {
                 e.preventDefault();
                 handleStartChat();
               }
-            }} 
+            }}
+            onFocus={e => {
+              // Prevent default scroll behavior on mobile
+              if (window.innerWidth < 768) {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }}
             placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
             className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
             rows={1}
             aria-label={isImageMode ? "Describe an image" : "Type your message"}
           />
           
-          <div className="flex items-center justify-between gap-2">
-            <div className="flex items-center gap-1 sm:gap-2">
+          {/* Mobile-first redesigned input controls */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2">
+            {/* Top row on mobile: File upload and image controls */}
+            <div className="flex items-center gap-2 order-2 sm:order-1">
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" 
+                className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
                 onClick={handleFileUpload}
                 aria-label="Upload file"
               >
                 <Paperclip className="h-4 w-4" />
               </Button>
               
-                {isImageMode && !selectedStyle ? <>
+              {isImageMode && !selectedStyle ? (
+                <div className="flex items-center gap-2">
                   {/* Image mode indicator */}
-                  <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
                     <ImageIcon className="h-3 w-3" />
                     <span>Image</span>
                     <button 
                       onClick={handleExitImageMode} 
-                      className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary"
+                      className="opacity-70 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary"
                       aria-label="Exit image mode"
                     >
                       <X className="h-3 w-3" />
@@ -637,19 +645,19 @@ export default function Index() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
+                        className="h-9 px-3 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary"
                         aria-label="Select image style"
                         aria-expanded={isStylesOpen}
                         aria-haspopup="true"
                       >
                         <Palette className="h-3 w-3" />
-                        <span className="hidden sm:inline">Styles</span>
+                        <span>Styles</span>
                         <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg" align="start">
+                    <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg z-50" align="start">
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                         {imageStyles.map(style => 
                           <button 
@@ -669,31 +677,33 @@ export default function Index() {
                       </div>
                     </PopoverContent>
                   </Popover>
-                </> : 
+                </div>
+              ) : (
                 <Button 
                   variant="ghost" 
                   size="sm" 
-                  className="h-8 px-2 sm:px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm" 
+                  className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" 
                   onClick={handleCreateImageClick}
                   aria-label="Create an image"
                 >
-                  <ImageIcon className="h-4 w-4 mr-1" />
-                  <span className="hidden sm:inline">Create an image</span>
-                  <span className="sm:hidden">Image</span>
-                </Button>}
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  <span>Create image</span>
+                </Button>
+              )}
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+            {/* Bottom row on mobile: Model select, mic, voice mode */}
+            <div className="flex items-center gap-2 order-1 sm:order-2">
               <Select value={selectedModel} onValueChange={setSelectedModel}>
                 <SelectTrigger 
-                  className="w-[140px] sm:w-[180px] h-8 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
+                  className="flex-1 sm:w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
                   aria-label="Select AI model"
                 >
                   <SelectValue>
                     <span className="font-medium truncate">{selectedModelData?.name}</span>
                   </SelectValue>
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="z-50">
                   {models.map(model => {
                     const modelData = availableModels.find(m => m.id === model.id);
                     return (
@@ -720,7 +730,7 @@ export default function Index() {
               
               <Button 
                 size="sm" 
-                className={`h-8 w-8 sm:h-9 sm:w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
                   isRecording 
                     ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
                     : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
@@ -742,58 +752,112 @@ export default function Index() {
         </div>
       </div>
 
-      {/* Suggestion buttons - compact design - only show when no suggestions are active */}
+      {/* Suggestion buttons - horizontal scroll on mobile */}
       {!showSuggestions && (
         <div className="w-full max-w-3xl mb-4 sm:mb-6">
-          <div className="flex flex-wrap gap-2 justify-center">
-            {suggestionButtons.map((suggestion, index) => (
-              <Button
-                key={index}
-                onClick={() => handleSuggestionClick(suggestion.action)}
-                variant="ghost"
-                size="sm"
-                className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
-                aria-label={`${suggestion.label} suggestion`}
-              >
-                <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs sm:text-sm font-medium">{suggestion.label}</span>
-              </Button>
-            ))}
-            
-            {/* Show "See More" button only when additional buttons are not shown */}
-            {!showMoreButtons && (
-              <Button
-                onClick={() => handleSuggestionClick('see-more')}
-                variant="ghost"
-                size="sm"
-                className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
-                aria-label="Show more suggestions"
-                aria-expanded={showMoreButtons}
-              >
-                <Plus className="h-3.5 w-3.5 mr-1.5" />
-                <span className="text-xs sm:text-sm font-medium">See More</span>
-              </Button>
-            )}
-          </div>
-          
-          {/* Additional buttons when "See More" is clicked */}
-          {showMoreButtons && (
-            <div className="flex flex-wrap gap-2 justify-center mt-2" role="group" aria-label="Additional suggestions">
-              {additionalButtons.map((button, index) => (
+          {/* Mobile: Horizontal scroll like models */}
+          <div className="sm:hidden">
+            <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide" role="group" aria-label="Quick suggestions">
+              {suggestionButtons.map((suggestion, index) => (
                 <Button
                   key={index}
-                  onClick={() => handleSuggestionClick(button.action)}
+                  onClick={() => handleSuggestionClick(suggestion.action)}
                   variant="ghost"
                   size="sm"
-                  className="h-8 sm:h-9 px-3 sm:px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary min-h-[44px] sm:min-h-[36px]"
-                  aria-label={`${button.label} suggestion`}
+                  className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap"
+                  aria-label={`${suggestion.label} suggestion`}
                 >
-                  <button.icon className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-xs sm:text-sm font-medium">{button.label}</span>
+                  <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm font-medium">{suggestion.label}</span>
                 </Button>
               ))}
+              
+              {/* Show "See More" button on mobile */}
+              {!showMoreButtons && (
+                <Button
+                  onClick={() => handleSuggestionClick('see-more')}
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap"
+                  aria-label="Show more suggestions"
+                  aria-expanded={showMoreButtons}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm font-medium">See More</span>
+                </Button>
+              )}
+              
+              {/* Additional buttons when "See More" is clicked - mobile */}
+              {showMoreButtons && 
+                additionalButtons.map((button, index) => (
+                  <Button
+                    key={`mobile-${index}`}
+                    onClick={() => handleSuggestionClick(button.action)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap"
+                    aria-label={`${button.label} suggestion`}
+                  >
+                    <button.icon className="h-3.5 w-3.5 mr-1.5" />
+                    <span className="text-sm font-medium">{button.label}</span>
+                  </Button>
+                ))
+              }
             </div>
-          )}
+          </div>
+
+          {/* Desktop: Wrapped layout */}
+          <div className="hidden sm:block">
+            <div className="flex flex-wrap gap-2 justify-center">
+              {suggestionButtons.map((suggestion, index) => (
+                <Button
+                  key={index}
+                  onClick={() => handleSuggestionClick(suggestion.action)}
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label={`${suggestion.label} suggestion`}
+                >
+                  <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm font-medium">{suggestion.label}</span>
+                </Button>
+              ))}
+              
+              {/* Show "See More" button only when additional buttons are not shown */}
+              {!showMoreButtons && (
+                <Button
+                  onClick={() => handleSuggestionClick('see-more')}
+                  variant="ghost"
+                  size="sm"
+                  className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                  aria-label="Show more suggestions"
+                  aria-expanded={showMoreButtons}
+                >
+                  <Plus className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm font-medium">See More</span>
+                </Button>
+              )}
+            </div>
+            
+            {/* Additional buttons when "See More" is clicked - desktop */}
+            {showMoreButtons && (
+              <div className="flex flex-wrap gap-2 justify-center mt-2" role="group" aria-label="Additional suggestions">
+                {additionalButtons.map((button, index) => (
+                  <Button
+                    key={index}
+                    onClick={() => handleSuggestionClick(button.action)}
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary"
+                    aria-label={`${button.label} suggestion`}
+                  >
+                    <button.icon className="h-3.5 w-3.5 mr-1.5" />
+                    <span className="text-sm font-medium">{button.label}</span>
+                  </Button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
