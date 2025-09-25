@@ -32,9 +32,9 @@ const Home = () => {
             <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
           </div>
           <div className="hidden md:flex items-center space-x-6">
-            <a href="#models" className="text-sm font-medium hover:text-primary transition-colors">Models</a>
-            <a href="#features" className="text-sm font-medium hover:text-primary transition-colors">Features</a>
-            <a href="#pricing" className="text-sm font-medium hover:text-primary transition-colors">Pricing</a>
+            <button onClick={() => navigate('/models')} className="text-sm font-medium hover:text-primary transition-colors">Models</button>
+            <button onClick={() => navigate('/features')} className="text-sm font-medium hover:text-primary transition-colors">Features</button>
+            <button onClick={() => navigate('/pricing')} className="text-sm font-medium hover:text-primary transition-colors">Pricing</button>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center text-sm font-medium hover:text-primary transition-colors">
                 Terms <ChevronDown className="ml-1 h-3 w-3" />
@@ -565,9 +565,9 @@ const Home = () => {
             <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
               <h3 className="font-bold mb-6 text-lg">Product</h3>
               <div className="space-y-3">
-                <a href="#features" className="block text-muted-foreground hover:text-primary transition-colors">Features</a>
-                <a href="#pricing" className="block text-muted-foreground hover:text-primary transition-colors">Pricing</a>
-                <a href="#models" className="block text-muted-foreground hover:text-primary transition-colors">AI Models</a>
+                <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
+                <button onClick={() => navigate('/pricing')} className="block text-muted-foreground hover:text-primary transition-colors">Pricing</button>
+                <button onClick={() => navigate('/models')} className="block text-muted-foreground hover:text-primary transition-colors">AI Models</button>
                 <a href="/image-generation" className="block text-muted-foreground hover:text-primary transition-colors">Image Generation</a>
               </div>
             </div>

@@ -14,6 +14,9 @@ import Chat from '@/pages/Chat';
 import ProjectPage from '@/pages/ProjectPage';
 import Help from '@/pages/Help';
 import Home from '@/pages/Home';
+import Pricing from '@/pages/Pricing';
+import Features from '@/pages/Features';
+import Models from '@/pages/Models';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
@@ -34,6 +37,9 @@ function App() {
               <Routes>
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/home" element={<Home />} />
+                <Route path="/pricing" element={<Pricing />} />
+                <Route path="/features" element={<Features />} />
+                <Route path="/models" element={<Models />} />
                 <Route path="/" element={
                   <MainLayout>
                     <Index />
