@@ -18,39 +18,7 @@ const Features = () => {
   } = useTheme();
   const [activeFeature, setActiveFeature] = useState('models');
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <div className="relative">
-            <AdamGptLogo className="h-7 w-7" />
-            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-          </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
-        </div>
-        <div className="hidden md:flex items-center space-x-6">
-          <button onClick={() => navigate('/models')} className="text-sm font-medium hover:text-primary transition-colors">Models</button>
-          <button onClick={() => navigate('/features')} className="text-sm font-medium text-primary">Features</button>
-          <button onClick={() => navigate('/pricing')} className="text-sm font-medium hover:text-primary transition-colors">Pricing</button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium hover:text-primary transition-colors">
-              Terms <ChevronDown className="ml-1 h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-popover border shadow-lg">
-              <DropdownMenuItem onClick={() => navigate('/privacy')}>
-                Privacy Policy
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/terms')}>
-                Terms of Service
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/cookie-policy')}>
-                Cookie Policy
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-          Sign in
-        </Button>
-      </div>
+      
     </nav>;
   const Footer = () => <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
       <div className="container max-w-6xl mx-auto">
@@ -141,48 +109,16 @@ const Features = () => {
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-wrap justify-center gap-6 mb-16">
-            <Button 
-              variant={activeFeature === 'models' ? 'default' : 'outline'} 
-              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
-                activeFeature === 'models' 
-                  ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg scale-105 border-0' 
-                  : 'border-2 border-border hover:border-primary/50 hover:bg-muted/50 hover:scale-105'
-              }`}
-              onClick={() => setActiveFeature('models')}
-            >
+            <Button variant={activeFeature === 'models' ? 'default' : 'outline'} className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${activeFeature === 'models' ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg scale-105 border-0' : 'border-2 border-border hover:border-primary/50 hover:bg-muted/50 hover:scale-105'}`} onClick={() => setActiveFeature('models')}>
               Switch Models
             </Button>
-            <Button 
-              variant={activeFeature === 'voice' ? 'default' : 'outline'} 
-              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
-                activeFeature === 'voice' 
-                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg scale-105 border-0' 
-                  : 'border-2 border-border hover:border-blue-500/50 hover:bg-muted/50 hover:scale-105'
-              }`}
-              onClick={() => setActiveFeature('voice')}
-            >
+            <Button variant={activeFeature === 'voice' ? 'default' : 'outline'} className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${activeFeature === 'voice' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg scale-105 border-0' : 'border-2 border-border hover:border-blue-500/50 hover:bg-muted/50 hover:scale-105'}`} onClick={() => setActiveFeature('voice')}>
               Voice Chat
             </Button>
-            <Button 
-              variant={activeFeature === 'images' ? 'default' : 'outline'} 
-              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
-                activeFeature === 'images' 
-                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg scale-105 border-0' 
-                  : 'border-2 border-border hover:border-pink-500/50 hover:bg-muted/50 hover:scale-105'
-              }`}
-              onClick={() => setActiveFeature('images')}
-            >
+            <Button variant={activeFeature === 'images' ? 'default' : 'outline'} className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${activeFeature === 'images' ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg scale-105 border-0' : 'border-2 border-border hover:border-pink-500/50 hover:bg-muted/50 hover:scale-105'}`} onClick={() => setActiveFeature('images')}>
               Generate Images
             </Button>
-            <Button 
-              variant={activeFeature === 'files' ? 'default' : 'outline'} 
-              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
-                activeFeature === 'files' 
-                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105 border-0' 
-                  : 'border-2 border-border hover:border-green-500/50 hover:bg-muted/50 hover:scale-105'
-              }`}
-              onClick={() => setActiveFeature('files')}
-            >
+            <Button variant={activeFeature === 'files' ? 'default' : 'outline'} className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${activeFeature === 'files' ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105 border-0' : 'border-2 border-border hover:border-green-500/50 hover:bg-muted/50 hover:scale-105'}`} onClick={() => setActiveFeature('files')}>
               Talk to Files
             </Button>
           </div>
