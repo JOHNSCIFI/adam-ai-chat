@@ -11,6 +11,7 @@ import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, File
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
+import GoogleOneTab from '@/components/GoogleOneTab';
 import { toast } from 'sonner';
 const models = [{
   id: 'gpt-4o-mini',
@@ -770,6 +771,12 @@ export default function Index() {
       
 
       <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
+      
+      {/* Google One Tap - only show when user is not signed in */}
+      {!user && <GoogleOneTab onSuccess={() => {
+        setShowAuthModal(false);
+        toast.success('Successfully signed in with Google!');
+      }} />}
       
       <AuthModal isOpen={showAuthModal} onClose={() => {
       setShowAuthModal(false);
