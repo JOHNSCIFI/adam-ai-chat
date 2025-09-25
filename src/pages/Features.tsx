@@ -309,63 +309,135 @@ const Features = () => {
           {activeFeature === 'images' && (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 animate-fade-in">
-                <h2 className="text-4xl font-bold mb-6">Generate Images</h2>
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center">
+                    <ImageIcon className="h-6 w-6 text-white" />
+                  </div>
+                  <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center animate-pulse">
+                    <Sparkles className="h-6 w-6 text-white" />
+                  </div>
+                </div>
+                
+                <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
+                  Generate Images
+                </h2>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
                   Create stunning visuals with our advanced AI image generation models. Powered by OpenAI's DALL-E and Gemini's Imagen technology for exceptional quality and creativity.
                 </p>
-                <div className="flex gap-4 mb-8">
-                  <div className="flex items-center gap-2">
+                
+                <div className="space-y-4 mb-8">
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
                     <img 
                       src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
                       alt="ChatGPT" 
-                      className="w-6 h-6" 
+                      className="w-8 h-8" 
                     />
-                    <span className="text-sm font-medium">DALL-E 3</span>
+                    <div>
+                      <span className="font-semibold text-green-700 dark:text-green-300">DALL-E 3</span>
+                      <p className="text-sm text-muted-foreground">Photorealistic and artistic images</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  
+                  <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
                     <img 
                       src={geminiLogo} 
                       alt="Gemini" 
-                      className="w-6 h-6" 
+                      className="w-8 h-8" 
                     />
-                    <span className="text-sm font-medium">Imagen 3</span>
+                    <div>
+                      <span className="font-semibold text-blue-700 dark:text-blue-300">Imagen 3</span>
+                      <p className="text-sm text-muted-foreground">Advanced visual generation</p>
+                    </div>
                   </div>
                 </div>
-                <Button className="group bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" onClick={() => navigate('/image-generation')}>
+                
+                <Button className="group bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 hover:from-pink-700 hover:via-purple-700 hover:to-blue-700 text-white border-0 shadow-lg hover:shadow-xl transition-all duration-300" onClick={() => navigate('/image-generation')}>
                   Generate Images <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
               
               <div className="order-1 lg:order-2">
-                <div className="bg-card border border-border rounded-2xl p-8 animate-fade-in">
-                  <div className="flex items-start justify-between mb-6">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center">
-                        <span className="text-xs text-white font-medium">U</span>
+                <div className="relative">
+                  {/* Floating elements background */}
+                  <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-xl"></div>
+                  <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-xl"></div>
+                  
+                  <div className="relative bg-card border border-border rounded-3xl p-8 animate-fade-in backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-500">
+                    {/* Header */}
+                    <div className="flex items-center justify-between mb-6">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
+                          <span className="text-sm text-white font-semibold">U</span>
+                        </div>
+                        <div>
+                          <p className="font-medium">Image Generation</p>
+                          <p className="text-xs text-muted-foreground">Just now</p>
+                        </div>
+                      </div>
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                    </div>
+                    
+                    {/* User prompt */}
+                    <div className="bg-muted/50 rounded-2xl p-4 mb-6 border-l-4 border-blue-500">
+                      <p className="text-sm font-medium">Generate a cozy living room with golden light, a tabby cat on an armchair, and a black cat by the window.</p>
+                    </div>
+                    
+                    {/* AI response header */}
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                        <img 
+                          src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
+                          alt="AI" 
+                          className="w-6 h-6" 
+                        />
                       </div>
                       <div>
-                        <p className="text-sm">Generate a cozy living room with golden light, a tabby cat on an armchair, and a black cat by the window.</p>
+                        <div className="flex items-center gap-2">
+                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">
+                            <img 
+                              src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
+                              alt="DALL-E" 
+                              className="w-3 h-3 mr-1" 
+                            />
+                            DALL-E 3
+                          </Badge>
+                          <span className="text-xs text-muted-foreground">Processing...</span>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2 mb-4">
-                    <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">
-                      <img 
-                        src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                        alt="DALL-E" 
-                        className="w-3 h-3 mr-1" 
-                      />
-                      DALL-E 3
-                    </Badge>
-                  </div>
-                  
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Here's your generated image! The warm lighting and cozy atmosphere really bring the scene to life.
-                  </p>
-                  
-                  <div className="w-full h-32 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 rounded-lg flex items-center justify-center">
-                    <ImageIcon className="h-12 w-12 text-white/80" />
+                    
+                    {/* Generated content */}
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground">
+                        ✨ Your image has been generated! The warm lighting and cozy atmosphere really bring the scene to life.
+                      </p>
+                      
+                      <div className="relative group">
+                        <div className="w-full h-48 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 rounded-xl flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
+                          <ImageIcon className="h-16 w-16 text-white/90 z-10" />
+                          <div className="absolute bottom-3 left-3 z-10">
+                            <Badge variant="secondary" className="bg-black/30 text-white border-white/30">
+                              1024×1024
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      </div>
+                      
+                      {/* Action buttons */}
+                      <div className="flex items-center gap-3 pt-4">
+                        <Button size="sm" variant="outline" className="text-xs">
+                          ↻ Regenerate
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs">
+                          ↓ Download
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-xs">
+                          ✏ Edit
+                        </Button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
