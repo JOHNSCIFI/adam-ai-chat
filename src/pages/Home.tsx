@@ -12,14 +12,14 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
-
 const Home = () => {
   const navigate = useNavigate();
-  const { actualTheme } = useTheme();
-  
+  const {
+    actualTheme
+  } = useTheme();
+
   // Choose the appropriate ChatGPT logo based on theme
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
-
   const handleTryNowClick = () => {
     // Analytics event
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -30,14 +30,8 @@ const Home = () => {
     }
     navigate('/chat');
   };
-
-  return (
-    <div className="min-h-screen bg-background text-foreground">
-      <SEO 
-        title="AI Assistant for Everyone"
-        description="Access GPT-4o, Claude, Gemini and more powerful AI models from a single interface. AI chatbot, image generation, PDF analysis and writing tools."
-        canonical="https://adamchat.app/home"
-      />
+  return <div className="min-h-screen bg-background text-foreground">
+      <SEO title="AI Assistant for Everyone" description="Access GPT-4o, Claude, Gemini and more powerful AI models from a single interface. AI chatbot, image generation, PDF analysis and writing tools." canonical="https://adamchat.app/home" />
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8" role="main">
@@ -60,21 +54,10 @@ const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              size="lg" 
-              onClick={() => navigate('/chat')} 
-              className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200"
-              aria-label="Start using AdamGpt now"
-            >
+            <Button size="lg" onClick={() => navigate('/chat')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using AdamGpt now">
               Start Free Trial
             </Button>
-            <Button 
-              size="lg" 
-              variant="outline" 
-              onClick={() => navigate('/pricing')} 
-              className="w-full sm:w-auto text-lg px-8 py-4 h-auto border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200"
-              aria-label="View pricing plans"
-            >
+            <Button size="lg" variant="outline" onClick={() => navigate('/pricing')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="View pricing plans">
               View Pricing
             </Button>
           </div>
@@ -97,11 +80,7 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img 
-                    src={chatgptLogoSrc} 
-                    alt="OpenAI ChatGPT logo" 
-                    className="w-12 h-12 object-contain" 
-                  />
+                  <img src={chatgptLogoSrc} alt="OpenAI ChatGPT logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI GPT-4</h3>
                 <p className="text-sm text-muted-foreground">Advanced reasoning and problem-solving capabilities</p>
@@ -111,11 +90,7 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img 
-                    src={geminiLogo} 
-                    alt="Google Gemini logo" 
-                    className="w-12 h-12 object-contain" 
-                  />
+                  <img src={geminiLogo} alt="Google Gemini logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Google Gemini</h3>
                 <p className="text-sm text-muted-foreground">Excellent for multimodal tasks and analysis</p>
@@ -125,11 +100,7 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img 
-                    src={claudeLogo} 
-                    alt="Anthropic Claude logo" 
-                    className="w-12 h-12 object-contain" 
-                  />
+                  <img src={claudeLogo} alt="Anthropic Claude logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Anthropic Claude</h3>
                 <p className="text-sm text-muted-foreground">Best for writing and creative tasks</p>
@@ -139,11 +110,7 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
               <div className="text-center">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img 
-                    src={deepseekLogo} 
-                    alt="DeepSeek logo" 
-                    className="w-12 h-12 object-contain" 
-                  />
+                  <img src={deepseekLogo} alt="DeepSeek logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">DeepSeek</h3>
                 <p className="text-sm text-muted-foreground">Specialized in coding and technical analysis</p>
@@ -299,11 +266,7 @@ const Home = () => {
                   <span className="text-foreground">Voice commands</span>
                 </div>
               </div>
-              <Button 
-                size="lg" 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="Start biweekly plan trial"
-              >
+              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Start biweekly plan trial">
                 Start $0.99 Trial
               </Button>
             </div>
@@ -334,12 +297,7 @@ const Home = () => {
                   <span className="text-foreground">Priority support</span>
                 </div>
               </div>
-              <Button 
-                size="lg" 
-                variant="outline" 
-                className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="Get started with monthly plan"
-              >
+              <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with monthly plan">
                 Get Started
               </Button>
             </div>
@@ -375,11 +333,7 @@ const Home = () => {
                   <span className="text-foreground">Premium support</span>
                 </div>
               </div>
-              <Button 
-                size="lg" 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="Get started with quarterly plan"
-              >
+              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with quarterly plan">
                 Get Started
               </Button>
             </div>
@@ -420,7 +374,9 @@ const Home = () => {
               </p>
             </div>
             
-            <div className="lg:col-span-2 animate-fade-in" style={{animationDelay: '0.1s'}}>
+            <div className="lg:col-span-2 animate-fade-in" style={{
+            animationDelay: '0.1s'
+          }}>
               <Accordion type="single" collapsible className="space-y-4">
                 <AccordionItem value="item-1" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
@@ -473,28 +429,7 @@ const Home = () => {
       </section>
 
       {/* Final CTA Section */}
-      <section className="relative py-24 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-r from-primary via-purple-600 to-pink-600"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        <div className="container max-w-4xl mx-auto text-center relative z-10">
-          <div className="animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 text-white">
-              Ready to unlock AI's potential?
-            </h2>
-            <p className="text-xl md:text-2xl mb-10 text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Join thousands of users who are already transforming their work with AdamGpt
-            </p>
-            <Button 
-              size="lg" 
-              variant="secondary" 
-              onClick={() => navigate('/chat')}
-              className="text-lg px-12 py-4 h-auto bg-white text-primary hover:bg-white/90 hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl"
-            >
-              Start free trial →
-            </Button>
-          </div>
-        </div>
-      </section>
+      
 
       {/* Footer */}
       <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
@@ -513,7 +448,9 @@ const Home = () => {
               </p>
             </div>
             
-            <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
+            <div className="animate-fade-in" style={{
+            animationDelay: '0.1s'
+          }}>
               <h3 className="font-bold mb-6 text-lg">Product</h3>
               <div className="space-y-3">
                 <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
@@ -523,7 +460,9 @@ const Home = () => {
               </div>
             </div>
             
-            <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+            <div className="animate-fade-in" style={{
+            animationDelay: '0.2s'
+          }}>
               <h3 className="font-bold mb-6 text-lg">Company</h3>
               <div className="space-y-3">
                 <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
@@ -532,7 +471,9 @@ const Home = () => {
               </div>
             </div>
             
-            <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
+            <div className="animate-fade-in" style={{
+            animationDelay: '0.3s'
+          }}>
               <h3 className="font-bold mb-6 text-lg">Legal</h3>
               <div className="space-y-3">
                 <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
@@ -542,7 +483,9 @@ const Home = () => {
             </div>
           </div>
           
-          <div className="border-t border-border pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
+          <div className="border-t border-border pt-8 animate-fade-in" style={{
+          animationDelay: '0.4s'
+        }}>
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
               <p className="text-muted-foreground">
                 &copy; 2024 AdamGpt. All rights reserved.
@@ -561,8 +504,6 @@ const Home = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Home;
