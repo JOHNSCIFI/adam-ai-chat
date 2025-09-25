@@ -53,9 +53,9 @@ const Home = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-            Sign in
-          </Button>
+        <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
+          Try Here
+        </Button>
         </div>
       </nav>
 

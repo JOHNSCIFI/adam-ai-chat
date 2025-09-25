@@ -17,16 +17,16 @@ export default function Privacy() {
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <div className="relative">
             <AdamGptLogo className="h-7 w-7" />
-            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
+            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1" />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+          <span className="text-xl font-bold text-foreground">AdamGpt</span>
         </div>
         <div className="hidden md:flex items-center space-x-6">
-          <button onClick={() => navigate('/models')} className="text-sm font-medium hover:text-primary transition-colors">Models</button>
-          <button onClick={() => navigate('/features')} className="text-sm font-medium hover:text-primary transition-colors">Features</button>
-          <button onClick={() => navigate('/pricing')} className="text-sm font-medium hover:text-primary transition-colors">Pricing</button>
+          <button onClick={() => navigate('/models')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Models</button>
+          <button onClick={() => navigate('/features')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
+          <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium hover:text-primary transition-colors">
+            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
               Terms <ChevronDown className="ml-1 h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-popover border shadow-lg">
@@ -42,64 +42,61 @@ export default function Privacy() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-          Sign in
+        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
+          Try Here
         </Button>
       </div>
     </nav>
   );
 
   const Footer = () => (
-    <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
+    <footer className="py-12 px-4 bg-muted/20 border-t">
       <div className="container max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="animate-fade-in">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="relative">
-                <AdamGptLogo className="h-7 w-7" />
-                <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <AdamGptLogo className="h-6 w-6" />
+              <span className="text-lg font-semibold text-foreground">AdamGpt</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Your gateway to the world's most advanced AI models, unified in one intelligent platform.
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Professional AI solutions for businesses and individuals.
             </p>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
-            <h3 className="font-bold mb-6 text-lg">Product</h3>
-            <div className="space-y-3">
-              <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
-              <button onClick={() => navigate('/pricing')} className="block text-muted-foreground hover:text-primary transition-colors">Pricing</button>
-              <button onClick={() => navigate('/models')} className="block text-muted-foreground hover:text-primary transition-colors">AI Models</button>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Product</h3>
+            <div className="space-y-2">
+              <button onClick={() => navigate('/features')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Features</button>
+              <button onClick={() => navigate('/pricing')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
+              <button onClick={() => navigate('/models')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">AI Models</button>
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
-            <h3 className="font-bold mb-6 text-lg">Company</h3>
-            <div className="space-y-3">
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
-              <a href="/explore-tools" className="block text-muted-foreground hover:text-primary transition-colors">Explore Tools</a>
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">Help Center</a>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Company</h3>
+            <div className="space-y-2">
+              <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">About</a>
+              <a href="/explore-tools" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Explore Tools</a>
+              <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</a>
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
-            <h3 className="font-bold mb-6 text-lg">Legal</h3>
-            <div className="space-y-3">
-              <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
-              <a href="/terms" className="block text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
-              <a href="/cookie-policy" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Legal</h3>
+            <div className="space-y-2">
+              <a href="/privacy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
+              <a href="/cookie-policy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-border pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p className="text-muted-foreground">
               &copy; 2024 AdamGpt. All rights reserved.
             </p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
                 <span>Enterprise Security</span>
@@ -120,19 +117,15 @@ export default function Privacy() {
       <NavBar />
       
       {/* Hero Section */}
-      <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent"></div>
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
-        
-        <div className="container max-w-4xl mx-auto text-center relative z-10">
-          <Badge variant="secondary" className="mb-8 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 text-primary animate-fade-in">
-            Legal Information
+      <section className="py-16 px-4 border-b">
+        <div className="container max-w-4xl mx-auto text-center">
+          <Badge variant="outline" className="mb-6 border-muted-foreground/20 text-muted-foreground">
+            Legal Document
           </Badge>
-          <h1 className="text-6xl font-bold mb-8 animate-fade-in">
-            Privacy <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Policy</span>
+          <h1 className="text-5xl font-bold mb-6 text-foreground">
+            Privacy Policy
           </h1>
-          <p className="text-xl text-muted-foreground animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <p className="text-lg text-muted-foreground">
             Last updated: {new Date().toLocaleDateString('en-US', { 
               year: 'numeric', 
               month: 'long', 
@@ -143,39 +136,39 @@ export default function Privacy() {
       </section>
 
       {/* Content Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="container max-w-4xl mx-auto">
-          <div className="space-y-8">
-            <Card className="border-2 border-primary/10 bg-gradient-to-br from-primary/5 to-purple-500/5 hover:border-primary/30 transition-all duration-300">
+          <div className="space-y-6">
+            <Card className="border-2 hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="text-2xl">Introduction</CardTitle>
+                <CardTitle className="text-xl text-foreground">Introduction</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg leading-relaxed">
+                <p className="leading-relaxed text-muted-foreground">
                   This Privacy Policy describes how Adam AI Chat ("we," "our," or "us") collects, uses, and protects your personal information when you use our AI chat service. We are committed to protecting your privacy and ensuring transparency about our data practices.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="text-2xl">Controller Information</CardTitle>
+                <CardTitle className="text-xl text-foreground">Controller Information</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3">
                 <p><strong>Data Controller:</strong> Adam AI Chat</p>
                 <p><strong>Contact Email:</strong> privacy@adamai.chat</p>
                 <p><strong>Data Protection Officer:</strong> dpo@adamai.chat</p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="text-2xl">Information We Collect</CardTitle>
+                <CardTitle className="text-xl text-foreground">Information We Collect</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-primary">Account Information</h3>
-                  <ul className="list-disc pl-6 space-y-2 text-lg">
+                  <h3 className="text-lg font-semibold mb-3 text-foreground">Account Information</h3>
+                  <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                     <li>Email address (required for account creation)</li>
                     <li>Display name</li>
                     <li>Profile avatar (if provided)</li>
@@ -184,8 +177,8 @@ export default function Privacy() {
                 </div>
                 
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-primary">Chat and Content Data</h3>
-                  <ul className="list-disc pl-6 space-y-2 text-lg">
+                  <h3 className="text-lg font-semibold mb-3 text-foreground">Chat and Content Data</h3>
+                  <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                     <li>Chat messages and conversations</li>
                     <li>File attachments (documents, images, audio, video)</li>
                     <li>Image analyses and AI-generated content</li>
@@ -195,8 +188,8 @@ export default function Privacy() {
                 </div>
 
                 <div>
-                  <h3 className="text-xl font-semibold mb-4 text-primary">Technical Information</h3>
-                  <ul className="list-disc pl-6 space-y-2 text-lg">
+                  <h3 className="text-lg font-semibold mb-3 text-foreground">Technical Information</h3>
+                  <ul className="list-disc pl-6 space-y-1 text-muted-foreground">
                     <li>IP address and device information</li>
                     <li>Browser type and version</li>
                     <li>Usage patterns and preferences</li>
@@ -205,6 +198,8 @@ export default function Privacy() {
                 </div>
               </CardContent>
             </Card>
+
+            {/* ... keep existing cards with similar conservative styling ... */}
 
             <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>

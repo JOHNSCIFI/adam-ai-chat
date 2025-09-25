@@ -16,16 +16,16 @@ export default function Terms() {
         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
           <div className="relative">
             <AdamGptLogo className="h-7 w-7" />
-            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
+            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1" />
           </div>
-          <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+          <span className="text-xl font-bold text-foreground">AdamGpt</span>
         </div>
         <div className="hidden md:flex items-center space-x-6">
-          <button onClick={() => navigate('/models')} className="text-sm font-medium hover:text-primary transition-colors">Models</button>
-          <button onClick={() => navigate('/features')} className="text-sm font-medium hover:text-primary transition-colors">Features</button>
-          <button onClick={() => navigate('/pricing')} className="text-sm font-medium hover:text-primary transition-colors">Pricing</button>
+          <button onClick={() => navigate('/models')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Models</button>
+          <button onClick={() => navigate('/features')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
+          <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
           <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium hover:text-primary transition-colors">
+            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
               Terms <ChevronDown className="ml-1 h-3 w-3" />
             </DropdownMenuTrigger>
             <DropdownMenuContent className="bg-popover border shadow-lg">
@@ -41,64 +41,61 @@ export default function Terms() {
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <Button onClick={() => navigate('/chat')} className="bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90">
-          Sign in
+        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
+          Try Here
         </Button>
       </div>
     </nav>
   );
 
   const Footer = () => (
-    <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
+    <footer className="py-12 px-4 bg-muted/20 border-t">
       <div className="container max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="animate-fade-in">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="relative">
-                <AdamGptLogo className="h-7 w-7" />
-                <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-              </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+          <div>
+            <div className="flex items-center space-x-2 mb-4">
+              <AdamGptLogo className="h-6 w-6" />
+              <span className="text-lg font-semibold text-foreground">AdamGpt</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
-              Your gateway to the world's most advanced AI models, unified in one intelligent platform.
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Professional AI solutions for businesses and individuals.
             </p>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
-            <h3 className="font-bold mb-6 text-lg">Product</h3>
-            <div className="space-y-3">
-              <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
-              <button onClick={() => navigate('/pricing')} className="block text-muted-foreground hover:text-primary transition-colors">Pricing</button>
-              <button onClick={() => navigate('/models')} className="block text-muted-foreground hover:text-primary transition-colors">AI Models</button>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Product</h3>
+            <div className="space-y-2">
+              <button onClick={() => navigate('/features')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Features</button>
+              <button onClick={() => navigate('/pricing')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
+              <button onClick={() => navigate('/models')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">AI Models</button>
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
-            <h3 className="font-bold mb-6 text-lg">Company</h3>
-            <div className="space-y-3">
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
-              <a href="/explore-tools" className="block text-muted-foreground hover:text-primary transition-colors">Explore Tools</a>
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">Help Center</a>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Company</h3>
+            <div className="space-y-2">
+              <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">About</a>
+              <a href="/explore-tools" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Explore Tools</a>
+              <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</a>
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
-            <h3 className="font-bold mb-6 text-lg">Legal</h3>
-            <div className="space-y-3">
-              <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
-              <a href="/terms" className="block text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
-              <a href="/cookie-policy" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
+          <div>
+            <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Legal</h3>
+            <div className="space-y-2">
+              <a href="/privacy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
+              <a href="/terms" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
+              <a href="/cookie-policy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-border pt-6">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p className="text-muted-foreground">
               &copy; 2024 AdamGpt. All rights reserved.
             </p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4" />
                 <span>Enterprise Security</span>
@@ -119,19 +116,15 @@ export default function Terms() {
       <NavBar />
       
       {/* Hero Section */}
-      <section className="relative py-20 px-4 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent"></div>
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
-        
-        <div className="container max-w-4xl mx-auto text-center relative z-10">
-          <Badge variant="secondary" className="mb-8 bg-gradient-to-r from-primary/10 to-purple-500/10 border-primary/20 text-primary animate-fade-in">
-            Legal Information
+      <section className="py-16 px-4 border-b">
+        <div className="container max-w-4xl mx-auto text-center">
+          <Badge variant="outline" className="mb-6 border-muted-foreground/20 text-muted-foreground">
+            Legal Document
           </Badge>
-          <h1 className="text-6xl font-bold mb-8 animate-fade-in">
-            Terms of <span className="bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">Service</span>
+          <h1 className="text-5xl font-bold mb-6 text-foreground">
+            Terms of Service
           </h1>
-          <p className="text-xl text-muted-foreground animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <p className="text-lg text-muted-foreground">
             Last updated: {new Date().toLocaleDateString('en-US', { 
               year: 'numeric', 
               month: 'long', 
@@ -142,51 +135,53 @@ export default function Terms() {
       </section>
 
       {/* Content Section */}
-      <section className="py-16 px-4">
+      <section className="py-12 px-4">
         <div className="container max-w-4xl mx-auto">
-          <div className="space-y-8">
-            <Card className="border-2 border-primary/10 bg-gradient-to-br from-primary/5 to-purple-500/5 hover:border-primary/30 transition-all duration-300">
+          <div className="space-y-6">
+            <Card className="border-2 hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="text-2xl">Agreement to Terms</CardTitle>
+                <CardTitle className="text-xl text-foreground">Agreement to Terms</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg leading-relaxed">
+                <p className="leading-relaxed text-muted-foreground">
                   By accessing and using Adam AI Chat ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="hover:shadow-lg transition-all duration-300">
+            <Card className="hover:shadow-md transition-shadow">
               <CardHeader>
-                <CardTitle className="text-2xl">Service Description</CardTitle>
+                <CardTitle className="text-xl text-foreground">Service Description</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <p className="text-lg mb-4">
+                <p className="mb-4 text-muted-foreground">
                   Adam AI Chat is an artificial intelligence-powered chat service that allows users to:
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-lg bg-primary/10 border border-primary/20">
-                    <p className="font-semibold">💬 AI Conversations</p>
-                    <p className="text-sm mt-2">Engage with multiple AI assistants</p>
+                  <div className="p-4 rounded-lg bg-muted/20 border border-muted">
+                    <p className="font-semibold text-foreground">💬 AI Conversations</p>
+                    <p className="text-sm mt-2 text-muted-foreground">Engage with multiple AI assistants</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                    <p className="font-semibold">📁 File Analysis</p>
-                    <p className="text-sm mt-2">Upload and analyze various file types</p>
+                  <div className="p-4 rounded-lg bg-muted/20 border border-muted">
+                    <p className="font-semibold text-foreground">📁 File Analysis</p>
+                    <p className="text-sm mt-2 text-muted-foreground">Upload and analyze various file types</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/20">
-                    <p className="font-semibold">🎨 Image Generation</p>
-                    <p className="text-sm mt-2">Generate and edit images using AI</p>
+                  <div className="p-4 rounded-lg bg-muted/20 border border-muted">
+                    <p className="font-semibold text-foreground">🎨 Image Generation</p>
+                    <p className="text-sm mt-2 text-muted-foreground">Generate and edit images using AI</p>
                   </div>
-                  <div className="p-4 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <p className="font-semibold">📊 Project Organization</p>
-                    <p className="text-sm mt-2">Organize conversations into projects</p>
+                  <div className="p-4 rounded-lg bg-muted/20 border border-muted">
+                    <p className="font-semibold text-foreground">📊 Project Organization</p>
+                    <p className="text-sm mt-2 text-muted-foreground">Organize conversations into projects</p>
                   </div>
                 </div>
-                <p className="text-lg mt-6">
+                <p className="mt-4 text-muted-foreground">
                   The Service is provided "as is" and we reserve the right to modify, suspend, or discontinue the Service at any time.
                 </p>
               </CardContent>
             </Card>
+
+            {/* ... keep existing cards with similar conservative styling ... */}
 
             <Card className="hover:shadow-lg transition-all duration-300">
               <CardHeader>
