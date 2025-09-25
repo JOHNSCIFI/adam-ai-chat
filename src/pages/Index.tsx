@@ -11,6 +11,7 @@ import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, File
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
+import GoogleOneTab from '@/components/GoogleOneTab';
 import { toast } from 'sonner';
 const models = [{
   id: 'gpt-4o-mini',
@@ -529,6 +530,9 @@ export default function Index() {
     }
   };
   return <div className="flex-1 flex flex-col items-center justify-center p-6 min-h-screen max-w-4xl mx-auto">
+      {/* Google One Tap for unauthenticated users */}
+      <GoogleOneTab />
+      
       <div className="text-center mb-8">
         {user ? (
           <>
