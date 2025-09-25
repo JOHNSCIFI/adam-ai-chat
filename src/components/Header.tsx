@@ -3,20 +3,20 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import { Menu, ChevronDown, Sun, Moon } from 'lucide-react';
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Header = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Logo */}
-          <Link to="/home" className="flex items-center space-x-3 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
-            <AdamGptLogo className="h-8 w-8" />
+          {/* Brand Text Only */}
+          <Link to="/home" className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
             <span className="text-xl font-bold text-foreground">AdamGpt</span>
           </Link>
 
@@ -70,8 +70,21 @@ const Header = () => {
             </DropdownMenu>
           </nav>
 
-          {/* CTA Button */}
-          <div className="flex items-center space-x-4">
+          {/* Theme Toggle & CTA Button */}
+          <div className="flex items-center space-x-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-full p-0 hover:bg-muted transition-colors focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            >
+              {theme === 'light' ? (
+                <Moon className="h-4 w-4 transition-transform" />
+              ) : (
+                <Sun className="h-4 w-4 transition-transform" />
+              )}
+            </Button>
             <Button 
               onClick={() => navigate('/')} 
               className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
@@ -89,13 +102,29 @@ const Header = () => {
             {/* Mobile menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild className="md:hidden">
-                <Button variant="ghost" size="sm" className="p-2">
-                  <Menu className="h-6 w-6" />
+                <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full p-0">
+                  <Menu className="h-5 w-5" />
                   <span className="sr-only">Toggle menu</span>
                 </Button>
               </SheetTrigger>
               <SheetContent side="right" className="w-[300px] sm:w-[400px]">
-                <nav className="flex flex-col space-y-4 mt-8">
+                <div className="flex items-center justify-between mb-8">
+                  <h2 className="text-lg font-semibold">Menu</h2>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleTheme}
+                    className="h-9 w-9 rounded-full p-0 hover:bg-muted transition-colors"
+                    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+                  >
+                    {theme === 'light' ? (
+                      <Moon className="h-4 w-4" />
+                    ) : (
+                      <Sun className="h-4 w-4" />
+                    )}
+                  </Button>
+                </div>
+                <nav className="flex flex-col space-y-4">
                   <Link 
                     to="/models" 
                     className="text-lg font-medium hover:text-primary transition-colors"

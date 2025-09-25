@@ -10,6 +10,7 @@ interface ThemeContextType {
   accentColor: AccentColor;
   setTheme: (theme: Theme) => void;
   setAccentColor: (color: AccentColor) => void;
+  toggleTheme: () => void;
   actualTheme: 'light' | 'dark';
 }
 
@@ -102,13 +103,24 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     setAccentColor(color);
   };
 
+  const toggleTheme = () => {
+    if (theme === 'system') {
+      // If system, switch to opposite of current actual theme
+      setTheme(actualTheme === 'dark' ? 'light' : 'dark');
+    } else {
+      // Toggle between light and dark
+      setTheme(theme === 'light' ? 'dark' : 'light');
+    }
+  };
+
   return (
     <ThemeContext.Provider 
       value={{ 
         theme, 
         accentColor, 
         setTheme: handleSetTheme, 
-        setAccentColor: handleSetAccentColor, 
+        setAccentColor: handleSetAccentColor,
+        toggleTheme,
         actualTheme 
       }}
     >
