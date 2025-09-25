@@ -193,7 +193,7 @@ export default function ExploreTools() {
   const getModelIcon = (toolId: string) => {
     if (toolId.includes('openai') || toolId.includes('gpt')) {
       return <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />;
-    } else if (toolId.includes('gemini')) {
+    } else if (toolId.includes('gemini') || toolId.includes('nanobanana')) {
       return <img src={geminiLogo} alt="Google Gemini" className="w-5 h-5 object-contain" />;
     } else if (toolId.includes('deepseek')) {
       return <img src={deepseekLogo} alt="DeepSeek" className="w-5 h-5 object-contain" />;
