@@ -167,60 +167,40 @@ const Models = () => {
               {/* OpenAI GPT-4o */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64">
                 <h3 className="text-2xl font-bold mb-8">OpenAI GPT-4o</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI GPT-4o" className="w-12 h-12" />
-                  </div>
+                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20 p-8">
+                  <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI GPT-4o" className="w-full h-full object-contain" />
                 </div>
               </div>
 
               {/* Google Gemini */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.1s'}}>
                 <h3 className="text-2xl font-bold mb-8">Google Gemini</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-blue-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={geminiLogo} alt="Google Gemini" className="w-12 h-12" />
-                  </div>
+                <div className="w-32 h-32 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-blue-500/20 p-8">
+                  <img src={geminiLogo} alt="Google Gemini" className="w-full h-full object-contain" />
                 </div>
               </div>
 
               {/* Anthropic Claude */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.2s'}}>
                 <h3 className="text-2xl font-bold mb-8">Anthropic Claude</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-orange-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={claudeLogo} alt="Anthropic Claude" className="w-12 h-12" />
-                  </div>
+                <div className="w-32 h-32 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-orange-500/20 p-8">
+                  <img src={claudeLogo} alt="Anthropic Claude" className="w-full h-full object-contain" />
                 </div>
               </div>
 
               {/* DeepSeek */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.3s'}}>
                 <h3 className="text-2xl font-bold mb-8">DeepSeek</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={deepseekLogo} alt="DeepSeek" className="w-12 h-12" />
-                  </div>
+                <div className="w-32 h-32 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-purple-500/20 p-8">
+                  <img src={deepseekLogo} alt="DeepSeek" className="w-full h-full object-contain" />
                 </div>
               </div>
 
               {/* OpenAI o-3 mini */}
               <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.4s'}}>
                 <h3 className="text-2xl font-bold mb-8">OpenAI o-3 mini</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI o-3 mini" className="w-12 h-12" />
-                  </div>
-                </div>
-              </div>
-
-              {/* Grok */}
-              <div className="text-center animate-fade-in flex-shrink-0 w-64" style={{animationDelay: '0.5s'}}>
-                <h3 className="text-2xl font-bold mb-8">Grok</h3>
-                <div className="w-32 h-32 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-gray-500/20">
-                  <div className="w-20 h-20 bg-white rounded-xl flex items-center justify-center shadow-sm">
-                    <div className="text-2xl font-bold text-gray-800">X</div>
-                  </div>
+                <div className="w-32 h-32 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-8 border border-green-500/20 p-8">
+                  <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="OpenAI o-3 mini" className="w-full h-full object-contain" />
                 </div>
               </div>
             </div>
@@ -339,11 +319,11 @@ const Models = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-green-500/5 to-emerald-500/5 border border-green-500/10 hover:border-green-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
                   <img 
                     src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
                     alt="OpenAI ChatGPT" 
-                    className="w-12 h-12 object-contain" 
+                    className="w-full h-full object-contain" 
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-3">OpenAI GPT-4o</h3>
@@ -354,11 +334,11 @@ const Models = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border border-blue-500/10 hover:border-blue-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.1s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
                   <img 
                     src={geminiLogo} 
                     alt="Google Gemini" 
-                    className="w-12 h-12 object-contain" 
+                    className="w-full h-full object-contain" 
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Google Gemini</h3>
@@ -369,11 +349,11 @@ const Models = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-orange-500/5 to-red-500/5 border border-orange-500/10 hover:border-orange-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.2s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-red-500/0 group-hover:from-orange-500/5 group-hover:to-red-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
                   <img 
                     src={claudeLogo} 
                     alt="Anthropic Claude" 
-                    className="w-12 h-12 object-contain" 
+                    className="w-full h-full object-contain" 
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Anthropic Claude</h3>
@@ -384,11 +364,11 @@ const Models = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/5 to-pink-500/5 border border-purple-500/10 hover:border-purple-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.3s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/5 group-hover:to-pink-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
                   <img 
                     src={deepseekLogo} 
                     alt="DeepSeek" 
-                    className="w-12 h-12 object-contain" 
+                    className="w-full h-full object-contain" 
                   />
                 </div>
                 <h3 className="text-xl font-bold mb-3">DeepSeek</h3>
