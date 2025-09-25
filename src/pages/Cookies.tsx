@@ -6,50 +6,12 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Sparkles, Shield, Users } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
-
 export default function Cookies() {
   const navigate = useNavigate();
-
-  const NavBar = () => (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center space-x-2 cursor-pointer" onClick={() => navigate('/')}>
-          <div className="relative">
-            <AdamGptLogo className="h-7 w-7" />
-            <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1" />
-          </div>
-          <span className="text-xl font-bold text-foreground">AdamGpt</span>
-        </div>
-        <div className="hidden md:flex items-center space-x-6">
-          <button onClick={() => navigate('/models')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Models</button>
-          <button onClick={() => navigate('/features')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Features</button>
-          <button onClick={() => navigate('/pricing')} className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
-          <DropdownMenu>
-            <DropdownMenuTrigger className="flex items-center text-sm font-medium text-foreground hover:text-primary transition-colors">
-              Terms <ChevronDown className="ml-1 h-3 w-3" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="bg-popover border shadow-lg">
-              <DropdownMenuItem onClick={() => navigate('/privacy')}>
-                Privacy Policy
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/terms')}>
-                Terms of Service
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/cookie-policy')}>
-                Cookie Policy
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-        <Button onClick={() => navigate('/chat')} variant="outline" className="border-2">
-          Try Here
-        </Button>
-      </div>
-    </nav>
-  );
-
-  const Footer = () => (
-    <footer className="py-12 px-4 bg-muted/20 border-t">
+  const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      
+    </nav>;
+  const Footer = () => <footer className="py-12 px-4 bg-muted/20 border-t">
       <div className="container max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
@@ -108,11 +70,8 @@ export default function Cookies() {
           </div>
         </div>
       </div>
-    </footer>
-  );
-
-  return (
-    <div className="min-h-screen bg-background">
+    </footer>;
+  return <div className="min-h-screen bg-background">
       <NavBar />
       
       {/* Hero Section */}
@@ -125,11 +84,11 @@ export default function Cookies() {
             Cookie Policy
           </h1>
           <p className="text-lg text-muted-foreground">
-            Last updated: {new Date().toLocaleDateString('en-US', { 
-              year: 'numeric', 
-              month: 'long', 
-              day: 'numeric' 
-            })}
+            Last updated: {new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}
           </p>
         </div>
       </section>
@@ -341,6 +300,5 @@ export default function Cookies() {
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 }
