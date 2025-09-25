@@ -13,6 +13,7 @@ import Index from '@/pages/Index';
 import Chat from '@/pages/Chat';
 import ProjectPage from '@/pages/ProjectPage';
 import Help from '@/pages/Help';
+import Home from '@/pages/Home';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
@@ -32,6 +33,7 @@ function App() {
             <Router>
               <Routes>
                 <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/home" element={<Home />} />
                 <Route path="/" element={
                   <MainLayout>
                     <Index />
