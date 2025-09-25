@@ -11,14 +11,13 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
-
 const Features = () => {
   const navigate = useNavigate();
-  const { actualTheme } = useTheme();
+  const {
+    actualTheme
+  } = useTheme();
   const [activeFeature, setActiveFeature] = useState('models');
-
-  const NavBar = () => (
-    <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+  const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between">
         <div className="flex items-center space-x-2">
           <div className="relative">
@@ -52,11 +51,8 @@ const Features = () => {
           Sign in
         </Button>
       </div>
-    </nav>
-  );
-
-  const Footer = () => (
-    <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
+    </nav>;
+  const Footer = () => <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
       <div className="container max-w-6xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="animate-fade-in">
@@ -72,7 +68,9 @@ const Features = () => {
             </p>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.1s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.1s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Product</h3>
             <div className="space-y-3">
               <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
@@ -82,7 +80,9 @@ const Features = () => {
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.2s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.2s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Company</h3>
             <div className="space-y-3">
               <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
@@ -91,7 +91,9 @@ const Features = () => {
             </div>
           </div>
           
-          <div className="animate-fade-in" style={{animationDelay: '0.3s'}}>
+          <div className="animate-fade-in" style={{
+          animationDelay: '0.3s'
+        }}>
             <h3 className="font-bold mb-6 text-lg">Legal</h3>
             <div className="space-y-3">
               <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
@@ -101,7 +103,9 @@ const Features = () => {
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 animate-fade-in" style={{animationDelay: '0.4s'}}>
+        <div className="border-t border-border pt-8 animate-fade-in" style={{
+        animationDelay: '0.4s'
+      }}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-muted-foreground">
               &copy; 2024 AdamGpt. All rights reserved.
@@ -119,11 +123,8 @@ const Features = () => {
           </div>
         </div>
       </div>
-    </footer>
-  );
-
-  return (
-    <div className="min-h-screen bg-background">
+    </footer>;
+  return <div className="min-h-screen bg-background">
       <NavBar />
       
       {/* Hero Section */}
@@ -140,39 +141,22 @@ const Features = () => {
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
           <div className="flex flex-wrap justify-center gap-4 mb-16">
-            <Button 
-              variant={activeFeature === 'models' ? 'secondary' : 'outline'} 
-              className="px-8 py-3 rounded-full"
-              onClick={() => setActiveFeature('models')}
-            >
+            <Button variant={activeFeature === 'models' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('models')}>
               Switch Models
             </Button>
-            <Button 
-              variant={activeFeature === 'voice' ? 'secondary' : 'outline'} 
-              className="px-8 py-3 rounded-full"
-              onClick={() => setActiveFeature('voice')}
-            >
+            <Button variant={activeFeature === 'voice' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('voice')}>
               Voice Chat
             </Button>
-            <Button 
-              variant={activeFeature === 'images' ? 'secondary' : 'outline'} 
-              className="px-8 py-3 rounded-full"
-              onClick={() => setActiveFeature('images')}
-            >
+            <Button variant={activeFeature === 'images' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('images')}>
               Generate Images
             </Button>
-            <Button 
-              variant={activeFeature === 'files' ? 'secondary' : 'outline'} 
-              className="px-8 py-3 rounded-full"
-              onClick={() => setActiveFeature('files')}
-            >
+            <Button variant={activeFeature === 'files' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('files')}>
               Talk to Files
             </Button>
           </div>
 
           {/* Switch Models Feature */}
-          {activeFeature === 'models' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {activeFeature === 'models' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 animate-fade-in">
                 <h2 className="text-4xl font-bold mb-6">Switch Models</h2>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
@@ -185,60 +169,50 @@ const Features = () => {
               
               <div className="order-1 lg:order-2 grid grid-cols-2 gap-6">
                 <div className="space-y-6">
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-green-500/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.1s'}}>
+                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-green-500/30 transition-all duration-300 animate-fade-in" style={{
+                animationDelay: '0.1s'
+              }}>
                     <div className="w-16 h-16 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img 
-                        src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                        alt="ChatGPT" 
-                        className="w-10 h-10 object-contain" 
-                      />
+                      <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-10 h-10 object-contain" />
                     </div>
                     <h3 className="font-bold text-sm mb-2">ChatGPT</h3>
                     <p className="text-xs text-muted-foreground">Advanced reasoning</p>
                   </div>
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-purple-500/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.3s'}}>
+                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-purple-500/30 transition-all duration-300 animate-fade-in" style={{
+                animationDelay: '0.3s'
+              }}>
                     <div className="w-16 h-16 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img 
-                        src={deepseekLogo} 
-                        alt="DeepSeek" 
-                        className="w-10 h-10 object-contain" 
-                      />
+                      <img src={deepseekLogo} alt="DeepSeek" className="w-10 h-10 object-contain" />
                     </div>
                     <h3 className="font-bold text-sm mb-2">DeepSeek</h3>
                     <p className="text-xs text-muted-foreground">Coding specialist</p>
                   </div>
                 </div>
                 <div className="space-y-6 pt-8">
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-orange-500/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.2s'}}>
+                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-orange-500/30 transition-all duration-300 animate-fade-in" style={{
+                animationDelay: '0.2s'
+              }}>
                     <div className="w-16 h-16 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img 
-                        src={claudeLogo} 
-                        alt="Claude" 
-                        className="w-10 h-10 object-contain" 
-                      />
+                      <img src={claudeLogo} alt="Claude" className="w-10 h-10 object-contain" />
                     </div>
                     <h3 className="font-bold text-sm mb-2">Claude</h3>
                     <p className="text-xs text-muted-foreground">Creative writing</p>
                   </div>
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-blue-500/30 transition-all duration-300 animate-fade-in" style={{animationDelay: '0.4s'}}>
+                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-blue-500/30 transition-all duration-300 animate-fade-in" style={{
+                animationDelay: '0.4s'
+              }}>
                     <div className="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img 
-                        src={geminiLogo} 
-                        alt="Gemini" 
-                        className="w-10 h-10 object-contain" 
-                      />
+                      <img src={geminiLogo} alt="Gemini" className="w-10 h-10 object-contain" />
                     </div>
                     <h3 className="font-bold text-sm mb-2">Gemini</h3>
                     <p className="text-xs text-muted-foreground">Multimodal tasks</p>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Voice Chat Feature */}
-          {activeFeature === 'voice' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {activeFeature === 'voice' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 animate-fade-in">
                 <h2 className="text-4xl font-bold mb-6">Voice Chat</h2>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
@@ -254,9 +228,7 @@ const Features = () => {
                     Natural Voice
                   </Badge>
                 </div>
-                <Button className="group bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" onClick={() => navigate('/chat')}>
-                  Try Voice Chat <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
+                
               </div>
               
               <div className="order-1 lg:order-2">
@@ -302,12 +274,10 @@ const Features = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Generate Images Feature */}
-          {activeFeature === 'images' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {activeFeature === 'images' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 animate-fade-in">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-12 h-12 bg-gradient-to-r from-pink-500 to-purple-600 rounded-2xl flex items-center justify-center">
@@ -327,11 +297,7 @@ const Features = () => {
                 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
-                    <img 
-                      src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                      alt="ChatGPT" 
-                      className="w-8 h-8" 
-                    />
+                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-8 h-8" />
                     <div>
                       <span className="font-semibold text-green-700 dark:text-green-300">DALL-E 3</span>
                       <p className="text-sm text-muted-foreground">Photorealistic and artistic images</p>
@@ -339,11 +305,7 @@ const Features = () => {
                   </div>
                   
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
-                    <img 
-                      src={geminiLogo} 
-                      alt="Gemini" 
-                      className="w-8 h-8" 
-                    />
+                    <img src={geminiLogo} alt="Gemini" className="w-8 h-8" />
                     <div>
                       <span className="font-semibold text-blue-700 dark:text-blue-300">Imagen 3</span>
                       <p className="text-sm text-muted-foreground">Advanced visual generation</p>
@@ -385,20 +347,12 @@ const Features = () => {
                     {/* AI response header */}
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                        <img 
-                          src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                          alt="AI" 
-                          className="w-6 h-6" 
-                        />
+                        <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="AI" className="w-6 h-6" />
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
                           <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">
-                            <img 
-                              src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                              alt="DALL-E" 
-                              className="w-3 h-3 mr-1" 
-                            />
+                            <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="DALL-E" className="w-3 h-3 mr-1" />
                             DALL-E 3
                           </Badge>
                           <span className="text-xs text-muted-foreground">Processing...</span>
@@ -441,12 +395,10 @@ const Features = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
 
           {/* Talk to Files Feature */}
-          {activeFeature === 'files' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+          {activeFeature === 'files' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
               <div className="order-2 lg:order-1 animate-fade-in">
                 <h2 className="text-4xl font-bold mb-6">Talk to Files</h2>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
@@ -515,14 +467,11 @@ const Features = () => {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            </div>}
         </div>
       </section>
 
       <Footer />
-    </div>
-  );
+    </div>;
 };
-
 export default Features;
