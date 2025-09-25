@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
+import GoogleAutoLogin from '@/components/GoogleAutoLogin';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import { toast } from 'sonner';
 const models = [{
@@ -223,6 +224,7 @@ export default function Index() {
   const [isRecording, setIsRecording] = useState(false);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showGoogleAutoLogin, setShowGoogleAutoLogin] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
@@ -246,6 +248,17 @@ export default function Index() {
       }
     }
   }, [user]);
+
+  // Show Google auto-login for unauthenticated users
+  useEffect(() => {
+    if (!authLoading && !user) {
+      const hasSeenAutoLogin = localStorage.getItem('hasSeenGoogleAutoLogin');
+      if (!hasSeenAutoLogin) {
+        setShowGoogleAutoLogin(true);
+        localStorage.setItem('hasSeenGoogleAutoLogin', 'true');
+      }
+    }
+  }, [user, authLoading]);
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -812,5 +825,13 @@ export default function Index() {
         }, 100);
       }
     }} />
+
+      <GoogleAutoLogin 
+        isOpen={showGoogleAutoLogin} 
+        onClose={() => {
+          setShowGoogleAutoLogin(false);
+          setShowAuthModal(true);
+        }} 
+      />
     </div>;
 }
