@@ -140,17 +140,49 @@ const Features = () => {
       {/* Feature Tabs */}
       <section className="py-16 px-4">
         <div className="container max-w-6xl mx-auto">
-          <div className="flex flex-wrap justify-center gap-4 mb-16">
-            <Button variant={activeFeature === 'models' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('models')}>
+          <div className="flex flex-wrap justify-center gap-6 mb-16">
+            <Button 
+              variant={activeFeature === 'models' ? 'default' : 'outline'} 
+              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
+                activeFeature === 'models' 
+                  ? 'bg-gradient-to-r from-primary to-purple-600 text-white shadow-lg scale-105 border-0' 
+                  : 'border-2 border-border hover:border-primary/50 hover:bg-muted/50 hover:scale-105'
+              }`}
+              onClick={() => setActiveFeature('models')}
+            >
               Switch Models
             </Button>
-            <Button variant={activeFeature === 'voice' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('voice')}>
+            <Button 
+              variant={activeFeature === 'voice' ? 'default' : 'outline'} 
+              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
+                activeFeature === 'voice' 
+                  ? 'bg-gradient-to-r from-blue-500 to-cyan-500 text-white shadow-lg scale-105 border-0' 
+                  : 'border-2 border-border hover:border-blue-500/50 hover:bg-muted/50 hover:scale-105'
+              }`}
+              onClick={() => setActiveFeature('voice')}
+            >
               Voice Chat
             </Button>
-            <Button variant={activeFeature === 'images' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('images')}>
+            <Button 
+              variant={activeFeature === 'images' ? 'default' : 'outline'} 
+              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
+                activeFeature === 'images' 
+                  ? 'bg-gradient-to-r from-pink-500 to-purple-500 text-white shadow-lg scale-105 border-0' 
+                  : 'border-2 border-border hover:border-pink-500/50 hover:bg-muted/50 hover:scale-105'
+              }`}
+              onClick={() => setActiveFeature('images')}
+            >
               Generate Images
             </Button>
-            <Button variant={activeFeature === 'files' ? 'secondary' : 'outline'} className="px-8 py-3 rounded-full" onClick={() => setActiveFeature('files')}>
+            <Button 
+              variant={activeFeature === 'files' ? 'default' : 'outline'} 
+              className={`px-8 py-4 rounded-full font-semibold text-sm transition-all duration-300 ${
+                activeFeature === 'files' 
+                  ? 'bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg scale-105 border-0' 
+                  : 'border-2 border-border hover:border-green-500/50 hover:bg-muted/50 hover:scale-105'
+              }`}
+              onClick={() => setActiveFeature('files')}
+            >
               Talk to Files
             </Button>
           </div>
