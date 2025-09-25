@@ -199,7 +199,7 @@ const Models = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
-                  <img src={chatgptLogo} alt="OpenAI ChatGPT" className="w-full h-full object-contain brightness-0" />
+                  <img src={chatgptLogo} alt="OpenAI ChatGPT" className="w-full h-full object-contain brightness-0 invert" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">OpenAI GPT-4o</h3>
                 <p className="text-muted-foreground">Most advanced reasoning and problem-solving capabilities</p>
@@ -238,7 +238,7 @@ const Models = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/5 group-hover:to-pink-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
-                  <img src={deepseekLogo} alt="DeepSeek" className="w-full h-full object-contain brightness-0" />
+                  <img src={deepseekLogo} alt="DeepSeek" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">DeepSeek</h3>
                 <p className="text-muted-foreground">Specialized in coding and technical analysis</p>
