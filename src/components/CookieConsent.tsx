@@ -122,7 +122,7 @@ export default function CookieConsent() {
                   <h3 className="text-lg font-semibold mb-2">We use cookies</h3>
                   <p className="text-sm text-muted-foreground">
                     We use essential cookies to make our service work. We'd also like to use functional cookies to remember your preferences and improve your experience. You can review our{' '}
-                    <a href="/cookies" className="text-primary hover:underline" target="_blank">
+                    <a href="/cookie-policy" className="text-primary hover:underline" target="_blank">
                       Cookie Policy
                     </a>{' '}
                     and{' '}
@@ -246,7 +246,7 @@ export default function CookieConsent() {
 
             <div className="flex justify-between items-center pt-4 border-t">
               <div className="text-sm text-muted-foreground">
-                <a href="/cookies" className="text-primary hover:underline" target="_blank">
+                <a href="/cookie-policy" className="text-primary hover:underline" target="_blank">
                   Learn more about cookies
                 </a>
               </div>

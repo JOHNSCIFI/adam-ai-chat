@@ -56,7 +56,7 @@ export default function Help() {
             </CardContent>
           </Card>
 
-          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/cookies')}>
+          <Card className="group hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-primary/20" onClick={() => navigate('/cookie-policy')}>
             <CardHeader className="pb-4">
               <CardTitle className="flex items-center gap-3 text-lg">
                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors flex-shrink-0">

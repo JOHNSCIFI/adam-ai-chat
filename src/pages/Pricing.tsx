@@ -113,7 +113,7 @@ const Pricing = () => {
               <DropdownMenuItem onClick={() => navigate('/terms')}>
                 Terms of Service
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate('/cookies')}>
+              <DropdownMenuItem onClick={() => navigate('/cookie-policy')}>
                 Cookie Policy
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -167,7 +167,7 @@ const Pricing = () => {
             <div className="space-y-3">
               <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
               <a href="/terms" className="block text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
-              <a href="/cookies" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
+              <a href="/cookie-policy" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>

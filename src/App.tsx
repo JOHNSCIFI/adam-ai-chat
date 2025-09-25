@@ -85,7 +85,7 @@ function App() {
                 } />
                 <Route path="/privacy" element={<Privacy />} />
                 <Route path="/terms" element={<Terms />} />
-                <Route path="/cookies" element={<Cookies />} />
+                <Route path="/cookie-policy" element={<Cookies />} />
                 <Route path="*" element={<Navigate to="/" replace />} />
               </Routes>
             </Router>
