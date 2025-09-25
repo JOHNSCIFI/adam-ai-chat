@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
-import { useIsMobile } from '@/hooks/use-mobile';
 import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -259,14 +258,12 @@ export default function Index() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [showMoreButtons, setShowMoreButtons] = useState(false);
-  const [isUploadPopoverOpen, setIsUploadPopoverOpen] = useState(false);
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const { isMobile } = useSidebar();
-  const isMobileDevice = useIsMobile();
   useEffect(() => {
     if (user && !pendingMessage) {
       const storedMessage = localStorage.getItem('pendingChatMessage');
@@ -289,7 +286,6 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
-    setIsUploadPopoverOpen(false); // Close the popover when file upload is triggered
     fileInputRef.current?.click();
   };
   const handleCreateImage = () => {
@@ -524,7 +520,6 @@ export default function Index() {
   const handleCreateImageClick = () => {
     setIsImageMode(true);
     setMessage('');
-    setIsUploadPopoverOpen(false); // Close the popover when image mode is activated
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 0);
@@ -562,48 +557,14 @@ export default function Index() {
   };
   return <div className="flex-1 flex flex-col min-h-screen">
       {/* Mobile Header with Sidebar Trigger */}
-      {isMobileDevice && (
+      {isMobile && (
         <div className="flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
           <SidebarTrigger 
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
           />
-          <h1 className="text-lg font-semibold truncate absolute left-1/2 transform -translate-x-1/2">AdamGPT</h1>
-          
-          {/* Model selector in mobile navbar */}
-          <Select value={selectedModel} onValueChange={setSelectedModel}>
-            <SelectTrigger 
-              className="w-[120px] h-8 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs"
-              aria-label="Select AI model"
-            >
-              <SelectValue>
-                <span className="font-medium truncate">{selectedModelData?.name?.split(' ')[0]}</span>
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent className="z-50">
-              {models.map(model => {
-                const modelData = availableModels.find(m => m.id === model.id);
-                return (
-                  <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                    <div className="flex items-center gap-3">
-                      <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
-                        <img 
-                          src={getModelIcon(modelData?.icon || 'openai')} 
-                          alt={`${model.name} icon`} 
-                          className="w-4 h-4 object-contain" 
-                        />
-                      </div>
-                      <div>
-                        <div className="font-medium">{model.name}</div>
-                        <div className="text-xs text-muted-foreground">{model.description}</div>
-                      </div>
-                      {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                    </div>
-                  </SelectItem>
-                );
-              })}
-            </SelectContent>
-          </Select>
+          <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
+          <div className="w-9" /> {/* Spacer for balance */}
         </div>
       )}
       
@@ -627,101 +588,43 @@ export default function Index() {
 
       <div className="w-full max-w-3xl mb-4 sm:mb-6">
         <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
-          <div className="relative">
-            <Textarea 
-              ref={textareaRef} 
-              value={message} 
-              onChange={handleInputChange} 
-              onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleStartChat();
-                }
-              }}
-              onFocus={e => {
-                // Prevent default scroll behavior on mobile
-                if (window.innerWidth < 768) {
-                  e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                }
-              }}
-              placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
-              className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60 pr-20 sm:pr-0"
-              style={{ fontSize: '16px', boxShadow: 'none', border: 'none' }}
-              rows={1}
-              aria-label={isImageMode ? "Describe an image" : "Type your message"}
-            />
-            
-            {/* Mobile voice buttons positioned at bottom right of textarea */}
-            {isMobileDevice && !isImageMode && !isUploadPopoverOpen && (
-              <div className="absolute bottom-2 right-2 flex items-center gap-2">
-                <Button 
-                  size="sm" 
-                  className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                    isRecording 
-                      ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
-                      : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
-                  } text-background`} 
-                  onClick={isRecording ? stopRecording : startRecording}
-                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                  aria-pressed={isRecording}
-                >
-                  {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                </Button>
-                
-                <div className="h-8">
-                  <VoiceModeButton 
-                    onMessageSent={handleVoiceMessageSent}
-                    chatId={voiceChatId || 'temp'}
-                    actualTheme={actualTheme}
-                  />
-                </div>
-              </div>
-            )}
-          </div>
+          <Textarea 
+            ref={textareaRef} 
+            value={message} 
+            onChange={handleInputChange} 
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleStartChat();
+              }
+            }}
+            onFocus={e => {
+              // Prevent default scroll behavior on mobile
+              if (window.innerWidth < 768) {
+                e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+              }
+            }}
+            placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
+            className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+            rows={1}
+            aria-label={isImageMode ? "Describe an image" : "Type your message"}
+          />
           
           {/* Mobile-first redesigned input controls */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-2">
-            {/* Top row on mobile: Combined upload button and image controls */}
+            {/* Top row on mobile: File upload and image controls */}
             <div className="flex items-center gap-2 order-2 sm:order-1">
-              {/* Combined File/Image Upload Button */}
-              <Popover open={isUploadPopoverOpen} onOpenChange={setIsUploadPopoverOpen}>
-                <PopoverTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 gap-2" 
-                    aria-label="Upload options"
-                    aria-haspopup="true"
-                  >
-                    <Paperclip className="h-4 w-4" />
-                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
-                  <div className="flex flex-col gap-1">
-                    <button
-                      onClick={handleFileUpload}
-                      className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-muted transition-colors text-left focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label="Upload file or photo"
-                    >
-                      <Paperclip className="h-4 w-4" />
-                      <span className="text-sm">Add file & photo</span>
-                    </button>
-                    <button
-                      onClick={handleCreateImageClick}
-                      className="flex items-center gap-3 w-full p-2 rounded-lg hover:bg-muted transition-colors text-left focus-visible:ring-2 focus-visible:ring-primary"
-                      aria-label="Create an image"
-                    >
-                      <ImageIcon className="h-4 w-4" />
-                      <span className="text-sm">Create image</span>
-                    </button>
-                  </div>
-                </PopoverContent>
-              </Popover>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                onClick={handleFileUpload}
+                aria-label="Upload file"
+              >
+                <Paperclip className="h-4 w-4" />
+              </Button>
               
-              {isImageMode && !selectedStyle && (
+              {isImageMode && !selectedStyle ? (
                 <div className="flex items-center gap-2">
                   {/* Image mode indicator */}
                   <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
@@ -775,74 +678,75 @@ export default function Index() {
                     </PopoverContent>
                   </Popover>
                 </div>
+              ) : (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" 
+                  onClick={handleCreateImageClick}
+                  aria-label="Create an image"
+                >
+                  <ImageIcon className="h-4 w-4 mr-2" />
+                  <span>Create image</span>
+                </Button>
               )}
             </div>
             
-            {/* Bottom row: Desktop model selector, voice buttons on the right inside input */}
-            <div className="flex items-center justify-between gap-2 order-1 sm:order-2">
-              {/* Desktop model selector - hidden on mobile */}
-              {!isMobile && (
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger 
-                    className="w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-sm"
-                    aria-label="Select AI model"
-                  >
-                    <SelectValue>
-                      <span className="font-medium truncate">{selectedModelData?.name}</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="z-50">
-                    {models.map(model => {
-                      const modelData = availableModels.find(m => m.id === model.id);
-                      return (
-                        <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
-                          <div className="flex items-center gap-3">
-                            <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
-                              <img 
-                                src={getModelIcon(modelData?.icon || 'openai')} 
-                                alt={`${model.name} icon`} 
-                                className="w-4 h-4 object-contain" 
-                              />
-                            </div>
-                            <div>
-                              <div className="font-medium">{model.name}</div>
-                              <div className="text-xs text-muted-foreground">{model.description}</div>
-                            </div>
-                            {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+            {/* Bottom row on mobile: Model select, mic, voice mode */}
+            <div className="flex items-center gap-2 order-1 sm:order-2">
+              <Select value={selectedModel} onValueChange={setSelectedModel}>
+                <SelectTrigger 
+                  className="flex-1 sm:w-[180px] h-9 bg-transparent border border-border/50 rounded-full focus-visible:ring-2 focus-visible:ring-primary text-xs sm:text-sm"
+                  aria-label="Select AI model"
+                >
+                  <SelectValue>
+                    <span className="font-medium truncate">{selectedModelData?.name}</span>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent className="z-50">
+                  {models.map(model => {
+                    const modelData = availableModels.find(m => m.id === model.id);
+                    return (
+                      <SelectItem key={model.id} value={model.id} className="focus-visible:bg-accent">
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                            <img 
+                              src={getModelIcon(modelData?.icon || 'openai')} 
+                              alt={`${model.name} icon`} 
+                              className="w-4 h-4 object-contain" 
+                            />
                           </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              )}
+                          <div>
+                            <div className="font-medium">{model.name}</div>
+                            <div className="text-xs text-muted-foreground">{model.description}</div>
+                          </div>
+                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
+                </SelectContent>
+              </Select>
               
-               {/* Desktop voice buttons on the right side of message input */}
-               {!isMobileDevice && (
-                 <div className="flex items-center gap-2 ml-auto">
-                   <Button 
-                     size="sm" 
-                     className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                       isRecording 
-                         ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
-                         : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
-                     } text-background`} 
-                     onClick={isRecording ? stopRecording : startRecording}
-                     aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                     aria-pressed={isRecording}
-                   >
-                     {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-                   </Button>
-                   
-                   <div className="h-8">
-                     <VoiceModeButton 
-                       onMessageSent={handleVoiceMessageSent}
-                       chatId={voiceChatId || 'temp'}
-                       actualTheme={actualTheme}
-                     />
-                   </div>
-                 </div>
-               )}
+              <Button 
+                size="sm" 
+                className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                  isRecording 
+                    ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                    : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                } text-background`} 
+                onClick={isRecording ? stopRecording : startRecording}
+                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                aria-pressed={isRecording}
+              >
+                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              </Button>
+              
+              <VoiceModeButton 
+                onMessageSent={handleVoiceMessageSent}
+                chatId={voiceChatId || 'temp'}
+                actualTheme={actualTheme}
+              />
             </div>
           </div>
         </div>
