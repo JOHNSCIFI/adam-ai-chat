@@ -5,11 +5,19 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Check, Brain, Image, FileText, PenTool, Mic, Globe, Zap, Target, ChevronDown, Sparkles, Users, Shield, Clock, Bot } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
 
 const Home = () => {
   const navigate = useNavigate();
+  const { actualTheme } = useTheme();
   
-  // Fixed Bot import issue
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
 
   return (
     <div className="min-h-screen bg-background">
@@ -131,8 +139,12 @@ const Home = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-green-500/5 to-emerald-500/5 border border-green-500/10 hover:border-green-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl font-bold text-white">G</span>
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                  <img 
+                    src={chatgptLogoSrc} 
+                    alt="OpenAI ChatGPT" 
+                    className="w-12 h-12 object-contain" 
+                  />
                 </div>
                 <h3 className="text-xl font-bold mb-3">OpenAI GPT-4o</h3>
                 <p className="text-muted-foreground">Most advanced reasoning and problem-solving capabilities</p>
@@ -142,8 +154,12 @@ const Home = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-blue-500/5 to-cyan-500/5 border border-blue-500/10 hover:border-blue-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.1s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/0 to-cyan-500/0 group-hover:from-blue-500/5 group-hover:to-cyan-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl font-bold text-white">G</span>
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                  <img 
+                    src={geminiLogo} 
+                    alt="Google Gemini" 
+                    className="w-12 h-12 object-contain" 
+                  />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Google Gemini</h3>
                 <p className="text-muted-foreground">Excellent for multimodal tasks and analysis</p>
@@ -153,8 +169,12 @@ const Home = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-orange-500/5 to-red-500/5 border border-orange-500/10 hover:border-orange-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.2s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-red-500/0 group-hover:from-orange-500/5 group-hover:to-red-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl font-bold text-white">C</span>
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                  <img 
+                    src={claudeLogo} 
+                    alt="Anthropic Claude" 
+                    className="w-12 h-12 object-contain" 
+                  />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Anthropic Claude</h3>
                 <p className="text-muted-foreground">Best for writing and creative tasks</p>
@@ -164,8 +184,12 @@ const Home = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-purple-500/5 to-pink-500/5 border border-purple-500/10 hover:border-purple-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{animationDelay: '0.3s'}}>
               <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-pink-500/0 group-hover:from-purple-500/5 group-hover:to-pink-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300">
-                  <span className="text-2xl font-bold text-white">D</span>
+                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                  <img 
+                    src={deepseekLogo} 
+                    alt="DeepSeek" 
+                    className="w-12 h-12 object-contain" 
+                  />
                 </div>
                 <h3 className="text-xl font-bold mb-3">DeepSeek</h3>
                 <p className="text-muted-foreground">Specialized in coding and technical analysis</p>
