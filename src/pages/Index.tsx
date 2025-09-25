@@ -744,7 +744,7 @@ export default function Index() {
               )}
             </div>
             
-            {/* Bottom row: Desktop model selector */}
+            {/* Bottom row: Desktop model selector, voice buttons on the right inside input */}
             <div className="flex items-center justify-between gap-2 order-1 sm:order-2">
               {/* Desktop model selector - hidden on mobile */}
               {!isMobile && (
@@ -782,35 +782,33 @@ export default function Index() {
                   </SelectContent>
                 </Select>
               )}
-            </div>
-          </div>
-          
-          {/* Voice buttons positioned at bottom right of message input - hidden when in image mode */}
-          {!isImageMode && (
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <Button 
-                size="sm" 
-                className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
-                    : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
-                } text-background`} 
-                onClick={isRecording ? stopRecording : startRecording}
-                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                aria-pressed={isRecording}
-              >
-                {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
-              </Button>
               
-              <div className="h-8">
-                <VoiceModeButton 
-                  onMessageSent={handleVoiceMessageSent}
-                  chatId={voiceChatId || 'temp'}
-                  actualTheme={actualTheme}
-                />
+              {/* Voice buttons on the right side of message input */}
+              <div className="flex items-center gap-2 ml-auto">
+                <Button 
+                  size="sm" 
+                  className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                    isRecording 
+                      ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                      : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                  } text-background`} 
+                  onClick={isRecording ? stopRecording : startRecording}
+                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                  aria-pressed={isRecording}
+                >
+                  {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                </Button>
+                
+                <div className="h-8">
+                  <VoiceModeButton 
+                    onMessageSent={handleVoiceMessageSent}
+                    chatId={voiceChatId || 'temp'}
+                    actualTheme={actualTheme}
+                  />
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
