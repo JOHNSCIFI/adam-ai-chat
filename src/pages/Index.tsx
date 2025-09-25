@@ -13,6 +13,11 @@ import AuthModal from '@/components/AuthModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import GoogleOneTab from '@/components/GoogleOneTab';
 import { toast } from 'sonner';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
 const models = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
@@ -144,32 +149,32 @@ const availableModels = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
   description: 'GPT-4o mini, developed by OpenAI, stands as one of the most efficient AI models available.',
-  icon: '🔄'
+  icon: 'openai'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
   description: 'GPT-4o, OpenAI\'s newest flagship model, is designed for complex reasoning tasks.',
-  icon: '🔄'
+  icon: 'openai'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
   description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
-  icon: '🔄'
+  icon: 'openai'
 }, {
   id: 'claude',
   name: 'Claude',
   description: 'Claude, Anthropic\'s advanced AI model, excels at detailed analysis and reasoning.',
-  icon: '🤖'
+  icon: 'claude'
 }, {
   id: 'deepseek',
   name: 'DeepSeek',
   description: 'DeepSeek offers powerful AI capabilities for a wide range of applications.',
-  icon: '🔍'
+  icon: 'deepseek'
 }, {
   id: 'gemini',
   name: 'Google Gemini',
   description: 'Gemini, Google\'s most advanced AI, is designed for multimodal understanding.',
-  icon: '💎'
+  icon: 'gemini'
 }];
 export default function Index() {
   const {
@@ -180,6 +185,25 @@ export default function Index() {
   const {
     actualTheme
   } = useTheme();
+  
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  
+  // Helper function to get model icon
+  const getModelIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'openai':
+        return chatgptLogoSrc;
+      case 'gemini':
+        return geminiLogo;
+      case 'claude':
+        return claudeLogo;
+      case 'deepseek':
+        return deepseekLogo;
+      default:
+        return chatgptLogoSrc;
+    }
+  };
   const {
     canSendMessage,
     isAtLimit,
@@ -610,15 +634,27 @@ export default function Index() {
                   </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
-                  {models.map(model => <SelectItem key={model.id} value={model.id}>
-                      <div className="flex items-center gap-2">
-                        <div>
-                          <div className="font-medium">{model.name}</div>
-                          <div className="text-xs text-muted-foreground">{model.description}</div>
+                  {models.map(model => {
+                    const modelData = availableModels.find(m => m.id === model.id);
+                    return (
+                      <SelectItem key={model.id} value={model.id}>
+                        <div className="flex items-center gap-3">
+                          <div className="w-6 h-6 bg-white/10 backdrop-blur-sm rounded-md flex items-center justify-center p-1">
+                            <img 
+                              src={getModelIcon(modelData?.icon || 'openai')} 
+                              alt={model.name} 
+                              className="w-4 h-4 object-contain" 
+                            />
+                          </div>
+                          <div>
+                            <div className="font-medium">{model.name}</div>
+                            <div className="text-xs text-muted-foreground">{model.description}</div>
+                          </div>
+                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
                         </div>
-                        {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                      </div>
-                    </SelectItem>)}
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
               
@@ -736,7 +772,13 @@ export default function Index() {
                 }`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="text-2xl">{model.icon}</div>
+                  <div className="w-10 h-10 bg-white/10 backdrop-blur-sm rounded-xl flex items-center justify-center p-2">
+                    <img 
+                      src={getModelIcon(model.icon)} 
+                      alt={model.name} 
+                      className="w-6 h-6 object-contain" 
+                    />
+                  </div>
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-sm mb-1">{model.name}</h3>
                     <p className="text-xs text-muted-foreground line-clamp-2">

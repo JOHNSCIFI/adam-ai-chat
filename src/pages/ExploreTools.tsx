@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import AuthModal from '@/components/AuthModal';
 
 import { 
@@ -24,6 +25,11 @@ import {
   Code
 } from 'lucide-react';
 import { toast } from 'sonner';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
 
 interface Tool {
   id: string;
@@ -176,8 +182,26 @@ const categories = ['Popular', 'AI Models', 'Writing', 'Education', 'Lifestyle',
 export default function ExploreTools() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { actualTheme } = useTheme();
   const [selectedCategory, setSelectedCategory] = useState('Popular');
   const [showAuthModal, setShowAuthModal] = useState(false);
+  
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  
+  // Helper function to get model icon
+  const getModelIcon = (toolId: string) => {
+    if (toolId.includes('openai') || toolId.includes('gpt')) {
+      return <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />;
+    } else if (toolId.includes('gemini')) {
+      return <img src={geminiLogo} alt="Google Gemini" className="w-5 h-5 object-contain" />;
+    } else if (toolId.includes('deepseek')) {
+      return <img src={deepseekLogo} alt="DeepSeek" className="w-5 h-5 object-contain" />;
+    } else if (toolId.includes('claude')) {
+      return <img src={claudeLogo} alt="Anthropic Claude" className="w-5 h-5 object-contain" />;
+    }
+    return <Bot className="h-5 w-5" />;
+  };
 
   const filteredTools = tools.filter(tool => tool.category === selectedCategory);
 
@@ -228,11 +252,11 @@ export default function ExploreTools() {
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   <CardHeader className="pb-4 relative z-10">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300">
-                          {tool.icon}
-                        </div>
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-4">
+                          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
+                            {tool.category === 'AI Models' ? getModelIcon(tool.id) : tool.icon}
+                          </div>
                         <div className="flex-1">
                           <CardTitle className="text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
                             {tool.name}
