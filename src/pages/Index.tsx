@@ -654,42 +654,7 @@ export default function Index() {
             {/* File upload controls row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {isMobile ? (
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
-                        aria-label="Upload or create content"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-44 p-1.5 bg-background border shadow-lg z-50" align="start">
-                      <div className="flex flex-col gap-0.5">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
-                          onClick={handleFileUpload}
-                        >
-                          <Paperclip className="h-3.5 w-3.5 mr-2" />
-                          Add File & Photo
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
-                          onClick={handleCreateImageClick}
-                        >
-                          <ImageIcon className="h-3.5 w-3.5 mr-2" />
-                          Create Image
-                        </Button>
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                ) : (
+                {!isMobile && (
                   <>
                     <Button 
                       variant="ghost" 
@@ -831,9 +796,44 @@ export default function Index() {
               )}
             </div>
 
-            {/* Mobile voice controls - positioned at bottom right */}
+            {/* Mobile controls - upload, dictation and voice mode buttons */}
             {isMobile && (
-              <div className="flex justify-end">
+              <div className="flex justify-between items-center">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                      aria-label="Upload or create content"
+                    >
+                      <Plus className="h-3.5 w-3.5" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-44 p-1.5 bg-background border shadow-lg z-50" align="start">
+                    <div className="flex flex-col gap-0.5">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                        onClick={handleFileUpload}
+                      >
+                        <Paperclip className="h-3.5 w-3.5 mr-2" />
+                        Add File & Photo
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-9 px-2.5 justify-start text-sm hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary rounded-md"
+                        onClick={handleCreateImageClick}
+                      >
+                        <ImageIcon className="h-3.5 w-3.5 mr-2" />
+                        Create Image
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+                
                 <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
                   <Button 
                     size="sm" 
