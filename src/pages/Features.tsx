@@ -321,26 +321,26 @@ const Features = () => {
                 </div>
                 
                 <h2 className="text-4xl font-bold mb-6 bg-gradient-to-r from-pink-600 via-purple-600 to-blue-600 bg-clip-text text-transparent">
-                  Generate Images
+                  Generate & Edit Images
                 </h2>
                 <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                  Create stunning visuals with our advanced AI image generation models. Powered by OpenAI's DALL-E and Gemini's Imagen technology for exceptional quality and creativity.
+                  Create, combine, and edit stunning visuals with our advanced AI image models. Generate with DALL-E 3 and nanobanana, edit images with OpenAI, and combine multiple images seamlessly.
                 </p>
                 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
                     <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-8 h-8" />
                     <div>
-                      <span className="font-semibold text-green-700 dark:text-green-300">DALL-E 3</span>
-                      <p className="text-sm text-muted-foreground">Photorealistic and artistic images</p>
+                      <span className="font-semibold text-green-700 dark:text-green-300">DALL-E 3 & OpenAI</span>
+                      <p className="text-sm text-muted-foreground">Generate & edit images</p>
                     </div>
                   </div>
                   
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
                     <img src={geminiLogo} alt="Gemini" className="w-8 h-8" />
                     <div>
-                      <span className="font-semibold text-blue-700 dark:text-blue-300">Imagen 3</span>
-                      <p className="text-sm text-muted-foreground">Advanced visual generation</p>
+                      <span className="font-semibold text-blue-700 dark:text-blue-300">nanobanana</span>
+                      <p className="text-sm text-muted-foreground">Generate, combine & edit images</p>
                     </div>
                   </div>
                 </div>
@@ -353,75 +353,54 @@ const Features = () => {
               <div className="order-1 lg:order-2">
                 <div className="relative">
                   {/* Floating elements background */}
-                  <div className="absolute -top-4 -left-4 w-20 h-20 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-full blur-xl"></div>
-                  <div className="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full blur-xl"></div>
+                  <div className="absolute -top-8 -left-8 w-32 h-32 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-full blur-2xl"></div>
+                  <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-2xl"></div>
                   
-                  <div className="relative bg-card border border-border rounded-3xl p-8 animate-fade-in backdrop-blur-sm shadow-2xl hover:shadow-3xl transition-all duration-500">
-                    {/* Header */}
-                    <div className="flex items-center justify-between mb-6">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center shadow-lg">
-                          <span className="text-sm text-white font-semibold">U</span>
+                  <div className="relative bg-gradient-to-br from-background to-muted/20 border-2 border-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl p-8 animate-fade-in backdrop-blur-sm shadow-2xl">
+                    {/* Artistic mockup header */}
+                    <div className="flex items-center justify-between mb-8">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                            <ImageIcon className="h-7 w-7 text-white" />
+                          </div>
+                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
                         </div>
                         <div>
-                          <p className="font-medium">Image Generation</p>
-                          <p className="text-xs text-muted-foreground">Just now</p>
-                        </div>
-                      </div>
-                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    </div>
-                    
-                    {/* User prompt */}
-                    <div className="bg-muted/50 rounded-2xl p-4 mb-6 border-l-4 border-blue-500">
-                      <p className="text-sm font-medium">Generate a cozy living room with golden light, a tabby cat on an armchair, and a black cat by the window.</p>
-                    </div>
-                    
-                    {/* AI response header */}
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
-                        <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="AI" className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30">
-                            <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="DALL-E" className="w-3 h-3 mr-1" />
-                            DALL-E 3
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">Processing...</span>
+                          <p className="font-bold text-lg bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AI Image Studio</p>
+                          <p className="text-sm text-muted-foreground">Create • Edit • Combine</p>
                         </div>
                       </div>
                     </div>
                     
-                    {/* Generated content */}
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground">
-                        ✨ Your image has been generated! The warm lighting and cozy atmosphere really bring the scene to life.
-                      </p>
-                      
-                      <div className="relative group">
-                        <div className="w-full h-48 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 rounded-xl flex items-center justify-center overflow-hidden shadow-lg group-hover:shadow-xl transition-shadow duration-300">
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-                          <ImageIcon className="h-16 w-16 text-white/90 z-10" />
-                          <div className="absolute bottom-3 left-3 z-10">
-                            <Badge variant="secondary" className="bg-black/30 text-white border-white/30">
-                              1024×1024
-                            </Badge>
-                          </div>
+                    {/* Sample gallery */}
+                    <div className="grid grid-cols-2 gap-4 mb-6">
+                      <div className="relative group overflow-hidden rounded-xl">
+                        <div className="w-full h-28 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-inner">
+                          <ImageIcon className="h-8 w-8 text-white/90" />
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-r from-pink-500/20 to-purple-500/20 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                        <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/20 text-white border-white/30 text-xs">
+                          Generated
+                        </Badge>
                       </div>
                       
-                      {/* Action buttons */}
-                      <div className="flex items-center gap-3 pt-4">
-                        <Button size="sm" variant="outline" className="text-xs">
-                          ↻ Regenerate
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs">
-                          ↓ Download
-                        </Button>
-                        <Button size="sm" variant="outline" className="text-xs">
-                          ✏ Edit
-                        </Button>
+                      <div className="relative group overflow-hidden rounded-xl">
+                        <div className="w-full h-28 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center shadow-inner">
+                          <Sparkles className="h-8 w-8 text-white/90" />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
+                        <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/20 text-white border-white/30 text-xs">
+                          Edited
+                        </Badge>
+                      </div>
+                    </div>
+                    
+                    {/* Status indicator */}
+                    <div className="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
+                      <div className="flex items-center gap-3">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Ready to create amazing visuals</span>
                       </div>
                     </div>
                   </div>
