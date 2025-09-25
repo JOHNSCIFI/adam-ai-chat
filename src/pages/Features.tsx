@@ -357,7 +357,7 @@ const Features = () => {
                   <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-gradient-to-tl from-blue-500/15 via-cyan-500/10 to-transparent rounded-full blur-3xl"></div>
                   <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-full blur-2xl"></div>
                   
-                  <div className="relative bg-gradient-to-br from-background via-muted/30 to-background/80 border border-gradient-to-br from-pink-500/30 via-purple-500/30 to-blue-500/30 rounded-3xl p-10 animate-fade-in backdrop-blur-xl shadow-2xl hover:shadow-3xl transition-all duration-700">
+                  <div className="relative bg-gradient-to-br from-background/95 via-muted/10 to-background/90 border border-gradient-to-br from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl p-10 animate-fade-in backdrop-blur-xl shadow-2xl hover:shadow-3xl transition-all duration-700">
                     {/* Premium header design */}
                     <div className="flex items-center justify-between mb-10">
                       <div className="flex items-center gap-5">
