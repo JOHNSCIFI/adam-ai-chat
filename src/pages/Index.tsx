@@ -563,7 +563,7 @@ export default function Index() {
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
           />
-          <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
+          <h1 className="text-lg font-semibold truncate absolute left-1/2 transform -translate-x-1/2">AdamGPT</h1>
           
           {/* Model selector in mobile navbar */}
           <Select value={selectedModel} onValueChange={setSelectedModel}>
@@ -639,9 +639,9 @@ export default function Index() {
               }
             }}
             placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
-            className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60" 
+            className="w-full min-h-[40px] sm:min-h-[24px] border-0 resize-none bg-transparent focus:ring-0 focus:border-0 focus:outline-0 focus-visible:ring-0 focus-visible:ring-offset-0 outline-none ring-0 px-0 py-2 sm:py-0 mb-3 text-base sm:text-base placeholder:text-muted-foreground/60"
+            style={{ fontSize: '16px', boxShadow: 'none', border: 'none' }}
             rows={1}
-            style={{ boxShadow: 'none', border: 'none' }}
             aria-label={isImageMode ? "Describe an image" : "Type your message"}
           />
           
@@ -660,7 +660,6 @@ export default function Index() {
                     aria-haspopup="true"
                   >
                     <Paperclip className="h-4 w-4" />
-                    <span className="text-sm">Add</span>
                     <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
@@ -745,8 +744,8 @@ export default function Index() {
               )}
             </div>
             
-            {/* Bottom row on mobile: Mic and voice mode (model selector moved to navbar on mobile) */}
-            <div className="flex items-center gap-2 order-1 sm:order-2">
+            {/* Bottom row: Desktop model selector, voice buttons on the right inside input */}
+            <div className="flex items-center justify-between gap-2 order-1 sm:order-2">
               {/* Desktop model selector - hidden on mobile */}
               {!isMobile && (
                 <Select value={selectedModel} onValueChange={setSelectedModel}>
@@ -784,25 +783,30 @@ export default function Index() {
                 </Select>
               )}
               
-              <Button 
-                size="sm" 
-                className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                  isRecording 
-                    ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
-                    : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
-                } text-background`} 
-                onClick={isRecording ? stopRecording : startRecording}
-                aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                aria-pressed={isRecording}
-              >
-                {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-              </Button>
-              
-              <VoiceModeButton 
-                onMessageSent={handleVoiceMessageSent}
-                chatId={voiceChatId || 'temp'}
-                actualTheme={actualTheme}
-              />
+              {/* Voice buttons on the right side of message input */}
+              <div className="flex items-center gap-2 ml-auto">
+                <Button 
+                  size="sm" 
+                  className={`h-8 w-8 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                    isRecording 
+                      ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                      : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                  } text-background`} 
+                  onClick={isRecording ? stopRecording : startRecording}
+                  aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                  aria-pressed={isRecording}
+                >
+                  {isRecording ? <MicOff className="h-3.5 w-3.5" /> : <Mic className="h-3.5 w-3.5" />}
+                </Button>
+                
+                <div className="h-8">
+                  <VoiceModeButton 
+                    onMessageSent={handleVoiceMessageSent}
+                    chatId={voiceChatId || 'temp'}
+                    actualTheme={actualTheme}
+                  />
+                </div>
+              </div>
             </div>
           </div>
         </div>
