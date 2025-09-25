@@ -48,21 +48,9 @@ function App() {
                     </MainLayout>
                   } />
                   
-                  {/* Chat routes */}
-                  <Route path="/chat" element={
-                    <ProtectedRoute>
-                      <MainLayout>
-                        <Chat />
-                      </MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/chat/:chatId" element={
-                    <ProtectedRoute>
-                      <MainLayout>
-                        <Chat />
-                      </MainLayout>
-                    </ProtectedRoute>
-                  } />
+                  {/* Chat routes - redirect to root */}
+                  <Route path="/chat" element={<Navigate to="/" replace />} />
+                  <Route path="/chat/:chatId" element={<Navigate to="/" replace />} />
                   
                   {/* Marketing homepage */}
                   <Route path="/home" element={

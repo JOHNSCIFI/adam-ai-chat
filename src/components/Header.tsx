@@ -73,13 +73,13 @@ const Header = () => {
           {/* CTA Button */}
           <div className="flex items-center space-x-4">
             <Button 
-              onClick={() => navigate('/chat')} 
+              onClick={() => navigate('/')} 
               className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
               onMouseEnter={() => {
-                // Prefetch /chat route
+                // Prefetch / route
                 const link = document.createElement('link');
                 link.rel = 'prefetch';
-                link.href = '/chat';
+                link.href = '/';
                 document.head.appendChild(link);
               }}
             >

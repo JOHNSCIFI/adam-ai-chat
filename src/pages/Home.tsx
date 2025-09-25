@@ -28,7 +28,7 @@ const Home = () => {
         event_label: 'homepage_cta'
       });
     }
-    navigate('/chat');
+    navigate('/');
   };
   return <div className="min-h-screen bg-background text-foreground">
       <SEO title="AI Assistant for Everyone" description="Access GPT-4o, Claude, Gemini and more powerful AI models from a single interface. AI chatbot, image generation, PDF analysis and writing tools." canonical="https://adamchat.app/home" />
@@ -54,7 +54,7 @@ const Home = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button size="lg" onClick={() => navigate('/chat')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using AdamGpt now">
+            <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using AdamGpt now">
               Start Free Trial
             </Button>
             <Button size="lg" variant="outline" onClick={() => navigate('/pricing')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="View pricing plans">
