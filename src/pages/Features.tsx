@@ -331,7 +331,7 @@ const Features = () => {
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
                     <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-8 h-8" />
                     <div>
-                      <span className="font-semibold text-green-700 dark:text-green-300">DALL-E 3 & OpenAI</span>
+                      <span className="font-semibold text-green-700 dark:text-green-300">GPT Image 1</span>
                       <p className="text-sm text-muted-foreground">Generate & edit images</p>
                     </div>
                   </div>
@@ -339,7 +339,7 @@ const Features = () => {
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-xl border border-blue-500/20">
                     <img src={geminiLogo} alt="Gemini" className="w-8 h-8" />
                     <div>
-                      <span className="font-semibold text-blue-700 dark:text-blue-300">nanobanana</span>
+                      <span className="font-semibold text-blue-700 dark:text-blue-300">nanoBanana</span>
                       <p className="text-sm text-muted-foreground">Generate, combine & edit images</p>
                     </div>
                   </div>
@@ -352,55 +352,87 @@ const Features = () => {
               
               <div className="order-1 lg:order-2">
                 <div className="relative">
-                  {/* Floating elements background */}
-                  <div className="absolute -top-8 -left-8 w-32 h-32 bg-gradient-to-r from-pink-500/10 to-purple-500/10 rounded-full blur-2xl"></div>
-                  <div className="absolute -bottom-8 -right-8 w-40 h-40 bg-gradient-to-r from-blue-500/10 to-cyan-500/10 rounded-full blur-2xl"></div>
+                  {/* Enhanced floating elements background */}
+                  <div className="absolute -top-12 -left-12 w-40 h-40 bg-gradient-to-br from-pink-500/15 via-purple-500/10 to-transparent rounded-full blur-3xl animate-pulse"></div>
+                  <div className="absolute -bottom-12 -right-12 w-48 h-48 bg-gradient-to-tl from-blue-500/15 via-cyan-500/10 to-transparent rounded-full blur-3xl"></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 bg-gradient-to-r from-yellow-500/5 to-orange-500/5 rounded-full blur-2xl"></div>
                   
-                  <div className="relative bg-gradient-to-br from-background to-muted/20 border-2 border-gradient-to-r from-pink-500/20 via-purple-500/20 to-blue-500/20 rounded-3xl p-8 animate-fade-in backdrop-blur-sm shadow-2xl">
-                    {/* Artistic mockup header */}
-                    <div className="flex items-center justify-between mb-8">
-                      <div className="flex items-center gap-4">
+                  <div className="relative bg-gradient-to-br from-background via-muted/30 to-background/80 border border-gradient-to-br from-pink-500/30 via-purple-500/30 to-blue-500/30 rounded-3xl p-10 animate-fade-in backdrop-blur-xl shadow-2xl hover:shadow-3xl transition-all duration-700">
+                    {/* Premium header design */}
+                    <div className="flex items-center justify-between mb-10">
+                      <div className="flex items-center gap-5">
                         <div className="relative">
-                          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
-                            <ImageIcon className="h-7 w-7 text-white" />
+                          <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 p-0.5 shadow-2xl">
+                            <div className="w-full h-full rounded-3xl bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 flex items-center justify-center">
+                              <ImageIcon className="h-8 w-8 text-white" />
+                            </div>
                           </div>
-                          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-background animate-pulse"></div>
+                          <div className="absolute -top-2 -right-2 w-6 h-6 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full border-3 border-background flex items-center justify-center shadow-lg">
+                            <Sparkles className="h-3 w-3 text-white" />
+                          </div>
                         </div>
                         <div>
-                          <p className="font-bold text-lg bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AI Image Studio</p>
-                          <p className="text-sm text-muted-foreground">Create • Edit • Combine</p>
+                          <p className="font-bold text-xl bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AI Studio Pro</p>
+                          <p className="text-sm text-muted-foreground font-medium">Create • Edit • Transform</p>
                         </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 bg-green-500 rounded-full animate-ping"></div>
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
                       </div>
                     </div>
                     
-                    {/* Sample gallery */}
-                    <div className="grid grid-cols-2 gap-4 mb-6">
-                      <div className="relative group overflow-hidden rounded-xl">
-                        <div className="w-full h-28 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 flex items-center justify-center shadow-inner">
-                          <ImageIcon className="h-8 w-8 text-white/90" />
+                    {/* Enhanced image gallery */}
+                    <div className="grid grid-cols-2 gap-5 mb-8">
+                      <div className="relative group overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <div className="w-full h-36 bg-gradient-to-br from-orange-400 via-yellow-500 to-amber-600 flex items-center justify-center relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10"></div>
+                          <ImageIcon className="h-12 w-12 text-white/90 z-10 drop-shadow-lg" />
+                          <div className="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
+                            <Sparkles className="h-4 w-4 text-white" />
+                          </div>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                        <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/20 text-white border-white/30 text-xs">
+                        <Badge variant="secondary" className="absolute bottom-3 left-3 bg-gradient-to-r from-white/90 to-white/70 text-gray-800 border-0 font-semibold text-xs shadow-lg">
                           Generated
                         </Badge>
                       </div>
                       
-                      <div className="relative group overflow-hidden rounded-xl">
-                        <div className="w-full h-28 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center shadow-inner">
-                          <Sparkles className="h-8 w-8 text-white/90" />
+                      <div className="relative group overflow-hidden rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300">
+                        <div className="w-full h-36 bg-gradient-to-br from-purple-500 via-pink-500 to-red-500 flex items-center justify-center relative overflow-hidden">
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-white/10"></div>
+                          <Bot className="h-12 w-12 text-white/90 z-10 drop-shadow-lg" />
+                          <div className="absolute top-3 right-3 w-8 h-8 bg-white/20 rounded-full backdrop-blur-sm flex items-center justify-center">
+                            <Target className="h-4 w-4 text-white" />
+                          </div>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent"></div>
-                        <Badge variant="secondary" className="absolute bottom-2 left-2 bg-white/20 text-white border-white/30 text-xs">
+                        <Badge variant="secondary" className="absolute bottom-3 left-3 bg-gradient-to-r from-white/90 to-white/70 text-gray-800 border-0 font-semibold text-xs shadow-lg">
                           Edited
                         </Badge>
                       </div>
                     </div>
                     
-                    {/* Status indicator */}
-                    <div className="flex items-center justify-center p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
-                      <div className="flex items-center gap-3">
-                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                        <span className="text-sm font-medium text-green-700 dark:text-green-300">Ready to create amazing visuals</span>
+                    {/* Enhanced status and capabilities */}
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-center p-5 bg-gradient-to-r from-green-500/15 via-emerald-500/10 to-green-500/15 rounded-2xl border border-green-500/30 shadow-inner">
+                        <div className="flex items-center gap-4">
+                          <div className="relative">
+                            <div className="w-4 h-4 bg-green-500 rounded-full animate-pulse shadow-lg"></div>
+                            <div className="absolute inset-0 w-4 h-4 bg-green-400 rounded-full animate-ping"></div>
+                          </div>
+                          <span className="text-sm font-semibold text-green-700 dark:text-green-300">Advanced AI Models Ready</span>
+                          <Zap className="h-4 w-4 text-green-500" />
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="flex items-center gap-2 p-3 bg-muted/40 rounded-xl border border-muted">
+                          <ImageIcon className="h-4 w-4 text-blue-500" />
+                          <span className="text-xs font-medium text-muted-foreground">Generate</span>
+                        </div>
+                        <div className="flex items-center gap-2 p-3 bg-muted/40 rounded-xl border border-muted">
+                          <Target className="h-4 w-4 text-purple-500" />
+                          <span className="text-xs font-medium text-muted-foreground">Edit</span>
+                        </div>
                       </div>
                     </div>
                   </div>
