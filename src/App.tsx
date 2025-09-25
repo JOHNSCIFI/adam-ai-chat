@@ -22,7 +22,7 @@ import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
 import ExploreTools from '@/pages/ExploreTools';
-import PricingPlans from '@/pages/PricingPlans';
+
 import ToolPage from '@/pages/ToolPage';
 import NotFound from '@/pages/NotFound';
 import About from '@/pages/About';
@@ -134,11 +134,6 @@ function App() {
                   <Route path="/explore-tools" element={
                     <MainLayout>
                       <ExploreTools />
-                    </MainLayout>
-                  } />
-                  <Route path="/pricing-plans" element={
-                    <MainLayout>
-                      <PricingPlans />
                     </MainLayout>
                   } />
                   <Route path="/:toolName/:toolId" element={
