@@ -1,12 +1,14 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as Sonner } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import MainLayout from '@/layouts/MainLayout';
+import PublicLayout from '@/layouts/PublicLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import ResetPassword from '@/pages/ResetPassword';
 import Index from '@/pages/Index';
@@ -24,77 +26,157 @@ import ExploreTools from '@/pages/ExploreTools';
 import PricingPlans from '@/pages/PricingPlans';
 import ToolPage from '@/pages/ToolPage';
 import NotFound from '@/pages/NotFound';
+import About from '@/pages/About';
+import Contact from '@/pages/Contact';
+import HelpCenter from '@/pages/HelpCenter';
+import RefundPolicy from '@/pages/RefundPolicy';
+import CancelSubscription from '@/pages/CancelSubscription';
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <ThemeProvider>
-            <Router>
-              <Routes>
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/home" element={<Home />} />
-                <Route path="/pricing" element={<Pricing />} />
-                <Route path="/features" element={<Features />} />
-                <Route path="/models" element={<Models />} />
-                <Route path="/" element={
-                  <MainLayout>
-                    <Index />
-                  </MainLayout>
-                } />
-                <Route path="/chat/:chatId" element={
-                  <ProtectedRoute>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AuthProvider>
+            <ThemeProvider>
+              <Router>
+                <Routes>
+                  {/* Root route - shows Chat */}
+                  <Route path="/" element={
                     <MainLayout>
-                      <Chat />
+                      <Index />
                     </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/project/:projectId" element={
-                  <ProtectedRoute>
+                  } />
+                  
+                  {/* Chat routes */}
+                  <Route path="/chat" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Chat />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/chat/:chatId" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Chat />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Marketing homepage */}
+                  <Route path="/home" element={
+                    <PublicLayout>
+                      <Home />
+                    </PublicLayout>
+                  } />
+                  
+                  {/* Public pages with header/footer */}
+                  <Route path="/pricing" element={
+                    <PublicLayout>
+                      <Pricing />
+                    </PublicLayout>
+                  } />
+                  <Route path="/features" element={
+                    <PublicLayout>
+                      <Features />
+                    </PublicLayout>
+                  } />
+                  <Route path="/models" element={
+                    <PublicLayout>
+                      <Models />
+                    </PublicLayout>
+                  } />
+                  <Route path="/about" element={
+                    <PublicLayout>
+                      <About />
+                    </PublicLayout>
+                  } />
+                  <Route path="/contact" element={
+                    <PublicLayout>
+                      <Contact />
+                    </PublicLayout>
+                  } />
+                  <Route path="/help-center" element={
+                    <PublicLayout>
+                      <HelpCenter />
+                    </PublicLayout>
+                  } />
+                  <Route path="/terms" element={
+                    <PublicLayout>
+                      <Terms />
+                    </PublicLayout>
+                  } />
+                  <Route path="/privacy" element={
+                    <PublicLayout>
+                      <Privacy />
+                    </PublicLayout>
+                  } />
+                  <Route path="/refund-policy" element={
+                    <PublicLayout>
+                      <RefundPolicy />
+                    </PublicLayout>
+                  } />
+                  <Route path="/cookie-policy" element={
+                    <PublicLayout>
+                      <Cookies />
+                    </PublicLayout>
+                  } />
+                  <Route path="/cancel-subscription" element={
+                    <PublicLayout>
+                      <CancelSubscription />
+                    </PublicLayout>
+                  } />
+                  
+                  {/* Existing protected routes */}
+                  <Route path="/project/:projectId" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <ProjectPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/help" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Help />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/explore-tools" element={
                     <MainLayout>
-                      <ProjectPage />
+                      <ExploreTools />
                     </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/help" element={
-                  <ProtectedRoute>
+                  } />
+                  <Route path="/pricing-plans" element={
                     <MainLayout>
-                      <Help />
+                      <PricingPlans />
                     </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/explore-tools" element={
-                  <MainLayout>
-                    <ExploreTools />
-                  </MainLayout>
-                } />
-                <Route path="/pricing-plans" element={
-                  <MainLayout>
-                    <PricingPlans />
-                  </MainLayout>
-                } />
-                <Route path="/:toolName/:toolId" element={
-                  <ProtectedRoute>
-                    <MainLayout>
-                      <ToolPage />
-                    </MainLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/privacy" element={<Privacy />} />
-                <Route path="/terms" element={<Terms />} />
-                <Route path="/cookie-policy" element={<Cookies />} />
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-            </Router>
-            <Toaster />
-            <Sonner />
-          </ThemeProvider>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
+                  } />
+                  <Route path="/:toolName/:toolId" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <ToolPage />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* Auth pages */}
+                  <Route path="/reset-password" element={<ResetPassword />} />
+                  
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Router>
+              <Toaster />
+              <Sonner />
+            </ThemeProvider>
+          </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

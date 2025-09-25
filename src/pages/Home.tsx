@@ -2,10 +2,11 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Check, Brain, Image, FileText, PenTool, Mic, Globe, Zap, Target, Users, Shield, Clock, Menu, X, Sparkles } from 'lucide-react';
+import { Brain, Image, FileText, PenTool, Star, Users, Award, Zap, Target, Mic, Globe, Check, Shield, Clock, Sparkles } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import SEO from '@/components/SEO';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
@@ -15,96 +16,28 @@ import deepseekLogo from '@/assets/deepseek-logo.png';
 const Home = () => {
   const navigate = useNavigate();
   const { actualTheme } = useTheme();
-  const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false);
   
   // Choose the appropriate ChatGPT logo based on theme
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
 
+  const handleTryNowClick = () => {
+    // Analytics event
+    if (typeof window !== 'undefined' && (window as any).gtag) {
+      (window as any).gtag('event', 'try_now_click', {
+        event_category: 'engagement',
+        event_label: 'homepage_cta'
+      });
+    }
+    navigate('/chat');
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Navigation */}
-      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-sm" role="banner">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <AdamGptLogo className="h-8 w-8" />
-              <span className="text-xl font-bold text-foreground">AdamGpt</span>
-            </div>
-            
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <button 
-                onClick={() => navigate('/models')} 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
-                aria-label="View AI models"
-              >
-                Models
-              </button>
-              <button 
-                onClick={() => navigate('/features')} 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
-                aria-label="View features"
-              >
-                Features
-              </button>
-              <button 
-                onClick={() => navigate('/pricing')} 
-                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
-                aria-label="View pricing"
-              >
-                Pricing
-              </button>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              <Button 
-                onClick={() => navigate('/chat')} 
-                size="lg"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-                aria-label="Start using AdamGpt"
-              >
-                Get Started
-              </Button>
-              
-              {/* Mobile menu button */}
-              <button
-                className="md:hidden p-2 text-muted-foreground hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm"
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                aria-label="Toggle mobile menu"
-                aria-expanded={mobileMenuOpen}
-              >
-                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-              </button>
-            </div>
-          </div>
-          
-          {/* Mobile Navigation */}
-          {mobileMenuOpen && (
-            <div className="md:hidden border-t border-border bg-background/95 backdrop-blur-sm">
-              <div className="px-4 py-4 space-y-4">
-                <button 
-                  onClick={() => {navigate('/models'); setMobileMenuOpen(false);}} 
-                  className="block w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-2"
-                >
-                  Models
-                </button>
-                <button 
-                  onClick={() => {navigate('/features'); setMobileMenuOpen(false);}} 
-                  className="block w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-2"
-                >
-                  Features
-                </button>
-                <button 
-                  onClick={() => {navigate('/pricing'); setMobileMenuOpen(false);}} 
-                  className="block w-full text-left text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-2"
-                >
-                  Pricing
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </nav>
+      <SEO 
+        title="AI Assistant for Everyone"
+        description="Access GPT-4o, Claude, Gemini and more powerful AI models from a single interface. AI chatbot, image generation, PDF analysis and writing tools."
+        canonical="https://adamchat.app/home"
+      />
 
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8" role="main">
