@@ -55,9 +55,8 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
-          cancel_on_tap_outside: true,
-          use_fedcm_for_prompt: true, // Enable FedCM for better compatibility
-          prompt_parent_id: oneTabRef.current?.id,
+          cancel_on_tap_outside: false, // Don't cancel on outside tap
+          use_fedcm_for_prompt: true,
         });
 
         // Display the One Tap prompt with detailed error handling
