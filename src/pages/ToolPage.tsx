@@ -1048,7 +1048,7 @@ export default function ToolPage() {
               </div>}
             
             <div className="relative">
-              <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-2 py-1.5 gap-2' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
+              <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-3 py-2 gap-2' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && 
                  toolConfig.id !== 'generate-image-openai' && 
@@ -1097,7 +1097,7 @@ export default function ToolPage() {
                     }
                   }} 
                   placeholder={`Message ${toolConfig.name}...`} 
-                  className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[20px] max-h-[60px] text-sm leading-tight' : 'min-h-[24px] max-h-[200px] text-sm md:text-base'}`} 
+                  className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[32px] max-h-[60px] text-sm leading-5 px-1 py-1' : 'min-h-[24px] max-h-[200px] text-sm md:text-base px-0 py-0'}`} 
                   style={{
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word'
