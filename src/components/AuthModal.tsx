@@ -128,7 +128,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md mx-4 sm:mx-auto bg-background border border-border shadow-2xl rounded-2xl sm:rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300 m-4 sm:m-0">
+      <DialogContent className="w-full max-w-md mx-auto my-4 sm:my-0 px-4 sm:px-0 bg-background border border-border shadow-2xl rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-center text-xl font-semibold">
             AdamGPT
