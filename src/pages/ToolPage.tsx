@@ -1066,7 +1066,7 @@ export default function ToolPage() {
                          <Paperclip className="h-4 w-4" />
                          Add photos & files
                        </Button>
-                        {toolConfig.id !== 'calculate-calories' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                        {toolConfig.id !== 'calculate-calories' && toolConfig.id !== 'analyse-files-openai' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                             <ImageIcon2 className="h-4 w-4" />
                             Create image
                           </Button>}
