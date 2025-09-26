@@ -1044,12 +1044,12 @@ export default function ToolPage() {
               </div>}
             
             <div className="relative">
-              <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-1.5 py-1' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
+              <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-2 py-1.5 gap-2' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6 p-0 mr-1' : 'h-8 w-8 p-0 mr-2'} hover:bg-muted/20 rounded-full flex-shrink-0`}>
-                        <Paperclip className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-muted-foreground`} />
+                      <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-8 w-8 p-0' : 'h-8 w-8 p-0 mr-2'} hover:bg-muted/20 rounded-full flex-shrink-0`}>
+                        <Paperclip className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} text-muted-foreground`} />
                       </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
@@ -1078,7 +1078,7 @@ export default function ToolPage() {
                     }
                   }} 
                   placeholder={`Message ${toolConfig.name}...`} 
-                  className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[14px] max-h-[60px] text-sm leading-tight' : 'min-h-[24px] max-h-[200px] text-sm md:text-base'}`} 
+                  className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[20px] max-h-[60px] text-sm leading-tight' : 'min-h-[24px] max-h-[200px] text-sm md:text-base'}`} 
                   style={{
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word'
@@ -1087,46 +1087,44 @@ export default function ToolPage() {
                   rows={1} 
                 />
                 
-                <div className={`flex items-center ${isMobile ? 'gap-0.5 ml-0.5' : 'gap-1 ml-2'}`}>
-                  {/* Dictation button - only show on mobile when input is empty */}
-                  {isMobile && !input.trim() && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="h-6 w-6 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground" 
-                      onClick={isRecording ? stopRecording : startRecording}
-                      aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                      aria-pressed={isRecording}
-                    >
-                      {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
-                    </Button>
-                  )}
-
-                  {/* Dictation button - always show on desktop */}
-                  {!isMobile && (
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="h-8 w-8 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 hover:bg-muted/50 focus-visible:ring-primary text-muted-foreground hover:text-foreground" 
-                      onClick={isRecording ? stopRecording : startRecording}
-                      aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                      aria-pressed={isRecording}
-                    >
-                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                    </Button>
-                  )}
-
-                  {/* Send button */}
+                {/* Dictation button - only show on mobile when input is empty */}
+                {isMobile && !input.trim() && (
                   <Button 
-                    type="submit" 
                     size="sm" 
-                    onClick={handleSubmit}
-                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 rounded-full flex-shrink-0`}
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground" 
+                    onClick={isRecording ? stopRecording : startRecording}
+                    aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                    aria-pressed={isRecording}
                   >
-                    <SendHorizontalIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
-                </div>
+                )}
+
+                {/* Dictation button - always show on desktop */}
+                {!isMobile && (
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-8 w-8 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 hover:bg-muted/50 focus-visible:ring-primary text-muted-foreground hover:text-foreground ml-2" 
+                    onClick={isRecording ? stopRecording : startRecording}
+                    aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                    aria-pressed={isRecording}
+                  >
+                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  </Button>
+                )}
+
+                {/* Send button */}
+                <Button 
+                  type="submit" 
+                  size="sm" 
+                  onClick={handleSubmit}
+                  disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                  className={`${isMobile ? 'h-8 w-8' : 'h-8 w-8'} p-0 rounded-full flex-shrink-0`}
+                >
+                  <SendHorizontalIcon className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'}`} />
+                </Button>
               </div>
             </div>
             
