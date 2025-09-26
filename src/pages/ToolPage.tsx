@@ -915,20 +915,32 @@ export default function ToolPage() {
         <div className="flex-1" />
       </div>
 
-      {/* Desktop Tool Header - Only show when no messages and not mobile */}
-      {messages.length === 0 && <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4 hidden md:block">
-          <div style={getContainerStyle()} className="flex items-center gap-4">
+      {/* Web Navigation Bar - Always visible on desktop */}
+      <div className="border-b border-border/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 hidden md:block">
+        <div style={getContainerStyle()} className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center gap-4">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigate('/explore-tools')} 
+              className="gap-2 text-muted-foreground hover:text-foreground"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Tools
+            </Button>
+            <div className="h-6 w-px bg-border" />
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
                 {toolConfig.icon}
               </div>
               <div>
-                <h1 className="text-lg font-semibold">{toolConfig.name}</h1>
+                <h1 className="font-semibold text-lg">{toolConfig.name}</h1>
                 <p className="text-sm text-muted-foreground">{toolConfig.description}</p>
               </div>
             </div>
           </div>
-        </div>}
+        </div>
+      </div>
 
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
@@ -1149,5 +1161,5 @@ export default function ToolPage() {
 
       {/* Image popup modal */}
       {selectedImage && <ImagePopupModal isOpen={true} imageUrl={selectedImage.url} onClose={() => setSelectedImage(null)} />}
-    </div>;
+    </div>
 }
