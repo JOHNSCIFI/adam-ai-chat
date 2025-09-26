@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -71,20 +71,12 @@ interface FileAttachment {
 }
 import { ImageEditModal } from '@/components/ImageEditModal';
 export default function Chat() {
-  const {
-    chatId
-  } = useParams();
-  const {
-    user,
-    userProfile
-  } = useAuth();
-  const {
-    actualTheme
-  } = useTheme();
+  const { chatId } = useParams();
+  const location = useLocation();
+  const { user, userProfile } = useAuth();
+  const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
-  const {
-    state: sidebarState
-  } = useSidebar();
+  const { state: sidebarState } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
   // Calculate proper centering based on sidebar state
@@ -129,7 +121,10 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [selectedModel, setSelectedModel] = useState(() => {
+    // Use model from navigation state if available, otherwise default to gpt-4o-mini
+    return location.state?.selectedModel || 'gpt-4o-mini';
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -1237,18 +1232,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       }
 
       // Check if we're on HTTPS or localhost
-      const isSecureContext = window.isSecureContext || location.protocol === 'https:' || location.hostname === 'localhost';
+      const isSecureContext = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost';
       const isChromeBased = /Chrome|Chromium|Edge/.test(navigator.userAgent) && !/Safari/.test(navigator.userAgent);
       console.log('🔐 Security context check:', {
         isSecureContext,
         isChromeBased,
-        protocol: location.protocol,
-        hostname: location.hostname,
+        protocol: window.location.protocol,
+        hostname: window.location.hostname,
         userAgent: navigator.userAgent
       });
 
       // For Chrome-based browsers on HTTP (non-localhost), show a helpful message
-      if (isChromeBased && !isSecureContext && location.hostname !== 'localhost') {
+      if (isChromeBased && !isSecureContext && window.location.hostname !== 'localhost') {
         console.error('❌ Chrome-based browsers require HTTPS for speech recognition');
         toast.error('Speech recognition requires HTTPS in this browser. Please use HTTPS or try Safari.');
         return;
