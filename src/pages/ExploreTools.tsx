@@ -233,10 +233,10 @@ export default function ExploreTools() {
         </div>
 
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-        <div className="mb-6 sm:mb-8">
-          <TabsList className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 w-full gap-1">
+        <div className="overflow-x-auto mb-6 sm:mb-8">
+          <TabsList className="inline-flex w-max min-w-full sm:grid sm:w-full sm:grid-cols-7 gap-1">
             {categories.map((category) => (
-              <TabsTrigger key={category} value={category} className="text-xs sm:text-sm px-2 sm:px-4 py-2">
+              <TabsTrigger key={category} value={category} className="text-xs sm:text-sm whitespace-nowrap px-3 sm:px-4">
                 {category}
               </TabsTrigger>
             ))}

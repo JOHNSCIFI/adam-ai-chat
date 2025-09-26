@@ -21,7 +21,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const isMobile = useIsMobile();
   
   return (
-    <SidebarProvider defaultOpen={true}>
+    <SidebarProvider defaultOpen={!isMobile}>
       <div className="flex min-h-screen w-full bg-background">
         <ChatSidebar isOpen={true} onClose={() => {}} />
         <MainContent>{children}</MainContent>
