@@ -48,9 +48,13 @@ function App() {
                     </MainLayout>
                   } />
                   
-                  {/* Chat routes - redirect to root */}
+                  {/* Chat routes */}
                   <Route path="/chat" element={<Navigate to="/" replace />} />
-                  <Route path="/chat/:chatId" element={<Navigate to="/" replace />} />
+                  <Route path="/chat/:chatId" element={
+                    <MainLayout>
+                      <Chat />
+                    </MainLayout>
+                  } />
                   
                   {/* Marketing homepage */}
                   <Route path="/home" element={
