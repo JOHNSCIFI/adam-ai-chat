@@ -738,7 +738,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           
           {/* Mobile Tab Navigation */}
           <div className="flex-shrink-0 border-b border-border bg-muted/20">
-            <nav className="flex overflow-x-auto p-2 gap-1">
+            <nav className="flex p-2 gap-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -747,7 +747,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
+                    className={`flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
                       activeTab === item.id
                         ? 'bg-accent text-accent-foreground font-medium'
                         : isDisabled
@@ -756,7 +756,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    <span className="text-xs">{item.label}</span>
                   </button>
                 );
               })}
