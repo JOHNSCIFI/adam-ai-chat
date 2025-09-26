@@ -1082,7 +1082,7 @@ export default function ToolPage() {
                     onClick={handleCreateImageClick}
                     aria-label="Create an image"
                   >
-                    <ImageIcon2 className="h-4 w-4" />
+                    <Plus className="h-4 w-4" />
                   </Button>
                 )}
 
