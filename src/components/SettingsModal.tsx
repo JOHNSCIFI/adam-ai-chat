@@ -1,5 +1,6 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -727,18 +728,17 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={`${isMobile ? 'max-w-[95vw] w-full h-[90vh]' : 'max-w-4xl h-[80vh]'} p-0 bg-background border`}>
-        <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-full`}>
-          {/* Sidebar */}
-          <div className={`${isMobile ? 'w-full border-b' : 'w-64 border-r'} bg-muted/20 border-border ${isMobile ? 'flex-shrink-0' : ''}`}>
-            <div className="p-4 border-b border-border">
-              <DialogHeader className="text-left">
-                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
-              </DialogHeader>
-            </div>
-            <nav className={`p-2 ${isMobile ? 'flex overflow-x-auto' : ''}`}>
+  if (isMobile) {
+    return (
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col">
+          <SheetHeader className="p-4 border-b border-border flex-shrink-0">
+            <SheetTitle className="text-lg font-semibold text-left">Settings</SheetTitle>
+          </SheetHeader>
+          
+          {/* Mobile Tab Navigation */}
+          <div className="flex-shrink-0 border-b border-border bg-muted/20">
+            <nav className="flex overflow-x-auto p-2 gap-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -747,7 +747,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`${isMobile ? 'flex-shrink-0 min-w-fit' : 'w-full'} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                    className={`flex-shrink-0 flex items-center gap-2 px-3 py-2 rounded-lg text-sm whitespace-nowrap transition-colors ${
                       activeTab === item.id
                         ? 'bg-accent text-accent-foreground font-medium'
                         : isDisabled
@@ -756,16 +756,63 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    <span className={isMobile ? 'whitespace-nowrap' : ''}>{item.label}</span>
+                    {item.label}
                   </button>
                 );
               })}
             </nav>
           </div>
 
-          {/* Main Content */}
+          {/* Mobile Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
+            <div className="p-4">
+              {renderContent()}
+            </div>
+          </div>
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
+        <div className="flex h-full">
+          {/* Desktop Sidebar */}
+          <div className="w-64 bg-muted/20 border-r border-border">
+            <div className="p-4 border-b border-border">
+              <DialogHeader className="text-left">
+                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
+              </DialogHeader>
+            </div>
+            <nav className="p-2">
+              {sidebarItems.map((item) => {
+                const Icon = item.icon;
+                const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
+                return (
+                  <button
+                    key={item.id}
+                    onClick={() => setActiveTab(item.id)}
+                    disabled={isDisabled}
+                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                      activeTab === item.id
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : isDisabled
+                        ? 'text-muted-foreground/50 cursor-not-allowed'
+                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                    }`}
+                  >
+                    <Icon className="h-4 w-4" />
+                    {item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Desktop Content */}
+          <div className="flex-1 overflow-y-auto">
+            <div className="p-6">
               {renderContent()}
             </div>
           </div>
