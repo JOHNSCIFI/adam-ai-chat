@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useSidebar } from '@/components/ui/sidebar';
+import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -900,14 +900,7 @@ export default function ToolPage() {
       {/* Mobile Navigation Bar */}
       <div className="flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm md:hidden">
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost" 
-            size="sm"
-            onClick={() => navigate('/explore-tools')}
-            className="p-2"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
+          {isMobile && <SidebarTrigger className="mr-2" />}
         </div>
         <div className="absolute left-1/2 transform -translate-x-1/2">
           <h1 className="text-lg font-bold">{toolConfig.name}</h1>
