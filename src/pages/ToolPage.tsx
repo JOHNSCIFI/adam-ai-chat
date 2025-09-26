@@ -945,8 +945,8 @@ export default function ToolPage() {
                   <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
                     {/* File attachments for user messages - show before text */}
                     {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-2">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-xs max-h-48 object-cover cursor-pointer" onClick={() => setSelectedImage({
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-xs max-h-48 object-cover cursor-pointer bg-transparent" onClick={() => setSelectedImage({
                     url: file.url,
                     name: file.name
                   })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
@@ -964,8 +964,8 @@ export default function ToolPage() {
                     
                     {/* File attachments for assistant messages - show after text */}
                     {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-3 space-y-2">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-xs max-h-48 object-cover cursor-pointer" onClick={() => setSelectedImage({
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-xs max-h-48 object-cover cursor-pointer bg-transparent" onClick={() => setSelectedImage({
                     url: file.url,
                     name: file.name
                   })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
