@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import AuthModal from '@/components/AuthModal';
@@ -183,6 +184,7 @@ export default function ExploreTools() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { actualTheme } = useTheme();
+  const { isMobile } = useSidebar();
   const [selectedCategory, setSelectedCategory] = useState('Popular');
   const [showAuthModal, setShowAuthModal] = useState(false);
   
@@ -217,8 +219,14 @@ export default function ExploreTools() {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
-      <div className="container mx-auto p-3 sm:p-6 max-w-7xl">
+    <div className="flex-1 flex flex-col bg-gradient-to-br from-background via-background/95 to-background/90">
+      <div className="flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm">
+        {isMobile && <SidebarTrigger className="mr-2" />}
+        <div className="flex-1" />
+      </div>
+      
+      <div className="flex-1 overflow-auto">
+        <div className="container mx-auto p-3 sm:p-6 max-w-7xl">
         <div className="mb-8 sm:mb-12 text-center">
           <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary mb-4 sm:mb-6">
             <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
@@ -284,6 +292,7 @@ export default function ExploreTools() {
           </TabsContent>
         ))}
         </Tabs>
+        </div>
       </div>
 
       {/* Auth Modal */}
