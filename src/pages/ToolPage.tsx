@@ -1078,12 +1078,11 @@ export default function ToolPage() {
                   <Button 
                     variant="ghost" 
                     size="sm" 
-                    className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs mr-2" 
+                    className="h-8 w-8 p-0 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50 flex-shrink-0 mr-2" 
                     onClick={handleCreateImageClick}
                     aria-label="Create an image"
                   >
-                    <ImageIcon2 className="h-4 w-4 mr-2" />
-                    <span>Create image</span>
+                    <ImageIcon2 className="h-4 w-4" />
                   </Button>
                 )}
 
