@@ -84,13 +84,14 @@ serve(async (req) => {
   }
 
   try {
-    const { message, chat_id, user_id, file_analysis, image_context } = await req.json();
+    const { message, chat_id, user_id, file_analysis, image_context, model } = await req.json();
     console.log('Optimized chat request:', { 
       message, 
       chat_id, 
       user_id, 
       has_file_analysis: !!file_analysis,
-      image_count: image_context?.length || 0
+      image_count: image_context?.length || 0,
+      selected_model: model
     });
 
     // Validate required parameters
@@ -183,7 +184,7 @@ serve(async (req) => {
     
     // Handle image context specially
     if (image_context && image_context.length > 0) {
-      const imageDescriptions = image_context.map(img => img.aiDescription).join('\n\n');
+      const imageDescriptions = image_context.map((img: any) => img.aiDescription).join('\n\n');
       
       if (!message.trim()) {
         // Image only - ask what they'd like to know
@@ -217,7 +218,29 @@ serve(async (req) => {
 
     console.log('Sending to OpenAI (optimized)');
 
-    // Use faster gpt-4o-mini model for speed
+    // Map the model ID to the actual OpenAI model name
+    const getOpenAIModel = (modelId: string) => {
+      switch (modelId) {
+        case 'gpt-4o-mini':
+          return 'gpt-4o-mini';
+        case 'gpt-4o':
+          return 'gpt-4o';
+        case 'gpt-5':
+          return 'gpt-4o'; // Use gpt-4o as gpt-5 is not available yet
+        case 'claude':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
+        case 'deepseek':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
+        case 'gemini':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
+        default:
+          return 'gpt-4o-mini';
+      }
+    };
+
+    const selectedOpenAIModel = getOpenAIModel(model || 'gpt-4o-mini');
+    console.log('Using OpenAI model:', selectedOpenAIModel);
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -225,7 +248,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Faster model
+        model: selectedOpenAIModel,
         messages: [
           {
             role: 'system',

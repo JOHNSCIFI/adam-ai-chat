@@ -356,6 +356,7 @@ export default function Index() {
         title: message.slice(0, 50) || 'New Chat'
       }]).select().single();
       if (chatError) throw chatError;
+      
       const {
         error: messageError
       } = await supabase.from('messages').insert({
@@ -364,6 +365,27 @@ export default function Index() {
         role: 'user'
       });
       if (messageError) throw messageError;
+
+      // Send message to webhook with selected model
+      console.log('Sending message to webhook with model:', selectedModel);
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
+          message: message,
+          chat_id: chatData.id,
+          user_id: user.id,
+          file_analysis: null,
+          image_context: [],
+          model: selectedModel
+        }
+      });
+
+      if (aiError) {
+        console.error('Error sending to webhook:', aiError);
+      } else {
+        console.log('Message sent to webhook successfully');
+      }
+
+      // Navigate to chat page
       navigate(`/chat/${chatData.id}`);
     } catch (error) {
       console.error('Error starting chat:', error);
