@@ -1,7 +1,14 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Shield, Users } from 'lucide-react';
 import SEO from '@/components/SEO';
+import AdamGptLogo from '@/components/AdamGptLogo';
 
 const RefundPolicy = () => {
+  const navigate = useNavigate();
+  
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEO 
@@ -66,6 +73,68 @@ const RefundPolicy = () => {
           </div>
         </div>
       </div>
+      
+      {/* Footer from Terms page */}
+      <footer className="py-12 px-4 bg-muted/20 border-t">
+        <div className="container max-w-6xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center space-x-2 mb-4">
+                <AdamGptLogo className="h-6 w-6" />
+                <span className="text-lg font-semibold text-foreground">AdamGpt</span>
+              </div>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                Professional AI solutions for businesses and individuals.
+              </p>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Product</h3>
+              <div className="space-y-2">
+                <button onClick={() => navigate('/features')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Features</button>
+                <button onClick={() => navigate('/pricing')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Pricing</button>
+                <button onClick={() => navigate('/models')} className="block text-sm text-muted-foreground hover:text-foreground transition-colors">AI Models</button>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Company</h3>
+              <div className="space-y-2">
+                <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">About</a>
+                <a href="/explore-tools" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Explore Tools</a>
+                <a href="/help" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Help Center</a>
+              </div>
+            </div>
+            
+            <div>
+              <h3 className="font-semibold mb-4 text-sm uppercase tracking-wider text-foreground">Legal</h3>
+              <div className="space-y-2">
+                <a href="/privacy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</a>
+                <a href="/terms" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Terms of Service</a>
+                <a href="/cookie-policy" className="block text-sm text-muted-foreground hover:text-foreground transition-colors">Cookie Policy</a>
+              </div>
+            </div>
+          </div>
+          
+          <div className="border-t border-border pt-6">
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
+              <p className="text-muted-foreground">
+                &copy; 2024 AdamGpt. All rights reserved.
+              </p>
+              <div className="flex items-center gap-6 text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <Shield className="h-4 w-4" />
+                  <span>Enterprise Security</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  <span>10,000+ Users</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 };
