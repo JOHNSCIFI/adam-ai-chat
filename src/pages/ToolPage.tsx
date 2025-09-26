@@ -367,9 +367,15 @@ export default function ToolPage() {
           return;
         }
 
-        // Skip AI response for calculate-calories tool - it only uses webhook
+        // Skip AI response for tools that only use webhook or specific services
         if (toolConfig.id === 'calculate-calories') {
           console.log(`[AUTO-TRIGGER] Skipping AI response for calculate-calories tool`);
+          return;
+        }
+        
+        // Skip AI response for edit-image-openai - it goes directly to OpenAI image editing
+        if (toolConfig.id === 'edit-image-openai') {
+          console.log(`[AUTO-TRIGGER] Skipping AI response for edit-image-openai tool`);
           return;
         }
         const hasAssistantResponseAfter = currentToolMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
@@ -789,7 +795,40 @@ export default function ToolPage() {
       } else {
         console.log('Message saved to database');
 
-        // Send webhook notification
+        // Skip webhook for edit-image-openai - handle with OpenAI image editing instead
+        if (toolName === 'edit-image-openai') {
+          console.log('Skipping webhook for edit-image-openai, handling with OpenAI image editing');
+          
+          // Call OpenAI image editing edge function directly
+          if (base64ImageData && imageFileInfo) {
+            try {
+              const { data, error } = await supabase.functions.invoke('edit-image-openai', {
+                body: {
+                  imageData: base64ImageData,
+                  prompt: input,
+                  fileName: imageFileInfo.fileName,
+                  chatId: actualChatId,
+                  userId: user.id
+                }
+              });
+              
+              if (error) {
+                console.error('Error calling edit-image-openai function:', error);
+                toast.error('Failed to edit image. Please try again.');
+              } else {
+                console.log('Image editing response:', data);
+              }
+            } catch (edgeError) {
+              console.error('Error calling edit-image-openai edge function:', edgeError);
+              toast.error('Failed to edit image. Please try again.');
+            }
+          } else {
+            toast.error('Please upload an image to edit.');
+          }
+          return;
+        }
+
+        // Send webhook notification for other tools
         try {
           let webhookData: any;
           if (base64ImageData && imageFileInfo) {
