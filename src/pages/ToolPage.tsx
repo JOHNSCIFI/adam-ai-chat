@@ -997,7 +997,7 @@ export default function ToolPage() {
       </div>
 
       {/* Input area - fixed at bottom, consistent styling */}
-      <div className={`overflow-hidden ${isMobile ? 'bg-background border-t border-border/20' : ''}`} style={getMessageInputStyle()}>
+      <div className={`overflow-hidden ${isMobile ? 'bg-background border-t border-border/20' : 'bg-background/95 backdrop-blur-sm'}`} style={getMessageInputStyle()}>
         <div className={`${isMobile ? 'px-3 py-2' : 'px-4 py-3 md:py-4'}`}>
           <div className="w-full max-w-4xl mx-auto">
             {/* File attachments preview */}
