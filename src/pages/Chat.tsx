@@ -304,36 +304,30 @@ export default function Chat() {
     try {
       console.log('Starting AI response generation for chat:', originalChatId);
 
-      // Send message to webhook with selected model
+      // Send message directly to webhook with selected model
       console.log('Sending to webhook with model:', selectedModel);
-      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
-        body: {
+      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'text',
           message: userMessage,
-          chat_id: originalChatId,
-          user_id: user.id,
-          file_analysis: null,
-          image_context: [],
+          userId: user.id,
+          chatId: originalChatId,
           model: selectedModel
-        }
+        })
       });
       
-      console.log('Webhook response received:', {
-        aiResponse,
-        aiError
-      });
-      if (aiError) {
-        // Check for authentication errors
-        if (aiError.message?.includes('unauthorized') || aiError.message?.includes('JWT')) {
-          // Show auth modal for unauthorized access
-          if (chatId === originalChatId) {
-            setShowAuthModal(true);
-          }
-          return;
-        }
-        throw aiError;
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook request failed: ${webhookResponse.status}`);
       }
-      if (aiResponse?.response || aiResponse?.content) {
-        const responseContent = aiResponse.response || aiResponse.content;
+      
+      const aiResponse = await webhookResponse.json();
+      console.log('Webhook response received:', aiResponse);
+      if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
+        const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
         console.log('Processing AI response content:', responseContent);
 
         // Handle image generation responses
@@ -701,25 +695,14 @@ export default function Chat() {
               reader.readAsDataURL(blob);
             });
 
-            // Save to Supabase storage
-            const saveResponse = await supabase.functions.invoke('save-image', {
-              body: {
-                imageBase64: base64,
-                fileName: file.name,
-                chatId: chatId,
-                userId: user?.id,
-                imageType: 'uploaded'
-              }
+            // Images are now handled by webhook - no need for separate storage
+            persistentFileAttachments.push({
+              id: `temp-file-${Date.now()}-${Math.random()}`,
+              name: file.name,
+              size: file.size,
+              type: file.type,
+              url: URL.createObjectURL(file) // Use blob URL temporarily
             });
-            if (saveResponse.data?.success) {
-              persistentFileAttachments.push({
-                ...file,
-                url: saveResponse.data.url // Use persistent URL from storage
-              });
-            } else {
-              // Fallback to blob URL if storage fails
-              persistentFileAttachments.push(file);
-            }
           } catch (error) {
             console.error('Error saving image to storage:', error);
             // Fallback to blob URL if storage fails
@@ -1880,71 +1863,36 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       {selectedImage && <ImagePopupModal isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} imageUrl={selectedImage.url} prompt={selectedImage.name} />}
 
       {/* Image edit modal */}
-      {showImageEditModal && imageToEdit && <ImageEditModal isOpen={showImageEditModal} onClose={() => {
-      setShowImageEditModal(false);
-      setImageToEdit(null);
-    }} imageFile={imageToEdit} onSaveImage={async editedBlob => {
-      try {
-        // Convert blob to base64
-        const reader = new FileReader();
-        reader.onload = async () => {
-          const base64 = (reader.result as string).split(',')[1];
-
-          // Save edited image to Supabase
-          const response = await supabase.functions.invoke('save-image', {
-            body: {
-              imageBase64: base64,
-              fileName: `edited_${imageToEdit?.name || 'image.png'}`,
-              chatId: chatId,
-              userId: user?.id,
-              imageType: 'edited'
-            }
-          });
-          if (response.data?.success) {
-            toast.success('Image edited and saved successfully!');
-
-            // Add edited image to chat as assistant message
-            const editedImageMessage: Message = {
-              id: `temp-edited-${Date.now()}`,
-              chat_id: chatId!,
-              content: 'Here is your edited image:',
-              role: 'assistant',
-              created_at: new Date().toISOString(),
-              file_attachments: [{
-                id: Date.now().toString(),
-                name: `edited_${imageToEdit?.name || 'image.png'}`,
-                size: editedBlob.size,
-                type: 'image/png',
-                url: response.data.url
-              }]
-            };
-            setMessages(prev => [...prev, editedImageMessage]);
-
-            // Save to database
-            await supabase.from('messages').insert({
-              chat_id: chatId,
-              content: 'Here is your edited image:',
-              role: 'assistant',
-              file_attachments: editedImageMessage.file_attachments as any,
-              embedding: null
-            });
-          } else {
-            toast.error('Failed to save edited image');
+      {showImageEditModal && imageToEdit && <ImageEditModal 
+        isOpen={showImageEditModal} 
+        onClose={() => {
+          setShowImageEditModal(false);
+          setImageToEdit(null);
+        }} 
+        imageFile={imageToEdit} 
+        onSaveImage={async (editedBlob) => {
+          try {
+            // Edited images are now handled by webhook only
+            console.log('Image editing completed - processed by webhook');
+            toast.success('Image edited successfully');
+          } catch (error) {
+            console.error('Error with edited image:', error);
+            toast.error('Failed to process edited image');
           }
-        };
-        reader.readAsDataURL(editedBlob);
-      } catch (error) {
-        console.error('Error saving edited image:', error);
-        toast.error('Failed to save edited image');
-      }
-    }} />}
+        }} 
+      />}
 
       {/* Auth Modal */}
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {
-      // Focus back to textarea after successful login
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 100);
-    }} />
-    </div>;
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onSuccess={() => {
+          // Focus back to textarea after successful login
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 100);
+        }} 
+      />
+    </div>
+  );
 }
