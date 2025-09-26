@@ -839,37 +839,25 @@ export default function Index() {
                       <Plus className="h-3.5 w-3.5" />
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-52 p-2 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl z-50" align="start">
-                    <div className="flex flex-col gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-11 px-3 justify-start text-sm hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
-                        onClick={handleFileUpload}
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-blue-600/20 rounded-lg flex items-center justify-center mr-3">
-                          <Paperclip className="h-4 w-4 text-blue-600" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium">Add File & Photo</div>
-                          <div className="text-xs text-muted-foreground">Upload documents or images</div>
-                        </div>
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-11 px-3 justify-start text-sm hover:bg-accent/60 focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200"
-                        onClick={handleCreateImageClick}
-                      >
-                        <div className="w-8 h-8 bg-gradient-to-br from-purple-500/10 to-purple-600/20 rounded-lg flex items-center justify-center mr-3">
-                          <ImageIcon className="h-4 w-4 text-purple-600" />
-                        </div>
-                        <div className="text-left">
-                          <div className="font-medium">Create Image</div>
-                          <div className="text-xs text-muted-foreground">Generate AI artwork</div>
-                        </div>
-                      </Button>
-                    </div>
+                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={handleFileUpload}
+                    >
+                      <Paperclip className="h-4 w-4" />
+                      Add photos & files
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full justify-start gap-2"
+                      onClick={handleCreateImageClick}
+                    >
+                      <ImageIcon className="h-4 w-4" />
+                      Create an image
+                    </Button>
                   </PopoverContent>
                 </Popover>
                 
