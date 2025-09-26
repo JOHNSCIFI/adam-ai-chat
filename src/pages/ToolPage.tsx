@@ -994,7 +994,7 @@ export default function ToolPage() {
 
       {/* Input area - fixed at bottom for mobile, dynamically centered for desktop */}
       <div className={`overflow-hidden ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/20' : ''}`} style={isMobile ? {} : getMessageInputStyle()}>
-        <div className="px-4 py-3 md:py-4">
+        <div className={`${isMobile ? 'px-3 py-2' : 'px-4 py-3 md:py-4'}`}>
           <div className="w-full max-w-4xl mx-auto">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && <div className="mb-3 md:mb-4 flex flex-wrap gap-2">
@@ -1044,11 +1044,11 @@ export default function ToolPage() {
               </div>}
             
             <div className="relative">
-              <div className={`flex items-center border rounded-2xl md:rounded-3xl px-2 md:px-4 py-2 md:py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
+              <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-1.5 py-1' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-1 md:mr-2`}>
+                      <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-6 w-6 p-0 mr-1' : 'h-8 w-8 p-0 mr-2'} hover:bg-muted/20 rounded-full flex-shrink-0`}>
                         <Paperclip className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-muted-foreground`} />
                       </Button>
                     </PopoverTrigger>
@@ -1078,7 +1078,7 @@ export default function ToolPage() {
                     }
                   }} 
                   placeholder={`Message ${toolConfig.name}...`} 
-                  className={`flex-1 min-h-[18px] md:min-h-[24px] max-h-[100px] md:max-h-[200px] ${isMobile ? 'text-sm' : 'text-sm md:text-base'} border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left`} 
+                  className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[14px] max-h-[60px] text-sm leading-tight' : 'min-h-[24px] max-h-[200px] text-sm md:text-base'}`} 
                   style={{
                     wordWrap: 'break-word',
                     overflowWrap: 'break-word'
@@ -1087,13 +1087,13 @@ export default function ToolPage() {
                   rows={1} 
                 />
                 
-                <div className="flex items-center gap-1 ml-1 md:ml-2">
+                <div className={`flex items-center ${isMobile ? 'gap-0.5 ml-0.5' : 'gap-1 ml-2'}`}>
                   {/* Dictation button - only show on mobile when input is empty */}
                   {isMobile && !input.trim() && (
                     <Button 
                       size="sm" 
                       variant="ghost"
-                      className="h-7 w-7 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground" 
+                      className="h-6 w-6 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground" 
                       onClick={isRecording ? stopRecording : startRecording}
                       aria-label={isRecording ? "Stop recording" : "Start voice recording"}
                       aria-pressed={isRecording}
@@ -1122,7 +1122,7 @@ export default function ToolPage() {
                     size="sm" 
                     onClick={handleSubmit}
                     disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                    className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 rounded-full flex-shrink-0`}
+                    className={`${isMobile ? 'h-6 w-6' : 'h-8 w-8'} p-0 rounded-full flex-shrink-0`}
                   >
                     <SendHorizontalIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
                   </Button>
