@@ -4,6 +4,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { useNavigate } from 'react-router-dom';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -22,6 +23,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   
   const { user, signIn, signUp, signInWithGoogle } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   // Close modal and call onSuccess when user is authenticated
   useEffect(() => {
@@ -126,7 +128,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-md mx-4 sm:mx-auto bg-background border border-border shadow-2xl rounded-2xl sm:rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300">
+      <DialogContent className="w-full max-w-md mx-4 sm:mx-auto bg-background border border-border shadow-2xl rounded-2xl sm:rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300 m-4 sm:m-0">
         <DialogHeader className="pb-2">
           <DialogTitle className="text-center text-xl font-semibold">
             AdamGPT
@@ -242,9 +244,25 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Footer */}
           <div className="mt-5 sm:mt-6">
             <div className="text-center text-xs text-muted-foreground space-x-1">
-              <a href="#" className="hover:underline">Terms of Use</a>
+              <button 
+                onClick={() => {
+                  onClose();
+                  navigate('/terms');
+                }}
+                className="hover:underline cursor-pointer"
+              >
+                Terms of Use
+              </button>
               <span>|</span>
-              <a href="#" className="hover:underline">Privacy Policy</a>
+              <button 
+                onClick={() => {
+                  onClose();
+                  navigate('/privacy');
+                }}
+                className="hover:underline cursor-pointer"
+              >
+                Privacy Policy
+              </button>
             </div>
           </div>
         </div>
