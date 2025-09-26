@@ -155,6 +155,15 @@ const toolConfigs: Record<string, ToolInfo> = {
     allowImages: true,
     allowFiles: false
   },
+  'edit-image-openai': {
+    id: 'edit-image-openai',
+    name: 'Edit Image with OpenAI',
+    description: 'Professional image editing powered by OpenAI',
+    instructions: 'Upload an image and describe the edits you want to make. I can adjust colors, add effects, remove objects, and more.',
+    icon: <span className="text-2xl">✏️</span>,
+    allowImages: true,
+    allowFiles: false
+  },
   'analyse-files-openai': {
     id: 'analyse-files-openai',
     name: 'Analyse Files with OpenAI',
