@@ -144,6 +144,14 @@ const tools: Tool[] = [
     route: '/combine-images-nanobanana'
   },
   {
+    id: 'edit-image-openai',
+    name: 'Edit Image with OpenAI',
+    description: 'Professional image editing powered by OpenAI',
+    category: 'Image Generation',
+    icon: <Edit3 className="h-5 w-5" />,
+    route: '/edit-image-openai'
+  },
+  {
     id: 'edit-image-nanobanana',
     name: 'Edit Image with NanoBanana',
     description: 'Professional image editing powered by AI',
