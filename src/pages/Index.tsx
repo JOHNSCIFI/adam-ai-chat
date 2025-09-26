@@ -563,57 +563,58 @@ export default function Index() {
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
           />
-          <h1 className="text-lg font-semibold truncate flex-1 text-center">AdamGPT</h1>
-          <div className="w-12 flex justify-end">
-            {/* Mobile Model Selector */}
-            <Select value={selectedModel} onValueChange={setSelectedModel}>
-              <SelectTrigger 
-                className="w-12 h-12 bg-background/80 backdrop-blur-sm border border-border/50 hover:bg-accent hover:border-border shadow-sm focus-visible:ring-2 focus-visible:ring-primary rounded-xl transition-all duration-200 [&>svg]:hidden"
-                aria-label="Select AI model"
-              >
-                <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
-                  <img 
-                    src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
-                    alt="Model icon" 
-                    className="w-6 h-6 object-contain" 
-                  />
-                </div>
-              </SelectTrigger>
-              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[280px]" align="end">
-                {models.map(model => {
-                  const modelData = availableModels.find(m => m.id === model.id);
-                  return (
-                    <SelectItem 
-                      key={model.id} 
-                      value={model.id} 
-                      className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
-                            <img 
-                              src={getModelIcon(modelData?.icon || 'openai')} 
-                              alt={`${model.name} icon`} 
-                              className="w-5 h-5 object-contain" 
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm text-foreground">{model.name}</div>
-                            <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{model.description}</div>
-                          </div>
-                        </div>
-                        {model.type === 'pro' && (
-                          <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2.5 py-1 rounded-full font-medium ml-2">
+          
+          {/* Mobile Model Selector - Triggered by AdamGPT text */}
+          <Select value={selectedModel} onValueChange={setSelectedModel}>
+            <SelectTrigger 
+              className="flex-1 text-center bg-transparent border-none shadow-none hover:bg-accent/20 rounded-lg transition-all duration-200 [&>svg]:hidden focus-visible:ring-2 focus-visible:ring-primary"
+              aria-label="Select AI model"
+            >
+              <h1 className="text-lg font-semibold truncate">AdamGPT</h1>
+            </SelectTrigger>
+            <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-3 min-w-[320px] max-h-[400px] overflow-y-auto" align="center">
+              <div className="text-sm font-medium text-muted-foreground mb-3 px-2">Models</div>
+              {models.map(model => {
+                const modelData = availableModels.find(m => m.id === model.id);
+                return (
+                  <SelectItem 
+                    key={model.id} 
+                    value={model.id} 
+                    className="rounded-xl px-3 py-4 hover:bg-accent/40 focus-visible:bg-accent/40 transition-all duration-200 cursor-pointer border-none"
+                  >
+                    <div className="flex items-center w-full min-h-[48px]">
+                      <div className="w-10 h-10 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-2 flex-shrink-0 mr-3">
+                        <img 
+                          src={getModelIcon(modelData?.icon || 'openai')} 
+                          alt={`${model.name} icon`} 
+                          className="w-6 h-6 object-contain" 
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0 mr-3">
+                        <div className="font-semibold text-sm text-foreground leading-tight">{model.name}</div>
+                        <div className="text-xs text-muted-foreground mt-1 leading-tight">{model.description}</div>
+                      </div>
+                      <div className="flex items-center justify-center min-w-[50px]">
+                        {model.type === 'pro' ? (
+                          <span className="text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white px-3 py-1.5 rounded-lg font-medium">
                             Pro
                           </span>
+                        ) : (
+                          <div className="w-6 h-6 rounded-full bg-blue-500 flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
                         )}
                       </div>
-                    </SelectItem>
-                  );
-                })}
-              </SelectContent>
-            </Select>
-          </div>
+                    </div>
+                  </SelectItem>
+                );
+              })}
+            </SelectContent>
+          </Select>
+          
+          <div className="w-9"></div> {/* Spacer for balance */}
         </div>
       )}
       
