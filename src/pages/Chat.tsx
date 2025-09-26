@@ -286,7 +286,8 @@ export default function Chat() {
       userMessage,
       userMessageId,
       isGeneratingResponse,
-      loading
+      loading,
+      selectedModel
     });
     if (isGeneratingResponse || loading) {
       console.log('Skipping AI response - already in progress');
@@ -303,25 +304,20 @@ export default function Chat() {
     try {
       console.log('Starting AI response generation for chat:', originalChatId);
 
-      // Check if this is an image generation request
-      const isImageRequest = /\b(generate|create|make|draw|design|sketch|paint|render)\b.*\b(image|picture|photo|art|artwork|illustration|drawing|painting)\b/i.test(userMessage);
-      if (isImageRequest) {
-        setCurrentImagePrompts(prev => new Map(prev).set(originalChatId, userMessage));
-      }
-      console.log('Invoking chat-with-ai-optimized function...');
-      const {
-        data: aiResponse,
-        error: aiError
-      } = await supabase.functions.invoke('chat-with-ai-optimized', {
+      // Send message to webhook with selected model
+      console.log('Sending to webhook with model:', selectedModel);
+      const { data: aiResponse, error: aiError } = await supabase.functions.invoke('chat-with-ai-optimized', {
         body: {
           message: userMessage,
           chat_id: originalChatId,
           user_id: user.id,
           file_analysis: null,
-          image_context: []
+          image_context: [],
+          model: selectedModel
         }
       });
-      console.log('AI response received:', {
+      
+      console.log('Webhook response received:', {
         aiResponse,
         aiError
       });
@@ -369,13 +365,12 @@ export default function Chat() {
         }
 
         // Clear image prompt when response is received (only for original chat)
-        if (isImageRequest) {
-          setCurrentImagePrompts(prev => {
-            const newMap = new Map(prev);
-            newMap.delete(originalChatId);
-            return newMap;
-          });
-        }
+        // Note: Image requests are now handled by webhook
+        setCurrentImagePrompts(prev => {
+          const newMap = new Map(prev);
+          newMap.delete(originalChatId);
+          return newMap;
+        });
 
         // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
         console.log('Saving AI message to database for chat:', originalChatId);
@@ -640,7 +635,8 @@ export default function Chat() {
                 fileData: base64,
                 userId: user.id,
                 chatId: chatId,
-                message: userMessage
+                message: userMessage,
+                model: selectedModel
               })
             });
             if (webhookResponse.ok) {
