@@ -880,75 +880,11 @@ export default function Chat() {
         const text = await file.text();
         return text; // Return the actual content, not metadata
       } else if (fileType.startsWith('image/')) {
-        // For images, use OpenAI Vision API for analysis
-        console.log('Performing OpenAI image analysis...');
-        try {
-          // Convert image to base64
-          const reader = new FileReader();
-          const imageBase64 = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => {
-              const result = reader.result as string;
-              const base64 = result.split(',')[1]; // Remove data:image/...;base64, prefix
-              resolve(base64);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
-
-          // Call OpenAI image analysis in background
-          supabase.functions.invoke('analyze-image', {
-            body: {
-              imageBase64,
-              fileName: file.name,
-              chatId: chatId,
-              userId: user?.id
-            }
-          }).then(response => {
-            if (response.data?.analysis) {
-              // Store the analysis result for future reference (background)
-              const analysisResult = {
-                id: `img-${Date.now()}`,
-                fileName: file.name,
-                url: URL.createObjectURL(file),
-                basicInfo: {
-                  width: 0,
-                  height: 0,
-                  size: file.size,
-                  format: file.type,
-                  aspectRatio: 1
-                },
-                visualAnalysis: {
-                  dominantColors: [],
-                  brightness: 0,
-                  contrast: 0,
-                  colorfulness: 0,
-                  composition: 'unknown',
-                  quality: 'unknown'
-                },
-                detectedElements: {
-                  hasText: false,
-                  textAreas: 0,
-                  hasFaces: false,
-                  faceCount: 0,
-                  hasObjects: false,
-                  objectTypes: []
-                },
-                aiDescription: response.data.analysis,
-                timestamp: new Date().toISOString()
-              };
-              setImageAnalysisResults(prev => new Map(prev.set(analysisResult.id, analysisResult)));
-              console.log('OpenAI image analysis completed and saved');
-            }
-          }).catch(error => {
-            console.error('Background image analysis failed:', error);
-          });
-
-          // Return empty string - don't show analysis to user
-          return '';
-        } catch (error) {
-          console.error('Image analysis failed:', error);
-          return '';
-        }
+        // For images, analysis now handled by webhook only
+        console.log('Image analysis skipped - using webhook only');
+        
+        // Return empty string - images are processed by webhook
+        return '';
       } else if (fileType.includes('pdf')) {
         // For PDF, we need actual content extraction (simplified for now)
         // In production, you'd use pdf-parse or similar
@@ -965,26 +901,8 @@ export default function Chat() {
     }
   };
   const generateEmbeddingAsync = async (text: string): Promise<number[]> => {
-    try {
-      const openAIKey = await getOpenAIKey();
-      const response = await fetch('https://api.openai.com/v1/embeddings', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIKey}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          model: 'text-embedding-3-small',
-          input: text
-        })
-      });
-      if (response.ok) {
-        const data = await response.json();
-        return data.data[0].embedding;
-      }
-    } catch (error) {
-      console.log('Embedding generation failed:', error);
-    }
+    // Embeddings disabled - all processing now goes through webhook only
+    console.log('Embedding generation skipped - using webhook only');
     return [];
   };
   const analyzeFileDirectly = async (file: File): Promise<string> => {
@@ -1194,12 +1112,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
 
-  // Helper function to get OpenAI API key (placeholder for actual implementation)
-  const getOpenAIKey = async () => {
-    // In production, this should be retrieved from your secure backend
-    // For now, using a placeholder that will be handled by the edge function
-    return 'demo-key';
-  };
+  // OpenAI functions removed - all processing now goes through webhook only
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
