@@ -209,6 +209,17 @@ export default function ToolPage() {
 
   // Dynamic positioning for message input to center on available space
   const getMessageInputStyle = () => {
+    // For mobile, always use full width at bottom
+    if (isMobile) {
+      return {
+        position: 'fixed' as const,
+        bottom: 0,
+        left: 0,
+        right: 0,
+        zIndex: 50
+      };
+    }
+    
     const sidebarWidth = collapsed ? 56 : 240; // sidebar widths
     const availableWidth = window.innerWidth - sidebarWidth;
     const inputMaxWidth = 768; // max width of input container
@@ -992,8 +1003,8 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Input area - fixed at bottom for mobile, dynamically centered for desktop */}
-      <div className={`overflow-hidden ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/20' : ''}`} style={isMobile ? {} : getMessageInputStyle()}>
+      {/* Input area - fixed at bottom, consistent styling */}
+      <div className={`overflow-hidden ${isMobile ? 'bg-background border-t border-border/20' : ''}`} style={getMessageInputStyle()}>
         <div className={`${isMobile ? 'px-3 py-2' : 'px-4 py-3 md:py-4'}`}>
           <div className="w-full max-w-4xl mx-auto">
             {/* File attachments preview */}
