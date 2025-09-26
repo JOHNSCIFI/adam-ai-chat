@@ -73,7 +73,7 @@ serve(async (req) => {
     
     for (let i = 0; i < uint8Array.length; i += chunkSize) {
       const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, uint8Array.length));
-      binary += String.fromCharCode.apply(null, chunk);
+      binary += String.fromCharCode.apply(null, Array.from(chunk));
     }
     
     const base64Audio = btoa(binary);
@@ -87,12 +87,14 @@ serve(async (req) => {
     );
   } catch (error) {
     console.error('💥 Text-to-speech error:', error);
-    console.error('💥 Error stack:', error.stack);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+    console.error('💥 Error stack:', errorStack);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.stack
+        error: errorMessage,
+        details: errorStack
       }),
       {
         status: 500,

@@ -86,16 +86,20 @@ serve(async (req) => {
       },
     );
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : 'No stack trace';
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    
     console.error('❌ TTS function error:', {
-      message: error.message,
-      stack: error.stack,
-      name: error.name
+      message: errorMessage,
+      stack: errorStack,
+      name: errorName
     });
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        details: error.name || 'UnknownError'
+        error: errorMessage,
+        details: errorName
       }),
       {
         status: 500,

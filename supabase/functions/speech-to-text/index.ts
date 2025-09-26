@@ -109,10 +109,13 @@ serve(async (req) => {
         
       } catch (formDataError) {
         console.error('❌ FormData processing error:', formDataError);
+        const errorMessage = formDataError instanceof Error ? formDataError.message : 'Unknown form data error';
+        const errorName = formDataError instanceof Error ? formDataError.name : 'FormDataError';
+        const errorStack = formDataError instanceof Error ? formDataError.stack?.slice(0, 500) : 'No stack trace';
         console.error('❌ FormData error details:', {
-          name: formDataError.name,
-          message: formDataError.message,
-          stack: formDataError.stack?.slice(0, 500)
+          name: errorName,
+          message: errorMessage,
+          stack: errorStack
         });
         console.error('❌ Request info during error:', {
           contentType: req.headers.get('content-type'),
@@ -121,8 +124,8 @@ serve(async (req) => {
         });
         return new Response(
           JSON.stringify({ 
-            error: `FormData processing failed: ${formDataError.message}`,
-            errorType: formDataError.name,
+            error: `FormData processing failed: ${errorMessage}`,
+            errorType: errorName,
             details: 'Failed to parse multipart form data - this might be due to network issues or corrupted upload'
           }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -164,20 +167,26 @@ serve(async (req) => {
           
         } catch (decodeError) {
           console.error('❌ Base64 decode error:', decodeError);
-          throw new Error(`Base64 decode failed: ${decodeError.message}`);
+          const errorMessage = decodeError instanceof Error ? decodeError.message : 'Unknown decode error';
+          throw new Error(`Base64 decode failed: ${errorMessage}`);
         }
         
         // Convert to WAV format for better OpenAI compatibility
-        audioBlob = new Blob([audioData], { type: 'audio/wav' });
+        const buffer = new ArrayBuffer(audioData.length);
+        const view = new Uint8Array(buffer);
+        view.set(audioData);
+        audioBlob = new Blob([buffer], { type: 'audio/wav' });
         filename = 'audio.wav';
         
         console.log('✅ JSON processing complete');
         
       } catch (jsonError) {
         console.error('❌ JSON processing error:', jsonError);
-        console.error('❌ JSON error details:', jsonError.stack);
+        const errorMessage = jsonError instanceof Error ? jsonError.message : 'Unknown JSON error';
+        const errorStack = jsonError instanceof Error ? jsonError.stack : 'No stack trace';
+        console.error('❌ JSON error details:', errorStack);
         return new Response(
-          JSON.stringify({ error: `JSON processing failed: ${jsonError.message}` }),
+          JSON.stringify({ error: `JSON processing failed: ${errorMessage}` }),
           { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
       }
@@ -246,7 +255,7 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ 
           error: 'Failed to prepare audio for speech recognition',
-          details: formDataError.message
+          details: formDataError instanceof Error ? formDataError.message : 'Unknown formData error'
         }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
@@ -349,15 +358,18 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('💥 Speech-to-text error:', error);
-    console.error('📍 Error name:', error.name);
-    console.error('📍 Error message:', error.message);
-    console.error('📍 Error stack (first 500 chars):', error.stack?.slice(0, 500));
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
+    const errorStack = error instanceof Error ? error.stack?.slice(0, 500) : 'No stack trace';
+    console.error('📍 Error name:', errorName);
+    console.error('📍 Error message:', errorMessage);
+    console.error('📍 Error stack (first 500 chars):', errorStack);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message,
-        errorType: error.name,
-        details: `Speech-to-text processing failed: ${error.message}`
+        error: errorMessage,
+        errorType: errorName,
+        details: `Speech-to-text processing failed: ${errorMessage}`
       }),
       {
         status: 500,
