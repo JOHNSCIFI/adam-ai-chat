@@ -248,6 +248,7 @@ export default function ToolPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
   const toolConfig = toolName ? toolConfigs[toolName] : null;
@@ -606,6 +607,29 @@ export default function ToolPage() {
     } catch (err) {
       console.error('Failed to copy text: ', err);
     }
+  };
+
+  const startRecording = () => {
+    if (!user) {
+      toast.error('Please sign in to use voice input');
+      return;
+    }
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      toast.error('Speech recognition not supported in this browser');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.onresult = (event: any) => setInput(prev => prev + event.results[0][0].transcript);
+    recognition.onend = () => setIsRecording(false);
+    recognitionRef.current = recognition;
+    recognition.start();
+    setIsRecording(true);
+  };
+
+  const stopRecording = () => {
+    recognitionRef.current?.stop();
+    setIsRecording(false);
   };
 
   // Auto-resize textarea
@@ -970,10 +994,10 @@ export default function ToolPage() {
 
       {/* Input area - fixed at bottom for mobile, dynamically centered for desktop */}
       <div className={`overflow-hidden ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/20' : ''}`} style={isMobile ? {} : getMessageInputStyle()}>
-        <div className="px-4 py-4">
+        <div className="px-4 py-3 md:py-4">
           <div className="w-full max-w-4xl mx-auto">
             {/* File attachments preview */}
-            {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
+            {selectedFiles.length > 0 && <div className="mb-3 md:mb-4 flex flex-wrap gap-2">
                 {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                     {file.type.startsWith('image/') ? <ImageIcon className="h-4 w-4" /> : <FileText className="h-4 w-4" />}
                     <span className="truncate max-w-32">{file.name}</span>
@@ -982,9 +1006,6 @@ export default function ToolPage() {
                     </button>
                   </div>)}
               </div>}
-            
-            {/* Image mode indicator */}
-            {isImageMode}
             
             {/* Image mode indicator */}
             {isImageMode && <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
@@ -1023,12 +1044,12 @@ export default function ToolPage() {
               </div>}
             
             <div className="relative">
-              <div className={`flex-1 flex items-center border rounded-2xl md:rounded-3xl px-3 md:px-4 py-2 md:py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
+              <div className={`flex items-center border rounded-2xl md:rounded-3xl px-2 md:px-4 py-2 md:py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
+                      <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-1 md:mr-2`}>
+                        <Paperclip className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'} text-muted-foreground`} />
                       </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
@@ -1046,28 +1067,54 @@ export default function ToolPage() {
                      </PopoverContent>
                   </Popover>}
                 
-                <Textarea ref={textareaRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSubmit();
-                }
-              }} placeholder={`Message ${toolConfig.name}...`} className="flex-1 min-h-[20px] md:min-h-[24px] max-h-[120px] md:max-h-[200px] text-sm md:text-base border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
-                wordWrap: 'break-word',
-                overflowWrap: 'break-word'
-              }} disabled={loading} rows={1} />
+                <Textarea 
+                  ref={textareaRef} 
+                  value={input} 
+                  onChange={e => setInput(e.target.value)} 
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }} 
+                  placeholder={`Message ${toolConfig.name}...`} 
+                  className={`flex-1 min-h-[18px] md:min-h-[24px] max-h-[100px] md:max-h-[200px] ${isMobile ? 'text-sm' : 'text-sm md:text-base'} border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left`} 
+                  style={{
+                    wordWrap: 'break-word',
+                    overflowWrap: 'break-word'
+                  }} 
+                  disabled={loading} 
+                  rows={1} 
+                />
                 
-                 <div className="flex items-center gap-1 ml-2">
-                   {/* Send button */}
-                   <Button 
-                     type="submit" 
-                     size="sm" 
-                     onClick={handleSubmit}
-                     disabled={(!input.trim() && selectedFiles.length === 0) || loading}
-                     className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full flex-shrink-0"
-                   >
-                     <SendHorizontalIcon className="h-3 w-3 md:h-4 md:w-4" />
-                   </Button>
-                 </div>
+                <div className="flex items-center gap-1 ml-1 md:ml-2">
+                  {/* Dictation button */}
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
+                      isRecording 
+                        ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-white' 
+                        : 'hover:bg-muted/50 focus-visible:ring-primary text-muted-foreground hover:text-foreground'
+                    }`} 
+                    onClick={isRecording ? stopRecording : startRecording}
+                    aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                    aria-pressed={isRecording}
+                  >
+                    {isRecording ? <MicOff className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} /> : <Mic className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />}
+                  </Button>
+
+                  {/* Send button */}
+                  <Button 
+                    type="submit" 
+                    size="sm" 
+                    onClick={handleSubmit}
+                    disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                    className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 rounded-full flex-shrink-0`}
+                  >
+                    <SendHorizontalIcon className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />
+                  </Button>
+                </div>
               </div>
             </div>
             
