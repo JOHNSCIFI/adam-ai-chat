@@ -9,6 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { useIsMobile } from '@/hooks/use-mobile';
 import { 
   Settings, 
   User, 
@@ -56,6 +57,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
   const { toast } = useToast();
   const { user, signOut, userProfile } = useAuth();
+  const isMobile = useIsMobile();
 
   const handleSetTheme = (newTheme: typeof theme) => {
     setTheme(newTheme);
@@ -727,16 +729,16 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
-        <div className="flex h-full">
+      <DialogContent className={`${isMobile ? 'max-w-[95vw] w-full h-[90vh]' : 'max-w-4xl h-[80vh]'} p-0 bg-background border`}>
+        <div className={`${isMobile ? 'flex flex-col' : 'flex'} h-full`}>
           {/* Sidebar */}
-          <div className="w-64 bg-muted/20 border-r border-border">
+          <div className={`${isMobile ? 'w-full border-b' : 'w-64 border-r'} bg-muted/20 border-border ${isMobile ? 'flex-shrink-0' : ''}`}>
             <div className="p-4 border-b border-border">
               <DialogHeader className="text-left">
                 <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
               </DialogHeader>
             </div>
-            <nav className="p-2">
+            <nav className={`p-2 ${isMobile ? 'flex overflow-x-auto' : ''}`}>
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -745,7 +747,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                    className={`${isMobile ? 'flex-shrink-0 min-w-fit' : 'w-full'} flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
                       activeTab === item.id
                         ? 'bg-accent text-accent-foreground font-medium'
                         : isDisabled
@@ -754,7 +756,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     }`}
                   >
                     <Icon className="h-4 w-4" />
-                    {item.label}
+                    <span className={isMobile ? 'whitespace-nowrap' : ''}>{item.label}</span>
                   </button>
                 );
               })}
@@ -763,7 +765,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
           {/* Main Content */}
           <div className="flex-1 overflow-y-auto">
-            <div className="p-6">
+            <div className={`${isMobile ? 'p-4' : 'p-6'}`}>
               {renderContent()}
             </div>
           </div>
