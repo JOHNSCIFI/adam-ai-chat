@@ -1064,9 +1064,9 @@ export default function ToolPage() {
                     setIsPopoverOpen(false);
                   }}>
                          <Paperclip className="h-4 w-4" />
-                         Add photos & files
+                         {toolConfig.id === 'analyse-image-openai' ? 'Add photo' : 'Add photos & files'}
                        </Button>
-                        {toolConfig.id !== 'calculate-calories' && toolConfig.id !== 'analyse-files-openai' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                        {toolConfig.id !== 'calculate-calories' && toolConfig.id !== 'analyse-files-openai' && toolConfig.id !== 'analyse-image-openai' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                             <ImageIcon2 className="h-4 w-4" />
                             Create image
                           </Button>}
