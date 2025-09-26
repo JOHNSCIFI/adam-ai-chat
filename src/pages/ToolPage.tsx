@@ -192,7 +192,8 @@ export default function ToolPage() {
     actualTheme
   } = useTheme();
   const {
-    state: sidebarState
+    state: sidebarState,
+    isMobile
   } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
@@ -861,8 +862,26 @@ export default function ToolPage() {
       </div>;
   }
   return <div className="h-screen flex flex-col bg-background relative">
-      {/* Tool Header - Only show when no messages */}
-      {messages.length === 0 && <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4">
+      {/* Mobile Navigation Bar */}
+      <div className="flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm md:hidden">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost" 
+            size="sm"
+            onClick={() => navigate('/explore-tools')}
+            className="p-2"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+        </div>
+        <div className="absolute left-1/2 transform -translate-x-1/2">
+          <h1 className="text-lg font-bold">{toolConfig.name}</h1>
+        </div>
+        <div className="flex-1" />
+      </div>
+
+      {/* Desktop Tool Header - Only show when no messages and not mobile */}
+      {messages.length === 0 && <div className="border-b border-border/40 bg-card/30 backdrop-blur-xl p-4 hidden md:block">
           <div style={getContainerStyle()} className="flex items-center gap-4">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-lg bg-primary/10">
@@ -877,8 +896,8 @@ export default function ToolPage() {
         </div>}
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto">
-        <div style={getContainerStyle()}>
+      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+        <div className={`${isMobile ? 'px-4' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {messages.length === 0 ?
         // Welcome message
         <div className="flex items-center justify-center min-h-[60vh]">
@@ -949,10 +968,10 @@ export default function ToolPage() {
         </div>
       </div>
 
-      {/* Input area - dynamically centered on available space */}
-      <div className="overflow-hidden" style={getMessageInputStyle()}>
+      {/* Input area - fixed at bottom for mobile, dynamically centered for desktop */}
+      <div className={`overflow-hidden ${isMobile ? 'fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border/20' : ''}`} style={isMobile ? {} : getMessageInputStyle()}>
         <div className="px-4 py-4">
-          <div className="w-full">
+          <div className="w-full max-w-4xl mx-auto">
             {/* File attachments preview */}
             {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
                 {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
@@ -1004,7 +1023,7 @@ export default function ToolPage() {
               </div>}
             
             <div className="relative">
-              <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
+              <div className={`flex-1 flex items-center border rounded-2xl md:rounded-3xl px-3 md:px-4 py-2 md:py-3 ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
                 {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
@@ -1032,17 +1051,23 @@ export default function ToolPage() {
                   e.preventDefault();
                   handleSubmit();
                 }
-              }} placeholder={`Message ${toolConfig.name}...`} className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
+              }} placeholder={`Message ${toolConfig.name}...`} className="flex-1 min-h-[20px] md:min-h-[24px] max-h-[120px] md:max-h-[200px] text-sm md:text-base border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
                 wordWrap: 'break-word',
                 overflowWrap: 'break-word'
               }} disabled={loading} rows={1} />
                 
-                <div className="flex items-center gap-1 ml-2 pb-1">
-                  {/* Dictation button */}
-                  <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? () => {} : () => {}} disabled={loading}>
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                  </Button>
-                </div>
+                 <div className="flex items-center gap-1 ml-2">
+                   {/* Send button */}
+                   <Button 
+                     type="submit" 
+                     size="sm" 
+                     onClick={handleSubmit}
+                     disabled={(!input.trim() && selectedFiles.length === 0) || loading}
+                     className="h-7 w-7 md:h-8 md:w-8 p-0 rounded-full flex-shrink-0"
+                   >
+                     <SendHorizontalIcon className="h-3 w-3 md:h-4 md:w-4" />
+                   </Button>
+                 </div>
               </div>
             </div>
             
