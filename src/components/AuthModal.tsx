@@ -126,20 +126,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="w-full max-w-md mx-4 sm:mx-auto bg-background border border-border shadow-2xl rounded-2xl sm:rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300">
+        <DialogHeader className="pb-2">
           <DialogTitle className="text-center text-xl font-semibold">
             AdamGPT
           </DialogTitle>
         </DialogHeader>
 
-        <div className="px-6 pb-6">
+        <div className="px-4 sm:px-6 pb-4 sm:pb-6">
           {/* Title Section */}
-          <div className="text-center mb-8">
-            <h2 className="text-2xl font-normal mb-3">Log in or sign up</h2>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              You'll get smarter responses and can upload<br />
-              files, images, and more.
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-xl sm:text-2xl font-normal mb-2 sm:mb-3">Log in or sign up</h2>
+            <p className="text-sm text-muted-foreground leading-relaxed px-2 sm:px-0">
+              You'll get smarter responses and can upload<br className="hidden sm:block" />
+              <span className="sm:hidden"> </span>files, images, and more.
             </p>
           </div>
 
@@ -153,7 +153,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 onChange={(e) => setEmail(e.target.value)}
                 required
                 disabled={showPassword}
-                className="w-full h-12 px-4 text-base border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors disabled:opacity-50"
+                className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors disabled:opacity-50"
               />
               {showPassword && (
                 <input
@@ -163,12 +163,12 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   minLength={6}
-                  className="w-full h-12 px-4 text-base border border-input rounded-lg bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
                   autoFocus
                 />
               )}
               {email && userSignupMethod && !showPassword && (
-                <p className="text-sm text-muted-foreground mt-2">
+                <p className="text-sm text-muted-foreground mt-2 px-1">
                   {userSignupMethod === 'google' 
                     ? 'This email is registered with Google. Please use Google sign-in.'
                     : 'This email is registered with email/password. You can sign in with email or Google.'
@@ -183,7 +183,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   setShowPassword(false);
                   setPassword('');
                 }}
-                className="text-sm text-muted-foreground hover:text-foreground mb-4"
+                className="text-sm text-muted-foreground hover:text-foreground mb-4 px-1"
               >
                 ← Back to email
               </button>
@@ -191,7 +191,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             <Button
               type="submit"
               disabled={loading || !email || (userSignupMethod === 'google' && !showPassword) || (showPassword && !password)}
-              className="w-full h-12 rounded-lg font-medium"
+              className="w-full h-11 sm:h-12 rounded-xl font-medium"
             >
               {loading ? (
                 <>
@@ -205,7 +205,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           </form>
 
           {/* OR Divider */}
-          <div className="relative my-6">
+          <div className="relative my-5 sm:my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-border" />
             </div>
@@ -219,7 +219,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             onClick={handleGoogleSignIn}
             disabled={googleLoading || loading}
             variant="outline"
-            className="w-full h-12 font-medium"
+            className="w-full h-11 sm:h-12 font-medium rounded-xl"
           >
             {googleLoading ? (
               <>
@@ -240,7 +240,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           </Button>
 
           {/* Footer */}
-          <div className="mt-6">
+          <div className="mt-5 sm:mt-6">
             <div className="text-center text-xs text-muted-foreground space-x-1">
               <a href="#" className="hover:underline">Terms of Use</a>
               <span>|</span>
