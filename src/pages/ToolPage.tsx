@@ -1073,7 +1073,21 @@ export default function ToolPage() {
                      </PopoverContent>
                   </Popover>}
                 
-                <Textarea 
+                {/* Create image button - only for image generation tools */}
+                {(toolConfig.id === 'generate-image-openai' || toolConfig.id === 'generate-image-nanobanana') && (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs mr-2" 
+                    onClick={handleCreateImageClick}
+                    aria-label="Create an image"
+                  >
+                    <ImageIcon2 className="h-4 w-4 mr-2" />
+                    <span>Create image</span>
+                  </Button>
+                )}
+
+                <Textarea
                   ref={textareaRef} 
                   value={input} 
                   onChange={e => setInput(e.target.value)} 
