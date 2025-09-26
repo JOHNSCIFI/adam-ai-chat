@@ -1088,21 +1088,33 @@ export default function ToolPage() {
                 />
                 
                 <div className="flex items-center gap-1 ml-1 md:ml-2">
-                  {/* Dictation button */}
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    className={`${isMobile ? 'h-7 w-7' : 'h-8 w-8'} p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
-                      isRecording 
-                        ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-white' 
-                        : 'hover:bg-muted/50 focus-visible:ring-primary text-muted-foreground hover:text-foreground'
-                    }`} 
-                    onClick={isRecording ? stopRecording : startRecording}
-                    aria-label={isRecording ? "Stop recording" : "Start voice recording"}
-                    aria-pressed={isRecording}
-                  >
-                    {isRecording ? <MicOff className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} /> : <Mic className={`${isMobile ? 'h-3 w-3' : 'h-4 w-4'}`} />}
-                  </Button>
+                  {/* Dictation button - only show on mobile when input is empty */}
+                  {isMobile && !input.trim() && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-7 w-7 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 bg-muted/30 hover:bg-muted/50 text-muted-foreground hover:text-foreground" 
+                      onClick={isRecording ? stopRecording : startRecording}
+                      aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                      aria-pressed={isRecording}
+                    >
+                      {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                    </Button>
+                  )}
+
+                  {/* Dictation button - always show on desktop */}
+                  {!isMobile && (
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-8 w-8 p-0 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 hover:bg-muted/50 focus-visible:ring-primary text-muted-foreground hover:text-foreground" 
+                      onClick={isRecording ? stopRecording : startRecording}
+                      aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                      aria-pressed={isRecording}
+                    >
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </Button>
+                  )}
 
                   {/* Send button */}
                   <Button 
