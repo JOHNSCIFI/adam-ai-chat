@@ -358,9 +358,11 @@ export default function ToolPage() {
           return;
         }
 
-        // Skip AI response for calculate-calories tool - it only uses webhook
-        if (toolConfig.id === 'calculate-calories') {
-          console.log(`[AUTO-TRIGGER] Skipping AI response for calculate-calories tool`);
+        // Skip AI response for tools that only use webhook
+        if (toolConfig.id === 'calculate-calories' || 
+            toolConfig.id === 'generate-image-openai' || 
+            toolConfig.id === 'generate-image-nanobanana') {
+          console.log(`[AUTO-TRIGGER] Skipping AI response for ${toolConfig.id} tool - webhook only`);
           return;
         }
         const hasAssistantResponseAfter = currentToolMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
