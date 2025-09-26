@@ -245,26 +245,26 @@ export default function ExploreTools() {
 
         {categories.map((category) => (
           <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6 lg:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {filteredTools.map((tool) => (
                 <Card 
                   key={tool.id} 
-                  className="group relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:-translate-y-1 h-full"
+                  className="group relative overflow-hidden border-0 bg-gradient-to-br from-card/80 to-card/40 backdrop-blur-xl hover:shadow-2xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer hover:-translate-y-1"
                   onClick={() => handleToolClick(tool)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <CardHeader className="pb-2 sm:pb-3 relative z-10 p-3 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-0">
-                      <div className="flex items-center gap-2 sm:gap-4 w-full">
-                        <div className="p-1.5 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center flex-shrink-0">
-                          {tool.id.includes('openai') || tool.id.includes('gpt') || tool.id.includes('nanobanana') ? getModelIcon(tool.id) : 
-                           tool.category === 'AI Models' ? getModelIcon(tool.id) : tool.icon}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <CardTitle className="text-sm sm:text-lg lg:text-xl font-bold flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 group-hover:text-primary transition-colors duration-300">
-                            <span className="truncate">{tool.name}</span>
+                  <CardHeader className="pb-3 sm:pb-4 relative z-10">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
+                            {tool.id.includes('openai') || tool.id.includes('gpt') || tool.id.includes('nanobanana') ? getModelIcon(tool.id) : 
+                             tool.category === 'AI Models' ? getModelIcon(tool.id) : tool.icon}
+                          </div>
+                        <div className="flex-1">
+                          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                            {tool.name}
                             {tool.isNew && (
-                              <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 animate-pulse self-start sm:self-auto">
+                              <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 animate-pulse">
                                 New
                               </Badge>
                             )}
@@ -273,17 +273,17 @@ export default function ExploreTools() {
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent className="pt-0 relative z-10 p-3 sm:p-6 sm:pt-0">
-                    <CardDescription className="text-xs sm:text-sm lg:text-base text-muted-foreground leading-relaxed line-clamp-2 sm:line-clamp-none">
+                  <CardContent className="pt-0 relative z-10">
+                    <CardDescription className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                       {tool.description}
                     </CardDescription>
                   </CardContent>
                 </Card>
-               ))}
-             </div>
-           </TabsContent>
-         ))}
-         </Tabs>
+              ))}
+            </div>
+          </TabsContent>
+        ))}
+        </Tabs>
       </div>
 
       {/* Auth Modal */}
