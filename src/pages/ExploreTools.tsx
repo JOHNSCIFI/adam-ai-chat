@@ -192,15 +192,15 @@ export default function ExploreTools() {
   // Helper function to get model icon
   const getModelIcon = (toolId: string) => {
     if (toolId.includes('openai') || toolId.includes('gpt')) {
-      return <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />;
+      return <img src={chatgptLogoSrc} alt="OpenAI" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     } else if (toolId.includes('gemini') || toolId.includes('nanobanana')) {
-      return <img src={geminiLogo} alt="Google Gemini" className="w-5 h-5 object-contain" />;
+      return <img src={geminiLogo} alt="Google Gemini" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     } else if (toolId.includes('deepseek')) {
-      return <img src={deepseekLogo} alt="DeepSeek" className="w-5 h-5 object-contain" />;
+      return <img src={deepseekLogo} alt="DeepSeek" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     } else if (toolId.includes('claude')) {
-      return <img src={claudeLogo} alt="Anthropic Claude" className="w-5 h-5 object-contain" />;
+      return <img src={claudeLogo} alt="Anthropic Claude" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     }
-    return <Bot className="h-5 w-5" />;
+    return <Bot className="h-4 w-4 sm:h-5 sm:w-5" />;
   };
 
   const filteredTools = tools.filter(tool => tool.category === selectedCategory);
@@ -218,32 +218,34 @@ export default function ExploreTools() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background/95 to-background/90">
-      <div className="container mx-auto p-6 max-w-7xl">
-        <div className="mb-12 text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary mb-6">
-            <Sparkles className="h-4 w-4" />
-            <span className="text-sm font-medium">Discover Amazing AI Tools</span>
+      <div className="container mx-auto p-3 sm:p-6 max-w-7xl">
+        <div className="mb-8 sm:mb-12 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full bg-primary/10 text-primary mb-4 sm:mb-6">
+            <Sparkles className="h-3 w-3 sm:h-4 sm:w-4" />
+            <span className="text-xs sm:text-sm font-medium">Discover Amazing AI Tools</span>
           </div>
-          <h1 className="text-5xl font-bold mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text text-transparent">
             Explore Tools
           </h1>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto leading-relaxed">
+          <p className="text-muted-foreground text-base sm:text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed px-4 sm:px-0">
             Discover and use the most powerful AI tools for your everyday tasks. From image generation to complex analysis.
           </p>
         </div>
 
       <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-        <TabsList className="grid w-full grid-cols-7 mb-8">
-          {categories.map((category) => (
-            <TabsTrigger key={category} value={category} className="text-xs sm:text-sm">
-              {category}
-            </TabsTrigger>
-          ))}
-        </TabsList>
+        <div className="overflow-x-auto mb-6 sm:mb-8">
+          <TabsList className="inline-flex w-max min-w-full sm:grid sm:w-full sm:grid-cols-7 gap-1">
+            {categories.map((category) => (
+              <TabsTrigger key={category} value={category} className="text-xs sm:text-sm whitespace-nowrap px-3 sm:px-4">
+                {category}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
 
         {categories.map((category) => (
           <TabsContent key={category} value={category}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {filteredTools.map((tool) => (
                 <Card 
                   key={tool.id} 
@@ -251,15 +253,15 @@ export default function ExploreTools() {
                   onClick={() => handleToolClick(tool)}
                 >
                   <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <CardHeader className="pb-4 relative z-10">
+                  <CardHeader className="pb-3 sm:pb-4 relative z-10">
                       <div className="flex items-start justify-between">
-                        <div className="flex items-center gap-4">
-                          <div className="p-3 rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="p-2 sm:p-3 rounded-lg sm:rounded-xl bg-gradient-to-br from-primary/20 to-primary/10 text-primary group-hover:scale-110 transition-transform duration-300 flex items-center justify-center">
                             {tool.id.includes('openai') || tool.id.includes('gpt') || tool.id.includes('nanobanana') ? getModelIcon(tool.id) : 
                              tool.category === 'AI Models' ? getModelIcon(tool.id) : tool.icon}
                           </div>
                         <div className="flex-1">
-                          <CardTitle className="text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
+                          <CardTitle className="text-lg sm:text-xl font-bold flex items-center gap-2 group-hover:text-primary transition-colors duration-300">
                             {tool.name}
                             {tool.isNew && (
                               <Badge className="text-xs bg-gradient-to-r from-green-500 to-emerald-500 text-white border-0 animate-pulse">
@@ -272,7 +274,7 @@ export default function ExploreTools() {
                     </div>
                   </CardHeader>
                   <CardContent className="pt-0 relative z-10">
-                    <CardDescription className="text-base text-muted-foreground leading-relaxed">
+                    <CardDescription className="text-sm sm:text-base text-muted-foreground leading-relaxed">
                       {tool.description}
                     </CardDescription>
                   </CardContent>
