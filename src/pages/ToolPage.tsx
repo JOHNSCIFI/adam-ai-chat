@@ -1050,7 +1050,9 @@ export default function ToolPage() {
             <div className="relative">
               <div className={`flex items-center border rounded-2xl ${isMobile ? 'px-2 py-1.5 gap-2' : 'px-4 py-3 md:rounded-3xl'} ${actualTheme === 'light' ? 'border-gray-200' : 'border-border'}`}>
                 {/* Attachment button */}
-                {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                {(toolConfig.allowImages || toolConfig.allowFiles || toolConfig.id.includes('generate-image')) && 
+                 toolConfig.id !== 'generate-image-openai' && 
+                 toolConfig.id !== 'generate-image-nanobanana' && <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                     <PopoverTrigger asChild>
                       <Button type="button" variant="ghost" size="sm" className={`${isMobile ? 'h-8 w-8 p-0' : 'h-8 w-8 p-0 mr-2'} hover:bg-muted/20 rounded-full flex-shrink-0`}>
                         <Paperclip className={`${isMobile ? 'h-4 w-4' : 'h-4 w-4'} text-muted-foreground`} />
