@@ -955,7 +955,7 @@ export default function ToolPage() {
                     {/* File attachments for user messages - show before text */}
                     {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-2">
                         {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-xs max-h-48 object-cover cursor-pointer bg-transparent" onClick={() => setSelectedImage({
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-24 sm:max-w-32 md:max-w-xs max-h-32 sm:max-h-40 md:max-h-48 object-cover cursor-pointer bg-transparent" onClick={() => setSelectedImage({
                     url: file.url,
                     name: file.name
                   })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
