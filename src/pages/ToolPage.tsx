@@ -1008,7 +1008,7 @@ export default function ToolPage() {
   }
   return <div className="h-screen flex flex-col bg-background relative">
       {/* Mobile Navigation Bar */}
-      <div className="flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm md:hidden">
+      <div className="fixed top-0 left-0 right-0 z-50 w-full flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm md:hidden">
         <div className="flex items-center gap-3">
           {isMobile && <SidebarTrigger className="mr-2" />}
         </div>
