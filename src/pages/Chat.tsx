@@ -4,11 +4,11 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useSidebar } from '@/components/ui/sidebar';
+import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ChevronDown, ChevronUp } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { toast } from 'sonner';
@@ -76,7 +76,7 @@ export default function Chat() {
   const { user, userProfile } = useAuth();
   const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
-  const { state: sidebarState } = useSidebar();
+  const { state: sidebarState, isMobile } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
 
   // Calculate proper centering based on sidebar state
@@ -121,6 +121,7 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
@@ -1544,9 +1545,66 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   }
   return (
     <div className="fixed inset-0 flex flex-col bg-background">
+      {/* Mobile Header with Sidebar Trigger */}
+      {isMobile && (
+        <div className="relative flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+          <SidebarTrigger 
+            className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Open sidebar menu"
+          />
+          
+          {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <Select value={selectedModel} onValueChange={setSelectedModel} onOpenChange={setIsModelDropdownOpen}>
+              <SelectTrigger 
+                className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden"
+                aria-label="Select AI model"
+              >
+                <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                  <h1 className="text-lg font-semibold">AdamGpt</h1>
+                  {isModelDropdownOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </div>
+              </SelectTrigger>
+              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[300px]" align="center">
+                {models.map(model => (
+                  <SelectItem 
+                    key={model.id} 
+                    value={model.id} 
+                    className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
+                          <span className="w-5 h-5 text-xs font-semibold">
+                            {model.name.split(' ')[0].charAt(0)}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-foreground">{model.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{model.description}</div>
+                        </div>
+                      </div>
+                      {model.type === 'pro' && (
+                        <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium ml-2">
+                          Pro
+                        </span>
+                      )}
+                    </div>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      )}
+
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
-        <div className="w-full px-4 py-6" style={getContainerStyle()}>
+        <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
                 <h3 className="text-2xl font-normal mb-6 text-foreground">
@@ -1733,127 +1791,207 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         </div>
       </div>
 
-      {/* Input area - fixed at bottom without background that obscures buttons */}
-      <div className="fixed bottom-0 left-0 right-0">
-        <div className="px-4 py-4" style={getContainerStyle()}>
+      {/* Input area - mobile design matching Index page */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/20">
+        <div className={`px-3 py-3 ${!isMobile ? 'max-w-3xl mx-auto' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {/* File attachments preview */}
-          {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
+          {selectedFiles.length > 0 && <div className="mb-3 flex flex-wrap gap-2">
               {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                   {getFileIcon(file.type)}
                   <span className="truncate max-w-32">{file.name}</span>
                   <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-foreground">
-                    
+                    <X className="h-3 w-3" />
                   </button>
                 </div>)}
             </div>}
           
-          
-          <div className="relative bg-background border border-border rounded-2xl p-4">
-            <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image..." : "Type a message..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3" rows={1} />
+          <div className="relative bg-background border border-border rounded-xl p-3">
+            <Textarea 
+              ref={textareaRef} 
+              value={input} 
+              onChange={handleInputChange} 
+              onKeyDown={handleKeyDown} 
+              placeholder={isImageMode ? "Describe an image..." : "Type a message..."} 
+              className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
+              rows={1}
+            />
             
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+            {/* Mobile Image mode controls */}
+            {isImageMode && (
+              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+                <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  <ImageIcon2 className="h-3 w-3" />
+                  <span>Image</span>
+                  <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                
+                {/* Styles dropdown */}
+                <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
                   <PopoverTrigger asChild>
-                    <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
-                      <Paperclip className="h-4 w-4" />
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80">
+                      <Palette className="h-3 w-3" />
+                      Styles
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                      <Paperclip className="h-4 w-4" />
-                      Add photos & files
-                    </Button>
-                    
+                  <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                    <div className="grid grid-cols-3 gap-3">
+                      {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                            <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                              {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium leading-tight">{style.name}</span>
+                        </button>)}
+                    </div>
                   </PopoverContent>
                 </Popover>
-                
-                {isImageMode && !selectedStyle ? <>
-                    {/* Image mode indicator */}
-                    <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
-                      <ImageIcon className="h-3 w-3" />
-                      <span>Image</span>
-                      <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
-                        <X className="h-3 w-3" />
-                      </button>
-                    </div>
+              </div>
+            )}
+
+            <div className="flex items-center justify-between">
+              {/* Mobile controls */}
+              {isMobile ? (
+                <>
+                  {/* Left side - Upload button */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                        aria-label="Upload or create content"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleFileUpload}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        Add photos & files
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleCreateImageClick}
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        Create an image
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Right side - Voice controls */}
+                  <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
+                    <Button 
+                      size="sm" 
+                      className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
+                        isRecording 
+                          ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' 
+                          : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'
+                      } text-background`} 
+                      onClick={isRecording ? stopRecording : startRecording}
+                      aria-label={isRecording ? "Stop recording" : "Start voice recording"}
+                      aria-pressed={isRecording}
+                    >
+                      {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                    </Button>
                     
-                    {/* Show Styles dropdown before style selection */}
-                    <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                    <VoiceModeButton 
+                      onMessageSent={(messageId, content, role) => {
+                        if (role === 'user' && chatId) {
+                          if (!processedUserMessages.current.has(chatId)) {
+                            processedUserMessages.current.set(chatId, new Set());
+                          }
+                          processedUserMessages.current.get(chatId)!.add(messageId);
+                          fetchMessages();
+                        } else if (role === 'assistant') {
+                          setTimeout(() => {
+                            fetchMessages();
+                          }, 1000);
+                        }
+                      }} 
+                      chatId={chatId || 'temp'} 
+                      actualTheme={actualTheme}
+                    />
+                  </div>
+                </>
+              ) : (
+                /* Desktop controls */
+                <>
+                  <div className="flex items-center gap-2">
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                       <PopoverTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50">
-                          <Palette className="h-3 w-3" />
-                          Styles
-                          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                          </svg>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
+                          <Paperclip className="h-4 w-4" />
                         </Button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                        <div className="grid grid-cols-3 gap-3">
-                          {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                              <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
-                                <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
-                                  {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
-                                </span>
-                              </div>
-                              <span className="text-xs font-medium leading-tight">{style.name}</span>
-                            </button>)}
-                        </div>
+                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                          <Paperclip className="h-4 w-4" />
+                          Add photos & files
+                        </Button>
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                          <ImageIcon className="h-4 w-4" />
+                          Create an image
+                        </Button>
                       </PopoverContent>
                     </Popover>
-                  </> : <Button variant="ghost" size="sm" className="h-8 px-3 rounded-full border border-border/50 text-muted-foreground" onClick={handleCreateImageClick}>
-                    <ImageIcon className="h-4 w-4 mr-1" />Create an image
-                  </Button>}
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Select value={selectedModel} onValueChange={setSelectedModel}>
-                  <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
-                    <SelectValue>
-                      <span className="text-sm font-medium">{selectedModelData?.name}</span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent className="z-50 bg-background border shadow-lg">
-                    {models.map(model => <SelectItem key={model.id} value={model.id}>
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <div className="font-medium">{model.name}</div>
-                            <div className="text-xs text-muted-foreground">{model.description}</div>
-                          </div>
-                          {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                        </div>
-                      </SelectItem>)}
-                  </SelectContent>
-                </Select>
-                
-                <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
-                  {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                </Button>
-                
-                <VoiceModeButton onMessageSent={(messageId, content, role) => {
-                // Mark voice messages as processed to prevent auto-trigger duplicates
-                if (role === 'user' && chatId) {
-                  // Add to processed messages for this specific chat
-                  if (!processedUserMessages.current.has(chatId)) {
-                    processedUserMessages.current.set(chatId, new Set());
-                  }
-                  processedUserMessages.current.get(chatId)!.add(messageId);
-                  console.log(`✅ Voice user message marked as processed in chat ${chatId}:`, messageId);
-                  // Refresh messages immediately for user voice input
-                  fetchMessages();
-                } else if (role === 'assistant') {
-                  // For assistant messages, refresh after a delay to let audio play
-                  setTimeout(() => {
-                    fetchMessages();
-                  }, 1000);
-                }
-              }} chatId={chatId} actualTheme={actualTheme} />
-              </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
+                        <SelectValue>
+                          <span className="text-sm font-medium">{selectedModelData?.name}</span>
+                        </SelectValue>
+                      </SelectTrigger>
+                      <SelectContent className="z-50 bg-background border shadow-lg">
+                        {models.map(model => <SelectItem key={model.id} value={model.id}>
+                            <div className="flex items-center gap-2">
+                              <div>
+                                <div className="font-medium">{model.name}</div>
+                                <div className="text-xs text-muted-foreground">{model.description}</div>
+                              </div>
+                              {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                            </div>
+                          </SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    
+                    <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
+                      {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    </Button>
+                    
+                    <VoiceModeButton onMessageSent={(messageId, content, role) => {
+                      if (role === 'user' && chatId) {
+                        if (!processedUserMessages.current.has(chatId)) {
+                          processedUserMessages.current.set(chatId, new Set());
+                        }
+                        processedUserMessages.current.get(chatId)!.add(messageId);
+                        fetchMessages();
+                      } else if (role === 'assistant') {
+                        setTimeout(() => {
+                          fetchMessages();
+                        }, 1000);
+                      }
+                    }} chatId={chatId || 'temp'} actualTheme={actualTheme} />
+                  </div>
+                </>
+              )}
             </div>
           </div>
-          
-          
         </div>
       </div>
 
