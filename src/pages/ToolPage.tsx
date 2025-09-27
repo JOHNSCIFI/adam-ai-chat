@@ -1078,11 +1078,11 @@ export default function ToolPage() {
         // Messages
         <div className="py-8 pb-32 space-y-6">
               {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-2 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
+                  <div className={`max-w-[85%] w-full break-words rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
                     {/* File attachments for user messages - show before text */}
                     {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-2">
                         {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-40 sm:max-w-48 md:max-w-xs max-h-40 sm:max-h-48 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-32 sm:max-w-40 md:max-w-48 max-h-32 sm:max-h-40 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
                     url: file.url,
                     name: file.name
                   })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
@@ -1092,7 +1092,8 @@ export default function ToolPage() {
                           </div>)}
                       </div>}
 
-                    <div className="prose prose-sm max-w-none dark:prose-invert">
+                    <div className="prose prose-sm max-w-full break-words overflow-hidden dark:prose-invert"
+                      style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {message.content}
                       </ReactMarkdown>
@@ -1101,7 +1102,7 @@ export default function ToolPage() {
                     {/* File attachments for assistant messages - show after text */}
                     {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-3 space-y-2">
                         {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-40 sm:max-w-48 md:max-w-xs max-h-40 sm:max-h-48 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
+                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-32 sm:max-w-40 md:max-w-48 max-h-32 sm:max-h-40 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
                     url: file.url,
                     name: file.name
                   })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
