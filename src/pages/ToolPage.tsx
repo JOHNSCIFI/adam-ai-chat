@@ -168,9 +168,9 @@ const toolConfigs: Record<string, ToolInfo> = {
     id: 'analyse-files-openai',
     name: 'Analyse Files with OpenAI',
     description: 'Extract insights and information from various file types',
-    instructions: 'Upload documents, PDFs, images, or other files and I\'ll analyze their content, extract key information, and answer questions about them.',
+    instructions: 'Upload documents, PDFs, or other files and I\'ll analyze their content, extract key information, and answer questions about them.',
     icon: <span className="text-2xl">📄</span>,
-    allowImages: true,
+    allowImages: false,
     allowFiles: true
   },
   'grok-4': {
@@ -619,7 +619,16 @@ export default function ToolPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      if (!toolConfig?.allowFiles && toolConfig?.allowImages) {
+      if (toolConfig?.id === 'analyse-files-openai') {
+        // Only allow non-image files for analyse-files-openai
+        const nonImageFiles = Array.from(files).filter(file => !file.type.startsWith('image/'));
+        if (nonImageFiles.length > 0) {
+          setSelectedFiles(prev => [...prev, ...nonImageFiles]);
+        }
+        if (nonImageFiles.length !== files.length) {
+          toast.error('Only non-image files are allowed for this tool');
+        }
+      } else if (!toolConfig?.allowFiles && toolConfig?.allowImages) {
         const imageFiles = Array.from(files).filter(file => file.type.startsWith('image/'));
         setSelectedFiles(prev => [...prev, ...imageFiles]);
       } else {
@@ -648,15 +657,24 @@ export default function ToolPage() {
     
     console.log('[DEBUG] Drag over - toolConfig.id:', toolConfig?.id);
     
-    // Allow drag over for both image analysis tools
+    // Allow drag over for file analysis and image analysis tools
     if (toolConfig?.id === 'analyse-files-openai' || toolConfig?.id === 'analyse-image-openai') {
       const items = Array.from(e.dataTransfer.items);
-      const hasImages = items.some(item => item.type.startsWith('image/'));
       
-      console.log('[DEBUG] Has images:', hasImages, 'Items:', items.map(i => i.type));
-      
-      if (hasImages) {
-        setIsDragOver(true);
+      if (toolConfig?.id === 'analyse-files-openai') {
+        // For file analysis, accept non-image files
+        const hasFiles = items.some(item => !item.type.startsWith('image/') && item.kind === 'file');
+        console.log('[DEBUG] Has non-image files:', hasFiles, 'Items:', items.map(i => i.type));
+        if (hasFiles) {
+          setIsDragOver(true);
+        }
+      } else {
+        // For image analysis, accept image files
+        const hasImages = items.some(item => item.type.startsWith('image/'));
+        console.log('[DEBUG] Has images:', hasImages, 'Items:', items.map(i => i.type));
+        if (hasImages) {
+          setIsDragOver(true);
+        }
       }
     }
   };
@@ -674,22 +692,38 @@ export default function ToolPage() {
     
     console.log('[DEBUG] Drop - toolConfig.id:', toolConfig?.id);
     
-    // Handle drops for both image analysis tools
+    // Handle drops for both file and image analysis tools
     if (toolConfig?.id !== 'analyse-files-openai' && toolConfig?.id !== 'analyse-image-openai') {
-      console.log('[DEBUG] Tool not supported for image drop');
+      console.log('[DEBUG] Tool not supported for file drop');
       return;
     }
 
     const files = Array.from(e.dataTransfer.files);
-    const imageFiles = files.filter(file => file.type.startsWith('image/'));
     
-    console.log('[DEBUG] Files dropped:', files.length, 'Image files:', imageFiles.length);
-    
-    if (imageFiles.length > 0) {
-      setSelectedFiles(prev => [...prev, ...imageFiles]);
-      toast.success(`${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''} added`);
+    if (toolConfig?.id === 'analyse-files-openai') {
+      // Only accept non-image files for analyse-files-openai
+      const nonImageFiles = files.filter(file => !file.type.startsWith('image/'));
+      
+      console.log('[DEBUG] Files dropped:', files.length, 'Non-image files:', nonImageFiles.length);
+      
+      if (nonImageFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...nonImageFiles]);
+        toast.success(`${nonImageFiles.length} file${nonImageFiles.length > 1 ? 's' : ''} added`);
+      } else {
+        toast.error('Only non-image files are allowed for this tool');
+      }
     } else {
-      toast.error('Only image files are allowed for this tool');
+      // For analyse-image-openai, only accept image files
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      
+      console.log('[DEBUG] Files dropped:', files.length, 'Image files:', imageFiles.length);
+      
+      if (imageFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...imageFiles]);
+        toast.success(`${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''} added`);
+      } else {
+        toast.error('Only image files are allowed for this tool');
+      }
     }
   };
 
@@ -1011,9 +1045,19 @@ export default function ToolPage() {
           {isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
-                <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
-                <h3 className="text-lg font-semibold mb-2">Drop your images here</h3>
-                <p className="text-muted-foreground">Only image files are supported</p>
+                {toolConfig.id === 'analyse-files-openai' ? (
+                  <>
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-primary" />
+                    <h3 className="text-lg font-semibold mb-2">Drop your files here</h3>
+                    <p className="text-muted-foreground">Documents, PDFs, and other non-image files are supported</p>
+                  </>
+                ) : (
+                  <>
+                    <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
+                    <h3 className="text-lg font-semibold mb-2">Drop your images here</h3>
+                    <p className="text-muted-foreground">Only image files are supported</p>
+                  </>
+                )}
               </div>
             </div>
           )}
@@ -1151,13 +1195,13 @@ export default function ToolPage() {
                       </Button>
                     </PopoverTrigger>
                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start" side="bottom">
-                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => {
+                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => {
                     handleFileUpload();
                     setIsPopoverOpen(false);
                   }}>
-                         <Paperclip className="h-4 w-4" />
-                         {toolConfig.id === 'analyse-image-openai' || toolConfig.id === 'calculate-calories' ? 'Add photo' : 'Add photos & files'}
-                       </Button>
+                          <Paperclip className="h-4 w-4" />
+                          {toolConfig.id === 'analyse-image-openai' || toolConfig.id === 'calculate-calories' ? 'Add photo' : toolConfig.id === 'analyse-files-openai' ? 'Add files' : 'Add photos & files'}
+                        </Button>
                         {toolConfig.id !== 'calculate-calories' && toolConfig.id !== 'analyse-files-openai' && toolConfig.id !== 'analyse-image-openai' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                             <ImageIcon2 className="h-4 w-4" />
                             Create image
@@ -1245,7 +1289,20 @@ export default function ToolPage() {
       </div>
 
       {/* File input */}
-      <input ref={fileInputRef} type="file" className="hidden" onChange={handleFileChange} multiple accept={toolConfig.allowImages && !toolConfig.allowFiles ? "image/*" : "*"} />
+      <input 
+        ref={fileInputRef} 
+        type="file" 
+        className="hidden" 
+        onChange={handleFileChange} 
+        multiple 
+        accept={
+          toolConfig.id === 'analyse-files-openai' 
+            ? ".pdf,.doc,.docx,.txt,.csv,.json,.xml,.md" // Only non-image files
+            : toolConfig.allowImages && !toolConfig.allowFiles 
+              ? "image/*" 
+              : "*"
+        } 
+      />
 
       {/* Image popup modal */}
       {selectedImage && <ImagePopupModal isOpen={true} imageUrl={selectedImage.url} onClose={() => setSelectedImage(null)} />}
