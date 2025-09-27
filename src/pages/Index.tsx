@@ -19,9 +19,37 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
-import { getLegacyModels, getAvailableModels } from '@/data/aiModels';
-
-const models = getLegacyModels();
+const models = [{
+  id: 'gpt-4o-mini',
+  name: 'OpenAI GPT-4o mini',
+  description: "OpenAI's Fastest Model",
+  type: 'free'
+}, {
+  id: 'gpt-4o',
+  name: 'OpenAI GPT-4o',
+  description: "OpenAI's Most Accurate Model",
+  type: 'pro'
+}, {
+  id: 'gpt-5',
+  name: 'OpenAI GPT-5',
+  description: "OpenAI's Most Advanced Model",
+  type: 'pro'
+}, {
+  id: 'claude',
+  name: 'Claude',
+  description: "Anthropic's latest AI model",
+  type: 'pro'
+}, {
+  id: 'deepseek',
+  name: 'DeepSeek',
+  description: "Great for most questions",
+  type: 'pro'
+}, {
+  id: 'gemini',
+  name: 'Google Gemini',
+  description: "Google's most capable AI",
+  type: 'pro'
+}];
 const suggestionButtons = [{
   icon: Edit3,
   label: 'Help me write',
@@ -118,7 +146,37 @@ const suggestionPrompts = {
     'Generate ideas for a unique bucket list'
   ]
 };
-const availableModels = getAvailableModels();
+const availableModels = [{
+  id: 'gpt-4o-mini',
+  name: 'OpenAI GPT-4o mini',
+  description: 'GPT-4o mini, developed by OpenAI, stands as one of the most efficient AI models available.',
+  icon: 'openai'
+}, {
+  id: 'gpt-4o',
+  name: 'OpenAI GPT-4o',
+  description: 'GPT-4o, OpenAI\'s newest flagship model, is designed for complex reasoning tasks.',
+  icon: 'openai'
+}, {
+  id: 'gpt-5',
+  name: 'OpenAI GPT-5',
+  description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
+  icon: 'openai'
+}, {
+  id: 'claude',
+  name: 'Claude',
+  description: 'Claude, Anthropic\'s advanced AI model, excels at detailed analysis and reasoning.',
+  icon: 'claude'
+}, {
+  id: 'deepseek',
+  name: 'DeepSeek',
+  description: 'DeepSeek offers powerful AI capabilities for a wide range of applications.',
+  icon: 'deepseek'
+}, {
+  id: 'gemini',
+  name: 'Google Gemini',
+  description: 'Gemini, Google\'s most advanced AI, is designed for multimodal understanding.',
+  icon: 'gemini'
+}];
 export default function Index() {
   const {
     user,
