@@ -1540,7 +1540,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             </div>
           </div>
         </div>
-      </div>;
+      </div>
   }
   return <div className="fixed inset-0 flex flex-col bg-background">
       {/* Messages area - takes all available space above input */}
