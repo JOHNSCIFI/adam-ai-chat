@@ -657,8 +657,8 @@ export default function ToolPage() {
     
     console.log('[DEBUG] Drag over - toolConfig.id:', toolConfig?.id);
     
-    // Allow drag over for file analysis and image analysis tools
-    if (toolConfig?.id === 'analyse-files-openai' || toolConfig?.id === 'analyse-image-openai') {
+    // Allow drag over for tools that support images or files
+    if (toolConfig?.allowImages || toolConfig?.allowFiles) {
       const items = Array.from(e.dataTransfer.items);
       
       if (toolConfig?.id === 'analyse-files-openai') {
@@ -668,8 +668,8 @@ export default function ToolPage() {
         if (hasFiles) {
           setIsDragOver(true);
         }
-      } else {
-        // For image analysis, accept image files
+      } else if (toolConfig?.allowImages) {
+        // For all other image-accepting tools, accept image files
         const hasImages = items.some(item => item.type.startsWith('image/'));
         console.log('[DEBUG] Has images:', hasImages, 'Items:', items.map(i => i.type));
         if (hasImages) {
@@ -692,8 +692,8 @@ export default function ToolPage() {
     
     console.log('[DEBUG] Drop - toolConfig.id:', toolConfig?.id);
     
-    // Handle drops for both file and image analysis tools
-    if (toolConfig?.id !== 'analyse-files-openai' && toolConfig?.id !== 'analyse-image-openai') {
+    // Handle drops for tools that support images or files
+    if (!toolConfig?.allowImages && !toolConfig?.allowFiles) {
       console.log('[DEBUG] Tool not supported for file drop');
       return;
     }
@@ -712,8 +712,8 @@ export default function ToolPage() {
       } else {
         toast.error('Only non-image files are allowed for this tool');
       }
-    } else {
-      // For analyse-image-openai, only accept image files
+    } else if (toolConfig?.allowImages) {
+      // For all image-accepting tools, only accept image files
       const imageFiles = files.filter(file => file.type.startsWith('image/'));
       
       console.log('[DEBUG] Files dropped:', files.length, 'Image files:', imageFiles.length);
@@ -1035,14 +1035,14 @@ export default function ToolPage() {
 
       {/* Messages Container */}
       <div 
-        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
+        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && (toolConfig?.allowImages || toolConfig?.allowFiles) ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className={`${isMobile ? 'px-4 max-w-full overflow-x-hidden' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {/* Drag and drop indicator */}
-          {isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') && (
+          {isDragOver && (toolConfig?.allowImages || toolConfig?.allowFiles) && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
                 {toolConfig.id === 'analyse-files-openai' ? (
@@ -1051,11 +1051,17 @@ export default function ToolPage() {
                     <h3 className="text-lg font-semibold mb-2">Drop your files here</h3>
                     <p className="text-muted-foreground">Documents, PDFs, and other non-image files are supported</p>
                   </>
-                ) : (
+                ) : toolConfig?.allowImages ? (
                   <>
                     <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
                     <h3 className="text-lg font-semibold mb-2">Drop your images here</h3>
-                    <p className="text-muted-foreground">Only image files are supported</p>
+                    <p className="text-muted-foreground">JPG, PNG, WEBP and other image formats are supported</p>
+                  </>
+                ) : (
+                  <>
+                    <FileText className="h-12 w-12 mx-auto mb-4 text-primary" />
+                    <h3 className="text-lg font-semibold mb-2">Drop your files here</h3>
+                    <p className="text-muted-foreground">Supported file formats can be uploaded</p>
                   </>
                 )}
               </div>
