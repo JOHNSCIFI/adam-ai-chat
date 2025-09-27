@@ -1006,7 +1006,7 @@ export default function ToolPage() {
         </div>
       </div>;
   }
-  return <div className="h-screen flex flex-col bg-background relative">
+  return <div className="h-screen flex flex-col bg-background relative overflow-x-hidden">
       {/* Mobile Navigation Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 w-full flex items-center justify-between p-4 border-b border-border/40 bg-background/80 backdrop-blur-sm md:hidden">
         <div className="flex items-center gap-3">
@@ -1040,7 +1040,7 @@ export default function ToolPage() {
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
-        <div className={`${isMobile ? 'px-4' : ''}`} style={isMobile ? {} : getContainerStyle()}>
+        <div className={`${isMobile ? 'px-4 max-w-full overflow-x-hidden' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {/* Drag and drop indicator */}
           {isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
