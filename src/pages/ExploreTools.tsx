@@ -68,13 +68,13 @@ const tools: Tool[] = [
     route: '/openai-gpt-4-1'
   },
   {
-    id: 'deepseek',
-    name: 'DeepSeek',
+    id: 'deepseek-v31-terminus',
+    name: 'DeepSeek-V3.1 Terminus',
     description: 'Advanced AI model great for most questions and tasks',
     category: 'AI Models',
     icon: <Brain className="h-5 w-5" />,
     isNew: true,
-    route: '/deepseek'
+    route: '/deepseek-v31-terminus'
   },
   {
     id: 'deepseek-r1',
@@ -86,20 +86,48 @@ const tools: Tool[] = [
     route: '/deepseek-r1'
   },
   {
-    id: 'google-gemini',
-    name: 'Google Gemini',
-    description: 'Google\'s most capable AI for a wide range of tasks',
+    id: 'openai-gpt-4o-mini',
+    name: 'OpenAI GPT-4o-mini',
+    description: 'Fast and efficient OpenAI model for everyday tasks',
     category: 'AI Models',
-    icon: <Sparkles className="h-5 w-5" />,
-    route: '/google-gemini'
+    icon: <Bot className="h-5 w-5" />,
+    route: '/openai-gpt-4o-mini'
   },
   {
-    id: 'grok-3-mini',
-    name: 'Grok-3 Mini',
-    description: 'Fast and lightweight AI model built for speed',
+    id: 'openai-gpt-5',
+    name: 'OpenAI GPT-5',
+    description: 'OpenAI\'s most advanced and powerful AI model',
     category: 'AI Models',
-    icon: <Zap className="h-5 w-5" />,
-    route: '/grok-3-mini'
+    icon: <Bot className="h-5 w-5" />,
+    isNew: true,
+    route: '/openai-gpt-5'
+  },
+  {
+    id: 'claude-opus-4',
+    name: 'Claude Opus 4',
+    description: 'Anthropic\'s most capable and intelligent AI model',
+    category: 'AI Models',
+    icon: <Brain className="h-5 w-5" />,
+    isNew: true,
+    route: '/claude-opus-4'
+  },
+  {
+    id: 'claude-sonnet-4',
+    name: 'Claude Sonnet 4',
+    description: 'High-performance Claude model with exceptional reasoning',
+    category: 'AI Models',
+    icon: <Brain className="h-5 w-5" />,
+    isNew: true,
+    route: '/claude-sonnet-4'
+  },
+  {
+    id: 'gemini-2-5-flash',
+    name: 'Gemini 2.5 Flash',
+    description: 'Google\'s latest and most capable AI for a wide range of tasks',
+    category: 'AI Models',
+    icon: <Sparkles className="h-5 w-5" />,
+    isNew: true,
+    route: '/gemini-2-5-flash'
   },
   {
     id: 'grok-4',
@@ -226,10 +254,13 @@ export default function ExploreTools() {
       'calculate-calories',
       'openai-gpt-4o', 
       'openai-gpt-4-1',
-      'deepseek',
+      'deepseek-v31-terminus',
       'deepseek-r1',
-      'google-gemini',
-      'grok-3-mini'
+      'openai-gpt-4o-mini',
+      'openai-gpt-5',
+      'claude-opus-4',
+      'claude-sonnet-4',
+      'gemini-2-5-flash'
     ];
     
     if (chatTools.includes(tool.id)) {

@@ -8,7 +8,7 @@ import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ChevronDown, ChevronUp } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { toast } from 'sonner';
@@ -19,6 +19,11 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import AuthModal from '@/components/AuthModal';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -38,19 +43,29 @@ const models = [{
   description: "OpenAI's Most Advanced Model",
   type: 'pro'
 }, {
-  id: 'claude',
-  name: 'Claude',
-  description: "Anthropic's latest AI model",
+  id: 'claude-opus-4',
+  name: 'Claude Opus 4',
+  description: "Anthropic's most capable AI model",
   type: 'pro'
 }, {
-  id: 'deepseek',
-  name: 'DeepSeek',
-  description: "Great for most questions",
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  description: "High-performance Claude model",
   type: 'pro'
 }, {
-  id: 'gemini',
-  name: 'Google Gemini',
-  description: "Google's most capable AI",
+  id: 'deepseek-v31-terminus',
+  name: 'DeepSeek-V3.1 Terminus',
+  description: "Great for most questions and tasks",
+  type: 'pro'
+}, {
+  id: 'deepseek-r1',
+  name: 'DeepSeek R1',
+  description: "Enhanced reasoning capabilities",
+  type: 'pro'
+}, {
+  id: 'gemini-2-5-flash',
+  name: 'Gemini 2.5 Flash',
+  description: "Google's latest and most capable AI",
   type: 'free'
 }];
 interface Message {
@@ -77,6 +92,9 @@ export default function Chat() {
   const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
   const { state: sidebarState, isMobile } = useSidebar();
+  
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
   const collapsed = sidebarState === 'collapsed';
 
   // Calculate proper centering based on sidebar state
@@ -1958,15 +1976,26 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </SelectValue>
                       </SelectTrigger>
                       <SelectContent className="z-50 bg-background border shadow-lg">
-                        {models.map(model => <SelectItem key={model.id} value={model.id}>
-                            <div className="flex items-center gap-2">
-                              <div>
-                                <div className="font-medium">{model.name}</div>
-                                <div className="text-xs text-muted-foreground">{model.description}</div>
-                              </div>
-                              {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                            </div>
-                          </SelectItem>)}
+                         {models.map(model => <SelectItem key={model.id} value={model.id}>
+                             <div className="flex items-center gap-2">
+                               {model.id.includes('gpt') ? (
+                                 <img src={chatgptLogoSrc} alt="OpenAI" className="w-4 h-4 object-contain" />
+                               ) : model.id.includes('claude') ? (
+                                 <img src={claudeLogo} alt="Claude" className="w-4 h-4 object-contain" />
+                               ) : model.id.includes('deepseek') ? (
+                                 <img src={deepseekLogo} alt="DeepSeek" className="w-4 h-4 object-contain" />
+                               ) : model.id.includes('gemini') ? (
+                                 <img src={geminiLogo} alt="Gemini" className="w-4 h-4 object-contain" />
+                               ) : (
+                                 <Bot className="h-4 w-4" />
+                               )}
+                               <div>
+                                 <div className="font-medium">{model.name}</div>
+                                 <div className="text-xs text-muted-foreground">{model.description}</div>
+                               </div>
+                               {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
+                             </div>
+                           </SelectItem>)}
                       </SelectContent>
                     </Select>
                     
