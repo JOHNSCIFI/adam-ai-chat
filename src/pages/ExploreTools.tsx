@@ -263,13 +263,28 @@ export default function ExploreTools() {
       'openai-gpt-5',
       'claude-opus-4',
       'claude-sonnet-4',
-      'gemini-2-5-flash'
+      'gemini-2-5-flash',
+      'grok-4'
     ];
     
     if (chatTools.includes(tool.id)) {
       // Generate unique chat ID and navigate to chat page
       const chatId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      navigate(`/chat/${chatId}`);
+      // Map tool id to model id for pre-selection
+      const toolToModelMap: { [key: string]: string } = {
+        'openai-gpt-4o': 'gpt-4o',
+        'openai-gpt-4-1': 'gpt-4o',
+        'openai-gpt-5': 'gpt-5',
+        'openai-gpt-4o-mini': 'gpt-4o-mini',
+        'claude-opus-4': 'claude-opus-4',
+        'claude-sonnet-4': 'claude-sonnet-4',
+        'deepseek-v31-terminus': 'deepseek-v31-terminus',
+        'deepseek-r1': 'deepseek-r1',
+        'gemini-2-5-flash': 'gemini-2-5-flash',
+        'grok-4': 'grok-4'
+      };
+      const selectedModel = toolToModelMap[tool.id] || 'gpt-4o-mini';
+      navigate(`/chat/${chatId}`, { state: { selectedModel } });
     } else {
       // Generate unique ID for this tool session
       const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

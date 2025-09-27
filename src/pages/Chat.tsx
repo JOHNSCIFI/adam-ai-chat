@@ -68,6 +68,11 @@ const models = [{
   name: 'Gemini 2.5 Flash',
   description: "Google's latest and most capable AI",
   type: 'free'
+}, {
+  id: 'grok-4',
+  name: 'Grok-4',
+  description: "Advanced AI for tackling intricate challenges",
+  type: 'pro'
 }];
 interface Message {
   id: string;
