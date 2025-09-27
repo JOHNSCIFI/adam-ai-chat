@@ -265,6 +265,7 @@ export default function ToolPage() {
   const [imageAnalysisResults, setImageAnalysisResults] = useState<Map<string, ImageAnalysisResult>>(new Map());
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -629,6 +630,49 @@ export default function ToolPage() {
     }
   };
 
+  // Drag and drop handlers
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Only allow drag over for image analysis tool
+    if (toolConfig.id === 'analyse-image-openai') {
+      const items = Array.from(e.dataTransfer.items);
+      const hasImages = items.some(item => item.type.startsWith('image/'));
+      
+      if (hasImages) {
+        setIsDragOver(true);
+      }
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    // Only handle drops for image analysis tool
+    if (toolConfig.id !== 'analyse-image-openai') {
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length > 0) {
+      setSelectedFiles(prev => [...prev, ...imageFiles]);
+      toast.success(`${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''} added`);
+    } else {
+      toast.error('Only image files are allowed for this tool');
+    }
+  };
+
   const startRecording = () => {
     if (!user) {
       toast.error('Please sign in to use voice input');
@@ -933,8 +977,24 @@ export default function ToolPage() {
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto pb-20 md:pb-0">
+      <div 
+        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && toolConfig.id === 'analyse-image-openai' ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         <div className={`${isMobile ? 'px-4' : ''}`} style={isMobile ? {} : getContainerStyle()}>
+          {/* Drag and drop indicator */}
+          {isDragOver && toolConfig.id === 'analyse-image-openai' && (
+            <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
+              <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
+                <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-lg font-semibold mb-2">Drop your images here</h3>
+                <p className="text-muted-foreground">Only image files are supported</p>
+              </div>
+            </div>
+          )}
+          
           {messages.length === 0 ?
         // Welcome message
         <div className="flex items-center justify-center min-h-[60vh]">
