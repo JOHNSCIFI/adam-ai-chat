@@ -701,7 +701,7 @@ export default function Chat() {
               name: file.name,
               size: file.size,
               type: file.type,
-              url: URL.createObjectURL(file) // Use blob URL temporarily
+              url: file.url // Use existing blob URL
             });
           } catch (error) {
             console.error('Error saving image to storage:', error);
@@ -1542,7 +1542,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         </div>
       </div>
   }
-  return <div className="fixed inset-0 flex flex-col bg-background">
+  return (
+    <div className="fixed inset-0 flex flex-col bg-background">
       {/* Messages area - takes all available space above input */}
       <div className="flex-1 overflow-y-auto pb-24">
         <div className="w-full px-4 py-6" style={getContainerStyle()}>
