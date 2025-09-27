@@ -31,47 +31,47 @@ import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageA
 const models = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
-  description: "OpenAI's Fastest Model",
+  description: "Fast & efficient",
   type: 'free'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
-  description: "OpenAI's Most Accurate Model",
+  description: "Most accurate",
   type: 'pro'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
-  description: "OpenAI's Most Advanced Model",
+  description: "Most advanced",
   type: 'pro'
 }, {
   id: 'claude-opus-4',
   name: 'Claude Opus 4',
-  description: "Anthropic's most capable AI model",
+  description: "Most capable",
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
-  description: "High-performance Claude model",
+  description: "High performance",
   type: 'pro'
 }, {
   id: 'deepseek-v31-terminus',
   name: 'DeepSeek-V3.1 Terminus',
-  description: "Great for most questions and tasks",
+  description: "Great for tasks",
   type: 'pro'
 }, {
   id: 'deepseek-r1',
   name: 'DeepSeek R1',
-  description: "Enhanced reasoning capabilities",
+  description: "Enhanced reasoning",
   type: 'pro'
 }, {
   id: 'gemini-2-5-flash',
   name: 'Gemini 2.5 Flash',
-  description: "Google's latest and most capable AI",
-  type: 'free'
+  description: "Google's latest",
+  type: 'pro'
 }, {
   id: 'grok-4',
   name: 'Grok-4',
-  description: "Advanced AI for tackling intricate challenges",
+  description: "Advanced challenges",
   type: 'pro'
 }];
 interface Message {
@@ -1593,12 +1593,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[300px]" align="center">
+              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-1 min-w-[280px] max-w-[320px]" align="center">
                 {models.map(model => (
                   <SelectItem 
                     key={model.id} 
                     value={model.id} 
-                    className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    className="rounded-xl px-2 py-2 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
                   >
                     <div className="flex items-center justify-between w-full">
                       <div className="flex items-center gap-3">
@@ -1981,30 +1981,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           <span className="text-sm font-medium">{selectedModelData?.name}</span>
                         </SelectValue>
                       </SelectTrigger>
-                      <SelectContent className="z-50 bg-background border shadow-lg">
-                         {models.map(model => <SelectItem key={model.id} value={model.id}>
-                             <div className="flex items-center gap-2">
-                               {model.id.includes('gpt') ? (
-                                 <img src={chatgptLogoSrc} alt="OpenAI" className="w-4 h-4 object-contain" />
-                               ) : model.id.includes('claude') ? (
-                                 <img src={claudeLogo} alt="Claude" className="w-4 h-4 object-contain" />
-                               ) : model.id.includes('deepseek') ? (
-                                 <img src={deepseekLogo} alt="DeepSeek" className="w-4 h-4 object-contain" />
-                               ) : model.id.includes('gemini') ? (
-                                 <img src={geminiLogo} alt="Gemini" className="w-4 h-4 object-contain" />
-                               ) : model.id.includes('grok') ? (
-                                 <img src={grokLogo} alt="Grok" className="w-4 h-4 object-contain" />
-                               ) : (
-                                 <Bot className="h-4 w-4" />
-                               )}
-                               <div>
-                                 <div className="font-medium">{model.name}</div>
-                                 <div className="text-xs text-muted-foreground">{model.description}</div>
-                               </div>
-                               {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded">Pro</span>}
-                             </div>
-                           </SelectItem>)}
-                      </SelectContent>
+                       <SelectContent className="z-50 bg-background border shadow-lg rounded-lg p-1 min-w-[200px] max-w-[280px]">
+                          {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
+                              <div className="flex items-center gap-2">
+                                {model.id.includes('gpt') ? (
+                                  <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ) : model.id.includes('claude') ? (
+                                  <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ) : model.id.includes('deepseek') ? (
+                                  <img src={deepseekLogo} alt="DeepSeek" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ) : model.id.includes('gemini') ? (
+                                  <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ) : model.id.includes('grok') ? (
+                                  <img src={grokLogo} alt="Grok" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                ) : (
+                                  <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                )}
+                                <div className="min-w-0 flex-1">
+                                  <div className="font-medium text-sm truncate">{model.name}</div>
+                                  <div className="text-xs text-muted-foreground truncate">{model.description}</div>
+                                </div>
+                                {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0">Pro</span>}
+                              </div>
+                            </SelectItem>)}
+                       </SelectContent>
                     </Select>
                     
                     <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-foreground hover:bg-foreground/90'} text-background`} onClick={isRecording ? stopRecording : startRecording}>
