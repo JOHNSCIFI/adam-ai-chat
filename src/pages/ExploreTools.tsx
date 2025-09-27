@@ -324,7 +324,7 @@ export default function ExploreTools() {
         <div className="mb-6 sm:mb-8 overflow-x-auto scrollbar-hide">
           <TabsList className="inline-flex w-max sm:grid sm:w-full sm:grid-cols-7 gap-1 h-auto p-1">
             {categories.map((category) => (
-              <TabsTrigger key={category} value={category} className="text-xs sm:text-sm whitespace-nowrap px-3 sm:px-4">
+              <TabsTrigger key={category} value={category} className="text-xs sm:text-sm text-center px-2 sm:px-3 min-w-0 flex-shrink-0">
                 {category}
               </TabsTrigger>
             ))}
