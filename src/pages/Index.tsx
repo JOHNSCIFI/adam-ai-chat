@@ -19,35 +19,51 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 const models = [{
   id: 'gpt-4o-mini',
   name: 'OpenAI GPT-4o mini',
-  description: "OpenAI's Fastest Model",
+  description: "Fast & efficient",
   type: 'free'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
-  description: "OpenAI's Most Accurate Model",
+  description: "Most accurate",
   type: 'pro'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
-  description: "OpenAI's Most Advanced Model",
+  description: "Most advanced",
   type: 'pro'
 }, {
-  id: 'claude',
-  name: 'Claude',
-  description: "Anthropic's latest AI model",
+  id: 'claude-opus-4',
+  name: 'Claude Opus 4',
+  description: "Most capable",
   type: 'pro'
 }, {
-  id: 'deepseek',
-  name: 'DeepSeek',
-  description: "Great for most questions",
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  description: "High performance",
   type: 'pro'
 }, {
-  id: 'gemini',
-  name: 'Google Gemini',
-  description: "Google's most capable AI",
+  id: 'deepseek-v31-terminus',
+  name: 'DeepSeek-V3.1 Terminus',
+  description: "Great for tasks",
+  type: 'pro'
+}, {
+  id: 'deepseek-r1',
+  name: 'DeepSeek R1',
+  description: "Enhanced reasoning",
+  type: 'pro'
+}, {
+  id: 'gemini-2-5-flash',
+  name: 'Gemini 2.5 Flash',
+  description: "Google's latest",
+  type: 'pro'
+}, {
+  id: 'grok-4',
+  name: 'Grok-4',
+  description: "Advanced challenges",
   type: 'pro'
 }];
 const suggestionButtons = [{
@@ -162,20 +178,35 @@ const availableModels = [{
   description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
   icon: 'openai'
 }, {
-  id: 'claude',
-  name: 'Claude',
-  description: 'Claude, Anthropic\'s advanced AI model, excels at detailed analysis and reasoning.',
+  id: 'claude-opus-4',
+  name: 'Claude Opus 4',
+  description: 'Claude Opus 4, Anthropic\'s most capable AI model, excels at complex reasoning and analysis.',
   icon: 'claude'
 }, {
-  id: 'deepseek',
-  name: 'DeepSeek',
-  description: 'DeepSeek offers powerful AI capabilities for a wide range of applications.',
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  description: 'Claude Sonnet 4 offers high-performance AI capabilities with exceptional reasoning.',
+  icon: 'claude'
+}, {
+  id: 'deepseek-v31-terminus',
+  name: 'DeepSeek-V3.1 Terminus',
+  description: 'DeepSeek-V3.1 Terminus offers advanced AI capabilities great for most tasks.',
   icon: 'deepseek'
 }, {
-  id: 'gemini',
-  name: 'Google Gemini',
-  description: 'Gemini, Google\'s most advanced AI, is designed for multimodal understanding.',
+  id: 'deepseek-r1',
+  name: 'DeepSeek R1',
+  description: 'DeepSeek R1 provides enhanced reasoning capabilities for complex problem solving.',
+  icon: 'deepseek'
+}, {
+  id: 'gemini-2-5-flash',
+  name: 'Gemini 2.5 Flash',
+  description: 'Gemini 2.5 Flash, Google\'s latest AI model, is designed for fast multimodal understanding.',
   icon: 'gemini'
+}, {
+  id: 'grok-4',
+  name: 'Grok-4',
+  description: 'Grok-4 is an advanced AI model designed for tackling intricate challenges.',
+  icon: 'grok'
 }];
 export default function Index() {
   const {
@@ -201,6 +232,8 @@ export default function Index() {
         return claudeLogo;
       case 'deepseek':
         return deepseekLogo;
+      case 'grok':
+        return grokLogo;
       default:
         return chatgptLogoSrc;
     }
