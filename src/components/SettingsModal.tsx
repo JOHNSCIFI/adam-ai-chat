@@ -350,78 +350,98 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'general':
         return (
           <div className="space-y-8">
-            <div>
-              <h2 className="text-xl font-semibold mb-1 text-foreground">General</h2>
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">General</h2>
+              <p className="text-muted-foreground">Customize your experience and preferences</p>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-6">
               {/* Theme Setting */}
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium text-foreground">Theme</p>
-                </div>
-                <Select value={theme} onValueChange={handleSetTheme}>
-                  <SelectTrigger className="w-32 bg-background border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {themeOptions.map((option) => {
-                      const Icon = option.icon;
-                      return (
-                        <SelectItem key={option.value} value={option.value}>
-                          <div className="flex items-center gap-2">
-                            <Icon className="h-4 w-4" />
-                            {option.label}
-                          </div>
-                        </SelectItem>
-                      );
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Separator />
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="font-semibold text-foreground">Theme</p>
+                      <p className="text-sm text-muted-foreground">Choose your preferred appearance</p>
+                    </div>
+                    <Select value={theme} onValueChange={handleSetTheme}>
+                      <SelectTrigger className="w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background/95 border border-border/50 shadow-xl z-50 backdrop-blur-md">
+                        {themeOptions.map((option) => {
+                          const Icon = option.icon;
+                          return (
+                            <SelectItem 
+                              key={option.value} 
+                              value={option.value}
+                              className="hover:bg-accent/60 focus:bg-accent/60 cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3">
+                                <div className="p-1.5 rounded-md bg-primary/10">
+                                  <Icon className="h-3.5 w-3.5 text-primary" />
+                                </div>
+                                <span className="font-medium">{option.label}</span>
+                              </div>
+                            </SelectItem>
+                          );
+                        })}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
               {/* Accent Color Setting */}
-              <div className="flex items-center justify-between py-3">
-                <div>
-                  <p className="font-medium text-foreground">Accent color</p>
-                </div>
-                <Select value={accentColor} onValueChange={handleSetAccentColor}>
-                  <SelectTrigger className="w-32 bg-background border">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-background border shadow-lg z-50">
-                    {accentColors.map((color) => (
-                      <SelectItem key={color.value} value={color.value}>
-                        <div className="flex items-center gap-2">
-                          <div 
-                            className="w-3 h-3 rounded-full" 
-                            style={{ backgroundColor: color.color }}
-                          />
-                          {color.label}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-1">
+                      <p className="font-semibold text-foreground">Accent color</p>
+                      <p className="text-sm text-muted-foreground">Personalize your interface colors</p>
+                    </div>
+                    <Select value={accentColor} onValueChange={handleSetAccentColor}>
+                      <SelectTrigger className="w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-background/95 border border-border/50 shadow-xl z-50 backdrop-blur-md">
+                        {accentColors.map((color) => (
+                          <SelectItem 
+                            key={color.value} 
+                            value={color.value}
+                            className="hover:bg-accent/60 focus:bg-accent/60 cursor-pointer"
+                          >
+                            <div className="flex items-center gap-3">
+                              <div className="p-1 rounded-full border border-border/30">
+                                <div 
+                                  className="w-4 h-4 rounded-full shadow-sm" 
+                                  style={{ backgroundColor: color.color }}
+                                />
+                              </div>
+                              <span className="font-medium">{color.label}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </CardContent>
+              </Card>
 
               {user && (
-                <>
-                  <Separator />
-                  
-                  {/* Show additional settings only for authenticated users */}
-                  <div className="space-y-4 opacity-50 pointer-events-none">
-                    <div className="flex items-center justify-between py-3">
-                      <div>
-                        <p className="font-medium text-foreground">Language</p>
-                        <p className="text-sm text-muted-foreground">Interface language</p>
+                <Card className="border border-border/40 bg-gradient-to-r from-card/50 to-card/20 backdrop-blur-sm opacity-60">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <p className="font-semibold text-foreground">Language</p>
+                        <p className="text-sm text-muted-foreground">Interface language (Coming soon)</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">English</p>
+                      <div className="px-3 py-2 bg-muted/50 rounded-lg border border-border/30">
+                        <span className="text-sm font-medium text-muted-foreground">English</span>
+                      </div>
                     </div>
-                  </div>
-                </>
+                  </CardContent>
+                </Card>
               )}
 
             </div>
@@ -431,89 +451,124 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'profile':
         if (!user) {
           return (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-1">Profile</h2>
+            <div className="space-y-8">
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-foreground">Profile</h2>
                 <p className="text-muted-foreground">Sign in to manage your account information</p>
               </div>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">You need to be signed in to access profile settings.</p>
-                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
-              </div>
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
+                <CardContent className="p-8 text-center">
+                  <div className="space-y-4">
+                    <div className="w-16 h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
+                      <User className="h-8 w-8 text-muted-foreground" />
+                    </div>
+                    <div className="space-y-2">
+                      <p className="font-medium text-foreground">Sign in to access profile settings</p>
+                      <p className="text-sm text-muted-foreground">Manage your account information and preferences</p>
+                    </div>
+                    <Button 
+                      onClick={() => window.location.href = '/auth'}
+                      className="mt-4"
+                    >
+                      Sign In
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           );
         }
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold mb-1">Profile</h2>
+          <div className="space-y-8">
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-foreground">Profile</h2>
               <p className="text-muted-foreground">Manage your account information</p>
             </div>
             
             <div className="space-y-6">
-              <div>
-                <p className="font-medium mb-1">Email</p>
-                <p className="text-muted-foreground">{user?.email}</p>
-              </div>
+              {/* Email Section */}
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Mail className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-foreground">Email Address</p>
+                        <p className="text-sm text-muted-foreground">Your account email</p>
+                      </div>
+                    </div>
+                    <div className="ml-11">
+                      <p className="font-medium text-foreground bg-muted/40 px-3 py-2 rounded-lg border border-border/30 inline-block">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
-              <Separator />
-
-              <div>
-                <p className="font-medium mb-3">Login Methods</p>
-                <div className="space-y-3">
-                  {/* Show login methods based on user's available providers */}
-                  {user?.app_metadata?.providers?.includes('google') && (
-                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <svg className="h-4 w-4" viewBox="0 0 24 24">
-                            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-                            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-                          </svg>
-                        </div>
-                        <div>
-                          <p className="font-medium">Google</p>
-                          <p className="text-sm text-muted-foreground">Sign in with your Google account</p>
-                        </div>
+              {/* Login Methods Section */}
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
+                <CardContent className="p-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <Shield className="h-4 w-4 text-primary" />
                       </div>
-                      <Check className="h-5 w-5 text-green-500" />
-                    </div>
-                  )}
-                  
-                  {user?.app_metadata?.providers?.includes('email') && (
-                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Mail className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="font-medium">Email & Password</p>
-                          <p className="text-sm text-muted-foreground">Sign in with your email address</p>
-                        </div>
+                      <div>
+                        <p className="font-semibold text-foreground">Login Methods</p>
+                        <p className="text-sm text-muted-foreground">Connected authentication providers</p>
                       </div>
-                      <Check className="h-5 w-5 text-green-500" />
                     </div>
-                  )}
-                  
-                  {/* Fallback if no providers are found */}
-                  {(!user?.app_metadata?.providers || user.app_metadata.providers.length === 0) && (
-                    <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-primary/10 rounded-full">
-                          <Mail className="h-4 w-4 text-primary" />
+                    
+                    <div className="ml-11 space-y-3">
+                      {/* Google Provider */}
+                      {user?.app_metadata?.providers?.includes('google') && (
+                        <div className="flex items-center justify-between p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                              </svg>
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">Google</p>
+                              <p className="text-sm text-muted-foreground">Sign in with your Google account</p>
+                            </div>
+                          </div>
+                          <div className="p-1.5 bg-green-100 rounded-full">
+                            <Check className="h-4 w-4 text-green-600" />
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium">Email & Password</p>
-                          <p className="text-sm text-muted-foreground">Sign in with your email address</p>
+                      )}
+                      
+                      {/* Email Provider */}
+                      {(user?.app_metadata?.providers?.includes('email') || 
+                        !user?.app_metadata?.providers || 
+                        user.app_metadata.providers.length === 0) && (
+                        <div className="flex items-center justify-between p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-primary/10 rounded-lg">
+                              <Mail className="h-5 w-5 text-primary" />
+                            </div>
+                            <div>
+                              <p className="font-medium text-foreground">Email & Password</p>
+                              <p className="text-sm text-muted-foreground">Sign in with your email address</p>
+                            </div>
+                          </div>
+                          <div className="p-1.5 bg-green-100 rounded-full">
+                            <Check className="h-4 w-4 text-green-600" />
+                          </div>
                         </div>
-                      </div>
-                      <Check className="h-5 w-5 text-green-500" />
+                      )}
                     </div>
-                  )}
-                </div>
-              </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         );
@@ -731,14 +786,14 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col">
-          <SheetHeader className="p-4 border-b border-border flex-shrink-0">
-            <SheetTitle className="text-lg font-semibold text-left">Settings</SheetTitle>
+        <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col bg-background">
+          <SheetHeader className="px-6 py-4 border-b border-border/40 flex-shrink-0 bg-gradient-to-r from-background to-background/95">
+            <SheetTitle className="text-xl font-semibold text-left text-foreground">Settings</SheetTitle>
           </SheetHeader>
           
           {/* Mobile Tab Navigation */}
-          <div className="flex-shrink-0 border-b border-border bg-muted/20">
-            <nav className="flex p-2 gap-1">
+          <div className="flex-shrink-0 border-b border-border/40 bg-gradient-to-r from-muted/30 to-muted/10 backdrop-blur-sm">
+            <nav className="flex p-3 gap-2">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -747,16 +802,22 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`flex-1 flex items-center justify-center gap-2 px-2 py-2 rounded-lg text-sm transition-colors ${
+                    className={`flex-1 flex flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
                       activeTab === item.id
-                        ? 'bg-accent text-accent-foreground font-medium'
+                        ? 'bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20'
                         : isDisabled
-                        ? 'text-muted-foreground/50 cursor-not-allowed'
-                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                        ? 'text-muted-foreground/40 cursor-not-allowed'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
-                    <span className="text-xs">{item.label}</span>
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeTab === item.id 
+                        ? 'bg-primary/15' 
+                        : 'bg-muted/40'
+                    }`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="text-xs font-medium leading-tight">{item.label}</span>
                   </button>
                 );
               })}
@@ -764,8 +825,8 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </div>
 
           {/* Mobile Content */}
-          <div className="flex-1 overflow-y-auto">
-            <div className="p-4">
+          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-background/98">
+            <div className="p-6">
               {renderContent()}
             </div>
           </div>
@@ -776,16 +837,16 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border">
+      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border border-border/50 shadow-xl">
         <div className="flex h-full">
           {/* Desktop Sidebar */}
-          <div className="w-64 bg-muted/20 border-r border-border">
-            <div className="p-4 border-b border-border">
+          <div className="w-64 bg-gradient-to-b from-muted/30 to-muted/10 border-r border-border/40 backdrop-blur-sm">
+            <div className="px-6 py-4 border-b border-border/40 bg-gradient-to-r from-background/50 to-background/30">
               <DialogHeader className="text-left">
-                <DialogTitle className="text-lg font-semibold">Settings</DialogTitle>
+                <DialogTitle className="text-xl font-semibold text-foreground">Settings</DialogTitle>
               </DialogHeader>
             </div>
-            <nav className="p-2">
+            <nav className="p-3 space-y-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -794,16 +855,22 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-left transition-colors ${
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-200 group ${
                       activeTab === item.id
-                        ? 'bg-accent text-accent-foreground font-medium'
+                        ? 'bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20'
                         : isDisabled
-                        ? 'text-muted-foreground/50 cursor-not-allowed'
-                        : 'text-muted-foreground hover:bg-accent/50 hover:text-foreground'
+                        ? 'text-muted-foreground/40 cursor-not-allowed'
+                        : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:translate-x-1'
                     }`}
                   >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
+                    <div className={`p-2 rounded-lg transition-colors ${
+                      activeTab === item.id 
+                        ? 'bg-primary/15' 
+                        : 'bg-muted/40 group-hover:bg-accent/80'
+                    }`}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span className="font-medium">{item.label}</span>
                   </button>
                 );
               })}
@@ -811,7 +878,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           </div>
 
           {/* Desktop Content */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-background/98">
             <div className="p-6">
               {renderContent()}
             </div>
