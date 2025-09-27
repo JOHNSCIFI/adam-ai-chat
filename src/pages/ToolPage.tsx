@@ -273,6 +273,17 @@ export default function ToolPage() {
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
   const toolConfig = toolName ? toolConfigs[toolName] : null;
+  
+  // Debug logging for tool configuration
+  useEffect(() => {
+    console.log('[DEBUG] Tool configuration:', {
+      toolName,
+      toolId,
+      toolConfig: toolConfig ? { id: toolConfig.id, name: toolConfig.name } : null,
+      allowImages: toolConfig?.allowImages,
+      allowFiles: toolConfig?.allowFiles
+    });
+  }, [toolName, toolId, toolConfig]);
   useEffect(() => {
     if (toolId && user && toolConfig) {
       if (!processedUserMessages.current.has(toolId)) {
@@ -635,10 +646,14 @@ export default function ToolPage() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Only allow drag over for file analysis tool
-    if (toolConfig.id === 'analyse-files-openai') {
+    console.log('[DEBUG] Drag over - toolConfig.id:', toolConfig?.id);
+    
+    // Allow drag over for both image analysis tools
+    if (toolConfig?.id === 'analyse-files-openai' || toolConfig?.id === 'analyse-image-openai') {
       const items = Array.from(e.dataTransfer.items);
       const hasImages = items.some(item => item.type.startsWith('image/'));
+      
+      console.log('[DEBUG] Has images:', hasImages, 'Items:', items.map(i => i.type));
       
       if (hasImages) {
         setIsDragOver(true);
@@ -657,13 +672,18 @@ export default function ToolPage() {
     e.stopPropagation();
     setIsDragOver(false);
     
-    // Only handle drops for file analysis tool
-    if (toolConfig.id !== 'analyse-files-openai') {
+    console.log('[DEBUG] Drop - toolConfig.id:', toolConfig?.id);
+    
+    // Handle drops for both image analysis tools
+    if (toolConfig?.id !== 'analyse-files-openai' && toolConfig?.id !== 'analyse-image-openai') {
+      console.log('[DEBUG] Tool not supported for image drop');
       return;
     }
 
     const files = Array.from(e.dataTransfer.files);
     const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    console.log('[DEBUG] Files dropped:', files.length, 'Image files:', imageFiles.length);
     
     if (imageFiles.length > 0) {
       setSelectedFiles(prev => [...prev, ...imageFiles]);
@@ -978,14 +998,14 @@ export default function ToolPage() {
 
       {/* Messages Container */}
       <div 
-        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && toolConfig.id === 'analyse-files-openai' ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
+        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className={`${isMobile ? 'px-4' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {/* Drag and drop indicator */}
-          {isDragOver && toolConfig.id === 'analyse-files-openai' && (
+          {isDragOver && (toolConfig.id === 'analyse-files-openai' || toolConfig.id === 'analyse-image-openai') && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
                 <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
