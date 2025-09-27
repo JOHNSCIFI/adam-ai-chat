@@ -168,9 +168,9 @@ const toolConfigs: Record<string, ToolInfo> = {
     id: 'analyse-files-openai',
     name: 'Analyse Files with OpenAI',
     description: 'Extract insights and information from various file types',
-    instructions: 'Upload documents, PDFs, or other files and I\'ll analyze their content, extract key information, and answer questions about them.',
+    instructions: 'Upload documents, PDFs, images, or other files and I\'ll analyze their content, extract key information, and answer questions about them.',
     icon: <span className="text-2xl">📄</span>,
-    allowImages: false,
+    allowImages: true,
     allowFiles: true
   },
   'grok-4': {
@@ -635,8 +635,8 @@ export default function ToolPage() {
     e.preventDefault();
     e.stopPropagation();
     
-    // Only allow drag over for image analysis tool
-    if (toolConfig.id === 'analyse-image-openai') {
+    // Only allow drag over for file analysis tool
+    if (toolConfig.id === 'analyse-files-openai') {
       const items = Array.from(e.dataTransfer.items);
       const hasImages = items.some(item => item.type.startsWith('image/'));
       
@@ -657,8 +657,8 @@ export default function ToolPage() {
     e.stopPropagation();
     setIsDragOver(false);
     
-    // Only handle drops for image analysis tool
-    if (toolConfig.id !== 'analyse-image-openai') {
+    // Only handle drops for file analysis tool
+    if (toolConfig.id !== 'analyse-files-openai') {
       return;
     }
 
@@ -978,14 +978,14 @@ export default function ToolPage() {
 
       {/* Messages Container */}
       <div 
-        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && toolConfig.id === 'analyse-image-openai' ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
+        className={`flex-1 overflow-y-auto pb-20 md:pb-0 ${isDragOver && toolConfig.id === 'analyse-files-openai' ? 'bg-primary/5 border-2 border-dashed border-primary/30' : ''}`}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
       >
         <div className={`${isMobile ? 'px-4' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {/* Drag and drop indicator */}
-          {isDragOver && toolConfig.id === 'analyse-image-openai' && (
+          {isDragOver && toolConfig.id === 'analyse-files-openai' && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
                 <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
