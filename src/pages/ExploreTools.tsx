@@ -26,6 +26,7 @@ import {
   Code
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { aiModels } from '@/data/aiModels';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
@@ -52,92 +53,16 @@ const tools: Tool[] = [
     icon: <Calculator className="h-5 w-5" />,
     route: '/calculate-calories'
   },
-  {
-    id: 'openai-gpt-4o',
-    name: 'OpenAI GPT-4o',
-    description: 'Access to OpenAI\'s powerful GPT-4o model for complex tasks',
+  // AI Models are now imported from shared data
+  ...aiModels.map(model => ({
+    id: model.id,
+    name: model.name,
+    description: model.description,
     category: 'AI Models',
-    icon: <Bot className="h-5 w-5" />,
-    route: '/openai-gpt-4o'
-  },
-  {
-    id: 'openai-gpt-4-1',
-    name: 'OpenAI GPT-4.1',
-    description: 'The flagship GPT-4 model for reliable and accurate responses',
-    category: 'AI Models',
-    icon: <Bot className="h-5 w-5" />,
-    route: '/openai-gpt-4-1'
-  },
-  {
-    id: 'deepseek-v31-terminus',
-    name: 'DeepSeek-V3.1 Terminus',
-    description: 'Advanced AI model great for most questions and tasks',
-    category: 'AI Models',
-    icon: <Brain className="h-5 w-5" />,
-    isNew: true,
-    route: '/deepseek-v31-terminus'
-  },
-  {
-    id: 'deepseek-r1',
-    name: 'DeepSeek R1',
-    description: 'Latest DeepSeek model with enhanced reasoning capabilities',
-    category: 'AI Models',
-    icon: <Brain className="h-5 w-5" />,
-    isNew: true,
-    route: '/deepseek-r1'
-  },
-  {
-    id: 'openai-gpt-4o-mini',
-    name: 'OpenAI GPT-4o-mini',
-    description: 'Fast and efficient OpenAI model for everyday tasks',
-    category: 'AI Models',
-    icon: <Bot className="h-5 w-5" />,
-    route: '/openai-gpt-4o-mini'
-  },
-  {
-    id: 'openai-gpt-5',
-    name: 'OpenAI GPT-5',
-    description: 'OpenAI\'s most advanced and powerful AI model',
-    category: 'AI Models',
-    icon: <Bot className="h-5 w-5" />,
-    isNew: true,
-    route: '/openai-gpt-5'
-  },
-  {
-    id: 'claude-opus-4',
-    name: 'Claude Opus 4',
-    description: 'Anthropic\'s most capable and intelligent AI model',
-    category: 'AI Models',
-    icon: <Brain className="h-5 w-5" />,
-    isNew: true,
-    route: '/claude-opus-4'
-  },
-  {
-    id: 'claude-sonnet-4',
-    name: 'Claude Sonnet 4',
-    description: 'High-performance Claude model with exceptional reasoning',
-    category: 'AI Models',
-    icon: <Brain className="h-5 w-5" />,
-    isNew: true,
-    route: '/claude-sonnet-4'
-  },
-  {
-    id: 'gemini-2-5-flash',
-    name: 'Gemini 2.5 Flash',
-    description: 'Google\'s latest and most capable AI for a wide range of tasks',
-    category: 'AI Models',
-    icon: <Sparkles className="h-5 w-5" />,
-    isNew: true,
-    route: '/gemini-2-5-flash'
-  },
-  {
-    id: 'grok-4',
-    name: 'Grok-4',
-    description: 'Advanced AI model for tackling intricate challenges',
-    category: 'AI Models',
-    icon: <Zap className="h-5 w-5" />,
-    route: '/grok-4'
-  },
+    icon: getIconComponent(model.icon),
+    isNew: model.isNew,
+    route: model.route
+  })),
   {
     id: 'generate-image-openai',
     name: 'Generate Image with OpenAI',
@@ -216,6 +141,24 @@ const tools: Tool[] = [
 ];
 
 const categories = ['Popular', 'AI Models', 'Writing', 'Education', 'Lifestyle', 'Programming', 'Image Generation'];
+
+// Helper function to get icon component based on icon type
+const getIconComponent = (iconType: string) => {
+  switch (iconType) {
+    case 'openai':
+      return <Bot className="h-5 w-5" />;
+    case 'claude':
+      return <Brain className="h-5 w-5" />;
+    case 'deepseek':
+      return <Brain className="h-5 w-5" />;
+    case 'gemini':
+      return <Sparkles className="h-5 w-5" />;
+    case 'grok':
+      return <Zap className="h-5 w-5" />;
+    default:
+      return <Bot className="h-5 w-5" />;
+  }
+};
 
 export default function ExploreTools() {
   const navigate = useNavigate();
