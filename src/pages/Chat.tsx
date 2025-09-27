@@ -24,6 +24,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -1986,6 +1987,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  <img src={deepseekLogo} alt="DeepSeek" className="w-4 h-4 object-contain" />
                                ) : model.id.includes('gemini') ? (
                                  <img src={geminiLogo} alt="Gemini" className="w-4 h-4 object-contain" />
+                               ) : model.id.includes('grok') ? (
+                                 <img src={grokLogo} alt="Grok" className="w-4 h-4 object-contain" />
                                ) : (
                                  <Bot className="h-4 w-4" />
                                )}

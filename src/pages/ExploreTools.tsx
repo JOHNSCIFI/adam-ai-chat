@@ -31,6 +31,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 
 interface Tool {
   id: string;
@@ -237,6 +238,8 @@ export default function ExploreTools() {
       return <img src={deepseekLogo} alt="DeepSeek" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     } else if (toolId.includes('claude')) {
       return <img src={claudeLogo} alt="Anthropic Claude" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
+    } else if (toolId.includes('grok')) {
+      return <img src={grokLogo} alt="Grok" className="w-4 h-4 sm:w-5 sm:h-5 object-contain" />;
     }
     return <Bot className="h-4 w-4 sm:h-5 sm:w-5" />;
   };
