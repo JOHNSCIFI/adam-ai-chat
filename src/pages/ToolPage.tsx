@@ -765,63 +765,65 @@ export default function ToolPage() {
     try {
       // Process file uploads first
       let fileAttachments: FileAttachment[] = [];
-      let base64ImageData: string | null = null;
-      let imageFileInfo: any = null;
+      let base64FileData: string | null = null;
+      let fileInfo: any = null;
       if (selectedFiles.length > 0) {
         for (const file of selectedFiles) {
-          if (file.type.startsWith('image/')) {
-            console.log('Processing image file:', file.name);
+          console.log('Processing file:', file.name, 'Type:', file.type);
 
-            // Convert image to base64
-            base64ImageData = await new Promise<string>(resolve => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                const result = reader.result as string;
-                // Remove data:image/jpeg;base64, prefix
-                const base64 = result.split(',')[1];
-                resolve(base64);
-              };
-              reader.readAsDataURL(file);
-            });
-
-            // Save image to Supabase storage with proper folder structure
-            const fileName = `${user.id}/${actualChatId}_${Date.now()}_${file.name}`;
-            console.log('Uploading to storage:', fileName);
-            const {
-              data: uploadData,
-              error: uploadError
-            } = await supabase.storage.from('chat-images').upload(fileName, file, {
-              cacheControl: '3600',
-              upsert: false
-            });
-            if (uploadError) {
-              console.error('Error uploading image:', uploadError);
-              toast.error('Failed to upload image');
-              continue;
-            }
-            console.log('Upload successful:', uploadData);
-
-            // Get public URL
-            const {
-              data: urlData
-            } = supabase.storage.from('chat-images').getPublicUrl(fileName);
-            console.log('Public URL:', urlData.publicUrl);
-            const fileAttachment: FileAttachment = {
-              id: crypto.randomUUID(),
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              url: urlData.publicUrl
+          // Convert file to base64 for all file types
+          base64FileData = await new Promise<string>(resolve => {
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              // Remove data:*;base64, prefix
+              const base64 = result.split(',')[1];
+              resolve(base64);
             };
-            fileAttachments.push(fileAttachment);
+            reader.readAsDataURL(file);
+          });
 
-            // Store image info for webhook
-            imageFileInfo = {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type
-            };
+          // Save file to appropriate storage bucket
+          const bucketName = file.type.startsWith('image/') ? 'chat-images' : 'chat-files';
+          const fileName = `${user.id}/${actualChatId}_${Date.now()}_${file.name}`;
+          console.log('Uploading to storage:', fileName, 'Bucket:', bucketName);
+          
+          const {
+            data: uploadData,
+            error: uploadError
+          } = await supabase.storage.from(bucketName).upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
+          
+          if (uploadError) {
+            console.error('Error uploading file:', uploadError);
+            toast.error(`Failed to upload ${file.name}`);
+            continue;
           }
+          console.log('Upload successful:', uploadData);
+
+          // Get public URL
+          const {
+            data: urlData
+          } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+          console.log('Public URL:', urlData.publicUrl);
+          
+          const fileAttachment: FileAttachment = {
+            id: crypto.randomUUID(),
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: urlData.publicUrl
+          };
+          fileAttachments.push(fileAttachment);
+
+          // Store file info for webhook (use last file for webhook data)
+          fileInfo = {
+            fileName: file.name,
+            fileSize: file.size,
+            fileType: file.type
+          };
         }
       }
 
@@ -856,15 +858,15 @@ export default function ToolPage() {
         // Send webhook notification
         try {
           let webhookData: any;
-          if (base64ImageData && imageFileInfo) {
-            // Send image analysis format
+          if (base64FileData && fileInfo) {
+            // Send file analysis format
             webhookData = {
               type: toolName,
               // Use tool name as type
-              fileName: imageFileInfo.fileName,
-              fileSize: imageFileInfo.fileSize,
-              fileType: imageFileInfo.fileType,
-              fileData: base64ImageData,
+              fileName: fileInfo.fileName,
+              fileSize: fileInfo.fileSize,
+              fileType: fileInfo.fileType,
+              fileData: base64FileData,
               chat_id: actualChatId,
               user_id: user.id,
               message: input,
@@ -883,7 +885,8 @@ export default function ToolPage() {
           }
           console.log('Sending to webhook:', {
             type: webhookData.type,
-            hasImage: !!base64ImageData,
+            hasFile: !!base64FileData,
+            fileType: fileInfo?.fileType,
             webhook_handler_url: webhookData.webhook_handler_url,
             chat_id: actualChatId
           });
