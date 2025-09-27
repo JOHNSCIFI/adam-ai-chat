@@ -1297,7 +1297,7 @@ export default function ToolPage() {
         multiple 
         accept={
           toolConfig.id === 'analyse-files-openai' 
-            ? ".pdf,.doc,.docx,.txt,.csv,.json,.xml,.md" // Only non-image files
+            ? ".pdf,.doc,.docx,.txt,.csv,.json,.xml,.md,.html,.htm" // Include HTML files
             : toolConfig.allowImages && !toolConfig.allowFiles 
               ? "image/*" 
               : "*"
