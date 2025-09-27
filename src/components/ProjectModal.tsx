@@ -146,62 +146,60 @@ export function ProjectModal({
       <DialogTrigger asChild>
         {children}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[600px] max-w-[90vw] bg-background border shadow-lg">
-        <DialogHeader className="text-center pb-6">
-          <DialogTitle className="text-2xl font-semibold text-foreground">
+      <DialogContent className="sm:max-w-[500px] max-w-[95vw] bg-background border shadow-lg mx-2">
+        <DialogHeader className="text-center pb-4 sm:pb-6">
+          <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
             {isEditing ? 'Edit Project' : 'Create New Project'}
           </DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-8 px-2">
+        <div className="space-y-6 sm:space-y-8 px-1 sm:px-2">
           {/* Project Name Input */}
           <div className="flex justify-center">
-            <div className="w-full max-w-md">
+            <div className="w-full">
               <Input
                 placeholder="Enter project name"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="text-center text-lg font-medium border border-border rounded-lg px-4 py-3 bg-background hover:border-primary/50 focus:border-primary transition-colors"
+                className="text-center text-base sm:text-lg font-medium border border-border rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 bg-background hover:border-primary/50 focus:border-primary transition-colors w-full"
               />
             </div>
           </div>
 
           {/* Icon Selection */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             <h3 className="text-center text-sm font-medium text-muted-foreground">Choose an icon</h3>
-            <div className="flex justify-center">
-              <div className="w-full max-w-lg overflow-hidden">
-                <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-2 px-1">
-                  {iconOptions.map((option) => {
-                    const IconComponent = option.icon;
-                    const isSelected = selectedIcon.name === option.name;
-                    return (
-                      <button
-                        key={option.name}
-                        onClick={() => setSelectedIcon(option)}
-                        className={`flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-w-fit ${
-                          isSelected 
-                            ? 'bg-primary text-primary-foreground shadow-md scale-105' 
-                            : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border hover:border-primary/30'
-                        }`}
-                      >
-                        <IconComponent className="h-4 w-4" />
-                        {option.label}
-                      </button>
-                    );
-                  })}
-                </div>
+            <div className="w-full overflow-hidden">
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2 px-1 justify-start sm:justify-center">
+                {iconOptions.map((option) => {
+                  const IconComponent = option.icon;
+                  const isSelected = selectedIcon.name === option.name;
+                  return (
+                    <button
+                      key={option.name}
+                      onClick={() => setSelectedIcon(option)}
+                      className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-3 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 min-w-fit ${
+                        isSelected 
+                          ? 'bg-primary text-primary-foreground shadow-md scale-105' 
+                          : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground border border-border hover:border-primary/30'
+                      }`}
+                    >
+                      <IconComponent className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                      <span className="hidden xs:inline">{option.label}</span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Create Button */}
-          <div className="flex justify-center pt-6 pb-2">
+          <div className="flex justify-center pt-4 sm:pt-6 pb-1 sm:pb-2">
             <Button 
               onClick={handleSubmit}
               disabled={!title.trim() || isSubmitting}
               size="lg"
-              className="px-12 py-3 rounded-xl font-semibold shadow-md hover:shadow-lg transition-all"
+              className="w-full sm:w-auto px-8 sm:px-12 py-2.5 sm:py-3 rounded-lg sm:rounded-xl font-semibold shadow-md hover:shadow-lg transition-all text-sm sm:text-base"
             >
               {isSubmitting 
                 ? (isEditing ? 'Updating...' : 'Creating...') 
