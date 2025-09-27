@@ -1593,30 +1593,32 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-1 min-w-[280px] max-w-[320px]" align="center">
+              <SelectContent className="z-50 bg-background border shadow-lg rounded-lg p-1 min-w-[240px] max-w-[280px]" align="center">
                 {models.map(model => (
                   <SelectItem 
                     key={model.id} 
                     value={model.id} 
-                    className="rounded-xl px-2 py-2 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    className="rounded-md px-2 py-1.5 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
                   >
-                    <div className="flex items-center justify-between w-full">
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
-                          <span className="w-5 h-5 text-xs font-semibold">
-                            {model.name.split(' ')[0].charAt(0)}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-foreground">{model.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{model.description}</div>
-                        </div>
-                      </div>
-                      {model.type === 'pro' && (
-                        <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium ml-2">
-                          Pro
-                        </span>
+                    <div className="flex items-center gap-2">
+                      {model.id.includes('gpt') ? (
+                        <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                      ) : model.id.includes('claude') ? (
+                        <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                      ) : model.id.includes('deepseek') ? (
+                        <img src={deepseekLogo} alt="DeepSeek" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                      ) : model.id.includes('gemini') ? (
+                        <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                      ) : model.id.includes('grok') ? (
+                        <img src={grokLogo} alt="Grok" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                      ) : (
+                        <Bot className="h-3.5 w-3.5 flex-shrink-0" />
                       )}
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-sm truncate">{model.name}</div>
+                        <div className="text-xs text-muted-foreground truncate">{model.description}</div>
+                      </div>
+                      {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0">Pro</span>}
                     </div>
                   </SelectItem>
                 ))}
