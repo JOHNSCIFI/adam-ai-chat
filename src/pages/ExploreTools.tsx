@@ -34,6 +34,24 @@ import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
 import grokLogo from '@/assets/grok-logo.png';
 
+// Helper function to get icon component based on icon type
+const getIconComponent = (iconType: string) => {
+  switch (iconType) {
+    case 'openai':
+      return <Bot className="h-5 w-5" />;
+    case 'claude':
+      return <Brain className="h-5 w-5" />;
+    case 'deepseek':
+      return <Brain className="h-5 w-5" />;
+    case 'gemini':
+      return <Sparkles className="h-5 w-5" />;
+    case 'grok':
+      return <Zap className="h-5 w-5" />;
+    default:
+      return <Bot className="h-5 w-5" />;
+  }
+};
+
 interface Tool {
   id: string;
   name: string;
@@ -141,24 +159,6 @@ const tools: Tool[] = [
 ];
 
 const categories = ['Popular', 'AI Models', 'Writing', 'Education', 'Lifestyle', 'Programming', 'Image Generation'];
-
-// Helper function to get icon component based on icon type
-const getIconComponent = (iconType: string) => {
-  switch (iconType) {
-    case 'openai':
-      return <Bot className="h-5 w-5" />;
-    case 'claude':
-      return <Brain className="h-5 w-5" />;
-    case 'deepseek':
-      return <Brain className="h-5 w-5" />;
-    case 'gemini':
-      return <Sparkles className="h-5 w-5" />;
-    case 'grok':
-      return <Zap className="h-5 w-5" />;
-    default:
-      return <Bot className="h-5 w-5" />;
-  }
-};
 
 export default function ExploreTools() {
   const navigate = useNavigate();
