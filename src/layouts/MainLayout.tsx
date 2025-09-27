@@ -3,6 +3,8 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import ChatSidebar from "@/components/ChatSidebar";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+console.log("MainLayout component loading...");
+
 function MainContent({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex-1 flex flex-col bg-background min-w-0">
