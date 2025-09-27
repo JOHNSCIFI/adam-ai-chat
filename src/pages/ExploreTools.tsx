@@ -220,9 +220,27 @@ export default function ExploreTools() {
       setShowAuthModal(true);
       return;
     }
-    // Generate unique ID for this tool session
-    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`${tool.route}/${toolId}`);
+    
+    // List of tools that should navigate to /chat/id
+    const chatTools = [
+      'calculate-calories',
+      'openai-gpt-4o', 
+      'openai-gpt-4-1',
+      'deepseek',
+      'deepseek-r1',
+      'google-gemini',
+      'grok-3-mini'
+    ];
+    
+    if (chatTools.includes(tool.id)) {
+      // Generate unique chat ID and navigate to chat page
+      const chatId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      navigate(`/chat/${chatId}`);
+    } else {
+      // Generate unique ID for this tool session
+      const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      navigate(`${tool.route}/${toolId}`);
+    }
   };
 
 
