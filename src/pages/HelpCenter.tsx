@@ -1,10 +1,13 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
-import { Search, Book, MessageSquare, Settings, CreditCard } from 'lucide-react';
+import { Search, MessageSquare, Image, Wrench, CreditCard } from 'lucide-react';
 import SEO from '@/components/SEO';
 
 const HelpCenter = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEO 
@@ -32,21 +35,33 @@ const HelpCenter = () => {
         
         {/* Categories */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          <div className="p-6 bg-card border border-border rounded-lg text-center">
-            <Book className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Getting Started</h3>
-          </div>
-          <div className="p-6 bg-card border border-border rounded-lg text-center">
+          <div 
+            onClick={() => navigate('/chat')}
+            className="p-6 bg-card border border-border rounded-lg text-center cursor-pointer hover:bg-accent transition-colors"
+          >
             <MessageSquare className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Using AI Models</h3>
+            <h3 className="font-medium text-foreground">AI Chat</h3>
           </div>
-          <div className="p-6 bg-card border border-border rounded-lg text-center">
-            <Settings className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Account Settings</h3>
+          <div 
+            onClick={() => navigate('/image-generation')}
+            className="p-6 bg-card border border-border rounded-lg text-center cursor-pointer hover:bg-accent transition-colors"
+          >
+            <Image className="h-8 w-8 text-primary mx-auto mb-3" />
+            <h3 className="font-medium text-foreground">Image Generation</h3>
           </div>
-          <div className="p-6 bg-card border border-border rounded-lg text-center">
+          <div 
+            onClick={() => navigate('/explore-tools')}
+            className="p-6 bg-card border border-border rounded-lg text-center cursor-pointer hover:bg-accent transition-colors"
+          >
+            <Wrench className="h-8 w-8 text-primary mx-auto mb-3" />
+            <h3 className="font-medium text-foreground">AI Tools</h3>
+          </div>
+          <div 
+            onClick={() => navigate('/pricing')}
+            className="p-6 bg-card border border-border rounded-lg text-center cursor-pointer hover:bg-accent transition-colors"
+          >
             <CreditCard className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Billing & Plans</h3>
+            <h3 className="font-medium text-foreground">Pricing & Plans</h3>
           </div>
         </div>
         
