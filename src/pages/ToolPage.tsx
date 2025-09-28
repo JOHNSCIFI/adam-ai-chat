@@ -1127,8 +1127,8 @@ export default function ToolPage() {
                       : 'bg-gradient-to-br from-muted/50 to-muted border border-border/50 text-foreground hover:shadow-md'
                   }`}>
                     {/* File attachments for user messages - show before text */}
-                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-4 space-y-3">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-3">
+                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-4 space-y-3 w-fit">
+                        {message.file_attachments.map(file => <div key={file.id} className="w-fit">
                             {file.type.startsWith('image/') ? <img 
                               src={file.url} 
                               alt={file.name} 
@@ -1137,7 +1137,7 @@ export default function ToolPage() {
                                 url: file.url,
                                 name: file.name
                               })} 
-                            /> : <div className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                            /> : <div className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20 w-fit">
                                 <FileText className="h-5 w-5 text-white/80" />
                                 <span className="text-sm font-medium text-white/90">{file.name}</span>
                               </div>}
@@ -1152,8 +1152,8 @@ export default function ToolPage() {
                     </div>
                     
                     {/* File attachments for assistant messages - show after text */}
-                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-4 space-y-3">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-3">
+                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-4 space-y-3 w-fit">
+                        {message.file_attachments.map(file => <div key={file.id} className="w-fit">
                             {file.type.startsWith('image/') ? <img 
                               src={file.url} 
                               alt={file.name} 
@@ -1162,7 +1162,7 @@ export default function ToolPage() {
                                 url: file.url,
                                 name: file.name
                               })} 
-                            /> : <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl border border-border/30">
+                            /> : <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl border border-border/30 w-fit">
                                 <FileText className="h-5 w-5 text-muted-foreground" />
                                 <span className="text-sm font-medium text-foreground">{file.name}</span>
                               </div>}
