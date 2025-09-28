@@ -1121,7 +1121,7 @@ export default function ToolPage() {
         // Messages
         <div className="py-8 pb-32 space-y-8">
               {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-3 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[75%] w-full break-words rounded-2xl px-4 py-3 shadow-sm transition-all duration-200 ${
+                  <div className={`max-w-[75%] w-fit break-words rounded-2xl px-4 py-3 shadow-sm transition-all duration-200 ${
                     message.role === 'user' 
                       ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-primary/20' 
                       : 'bg-gradient-to-br from-muted/50 to-muted border border-border/50 text-foreground hover:shadow-md'
