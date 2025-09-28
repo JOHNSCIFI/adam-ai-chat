@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Input } from '@/components/ui/input';
-import { Search, MessageSquare, Image, Wrench, CreditCard } from 'lucide-react';
+import { Search, MessageSquare, Star, Wrench, CreditCard } from 'lucide-react';
 import SEO from '@/components/SEO';
 
 const HelpCenter = () => {
@@ -43,11 +43,11 @@ const HelpCenter = () => {
             <h3 className="font-medium text-foreground">AI Chat</h3>
           </div>
           <div 
-            onClick={() => navigate('/image-generation')}
+            onClick={() => navigate('/features')}
             className="p-6 bg-card border border-border rounded-lg text-center cursor-pointer hover:bg-accent transition-colors"
           >
-            <Image className="h-8 w-8 text-primary mx-auto mb-3" />
-            <h3 className="font-medium text-foreground">Image Generation</h3>
+            <Star className="h-8 w-8 text-primary mx-auto mb-3" />
+            <h3 className="font-medium text-foreground">Features</h3>
           </div>
           <div 
             onClick={() => navigate('/explore-tools')}
