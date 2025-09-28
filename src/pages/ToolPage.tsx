@@ -657,6 +657,17 @@ export default function ToolPage() {
     
     console.log('[DEBUG] Drag over - toolConfig.id:', toolConfig?.id);
     
+    // For calculate-calories, only allow images
+    if (toolConfig?.id === 'calculate-calories') {
+      const items = Array.from(e.dataTransfer.items);
+      const hasImages = items.some(item => item.type.startsWith('image/'));
+      if (hasImages) {
+        console.log('[DEBUG] Calculate calories - allowing images only');
+        setIsDragOver(true);
+      }
+      return;
+    }
+    
     // Allow drag over for tools that support images or files
     if (toolConfig?.allowImages || toolConfig?.allowFiles) {
       const items = Array.from(e.dataTransfer.items);
@@ -691,6 +702,21 @@ export default function ToolPage() {
     setIsDragOver(false);
     
     console.log('[DEBUG] Drop - toolConfig.id:', toolConfig?.id);
+    
+    // For calculate-calories, only accept images
+    if (toolConfig?.id === 'calculate-calories') {
+      const files = Array.from(e.dataTransfer.files);
+      const imageFiles = files.filter(file => file.type.startsWith('image/'));
+      console.log('[DEBUG] Calculate calories - Image files dropped:', imageFiles.length);
+      
+      if (imageFiles.length > 0) {
+        setSelectedFiles(prev => [...prev, ...imageFiles]);
+        toast.success(`${imageFiles.length} image${imageFiles.length > 1 ? 's' : ''} added`);
+      } else {
+        toast.error('This tool only accepts image files');
+      }
+      return;
+    }
     
     // Handle drops for tools that support images or files
     if (!toolConfig?.allowImages && !toolConfig?.allowFiles) {
@@ -797,12 +823,18 @@ export default function ToolPage() {
       });
     }
     try {
+      setLoading(true);
+      
+      // Clear selected files immediately when sending
+      const filesToProcess = [...selectedFiles];
+      setSelectedFiles([]);
+
       // Process file uploads first
       let fileAttachments: FileAttachment[] = [];
       let base64FileData: string | null = null;
       let fileInfo: any = null;
-      if (selectedFiles.length > 0) {
-        for (const file of selectedFiles) {
+      if (filesToProcess.length > 0) {
+        for (const file of filesToProcess) {
           console.log('Processing file:', file.name, 'Type:', file.type);
 
           // Convert file to base64 for all file types
@@ -991,7 +1023,6 @@ export default function ToolPage() {
       toast.error('Failed to send message. Please try again.');
     } finally {
       setInput('');
-      setSelectedFiles([]);
       setLoading(false);
     }
   };
@@ -1042,10 +1073,16 @@ export default function ToolPage() {
       >
         <div className={`${isMobile ? 'px-4 max-w-full overflow-x-hidden' : ''}`} style={isMobile ? {} : getContainerStyle()}>
           {/* Drag and drop indicator */}
-          {isDragOver && (toolConfig?.allowImages || toolConfig?.allowFiles) && (
+          {isDragOver && (toolConfig?.allowImages || toolConfig?.allowFiles || toolConfig?.id === 'calculate-calories') && (
             <div className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm flex items-center justify-center">
               <div className="text-center p-8 border-2 border-dashed border-primary rounded-2xl bg-background/90">
-                {toolConfig.id === 'analyse-files-openai' ? (
+                {toolConfig?.id === 'calculate-calories' ? (
+                  <>
+                    <ImageIcon className="h-12 w-12 mx-auto mb-4 text-primary" />
+                    <h3 className="text-lg font-semibold mb-2">Drop your food images here</h3>
+                    <p className="text-muted-foreground">JPG, PNG, WEBP and other image formats are supported</p>
+                  </>
+                ) : toolConfig.id === 'analyse-files-openai' ? (
                   <>
                     <FileText className="h-12 w-12 mx-auto mb-4 text-primary" />
                     <h3 className="text-lg font-semibold mb-2">Drop your files here</h3>
@@ -1084,7 +1121,7 @@ export default function ToolPage() {
         // Messages
         <div className="py-8 pb-32 space-y-8">
               {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-3 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[90%] w-full break-words rounded-3xl px-6 py-4 shadow-sm transition-all duration-200 ${
+                  <div className={`max-w-[75%] w-full break-words rounded-2xl px-4 py-3 shadow-sm transition-all duration-200 ${
                     message.role === 'user' 
                       ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-primary/20' 
                       : 'bg-gradient-to-br from-muted/50 to-muted border border-border/50 text-foreground hover:shadow-md'
