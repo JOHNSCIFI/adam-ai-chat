@@ -467,7 +467,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                       <p className="text-sm text-muted-foreground">Manage your account information and preferences</p>
                     </div>
                     <Button 
-                      onClick={() => window.location.href = '/auth'}
+                      onClick={() => window.location.href = '/'}
                       className="mt-4"
                     >
                       Sign In
@@ -583,7 +583,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </div>
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">You need to be signed in to access security settings.</p>
-                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+                <Button onClick={() => window.location.href = '/'}>Sign In</Button>
               </div>
             </div>
           );
@@ -675,7 +675,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </div>
               <div className="text-center py-8">
                 <p className="text-muted-foreground mb-4">You need to be signed in to access data control settings.</p>
-                <Button onClick={() => window.location.href = '/auth'}>Sign In</Button>
+                <Button onClick={() => window.location.href = '/'}>Sign In</Button>
               </div>
             </div>
           );

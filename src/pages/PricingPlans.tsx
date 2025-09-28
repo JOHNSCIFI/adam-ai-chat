@@ -147,7 +147,7 @@ export default function PricingPlans() {
 
   const handleSubscribe = (plan: 'pro' | 'ultra_pro') => {
     if (!user) {
-      navigate('/auth');
+      navigate('/');
       return;
     }
     

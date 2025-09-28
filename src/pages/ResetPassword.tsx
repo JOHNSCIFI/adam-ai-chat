@@ -36,7 +36,7 @@ export default function ResetPassword() {
             description: "This password reset link is invalid or has expired.",
             variant: "destructive",
           });
-          navigate('/auth');
+          navigate('/');
           return;
         }
 
@@ -49,7 +49,7 @@ export default function ResetPassword() {
             description: "This password reset link is invalid or has expired.",
             variant: "destructive",
           });
-          navigate('/auth');
+          navigate('/');
         }
       } catch (error) {
         console.error('Error checking recovery session:', error);
@@ -58,7 +58,7 @@ export default function ResetPassword() {
           description: "Something went wrong. Please try again.",
           variant: "destructive",
         });
-        navigate('/auth');
+        navigate('/');
       }
     };
 
@@ -116,7 +116,7 @@ export default function ResetPassword() {
         
         // Redirect to auth page after 2 seconds
         setTimeout(() => {
-          navigate('/auth');
+          navigate('/');
         }, 2000);
       }
     } catch (error) {
