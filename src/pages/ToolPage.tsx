@@ -1082,23 +1082,32 @@ export default function ToolPage() {
               </div>
             </div> :
         // Messages
-        <div className="py-8 pb-32 space-y-6">
-              {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-2 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
-                  <div className={`max-w-[85%] w-full break-words rounded-2xl px-4 py-3 ${message.role === 'user' ? 'bg-primary text-primary-foreground' : ''}`}>
+        <div className="py-8 pb-32 space-y-8">
+              {messages.map((message, index) => <div key={message.id} className={`flex flex-col gap-3 px-4 ${message.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  <div className={`max-w-[90%] w-full break-words rounded-3xl px-6 py-4 shadow-sm transition-all duration-200 ${
+                    message.role === 'user' 
+                      ? 'bg-gradient-to-br from-primary to-primary/90 text-primary-foreground shadow-primary/20' 
+                      : 'bg-gradient-to-br from-muted/50 to-muted border border-border/50 text-foreground hover:shadow-md'
+                  }`}>
                     {/* File attachments for user messages - show before text */}
-                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-2">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-32 sm:max-w-40 md:max-w-48 max-h-32 sm:max-h-40 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
-                    url: file.url,
-                    name: file.name
-                  })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                                <FileText className="h-4 w-4" />
-                                <span className="text-sm">{file.name}</span>
+                    {message.role === 'user' && message.file_attachments && message.file_attachments.length > 0 && <div className="mb-4 space-y-3">
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-3">
+                            {file.type.startsWith('image/') ? <img 
+                              src={file.url} 
+                              alt={file.name} 
+                              className="max-w-48 sm:max-w-56 md:max-w-64 max-h-48 sm:max-h-56 md:max-h-64 object-cover cursor-pointer rounded-2xl border border-white/20 shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-300" 
+                              onClick={() => setSelectedImage({
+                                url: file.url,
+                                name: file.name
+                              })} 
+                            /> : <div className="flex items-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+                                <FileText className="h-5 w-5 text-white/80" />
+                                <span className="text-sm font-medium text-white/90">{file.name}</span>
                               </div>}
                           </div>)}
                       </div>}
 
-                    <div className="prose prose-sm max-w-full break-words overflow-hidden dark:prose-invert"
+                    <div className="prose prose-sm max-w-full break-words overflow-hidden dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-code:text-current"
                       style={{ wordBreak: 'break-word', overflowWrap: 'break-word' }}>
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {message.content}
@@ -1106,30 +1115,38 @@ export default function ToolPage() {
                     </div>
                     
                     {/* File attachments for assistant messages - show after text */}
-                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-3 space-y-2">
-                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-2 bg-transparent">
-                            {file.type.startsWith('image/') ? <img src={file.url} alt={file.name} className="max-w-32 sm:max-w-40 md:max-w-48 max-h-32 sm:max-h-40 md:max-h-48 object-cover cursor-pointer rounded-lg border border-border/20 shadow-sm hover:shadow-md transition-shadow" onClick={() => setSelectedImage({
-                    url: file.url,
-                    name: file.name
-                  })} /> : <div className="flex items-center gap-2 p-2 bg-muted rounded-lg">
-                                <FileText className="h-4 w-4" />
-                                <span className="text-sm">{file.name}</span>
+                    {message.role === 'assistant' && message.file_attachments && message.file_attachments.length > 0 && <div className="mt-4 space-y-3">
+                        {message.file_attachments.map(file => <div key={file.id} className="flex items-center gap-3">
+                            {file.type.startsWith('image/') ? <img 
+                              src={file.url} 
+                              alt={file.name} 
+                              className="max-w-48 sm:max-w-56 md:max-w-64 max-h-48 sm:max-h-56 md:max-h-64 object-cover cursor-pointer rounded-2xl border border-border/30 shadow-md hover:shadow-lg transform hover:scale-[1.02] transition-all duration-300" 
+                              onClick={() => setSelectedImage({
+                                url: file.url,
+                                name: file.name
+                              })} 
+                            /> : <div className="flex items-center gap-3 p-3 bg-accent/50 rounded-xl border border-border/30">
+                                <FileText className="h-5 w-5 text-muted-foreground" />
+                                <span className="text-sm font-medium text-foreground">{file.name}</span>
                               </div>}
                           </div>)}
                       </div>}
                   </div>
                   
                   {/* Copy button - always visible, positioned based on message role */}
-                  <Button variant="ghost" size="sm" className={`h-6 w-6 p-0 text-muted-foreground hover:text-foreground ${message.role === 'user' ? 'self-end' : 'self-start'}`} onClick={() => copyToClipboard(message.content, message.id)}>
-                    {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                  <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 rounded-full shadow-sm transition-all duration-200 ${message.role === 'user' ? 'self-end' : 'self-start'}`} onClick={() => copyToClipboard(message.content, message.id)}>
+                    {copiedMessageId === message.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
                   </Button>
                 </div>)}
               
               {/* Loading indicator */}
               {(loading || isGeneratingResponse) && <div className="flex justify-start px-4">
-                  <div className="bg-muted rounded-2xl px-4 py-3 max-w-[85%]">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <div className="animate-pulse">Thinking...</div>
+                  <div className="bg-gradient-to-br from-muted/50 to-muted border border-border/50 rounded-3xl px-6 py-4 max-w-[90%] animate-pulse shadow-sm">
+                    <div className="flex items-center gap-3 text-muted-foreground">
+                      <div className="w-2 h-2 rounded-full bg-primary/50 animate-bounce"></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: '0.1s' }}></div>
+                      <div className="w-2 h-2 rounded-full bg-primary/50 animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                      <span className="ml-2 font-medium">AI is thinking...</span>
                     </div>
                   </div>
                 </div>}
