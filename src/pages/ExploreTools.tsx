@@ -254,7 +254,6 @@ export default function ExploreTools() {
     
     // List of tools that should navigate to /chat/id
     const chatTools = [
-      'calculate-calories',
       'openai-gpt-4o', 
       'openai-gpt-4-1',
       'deepseek-v31-terminus',
