@@ -14,7 +14,6 @@ import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 
 import GoogleOneTab from '@/components/GoogleOneTab';
 import AuthModal from '@/components/AuthModal';
-import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -203,7 +202,6 @@ export default function Index() {
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
-  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
@@ -313,7 +311,7 @@ export default function Index() {
     setIsRecording(false);
   };
   const handleStartChat = async () => {
-    if (!message.trim() || loading || isGeneratingImage) return;
+    if (!message.trim() || loading) return;
     if (!user) {
       setPendingMessage(message);
       localStorage.setItem('pendingChatMessage', message);
@@ -324,144 +322,6 @@ export default function Index() {
       navigate('/pricing-plans');
       return;
     }
-
-    // Handle image generation mode differently
-    if (isImageMode || selectedModel === 'generate-image') {
-      setIsGeneratingImage(true);
-      setLoading(true);
-      console.log('[IMAGE-GEN] Starting image generation with prompt:', message);
-      console.log('[IMAGE-GEN] Image mode:', isImageMode, 'Selected model:', selectedModel);
-      
-      try {
-        // Create new chat
-        const { data: chatData, error: chatError } = await supabase
-          .from('chats')
-          .insert([{
-            user_id: user.id,
-            title: message.slice(0, 50) || 'Generated Image'
-          }])
-          .select()
-          .single();
-        
-        if (chatError) throw chatError;
-        console.log('[IMAGE-GEN] Chat created:', chatData.id);
-
-        // Insert user message
-        const { error: messageError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: chatData.id,
-            content: message,
-            role: 'user'
-          });
-        
-        if (messageError) throw messageError;
-        console.log('[IMAGE-GEN] User message inserted');
-
-        // Call generate-image edge function
-        const { data: imageData, error: functionError } = await supabase.functions.invoke('generate-image', {
-          body: { prompt: message }
-        });
-
-        console.log('[IMAGE-GEN] Function response:', { imageData, functionError });
-
-        if (functionError) {
-          console.error('[IMAGE-GEN] Function error:', functionError);
-          throw functionError;
-        }
-
-        if (!imageData?.imageUrl) {
-          console.error('[IMAGE-GEN] No image URL in response:', imageData);
-          throw new Error('No image URL returned from generation');
-        }
-
-        // Convert base64 to blob and upload to storage
-        console.log('[IMAGE-GEN] Converting base64 to blob...');
-        const base64Data = imageData.imageUrl.includes(',') 
-          ? imageData.imageUrl.split(',')[1] 
-          : imageData.imageUrl;
-        
-        const byteCharacters = atob(base64Data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'image/png' });
-        
-        console.log('[IMAGE-GEN] Blob created, size:', blob.size, 'bytes');
-        
-        const fileName = `${user.id}/${Date.now()}-generated.png`;
-        console.log('[IMAGE-GEN] Uploading to storage:', fileName);
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('chat-images')
-          .upload(fileName, blob, {
-            contentType: 'image/png',
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) {
-          console.error('[IMAGE-GEN] Upload error:', uploadError);
-          throw uploadError;
-        }
-        console.log('[IMAGE-GEN] Image uploaded to storage:', uploadData.path);
-
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('chat-images')
-          .getPublicUrl(uploadData.path);
-
-        console.log('[IMAGE-GEN] Public URL:', publicUrl);
-
-        // Create file attachment object
-        const fileAttachment = {
-          name: 'generated-image.png',
-          type: 'image/png',
-          url: publicUrl,
-          size: blob.size
-        };
-
-        console.log('[IMAGE-GEN] Creating file attachment:', fileAttachment);
-
-        // Insert AI response message with file attachment
-        const { error: aiMessageError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: chatData.id,
-            content: 'I\'ve generated an image based on your prompt.',
-            role: 'assistant',
-            file_attachments: [fileAttachment] as any
-          });
-
-        if (aiMessageError) {
-          console.error('[IMAGE-GEN] AI message error:', aiMessageError);
-          throw aiMessageError;
-        }
-        console.log('[IMAGE-GEN] AI message inserted with file attachment');
-
-        // Clear state and navigate
-        setMessage('');
-        setIsImageMode(false);
-        toast.success('Image generated successfully!');
-        
-        navigate(`/chat/${chatData.id}`, {
-          replace: true,
-          state: { selectedModel: 'generate-image' }
-        });
-
-      } catch (error) {
-        console.error('[IMAGE-GEN] Error generating image:', error);
-        toast.error('Failed to generate image. Please try again.');
-      } finally {
-        setIsGeneratingImage(false);
-        setLoading(false);
-      }
-      return;
-    }
-
-    // Regular chat flow
     setLoading(true);
     try {
       // Create new chat
@@ -548,12 +408,6 @@ export default function Index() {
   };
   const handleModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
-    // Automatically enter image mode when Generate Image model is selected
-    if (modelId === 'generate-image') {
-      setIsImageMode(true);
-    } else {
-      setIsImageMode(false);
-    }
   };
   const scrollModels = (direction: 'left' | 'right') => {
     if (modelsContainerRef.current) {
@@ -734,14 +588,7 @@ export default function Index() {
               </div>)}
           </div>}
         
-        {/* Image generation indicator */}
-        {isGeneratingImage && message && (
-          <div className="mb-4">
-            <ImageProcessingIndicator prompt={message} />
-          </div>
-        )}
-
-        <div className={`relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-200 ${isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''} ${isGeneratingImage ? 'opacity-50 pointer-events-none' : ''}`}>
+        <div className={`relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-200 ${isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''}`}>
           {/* Drag and drop overlay */}
           {isDragOver && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-xl border-2 border-dashed border-primary">
               <div className="text-center">
