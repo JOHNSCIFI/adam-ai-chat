@@ -204,14 +204,6 @@ const tools: Tool[] = [
     category: 'Popular',
     icon: <FileText className="h-5 w-5" />,
     route: '/analyse-files-openai'
-  },
-  {
-    id: 'ai-search-engine',
-    name: 'AI Search Engine',
-    description: 'Advanced web search powered by artificial intelligence',
-    category: 'Popular',
-    icon: <Search className="h-5 w-5" />,
-    route: '/ai-search-engine'
   }
 ];
 
