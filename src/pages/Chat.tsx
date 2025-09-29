@@ -46,7 +46,7 @@ const models = [{
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
   description: "Alternative for natural language and writing",
   type: 'pro'
 }, {

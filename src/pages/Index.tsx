@@ -42,7 +42,7 @@ const models = [{
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
   description: "Alternative for natural language and writing",
   type: 'pro'
 }, {
@@ -99,7 +99,7 @@ const availableModels = [{
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
   description: 'Excellent for natural language tasks, writing, and creative work.',
   icon: 'claude'
 }, {
@@ -273,13 +273,6 @@ export default function Index() {
       return <FileText className="h-4 w-4" />;
     }
   };
-  const handleCreateImage = () => {
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-    navigate('/image-generation');
-  };
   const handleSearchWeb = () => {
     if (!user) {
       setShowAuthModal(true);
@@ -414,11 +407,6 @@ export default function Index() {
     textareaRef.current?.focus();
   };
   const handleModelSelect = (modelId: string) => {
-    if (modelId === 'generate-image') {
-      // Trigger image generation mode instead of setting as model
-      handleCreateImage();
-      return;
-    }
     setSelectedModel(modelId);
   };
   const scrollModels = (direction: 'left' | 'right') => {
@@ -467,13 +455,6 @@ export default function Index() {
     setIsStylesOpen(false);
     setIsImageMode(false); // Exit image mode when style is selected
 
-    setTimeout(() => {
-      textareaRef.current?.focus();
-    }, 0);
-  };
-  const handleCreateImageClick = () => {
-    setIsImageMode(true);
-    setMessage('');
     setTimeout(() => {
       textareaRef.current?.focus();
     }, 0);
@@ -667,7 +648,7 @@ export default function Index() {
                             </div>
                           </PopoverContent>
                         </Popover>
-                      </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={handleCreateImageClick} aria-label="Create an image">
+                      </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={() => setSelectedModel('generate-image')} aria-label="Create an image">
                         <ImageIcon className="h-4 w-4 mr-2" />
                         <span>Generate an image</span>
                       </Button>}
@@ -744,7 +725,7 @@ export default function Index() {
                       <Paperclip className="h-4 w-4" />
                       Add photos & files
                     </Button>
-                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                    <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={() => setSelectedModel('generate-image')}>
                       <ImageIcon className="h-4 w-4" />
                       Create an image
                     </Button>
