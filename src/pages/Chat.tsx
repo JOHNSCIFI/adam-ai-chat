@@ -1953,7 +1953,54 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       )}
 
       {/* Messages area - takes all available space above input */}
-      <div className="flex-1 overflow-y-auto pb-32 relative">
+      <div 
+        className="flex-1 overflow-y-auto pb-32 relative"
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Only hide overlay if leaving the entire messages area
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragOver(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+          
+          const newFiles = Array.from(e.dataTransfer.files);
+          if (newFiles.length > 0) {
+            // Combine existing files with new files
+            const combinedFiles = [...selectedFiles, ...newFiles];
+            
+            const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
+            const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
+            
+            if (totalSize > maxTotalSize) {
+              toast.error('Total file size cannot exceed 100MB');
+              return;
+            }
+            
+            if (combinedFiles.length > 10) {
+              toast.error('Maximum 10 files allowed per message');
+              return;
+            }
+            
+            setSelectedFiles(combinedFiles);
+            toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
+          }
+        }}
+      >
         <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -2238,45 +2285,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             className={`relative bg-background border border-border rounded-xl p-3 transition-all duration-200 ${
               isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
             }`}
-            onDragOver={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragOver(true);
-            }}
-            onDragLeave={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                setIsDragOver(false);
-              }
-            }}
-            onDrop={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              setIsDragOver(false);
-              
-              const newFiles = Array.from(e.dataTransfer.files);
-              if (newFiles.length > 0) {
-                // Combine existing files with new files
-                const combinedFiles = [...selectedFiles, ...newFiles];
-                
-                const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
-                const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
-                
-                if (totalSize > maxTotalSize) {
-                  toast.error('Total file size cannot exceed 100MB');
-                  return;
-                }
-                
-                if (combinedFiles.length > 10) {
-                  toast.error('Maximum 10 files allowed per message');
-                  return;
-                }
-                
-                setSelectedFiles(combinedFiles);
-                toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
-              }
-            }}
           >
             {/* Drag and drop overlay */}
             {isDragOver && (
@@ -2284,7 +2292,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 <div className="text-center">
                   <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
                   <p className="text-base font-semibold text-primary">Drop files here</p>
-                  <p className="text-xs text-muted-foreground">Maximum 10 files, 100MB total</p>
                 </div>
               </div>
             )}

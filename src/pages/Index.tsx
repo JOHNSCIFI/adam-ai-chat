@@ -711,6 +711,39 @@ export default function Index() {
       
       <div 
         className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200"
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Only hide overlay if leaving the entire page area
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragOver(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+          
+          if (!user) {
+            setShowAuthModal(true);
+            return;
+          }
+
+          const files = Array.from(e.dataTransfer.files);
+          if (files.length > 0) {
+            setSelectedFiles(prev => [...prev, ...files]);
+          }
+        }}
       >
 
         {/* Google One Tap for unauthenticated users */}
@@ -753,10 +786,6 @@ export default function Index() {
           className={`relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-200 ${
             isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
           }`}
-          onDragOver={handleDragOver}
-          onDragEnter={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
         >
           {/* Drag and drop overlay */}
           {isDragOver && (
@@ -764,7 +793,6 @@ export default function Index() {
               <div className="text-center">
                 <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
                 <p className="text-base font-semibold text-primary">Drop files here</p>
-                <p className="text-xs text-muted-foreground">Images, documents, and other files</p>
               </div>
             </div>
           )}
