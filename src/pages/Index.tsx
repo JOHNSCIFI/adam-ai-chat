@@ -363,26 +363,49 @@ export default function Index() {
           body: { prompt: message }
         });
 
-        if (functionError) throw functionError;
-        console.log('[IMAGE-GEN] Image generated:', imageData);
+        console.log('[IMAGE-GEN] Function response:', { imageData, functionError });
+
+        if (functionError) {
+          console.error('[IMAGE-GEN] Function error:', functionError);
+          throw functionError;
+        }
 
         if (!imageData?.imageUrl) {
+          console.error('[IMAGE-GEN] No image URL in response:', imageData);
           throw new Error('No image URL returned from generation');
         }
 
         // Convert base64 to blob and upload to storage
-        const base64Data = imageData.imageUrl.split(',')[1];
-        const blob = await fetch(`data:image/png;base64,${base64Data}`).then(r => r.blob());
+        console.log('[IMAGE-GEN] Converting base64 to blob...');
+        const base64Data = imageData.imageUrl.includes(',') 
+          ? imageData.imageUrl.split(',')[1] 
+          : imageData.imageUrl;
+        
+        const byteCharacters = atob(base64Data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'image/png' });
+        
+        console.log('[IMAGE-GEN] Blob created, size:', blob.size, 'bytes');
         
         const fileName = `${user.id}/${Date.now()}-generated.png`;
+        console.log('[IMAGE-GEN] Uploading to storage:', fileName);
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('chat-images')
           .upload(fileName, blob, {
             contentType: 'image/png',
-            cacheControl: '3600'
+            cacheControl: '3600',
+            upsert: false
           });
 
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('[IMAGE-GEN] Upload error:', uploadError);
+          throw uploadError;
+        }
         console.log('[IMAGE-GEN] Image uploaded to storage:', uploadData.path);
 
         // Get public URL
@@ -400,6 +423,8 @@ export default function Index() {
           size: blob.size
         };
 
+        console.log('[IMAGE-GEN] Creating file attachment:', fileAttachment);
+
         // Insert AI response message with file attachment
         const { error: aiMessageError } = await supabase
           .from('messages')
@@ -410,7 +435,10 @@ export default function Index() {
             file_attachments: [fileAttachment] as any
           });
 
-        if (aiMessageError) throw aiMessageError;
+        if (aiMessageError) {
+          console.error('[IMAGE-GEN] AI message error:', aiMessageError);
+          throw aiMessageError;
+        }
         console.log('[IMAGE-GEN] AI message inserted with file attachment');
 
         // Clear state and navigate
