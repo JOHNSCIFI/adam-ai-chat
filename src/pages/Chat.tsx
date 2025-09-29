@@ -1897,7 +1897,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-50 bg-background border shadow-lg rounded-lg p-1 min-w-[240px] max-w-[280px]" align="center">
+              <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]" align="center">
                 {models.map(model => (
                   <SelectItem 
                     key={model.id} 
@@ -2411,7 +2411,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           <span className="text-sm font-medium">{selectedModelData?.shortLabel}</span>
                         </SelectValue>
                       </SelectTrigger>
-                       <SelectContent className="z-50 bg-background border shadow-lg rounded-lg p-1 min-w-[200px] max-w-[280px]">
+                       <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
                           {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                               <div className="flex items-center justify-between gap-2 w-full">
                                 <div className="flex items-center gap-2 min-w-0 flex-1">

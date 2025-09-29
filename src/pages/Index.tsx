@@ -502,7 +502,7 @@ export default function Index() {
                   {isModelDropdownOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[300px]" align="center">
+              <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
                 {models.map(model => {
               const modelData = availableModels.find(m => m.id === model.id);
               return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
@@ -516,7 +516,7 @@ export default function Index() {
                             <div className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{model.description}</div>
                           </div>
                         </div>
-                        {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium ml-2">
+                        {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
                             Pro
                           </span>}
                       </div>
@@ -668,7 +668,7 @@ export default function Index() {
                         </div>
                       </SelectValue>
                     </SelectTrigger>
-                    <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[320px]">
+                    <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]">
                       {models.map(model => {
                       const modelData = availableModels.find(m => m.id === model.id);
                       return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
@@ -680,7 +680,7 @@ export default function Index() {
                                 <div className="font-semibold text-sm">{model.name}</div>
                                 <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
                               </div>
-                              {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium">
+                              {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
                                   Pro
                                 </span>}
                             </div>
