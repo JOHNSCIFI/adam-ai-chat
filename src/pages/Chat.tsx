@@ -1107,6 +1107,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
         setSpeakingMessageId(null);
+        console.log('Speech manually stopped for message:', messageId);
       }
       return;
     }
@@ -1117,12 +1118,54 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }
 
     setSpeakingMessageId(messageId);
+    console.log('Starting speech for message:', messageId);
     
     const utterance = new SpeechSynthesisUtterance(content);
-    utterance.onend = () => setSpeakingMessageId(null);
-    utterance.onerror = () => setSpeakingMessageId(null);
+    
+    // More robust event handling
+    const resetSpeaking = () => {
+      console.log('Speech ended for message:', messageId);
+      setSpeakingMessageId(null);
+    };
+
+    utterance.onend = resetSpeaking;
+    utterance.onerror = (error) => {
+      console.log('Speech error for message:', messageId, error);
+      resetSpeaking();
+    };
+    
+    // Fallback mechanism - check if speech is still active after expected duration
+    const maxDuration = Math.max(content.length * 100, 5000); // Estimate based on content length, minimum 5 seconds
+    const fallbackTimer = setTimeout(() => {
+      if (speakingMessageId === messageId && window.speechSynthesis) {
+        if (!window.speechSynthesis.speaking) {
+          console.log('Fallback: Speech appears to have ended without firing onend event');
+          resetSpeaking();
+        }
+      }
+    }, maxDuration);
+
+    // Store the timer reference to clear it if speech ends normally
+    utterance.addEventListener('end', () => {
+      clearTimeout(fallbackTimer);
+    });
     
     window.speechSynthesis.speak(utterance);
+    
+    // Additional monitoring for when speech synthesis state changes
+    const monitorSpeech = setInterval(() => {
+      if (speakingMessageId === messageId && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+        console.log('Monitor detected speech ended for message:', messageId);
+        clearInterval(monitorSpeech);
+        clearTimeout(fallbackTimer);
+        resetSpeaking();
+      }
+    }, 500);
+
+    // Clean up monitoring after reasonable time
+    setTimeout(() => {
+      clearInterval(monitorSpeech);
+    }, maxDuration + 5000);
   };
 
   // Rating functionality
