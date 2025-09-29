@@ -21,9 +21,6 @@ import Models from '@/pages/Models';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
-import ExploreTools from '@/pages/ExploreTools';
-
-import ToolPage from '@/pages/ToolPage';
 import NotFound from '@/pages/NotFound';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
@@ -132,18 +129,6 @@ function App() {
                     <ProtectedRoute>
                       <MainLayout>
                         <Help />
-                      </MainLayout>
-                    </ProtectedRoute>
-                  } />
-                  <Route path="/explore-tools" element={
-                    <MainLayout>
-                      <ExploreTools />
-                    </MainLayout>
-                  } />
-                  <Route path="/:toolName/:toolId" element={
-                    <ProtectedRoute>
-                      <MainLayout>
-                        <ToolPage />
                       </MainLayout>
                     </ProtectedRoute>
                   } />

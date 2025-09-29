@@ -175,9 +175,6 @@ export default function ChatSidebar({
       console.error('Error in handleNewChat:', error);
     }
   };
-  const handleExploreTools = () => {
-    navigate('/explore-tools');
-  };
   const handlePricingPlans = () => {
     navigate('/pricing-plans');
   };
@@ -469,13 +466,6 @@ export default function ChatSidebar({
 
         <SidebarFooter>
           <SidebarMenu>
-            {/* Explore Tools */}
-            {!collapsed && <SidebarMenuItem>
-                <Button onClick={handleExploreTools} className="w-full justify-start gap-2 px-3 rounded-lg bg-transparent hover:bg-sidebar-accent text-sidebar-foreground transition-all duration-200" size="sm" variant="ghost">
-                  <Search className="h-4 w-4" />
-                  <span className="font-medium">Explore Tools</span>
-                </Button>
-              </SidebarMenuItem>}
 
             {/* Pricing Plans */}
             {!collapsed}
