@@ -705,7 +705,7 @@ export default function Chat() {
     
     // Handle image generation mode
     if (selectedModel === 'generate-image') {
-      console.log('[IMAGE-GEN] Image generation mode detected, calling generate-image function');
+      console.log('[IMAGE-GEN] Image generation mode detected');
       try {
         // Create user message
         const newUserMessage: Message = {
@@ -742,29 +742,66 @@ export default function Chat() {
         }
         
         // Call generate-image function
-        console.log('[IMAGE-GEN] Calling generate-image function with prompt:', userMessage);
+        console.log('[IMAGE-GEN] Calling generate-image with prompt:', userMessage);
         const { data: imageData, error: functionError } = await supabase.functions.invoke('generate-image', {
           body: { prompt: userMessage }
         });
         
-        console.log('[IMAGE-GEN] Function response:', { imageData, functionError });
+        console.log('[IMAGE-GEN] Response:', { success: !!imageData?.imageUrl, error: functionError });
         
         if (functionError) throw functionError;
         if (!imageData?.imageUrl) throw new Error('No image URL returned');
         
-        // Create assistant message with generated image
+        // Extract base64 from data URL
+        const base64Match = imageData.imageUrl.match(/^data:image\/png;base64,(.+)$/);
+        if (!base64Match) throw new Error('Invalid image data format');
+        
+        const base64Data = base64Match[1];
+        console.log('[IMAGE-GEN] Uploading to storage, size:', base64Data.length);
+        
+        // Convert base64 to blob
+        const binaryString = atob(base64Data);
+        const bytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        const blob = new Blob([bytes], { type: 'image/png' });
+        
+        // Upload to Supabase Storage
+        const timestamp = Date.now();
+        const fileName = `generated_${timestamp}.png`;
+        const filePath = user?.id ? `${user.id}/${chatId}/${fileName}` : `${chatId}/${fileName}`;
+        
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('generated-images')
+          .upload(filePath, blob, {
+            contentType: 'image/png',
+            upsert: true
+          });
+          
+        if (uploadError) throw uploadError;
+        
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('generated-images')
+          .getPublicUrl(filePath);
+        
+        const publicUrl = urlData.publicUrl;
+        console.log('[IMAGE-GEN] Upload successful, URL:', publicUrl);
+        
+        // Create assistant message with storage URL
         const assistantMessage: Message = {
           id: `temp-ai-${Date.now()}`,
           chat_id: chatId!,
-          content: `Generated image: ${userMessage}`,
+          content: 'Generated image',
           role: 'assistant',
           created_at: new Date().toISOString(),
           file_attachments: [{
             id: `generated-${Date.now()}`,
-            name: 'generated-image.png',
-            size: 0,
+            name: fileName,
+            size: blob.size,
             type: 'image/png',
-            url: imageData.imageUrl
+            url: publicUrl
           }]
         };
         
@@ -792,6 +829,7 @@ export default function Chat() {
           ));
         }
         
+        console.log('[IMAGE-GEN] Complete, message saved');
         toast.success('Image generated successfully!');
       } catch (error: any) {
         console.error('[IMAGE-GEN] Error:', error);
