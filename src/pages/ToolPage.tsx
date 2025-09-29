@@ -197,6 +197,11 @@ export default function ToolPage() {
     user,
     userProfile
   } = useAuth();
+
+  // Auto-deletion timer
+  const autoDeleteTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [hasUserInteracted, setHasUserInteracted] = useState(false);
+
   const {
     actualTheme
   } = useTheme();
@@ -347,6 +352,49 @@ export default function ToolPage() {
       };
     }
   }, [toolId, user, toolConfig]);
+
+  // Auto-deletion timer for tools
+  useEffect(() => {
+    if (!toolId || !user || hasUserInteracted) return;
+
+    // Clear any existing timer
+    if (autoDeleteTimerRef.current) {
+      clearTimeout(autoDeleteTimerRef.current);
+    }
+
+    // Set timer for 2 minutes (120 seconds)
+    autoDeleteTimerRef.current = setTimeout(async () => {
+      if (!hasUserInteracted) {
+        try {
+          console.log(`[AUTO-DELETE] Deleting inactive tool session: ${toolId}`);
+          
+          // Delete the tool session
+          const { error: deleteError } = await supabase
+            .from('tool_sessions')
+            .delete()
+            .eq('id', toolId);
+
+          if (deleteError) {
+            console.error('Error auto-deleting tool session:', deleteError);
+          } else {
+            console.log(`[AUTO-DELETE] Successfully deleted tool session: ${toolId}`);
+            // Navigate to home page
+            navigate('/');
+          }
+        } catch (error) {
+          console.error('Error in auto-delete:', error);
+        }
+      }
+    }, 2 * 60 * 1000); // 2 minutes
+
+    // Cleanup timer on unmount
+    return () => {
+      if (autoDeleteTimerRef.current) {
+        clearTimeout(autoDeleteTimerRef.current);
+      }
+    };
+  }, [toolId, user, hasUserInteracted, navigate]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -1503,7 +1551,13 @@ export default function ToolPage() {
                 <Textarea
                   ref={textareaRef} 
                   value={input} 
-                  onChange={e => setInput(e.target.value)} 
+                  onChange={e => {
+                    setInput(e.target.value);
+                    // Mark user interaction to prevent auto-deletion
+                    if (e.target.value.trim()) {
+                      setHasUserInteracted(true);
+                    }
+                  }}
                   onKeyDown={e => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
