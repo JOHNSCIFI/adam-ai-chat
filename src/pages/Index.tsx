@@ -352,6 +352,18 @@ export default function Index() {
       toast.success(`${files.length} file(s) added successfully`);
     }
   };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) {
+      return <ImageIcon className="h-4 w-4" />;
+    } else {
+      return <FileText className="h-4 w-4" />;
+    }
+  };
   const handleCreateImage = () => {
     if (!user) {
       setShowAuthModal(true);
@@ -735,6 +747,24 @@ export default function Index() {
       </div>
 
       <div className="w-full max-w-3xl mb-4 sm:mb-6">
+        {/* File attachments preview */}
+        {selectedFiles.length > 0 && (
+          <div className="mb-3 flex flex-wrap gap-2">
+            {selectedFiles.map((file, index) => (
+              <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                {getFileIcon(file.type)}
+                <span className="truncate max-w-32">{file.name}</span>
+                <button 
+                  onClick={() => removeFile(index)} 
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        
         <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
           <Textarea 
             ref={textareaRef} 
@@ -1201,6 +1231,13 @@ export default function Index() {
         className="sr-only" 
         accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md"
         aria-label="File upload input"
+        onChange={(e) => {
+          const files = Array.from(e.target.files || []);
+          setSelectedFiles(prev => [...prev, ...files]);
+          if (files.length > 0) {
+            toast.success(`${files.length} file(s) added successfully`);
+          }
+        }}
       />
       
       <AuthModal 
