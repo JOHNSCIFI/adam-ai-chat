@@ -260,39 +260,6 @@ export type Database = {
         }
         Relationships: []
       }
-      tool_sessions: {
-        Row: {
-          created_at: string
-          id: string
-          session_id: string | null
-          title: string
-          tool_id: string
-          tool_name: string
-          updated_at: string
-          user_id: string | null
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          session_id?: string | null
-          title?: string
-          tool_id: string
-          tool_name: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          session_id?: string | null
-          title?: string
-          tool_id?: string
-          tool_name?: string
-          updated_at?: string
-          user_id?: string | null
-        }
-        Relationships: []
-      }
       user_subscriptions: {
         Row: {
           created_at: string
