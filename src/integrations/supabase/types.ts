@@ -143,28 +143,34 @@ export type Database = {
       }
       message_ratings: {
         Row: {
+          ai_message: string | null
           created_at: string
           id: string
           message_id: string
           rating: string
           updated_at: string
           user_id: string
+          user_message: string | null
         }
         Insert: {
+          ai_message?: string | null
           created_at?: string
           id?: string
           message_id: string
           rating: string
           updated_at?: string
           user_id: string
+          user_message?: string | null
         }
         Update: {
+          ai_message?: string | null
           created_at?: string
           id?: string
           message_id?: string
           rating?: string
           updated_at?: string
           user_id?: string
+          user_message?: string | null
         }
         Relationships: []
       }

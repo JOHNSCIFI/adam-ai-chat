@@ -1337,12 +1337,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     const currentRating = messageRatings[messageId];
     const newRating = currentRating === rating ? null : rating;
     
+    // Find the AI message being rated
+    const aiMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
+    if (!aiMessage) return;
+    
+    // Find the user message that preceded this AI message
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    let userMessage = '';
+    
+    // Look backwards to find the previous user message
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        userMessage = messages[i].content;
+        break;
+      }
+    }
+    
     try {
       if (newRating) {
         await supabase.from('message_ratings' as any).upsert({
           message_id: messageId,
           user_id: user.id,
-          rating: newRating
+          rating: newRating,
+          user_message: userMessage,
+          ai_message: aiMessage.content
         });
         setMessageRatings(prev => ({ ...prev, [messageId]: newRating }));
       } else {
