@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp, Send } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
 
@@ -757,8 +757,24 @@ export default function Index() {
                     </SelectContent>
                   </Select>
                   
-                  <Button size="sm" className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${isRecording ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'} text-background`} onClick={isRecording ? stopRecording : startRecording} aria-label={isRecording ? "Stop recording" : "Start voice recording"} aria-pressed={isRecording}>
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                  <Button 
+                    size="sm" 
+                    className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
+                      message.trim().length > 0
+                        ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                        : isRecording 
+                          ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
+                          : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                    }`} 
+                    onClick={message.trim().length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
+                    aria-label={message.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
+                    aria-pressed={isRecording}
+                  >
+                    {message.trim().length > 0 ? (
+                      <Send className="h-4 w-4" />
+                    ) : (
+                      isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
+                    )}
                   </Button>
                   
                 </div>}
@@ -785,8 +801,24 @@ export default function Index() {
                 </Popover>
                 
                 <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
-                  <Button size="sm" className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${isRecording ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300' : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary'} text-background`} onClick={isRecording ? stopRecording : startRecording} aria-label={isRecording ? "Stop recording" : "Start voice recording"} aria-pressed={isRecording}>
-                    {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                  <Button 
+                    size="sm" 
+                    className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
+                      message.trim().length > 0
+                        ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                        : isRecording 
+                          ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
+                          : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                    }`} 
+                    onClick={message.trim().length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
+                    aria-label={message.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
+                    aria-pressed={isRecording}
+                  >
+                    {message.trim().length > 0 ? (
+                      <Send className="h-3 w-3" />
+                    ) : (
+                      isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
+                    )}
                   </Button>
                   
                   
