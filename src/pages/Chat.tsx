@@ -721,6 +721,41 @@ export default function Chat() {
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
       try {
+        // First, ensure the chat exists
+        console.log('[IMAGE-GEN] Checking if chat exists:', chatId);
+        const { data: existingChat, error: chatCheckError } = await supabase
+          .from('chats')
+          .select('id, user_id')
+          .eq('id', chatId)
+          .maybeSingle();
+        
+        if (chatCheckError) {
+          console.error('[IMAGE-GEN] Error checking chat:', chatCheckError);
+          throw chatCheckError;
+        }
+        
+        // If chat doesn't exist, create it
+        if (!existingChat) {
+          console.log('[IMAGE-GEN] Chat does not exist, creating it...');
+          const { data: newChat, error: createError } = await supabase
+            .from('chats')
+            .insert({
+              id: chatId, // Use the chatId from URL
+              user_id: user.id,
+              title: userMessage.slice(0, 50) || 'New Chat'
+            })
+            .select()
+            .single();
+            
+          if (createError) {
+            console.error('[IMAGE-GEN] Error creating chat:', createError);
+            throw createError;
+          }
+          console.log('[IMAGE-GEN] Chat created successfully:', newChat);
+        } else {
+          console.log('[IMAGE-GEN] Chat exists, proceeding...');
+        }
+        
         // Create user message
         const newUserMessage: Message = {
           id: `temp-${Date.now()}`,
