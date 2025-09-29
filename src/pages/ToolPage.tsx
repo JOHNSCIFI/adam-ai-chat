@@ -7,7 +7,7 @@ import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ArrowLeft, Volume2 } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { toast } from 'sonner';
@@ -266,6 +266,7 @@ export default function ToolPage() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -688,6 +689,74 @@ export default function ToolPage() {
         }
       }
     }
+  };
+
+  // TTS functionality using existing browser TTS
+  const speakMessage = (messageId: string, content: string) => {
+    if (speakingMessageId === messageId) {
+      // Stop current speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        setSpeakingMessageId(null);
+        console.log('Speech manually stopped for message:', messageId);
+      }
+      return;
+    }
+
+    // Stop any current speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    setSpeakingMessageId(messageId);
+    console.log('Starting speech for message:', messageId);
+    
+    const utterance = new SpeechSynthesisUtterance(content);
+    
+    // More robust event handling
+    const resetSpeaking = () => {
+      console.log('Speech ended for message:', messageId);
+      setSpeakingMessageId(null);
+    };
+
+    utterance.onend = resetSpeaking;
+    utterance.onerror = (error) => {
+      console.log('Speech error for message:', messageId, error);
+      resetSpeaking();
+    };
+    
+    // Fallback mechanism - check if speech is still active after expected duration
+    const maxDuration = Math.max(content.length * 100, 5000); // Estimate based on content length, minimum 5 seconds
+    const fallbackTimer = setTimeout(() => {
+      if (speakingMessageId === messageId && window.speechSynthesis) {
+        if (!window.speechSynthesis.speaking) {
+          console.log('Fallback: Speech appears to have ended without firing onend event');
+          resetSpeaking();
+        }
+      }
+    }, maxDuration);
+
+    // Store the timer reference to clear it if speech ends normally
+    utterance.addEventListener('end', () => {
+      clearTimeout(fallbackTimer);
+    });
+    
+    window.speechSynthesis.speak(utterance);
+    
+    // Additional monitoring for when speech synthesis state changes
+    const monitorSpeech = setInterval(() => {
+      if (speakingMessageId === messageId && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+        console.log('Monitor detected speech ended for message:', messageId);
+        clearInterval(monitorSpeech);
+        clearTimeout(fallbackTimer);
+        resetSpeaking();
+      }
+    }, 500);
+
+    // Clean up monitoring after reasonable time
+    setTimeout(() => {
+      clearInterval(monitorSpeech);
+    }, maxDuration + 5000);
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
@@ -1170,10 +1239,32 @@ export default function ToolPage() {
                       </div>}
                   </div>
                   
-                  {/* Copy button - always visible, positioned based on message role */}
-                  <Button variant="ghost" size="sm" className={`h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 rounded-full shadow-sm transition-all duration-200 ${message.role === 'user' ? 'self-end' : 'self-start'}`} onClick={() => copyToClipboard(message.content, message.id)}>
-                    {copiedMessageId === message.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                  </Button>
+                  {/* Action buttons - positioned based on message role */}
+                  <div className={`flex items-center gap-2 ${message.role === 'user' ? 'self-end' : 'self-start'}`}>
+                    {/* Speaker button for assistant messages */}
+                    {message.role === 'assistant' && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 rounded-full shadow-sm transition-all duration-200"
+                        onClick={() => speakMessage(message.id, message.content)}
+                      >
+                        {speakingMessageId === message.id ? (
+                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                          </svg>
+                        ) : (
+                          <Volume2 className="h-4 w-4" />
+                        )}
+                      </Button>
+                    )}
+                    
+                    {/* Copy button - always visible */}
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-muted-foreground/60 hover:text-foreground hover:bg-accent/50 rounded-full shadow-sm transition-all duration-200" onClick={() => copyToClipboard(message.content, message.id)}>
+                      {copiedMessageId === message.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+                  </div>
                 </div>)}
               
               {/* Loading indicator */}
