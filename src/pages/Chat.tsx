@@ -1872,24 +1872,25 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            {message.role === 'assistant' && (
                              <>
                                {/* Volume/Speaker button */}
-                               <Button 
-                                 variant="ghost" 
-                                 size="sm" 
-                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${speakingMessageId === message.id ? 'bg-primary/20' : ''}`}
-                                 onClick={() => speakMessage(message.id, message.content)}
-                               >
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                   {speakingMessageId === message.id ? (
-                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14H8V8h2v8zm6 0h-2V8h2v8z"/>
-                                   ) : (
-                                     <>
-                                       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                                       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                                     </>
-                                   )}
-                                 </svg>
-                               </Button>
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                  onClick={() => speakMessage(message.id, message.content)}
+                                >
+                                  {speakingMessageId === message.id ? (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <rect x="6" y="4" width="4" height="16"></rect>
+                                      <rect x="14" y="4" width="4" height="16"></rect>
+                                    </svg>
+                                  ) : (
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                    </svg>
+                                  )}
+                                </Button>
                                
                                {/* Thumbs Up button - hide if disliked */}
                                {messageRatings[message.id] !== 'dislike' && (
