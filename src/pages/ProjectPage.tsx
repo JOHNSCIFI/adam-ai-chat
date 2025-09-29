@@ -3,16 +3,66 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2 } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon, Bot } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
 import VoiceModeButton from '@/components/VoiceModeButton';
 import { toast } from 'sonner';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
+
+const models = [{
+  id: 'gpt-4.1-mini',
+  name: 'OpenAI GPT-4.1 mini',
+  description: "Fast & efficient",
+  type: 'free'
+}, {
+  id: 'gpt-4o',
+  name: 'OpenAI GPT-4o',
+  description: "Most accurate",
+  type: 'pro'
+}, {
+  id: 'gpt-5',
+  name: 'OpenAI GPT-5',
+  description: "Most advanced",
+  type: 'pro'
+}, {
+  id: 'claude-opus-4',
+  name: 'Claude Opus 4',
+  description: "Most capable",
+  type: 'pro'
+}, {
+  id: 'claude-sonnet-3.5',
+  name: 'Claude Sonnet 3.5',
+  description: "Balanced & versatile",
+  type: 'pro'
+}, {
+  id: 'deepseek-r1',
+  name: 'DeepSeek R1',
+  description: "Advanced reasoning",
+  type: 'pro'
+}, {
+  id: 'gemini-pro',
+  name: 'Google Gemini Pro',
+  description: "Multimodal AI",
+  type: 'pro'
+}, {
+  id: 'grok-3',
+  name: 'Grok 3',
+  description: "Real-time insights",
+  type: 'pro'
+}];
+
 interface Chat {
   id: string;
   title: string;
@@ -96,7 +146,8 @@ export default function ProjectPage() {
     onConfirm: () => {}
   });
   const {
-    state: sidebarState
+    state: sidebarState,
+    isMobile
   } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
   const [project, setProject] = useState<Project | null>(null);
@@ -113,8 +164,14 @@ export default function ProjectPage() {
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [selectedModel, setSelectedModel] = useState('gpt-4.1-mini');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  const selectedModelData = models.find(m => m.id === selectedModel);
 
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
@@ -216,18 +273,33 @@ export default function ProjectPage() {
     }
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
+    const value = e.target.value;
+    setInput(value);
 
     // Auto-resize textarea
-    const textarea = e.target;
-    textarea.style.height = 'auto';
-    textarea.style.height = Math.min(textarea.scrollHeight, 200) + 'px';
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.overflowY = 'hidden';
+      const scrollHeight = textareaRef.current.scrollHeight;
+      const maxHeight = isMobile ? 80 : 200;
+      if (scrollHeight <= maxHeight) {
+        textareaRef.current.style.height = `${scrollHeight}px`;
+      } else {
+        textareaRef.current.style.height = `${maxHeight}px`;
+        textareaRef.current.style.overflowY = 'auto';
+      }
+    }
   };
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      sendMessage();
+      handleSubmit();
     }
+  };
+
+  const handleSubmit = () => {
+    sendMessage();
   };
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
