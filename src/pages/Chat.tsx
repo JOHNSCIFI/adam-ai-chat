@@ -818,8 +818,31 @@ export default function Chat() {
         const webhookData = await webhookResponse.json();
         console.log('[IMAGE-GEN] Webhook response data:', webhookData);
         
-        console.log('[IMAGE-GEN] Webhook called successfully, waiting for response via realtime...');
-        toast.success('Generating image... This may take a moment.');
+        // Call webhook-handler to save the image
+        if (webhookData && webhookData.image_base64) {
+          console.log('[IMAGE-GEN] Calling webhook-handler to save image...');
+          
+          const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
+            body: {
+              chat_id: chatId,
+              user_id: user.id,
+              image_base64: webhookData.image_base64,
+              image_name: webhookData.image_name || 'generated_image.png',
+              image_type: webhookData.image_type || 'image/png'
+            }
+          });
+          
+          if (handlerError) {
+            console.error('[IMAGE-GEN] Webhook-handler error:', handlerError);
+            throw handlerError;
+          }
+          
+          console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
+          toast.success('Image generated successfully!');
+        } else {
+          console.error('[IMAGE-GEN] No image_base64 in webhook response');
+          toast.error('Failed to receive generated image');
+        }
         
       } catch (error: any) {
         console.error('[IMAGE-GEN] Error:', error);
