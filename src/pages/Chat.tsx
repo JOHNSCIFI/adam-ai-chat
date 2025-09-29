@@ -539,13 +539,15 @@ export default function Chat() {
         // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
         console.log('Saving AI message to database for chat:', originalChatId);
         const {
+          data: insertedAiMessage,
           error: saveError
         } = await supabase.from('messages').insert({
           chat_id: originalChatId,
           content: responseContent,
           role: 'assistant',
           file_attachments: fileAttachments as any
-        });
+        }).select().single();
+        
         if (saveError) {
           // Check for authentication errors
           if (saveError.message?.includes('JWT') || saveError.message?.includes('unauthorized')) {
@@ -557,6 +559,13 @@ export default function Chat() {
           console.error('Error saving AI message:', saveError);
         } else {
           console.log('AI message saved successfully to chat:', originalChatId);
+          
+          // Update the message with the real database ID
+          if (insertedAiMessage && chatId === originalChatId) {
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id ? { ...msg, id: insertedAiMessage.id } : msg
+            ));
+          }
         }
       } else {
         console.log('No response content received from AI');
