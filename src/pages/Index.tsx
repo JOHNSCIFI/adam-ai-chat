@@ -451,9 +451,9 @@ export default function Index() {
   }];
   const handleStyleSelect = (style: typeof imageStyles[0]) => {
     setMessage(style.prompt);
-    setSelectedStyle(style.name);
     setIsStylesOpen(false);
     setIsImageMode(false); // Exit image mode when style is selected
+    setSelectedStyle(null); // Reset style selection to return to default state
 
     setTimeout(() => {
       textareaRef.current?.focus();
