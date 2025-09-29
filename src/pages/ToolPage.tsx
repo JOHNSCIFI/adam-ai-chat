@@ -1608,7 +1608,7 @@ export default function ToolPage() {
                       handleSubmit();
                     }
                   }} 
-                  placeholder="Type a message to Ask me anything..." 
+                  placeholder="ask me anything" 
                   className={`flex-1 border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-foreground placeholder:text-muted-foreground break-words text-left ${isMobile ? 'min-h-[32px] max-h-[60px] text-sm leading-5 px-1 py-1' : 'min-h-[24px] max-h-[200px] text-sm md:text-base px-0 py-0'}`} 
                   style={{
                     wordWrap: 'break-word',
