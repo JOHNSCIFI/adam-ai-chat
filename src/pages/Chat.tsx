@@ -54,7 +54,7 @@ const models = [{
   name: 'Generate Image',
   shortLabel: 'Generate Image',
   description: "Create images with DALL·E 3",
-  type: 'action'
+  type: 'pro'
 }];
 interface Message {
   id: string;
