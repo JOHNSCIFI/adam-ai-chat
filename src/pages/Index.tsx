@@ -8,11 +8,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp, Send } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import AuthModal from '@/components/AuthModal';
+import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 
 import GoogleOneTab from '@/components/GoogleOneTab';
+import AuthModal from '@/components/AuthModal';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -771,7 +772,7 @@ export default function Index() {
                     aria-pressed={isRecording}
                   >
                     {message.trim().length > 0 ? (
-                      <Send className="h-4 w-4" />
+                      <SendHorizontalIcon className="h-4 w-4" />
                     ) : (
                       isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
                     )}
@@ -815,7 +816,7 @@ export default function Index() {
                     aria-pressed={isRecording}
                   >
                     {message.trim().length > 0 ? (
-                      <Send className="h-3 w-3" />
+                      <SendHorizontalIcon className="h-3 w-3" />
                     ) : (
                       isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
                     )}
