@@ -1755,7 +1755,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       )}
 
       {/* Messages area - takes all available space above input */}
-      <div className="flex-1 overflow-y-auto pb-24">
+      <div className="flex-1 overflow-y-auto pb-32">
         <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
