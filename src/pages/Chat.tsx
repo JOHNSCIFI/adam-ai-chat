@@ -416,29 +416,48 @@ export default function Chat() {
           }];
         }
 
-        // Update the existing message instead of creating a new one
-        setMessages(prev => prev.map(msg => 
-          msg.id === messageId 
-            ? { 
-                ...msg, 
-                content: responseContent, 
-                file_attachments: fileAttachments,
-                model: userModel 
-              }
-            : msg
-        ));
-
-        // Update the message in the database
-        const { error: updateError } = await supabase
+        // Delete the old message from database first
+        const { error: deleteError } = await supabase
           .from('messages')
-          .update({
-            content: responseContent,
-            file_attachments: fileAttachments.length > 0 ? JSON.stringify(fileAttachments) : null
-          })
-          .eq('id', messageId);
+          .delete()
+          .eq('chat_id', chatId)
+          .eq('role', 'assistant')
+          .gte('created_at', assistantMessage.created_at);
 
-        if (updateError) {
-          console.error('Error updating regenerated message:', updateError);
+        if (deleteError) {
+          console.error('Error deleting old message:', deleteError);
+        }
+
+        // Insert the new regenerated message
+        const { data: newMessage, error: insertError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: responseContent,
+            role: 'assistant',
+            file_attachments: fileAttachments.length > 0 ? fileAttachments as any : null,
+            model: userModel
+          })
+          .select()
+          .single();
+
+        if (insertError) {
+          console.error('Error inserting regenerated message:', insertError);
+        } else if (newMessage) {
+          // Update the existing message with the new database ID and content
+          setMessages(prev => prev.map(msg => 
+            msg.id === messageId 
+              ? { 
+                  id: newMessage.id,
+                  chat_id: newMessage.chat_id,
+                  content: newMessage.content,
+                  role: 'assistant' as const,
+                  created_at: newMessage.created_at,
+                  file_attachments: fileAttachments,
+                  model: userModel
+                }
+              : msg
+          ));
         }
 
         scrollToBottom();
