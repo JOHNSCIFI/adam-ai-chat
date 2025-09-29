@@ -1310,6 +1310,16 @@ export default function ToolPage() {
                   
                   {/* Action buttons - positioned based on message role */}
                   <div className={`flex items-center gap-2 ${message.role === 'user' ? 'self-end' : 'self-start'}`}>
+                    {/* Copy button - always visible first */}
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" 
+                      onClick={() => copyToClipboard(message.content, message.id)}
+                    >
+                      {copiedMessageId === message.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
+                    </Button>
+
                     {/* Assistant message actions */}
                     {message.role === 'assistant' && (
                       <>
@@ -1380,16 +1390,6 @@ export default function ToolPage() {
                         </Button>
                       </>
                     )}
-                    
-                    {/* Copy button - always visible */}
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" 
-                      onClick={() => copyToClipboard(message.content, message.id)}
-                    >
-                      {copiedMessageId === message.id ? <Check className="h-4 w-4 text-green-500" /> : <Copy className="h-4 w-4" />}
-                    </Button>
                   </div>
                 </div>)}
               
