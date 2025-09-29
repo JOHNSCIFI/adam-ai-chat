@@ -67,53 +67,48 @@ const models = [{
   type: 'pro'
 }];
 const suggestionButtons = [{
-  icon: Edit3,
-  label: 'Help me write',
-  action: 'help-write'
-}, {
-  icon: BookOpen,
-  label: 'Learn about',
-  action: 'learn-about'
-}, {
-  icon: Search,
-  label: 'Analyze Image',
-  action: 'analyze-image'
-}, {
   icon: FileText,
-  label: 'Summarize text',
-  action: 'summarize-text'
-}];
-const additionalButtons = [{
-  icon: Lightbulb,
-  label: 'Brainstorm',
-  action: 'brainstorm'
+  label: 'Document Summary',
+  action: 'document-summary'
+}, {
+  icon: Edit3,
+  label: 'Email Response',
+  action: 'email-response'
 }, {
   icon: Settings,
   label: 'Improve Writing',
   action: 'improve-writing'
 }, {
-  icon: Globe,
-  label: 'Translate',
-  action: 'translate'
+  icon: BookOpen,
+  label: 'Knowledge Boost',
+  action: 'knowledge-boost'
+}];
+const additionalButtons = [{
+  icon: Lightbulb,
+  label: 'Business Ideas',
+  action: 'business-ideas'
 }, {
-  icon: Zap,
-  label: 'Generate Ideas',
-  action: 'generate-ideas'
+  icon: FileText,
+  label: 'Text Summary',
+  action: 'text-summary'
 }, {
   icon: BarChart3,
-  label: 'Analyze Data',
-  action: 'analyze-data'
+  label: 'Calorie Check',
+  action: 'calorie-check'
+}, {
+  icon: ImageIcon,
+  label: 'Generate Image',
+  action: 'generate-image'
 }];
 const suggestionPrompts = {
-  'help-write': ['Help me write an essay', 'Help me write a cover letter', 'Help me write a bedtime story', 'Help me write a poem'],
-  'learn-about': ['Learn about time management', 'Learn about stock trading', 'Learn about negotiation skills for business deals', 'Learn about handling difficult conversations'],
-  'analyze-image': ['Help me understand where this picture was taken', 'Help me identify the plant in this image', 'Help me understand the calories in the foods in this image', 'Help me find the color codes used in this image'],
-  'summarize-text': ['Summarize text in a few sentences', 'Summarize text by highlighting the key points', 'Summarize text and provide the main takeaway', 'Summarize text by condensing the most important information'],
-  'analyze-data': ['Help me find patterns in my data', 'Help me understand trends in my data', 'Help me summarize key insights from my data', 'Help me create a bar chart'],
-  'brainstorm': ['Brainstorm ideas for a new product or service', 'Brainstorm fun team-building activities', 'Brainstorm ways to improve your productivity', 'Brainstorm unique gift ideas for a loved one'],
-  'improve-writing': ['Improve writing by making it clearer and more concise', 'Improve writing by adding more engaging details', 'Improve writing to enhance the flow and readability', 'Improve writing by simplifying complex sentences'],
-  'translate': ['Translate text by maintaining the length', 'Translate text in a natural and local way', 'Translate text while keeping the original meaning intact', 'Translate text into multiple languages'],
-  'generate-ideas': ['Generate ideas for an innovative business model', 'Generate ideas for a creative marketing campaign', 'Generate ideas for a podcast episode', 'Generate ideas for a unique bucket list']
+  'document-summary': ['Summarize this document in key points', 'Extract main insights from this document', 'Provide a brief overview of this document', 'Condense this document into essential information'],
+  'email-response': ['Draft a professional email response', 'Write a polite email reply', 'Compose a follow-up email', 'Create a business email response'],
+  'improve-writing': ['Make this writing clearer and more concise', 'Enhance the flow and readability', 'Polish and refine this text', 'Improve grammar and style'],
+  'knowledge-boost': ['Explain this concept simply', 'Help me understand this topic', 'Provide study notes on this subject', 'Break down this complex information'],
+  'business-ideas': ['Generate innovative business concepts', 'Brainstorm startup ideas', 'Create business model suggestions', 'Develop entrepreneurial opportunities'],
+  'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
+  'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
+  'generate-image': ['Create an image of...', 'Generate artwork showing...', 'Design a visual representation of...', 'Produce an illustration of...']
 };
 const availableModels = [{
   id: 'gpt-4.1-mini',
