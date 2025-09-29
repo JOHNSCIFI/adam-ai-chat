@@ -31,46 +31,55 @@ import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageA
 const models = [{
   id: 'gpt-4.1-mini',
   name: 'OpenAI GPT-4.1 mini',
+  shortLabel: 'GPT-4.1 mini',
   description: "Fast & efficient",
   type: 'free'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
+  shortLabel: 'GPT-4o',
   description: "Most accurate",
   type: 'pro'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
+  shortLabel: 'GPT-5',
   description: "Most advanced",
   type: 'pro'
 }, {
   id: 'claude-opus-4',
   name: 'Claude Opus 4',
+  shortLabel: 'Claude Opus 4',
   description: "Most capable",
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
+  shortLabel: 'Claude Sonnet 4',
   description: "High performance",
   type: 'pro'
 }, {
   id: 'deepseek-v31-terminus',
   name: 'DeepSeek-V3.1 Terminus',
+  shortLabel: 'DeepSeek V3.1',
   description: "Great for tasks",
   type: 'pro'
 }, {
   id: 'deepseek-r1',
   name: 'DeepSeek R1',
+  shortLabel: 'DeepSeek R1',
   description: "Enhanced reasoning",
   type: 'pro'
 }, {
   id: 'gemini-2-5-flash',
   name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
   description: "Google's latest",
   type: 'pro'
 }, {
   id: 'grok-4',
   name: 'Grok-4',
+  shortLabel: 'Grok-4',
   description: "Advanced challenges",
   type: 'pro'
 }];
@@ -2426,7 +2435,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     <Select value={selectedModel} onValueChange={setSelectedModel}>
                       <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
                         <SelectValue>
-                          <span className="text-sm font-medium">{selectedModelData?.name}</span>
+                          <span className="text-sm font-medium">{selectedModelData?.shortLabel}</span>
                         </SelectValue>
                       </SelectTrigger>
                        <SelectContent className="z-50 bg-background border shadow-lg rounded-lg p-1 min-w-[200px] max-w-[280px]">
