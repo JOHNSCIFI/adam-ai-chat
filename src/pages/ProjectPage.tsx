@@ -776,7 +776,7 @@ export default function ProjectPage() {
                      </PopoverContent>
                   </Popover>
                   
-                 <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image" : "Ask me anything..."} className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
+                 <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image" : "Type a message to Ask me anything..."} className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
                   wordWrap: 'break-word',
                   overflowWrap: 'break-word'
                 }} disabled={loading} rows={1} />

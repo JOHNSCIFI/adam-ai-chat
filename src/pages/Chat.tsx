@@ -2300,7 +2300,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               value={input} 
               onChange={handleInputChange} 
               onKeyDown={handleKeyDown} 
-              placeholder={isImageMode ? "Describe an image..." : "Ask me anything..."} 
+              placeholder={isImageMode ? "Describe an image..." : "Type a message to Ask me anything..."} 
               className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
               rows={1}
             />
