@@ -23,46 +23,55 @@ import grokLogo from '@/assets/grok-logo.png';
 const models = [{
   id: 'gpt-4.1-mini',
   name: 'OpenAI GPT-4.1 mini',
+  shortLabel: 'GPT-4.1 mini',
   description: "Fast & efficient",
   type: 'free'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
+  shortLabel: 'GPT-4o',
   description: "Most accurate",
   type: 'pro'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
+  shortLabel: 'GPT-5',
   description: "Most advanced",
   type: 'pro'
 }, {
   id: 'claude-opus-4',
   name: 'Claude Opus 4',
+  shortLabel: 'Claude Opus 4',
   description: "Most capable",
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
+  shortLabel: 'Claude Sonnet 4',
   description: "High performance",
   type: 'pro'
 }, {
   id: 'deepseek-v31-terminus',
   name: 'DeepSeek-V3.1 Terminus',
+  shortLabel: 'DeepSeek V3.1',
   description: "Great for tasks",
   type: 'pro'
 }, {
   id: 'deepseek-r1',
   name: 'DeepSeek R1',
+  shortLabel: 'DeepSeek R1',
   description: "Enhanced reasoning",
   type: 'pro'
 }, {
   id: 'gemini-2-5-flash',
   name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
   description: "Google's latest",
   type: 'pro'
 }, {
   id: 'grok-4',
   name: 'Grok-4',
+  shortLabel: 'Grok-4',
   description: "Advanced challenges",
   type: 'pro'
 }];
@@ -113,46 +122,55 @@ const suggestionPrompts = {
 const availableModels = [{
   id: 'gpt-4.1-mini',
   name: 'OpenAI GPT-4.1 mini',
+  shortLabel: 'GPT-4.1 mini',
   description: 'GPT-4.1 mini, developed by OpenAI, stands as one of the most efficient AI models available.',
   icon: 'openai'
 }, {
   id: 'gpt-4o',
   name: 'OpenAI GPT-4o',
+  shortLabel: 'GPT-4o',
   description: 'GPT-4o, OpenAI\'s newest flagship model, is designed for complex reasoning tasks.',
   icon: 'openai'
 }, {
   id: 'gpt-5',
   name: 'OpenAI GPT-5',
+  shortLabel: 'GPT-5',
   description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
   icon: 'openai'
 }, {
   id: 'claude-opus-4',
   name: 'Claude Opus 4',
+  shortLabel: 'Claude Opus 4',
   description: 'Claude Opus 4, Anthropic\'s most capable AI model, excels at complex reasoning and analysis.',
   icon: 'claude'
 }, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
+  shortLabel: 'Claude Sonnet 4',
   description: 'Claude Sonnet 4 offers high-performance AI capabilities with exceptional reasoning.',
   icon: 'claude'
 }, {
   id: 'deepseek-v31-terminus',
   name: 'DeepSeek-V3.1 Terminus',
+  shortLabel: 'DeepSeek V3.1',
   description: 'DeepSeek-V3.1 Terminus offers advanced AI capabilities great for most tasks.',
   icon: 'deepseek'
 }, {
   id: 'deepseek-r1',
   name: 'DeepSeek R1',
+  shortLabel: 'DeepSeek R1',
   description: 'DeepSeek R1 provides enhanced reasoning capabilities for complex problem solving.',
   icon: 'deepseek'
 }, {
   id: 'gemini-2-5-flash',
   name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
   description: 'Gemini 2.5 Flash, Google\'s latest AI model, is designed for fast multimodal understanding.',
   icon: 'gemini'
 }, {
   id: 'grok-4',
   name: 'Grok-4',
+  shortLabel: 'Grok-4',
   description: 'Grok-4 is an advanced AI model designed for tackling intricate challenges.',
   icon: 'grok'
 }];
@@ -714,7 +732,7 @@ export default function Index() {
                           <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
                             <img src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} alt={`${selectedModelData?.name} icon`} className="w-4 h-4 object-contain" />
                           </div>
-                          <span className="font-medium truncate">{selectedModelData?.name}</span>
+                          <span className="font-medium truncate">{selectedModelData?.shortLabel}</span>
                         </div>
                       </SelectValue>
                     </SelectTrigger>
