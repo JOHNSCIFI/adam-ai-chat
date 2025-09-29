@@ -34,6 +34,12 @@ const models = [{
   description: "High Quality option",
   type: 'pro'
 }, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: "Most advanced AI model",
+  type: 'pro'
+}, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
   shortLabel: 'Claude Sonnet 4',
@@ -83,6 +89,12 @@ const availableModels = [{
   name: 'GPT-4o',
   shortLabel: 'GPT-4o',
   description: 'High-quality model for complex reasoning and accurate responses.',
+  icon: 'openai'
+}, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: 'Most advanced OpenAI model with superior capabilities and reasoning.',
   icon: 'openai'
 }, {
   id: 'claude-sonnet-4',

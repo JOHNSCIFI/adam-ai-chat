@@ -38,6 +38,12 @@ const models = [{
   description: "High Quality option",
   type: 'pro'
 }, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: "Most advanced AI model",
+  type: 'pro'
+}, {
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
   shortLabel: 'Claude Sonnet 4',
