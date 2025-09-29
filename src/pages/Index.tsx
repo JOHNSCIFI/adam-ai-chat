@@ -326,10 +326,11 @@ export default function Index() {
     }
 
     // Handle image generation mode differently
-    if (isImageMode) {
+    if (isImageMode || selectedModel === 'generate-image') {
       setIsGeneratingImage(true);
       setLoading(true);
       console.log('[IMAGE-GEN] Starting image generation with prompt:', message);
+      console.log('[IMAGE-GEN] Image mode:', isImageMode, 'Selected model:', selectedModel);
       
       try {
         // Create new chat
@@ -519,6 +520,12 @@ export default function Index() {
   };
   const handleModelSelect = (modelId: string) => {
     setSelectedModel(modelId);
+    // Automatically enter image mode when Generate Image model is selected
+    if (modelId === 'generate-image') {
+      setIsImageMode(true);
+    } else {
+      setIsImageMode(false);
+    }
   };
   const scrollModels = (direction: 'left' | 'right') => {
     if (modelsContainerRef.current) {
