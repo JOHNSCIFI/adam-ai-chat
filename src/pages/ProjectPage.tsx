@@ -771,7 +771,7 @@ export default function ProjectPage() {
                        </Button>
                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                          <ImageIcon2 className="h-4 w-4" />
-                         Create image
+                         Generate an image
                        </Button>
                      </PopoverContent>
                   </Popover>

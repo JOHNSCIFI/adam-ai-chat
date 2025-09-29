@@ -719,7 +719,7 @@ export default function Index() {
                         </Popover>
                       </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={handleCreateImageClick} aria-label="Create an image">
                         <ImageIcon className="h-4 w-4 mr-2" />
-                        <span>Create image</span>
+                        <span>Generate an image</span>
                       </Button>}
                   </>}
               </div>

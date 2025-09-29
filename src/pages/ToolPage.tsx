@@ -1574,7 +1574,7 @@ export default function ToolPage() {
                         </Button>
                         {toolConfig.id !== 'calculate-calories' && toolConfig.id !== 'analyse-files-openai' && toolConfig.id !== 'analyse-image-openai' && <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                             <ImageIcon2 className="h-4 w-4" />
-                            Create image
+                             Generate an image
                           </Button>}
                      </PopoverContent>
                   </Popover>}
