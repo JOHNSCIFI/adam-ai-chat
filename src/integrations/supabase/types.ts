@@ -82,27 +82,6 @@ export type Database = {
           },
         ]
       }
-      favorite_tools: {
-        Row: {
-          created_at: string
-          id: string
-          tool_name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          tool_name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          tool_name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       image_analyses: {
         Row: {
           analysis: string
