@@ -710,24 +710,8 @@ export default function Index() {
       )}
       
       <div 
-        className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${
-          isDragOver ? 'bg-primary/5 border-2 border-dashed border-primary rounded-lg' : ''
-        }`}
-        onDragOver={handleDragOver}
-        onDragEnter={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
+        className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200"
       >
-        {/* Drag and drop overlay */}
-        {isDragOver && (
-          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-lg border-2 border-dashed border-primary">
-            <div className="text-center">
-              <Paperclip className="h-12 w-12 text-primary mx-auto mb-4" />
-              <p className="text-lg font-semibold text-primary">Drop files here</p>
-              <p className="text-sm text-muted-foreground">Images, documents, and other files are supported</p>
-            </div>
-          </div>
-        )}
 
         {/* Google One Tap for unauthenticated users */}
         <GoogleOneTab />
@@ -765,7 +749,25 @@ export default function Index() {
           </div>
         )}
         
-        <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
+        <div 
+          className={`relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4 transition-all duration-200 ${
+            isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
+          }`}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {/* Drag and drop overlay */}
+          {isDragOver && (
+            <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-xl border-2 border-dashed border-primary">
+              <div className="text-center">
+                <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
+                <p className="text-base font-semibold text-primary">Drop files here</p>
+                <p className="text-xs text-muted-foreground">Images, documents, and other files</p>
+              </div>
+            </div>
+          )}
           <Textarea 
             ref={textareaRef} 
             value={message} 
