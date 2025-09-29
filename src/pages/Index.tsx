@@ -284,6 +284,7 @@ export default function Index() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [isDragOver, setIsDragOver] = useState(false);
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
@@ -321,6 +322,35 @@ export default function Index() {
       return;
     }
     fileInputRef.current?.click();
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+
+    const files = Array.from(e.dataTransfer.files);
+    if (files.length > 0) {
+      setSelectedFiles(prev => [...prev, ...files]);
+      toast.success(`${files.length} file(s) added successfully`);
+    }
   };
   const handleCreateImage = () => {
     if (!user) {
@@ -667,7 +697,26 @@ export default function Index() {
         </div>
       )}
       
-      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full">
+      <div 
+        className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${
+          isDragOver ? 'bg-primary/5 border-2 border-dashed border-primary rounded-lg' : ''
+        }`}
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        {/* Drag and drop overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-lg border-2 border-dashed border-primary">
+            <div className="text-center">
+              <Paperclip className="h-12 w-12 text-primary mx-auto mb-4" />
+              <p className="text-lg font-semibold text-primary">Drop files here</p>
+              <p className="text-sm text-muted-foreground">Images, documents, and other files are supported</p>
+            </div>
+          </div>
+        )}
+
         {/* Google One Tap for unauthenticated users */}
         <GoogleOneTab />
       
