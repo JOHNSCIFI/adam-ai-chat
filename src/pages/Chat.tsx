@@ -433,7 +433,6 @@ export default function Chat() {
           .from('messages')
           .update({
             content: responseContent,
-            model: userModel,
             file_attachments: fileAttachments.length > 0 ? JSON.stringify(fileAttachments) : null
           })
           .eq('id', messageId);
@@ -545,7 +544,6 @@ export default function Chat() {
           chat_id: originalChatId,
           content: responseContent,
           role: 'assistant',
-          model: selectedModel,
           file_attachments: fileAttachments as any
         });
         if (saveError) {
