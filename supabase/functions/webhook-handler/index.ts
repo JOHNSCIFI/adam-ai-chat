@@ -22,7 +22,7 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[WEBHOOK-HANDLER] Request body:', JSON.stringify(body));
 
-    const { chat_id, response_data } = body;
+    const { chat_id, response_data, user_id } = body;
 
     if (!chat_id || !response_data) {
       console.error('[WEBHOOK-HANDLER] Missing required fields:', { chat_id, response_data });
@@ -34,6 +34,7 @@ serve(async (req) => {
 
     // Parse the response data to extract the text content
     let responseContent = '';
+    let imageUrl = null;
     
     if (Array.isArray(response_data) && response_data.length > 0) {
       const analysisTexts = response_data.map(item => item.text || item.content || '').filter(text => text);
@@ -48,23 +49,73 @@ serve(async (req) => {
       responseContent = response_data;
     }
 
-    if (!responseContent) {
-      console.error('[WEBHOOK-HANDLER] No valid content found in response_data:', response_data);
+    // Handle image generation
+    if (response_data.image_base64) {
+      console.log('[WEBHOOK-HANDLER] Processing generated image');
+      
+      try {
+        // Convert base64 to blob
+        const imageData = Uint8Array.from(atob(response_data.image_base64), c => c.charCodeAt(0));
+        
+        // Generate unique filename
+        const timestamp = Date.now();
+        const uniqueFileName = `generated_${timestamp}_${response_data.image_name || 'image.png'}`;
+        const filePath = user_id ? `${user_id}/${chat_id}/${uniqueFileName}` : `${chat_id}/${uniqueFileName}`;
+        const bucketName = 'generated-images';
+
+        console.log('[WEBHOOK-HANDLER] Uploading image to storage:', filePath);
+
+        // Upload to Supabase Storage
+        const { data: uploadData, error: uploadError } = await supabaseClient.storage
+          .from(bucketName)
+          .upload(filePath, imageData, {
+            contentType: response_data.image_type || 'image/png',
+            upsert: true
+          });
+
+        if (uploadError) {
+          console.error('[WEBHOOK-HANDLER] Upload error:', uploadError);
+        } else {
+          // Get public URL
+          const { data: urlData } = supabaseClient.storage
+            .from(bucketName)
+            .getPublicUrl(filePath);
+          
+          imageUrl = urlData.publicUrl;
+          console.log('[WEBHOOK-HANDLER] Image uploaded successfully:', imageUrl);
+        }
+      } catch (imageError) {
+        console.error('[WEBHOOK-HANDLER] Error processing image:', imageError);
+      }
+    }
+
+    if (!responseContent && !imageUrl) {
+      console.error('[WEBHOOK-HANDLER] No valid content or image found in response_data:', response_data);
       return new Response(
-        JSON.stringify({ error: 'No valid content found in response_data' }),
+        JSON.stringify({ error: 'No valid content or image found in response_data' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('[WEBHOOK-HANDLER] Processed content:', responseContent);
+    console.log('[WEBHOOK-HANDLER] Processed content:', responseContent, 'Image URL:', imageUrl);
+
+    // Prepare file attachments if image exists
+    const fileAttachments = imageUrl ? [{
+      id: crypto.randomUUID(),
+      name: response_data.image_name || `generated_image_${Date.now()}.png`,
+      size: 0,
+      type: response_data.image_type || 'image/png',
+      url: imageUrl
+    }] : null;
 
     // Save the assistant message to the database
     const { data, error } = await supabaseClient
       .from('messages')
       .insert({
         chat_id: chat_id,
-        content: responseContent,
+        content: responseContent || 'Generated image',
         role: 'assistant',
+        file_attachments: fileAttachments,
         created_at: new Date().toISOString()
       })
       .select()
