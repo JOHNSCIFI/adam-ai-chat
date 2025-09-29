@@ -145,6 +145,8 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [messageRatings, setMessageRatings] = useState<{[key: string]: 'like' | 'dislike'}>({});
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
@@ -1097,6 +1099,85 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       // Silently handle error
     }
   };
+
+  // TTS functionality using existing browser TTS
+  const speakMessage = (messageId: string, content: string) => {
+    if (speakingMessageId === messageId) {
+      // Stop current speech
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+        setSpeakingMessageId(null);
+      }
+      return;
+    }
+
+    // Stop any current speech
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+
+    setSpeakingMessageId(messageId);
+    
+    const utterance = new SpeechSynthesisUtterance(content);
+    utterance.onend = () => setSpeakingMessageId(null);
+    utterance.onerror = () => setSpeakingMessageId(null);
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  // Rating functionality
+  const rateMessage = async (messageId: string, rating: 'like' | 'dislike') => {
+    if (!user) return;
+    
+    const currentRating = messageRatings[messageId];
+    const newRating = currentRating === rating ? null : rating;
+    
+    try {
+      if (newRating) {
+        await supabase.from('message_ratings').upsert({
+          message_id: messageId,
+          user_id: user.id,
+          rating: newRating
+        });
+        setMessageRatings(prev => ({ ...prev, [messageId]: newRating }));
+      } else {
+        await supabase.from('message_ratings')
+          .delete()
+          .eq('message_id', messageId)
+          .eq('user_id', user.id);
+        setMessageRatings(prev => {
+          const updated = { ...prev };
+          delete updated[messageId];
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error('Error saving rating:', error);
+    }
+  };
+
+  // Load message ratings
+  const loadMessageRatings = async () => {
+    if (!user || !chatId) return;
+    
+    try {
+      const { data } = await supabase
+        .from('message_ratings')
+        .select('message_id, rating')
+        .eq('user_id', user.id)
+        .in('message_id', messages.map(m => m.id));
+      
+      if (data) {
+        const ratingsMap: {[key: string]: 'like' | 'dislike'} = {};
+        data.forEach(rating => {
+          ratingsMap[rating.message_id] = rating.rating;
+        });
+        setMessageRatings(ratingsMap);
+      }
+    } catch (error) {
+      console.error('Error loading ratings:', error);
+    }
+  };
   const handleFileUpload = () => {
     fileInputRef.current?.click();
     setIsPopoverOpen(false);
@@ -1780,46 +1861,73 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                          
                        </div>
                        
-                        {/* Message action buttons - copy, volume, thumbs up/down, refresh */}
-                        <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
-                            {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-                          </Button>
-                          
-                          {/* Volume/Speaker button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                              <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                              <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                            </svg>
-                          </Button>
-                          
-                          {/* Thumbs Up button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
-                              <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                            </svg>
-                          </Button>
-                          
-                          {/* Thumbs Down button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
-                              <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
-                            </svg>
-                          </Button>
-                          
-                          {/* Refresh button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <path d="M21 2v6h-6"></path>
-                              <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                              <path d="M3 22v-6h6"></path>
-                              <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                            </svg>
-                          </Button>
+                         {/* Message action buttons */}
+                         <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                           {/* Copy button - always show */}
+                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
+                             {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                           </Button>
+                           
+                           {/* Assistant message actions */}
+                           {message.role === 'assistant' && (
+                             <>
+                               {/* Volume/Speaker button */}
+                               <Button 
+                                 variant="ghost" 
+                                 size="sm" 
+                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${speakingMessageId === message.id ? 'bg-primary/20' : ''}`}
+                                 onClick={() => speakMessage(message.id, message.content)}
+                               >
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                   {speakingMessageId === message.id ? (
+                                     <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14H8V8h2v8zm6 0h-2V8h2v8z"/>
+                                   ) : (
+                                     <>
+                                       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                                       <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                                       <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                                     </>
+                                   )}
+                                 </svg>
+                               </Button>
+                               
+                               {/* Thumbs Up button */}
+                               <Button 
+                                 variant="ghost" 
+                                 size="sm" 
+                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${messageRatings[message.id] === 'like' ? 'bg-green-500/20 text-green-600' : ''}`}
+                                 onClick={() => rateMessage(message.id, 'like')}
+                               >
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'like' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                   <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
+                                   <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                                 </svg>
+                               </Button>
+                               
+                               {/* Thumbs Down button */}
+                               <Button 
+                                 variant="ghost" 
+                                 size="sm" 
+                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${messageRatings[message.id] === 'dislike' ? 'bg-red-500/20 text-red-600' : ''}`}
+                                 onClick={() => rateMessage(message.id, 'dislike')}
+                               >
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'dislike' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                   <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
+                                   <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
+                                 </svg>
+                               </Button>
+                               
+                               {/* Refresh button */}
+                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
+                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                   <path d="M21 2v6h-6"></path>
+                                   <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                                   <path d="M3 22v-6h6"></path>
+                                   <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                                 </svg>
+                               </Button>
+                             </>
+                           )}
                         </div>
                     </div>
                   </div>
