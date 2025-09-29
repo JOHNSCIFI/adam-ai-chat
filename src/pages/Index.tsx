@@ -502,7 +502,7 @@ export default function Index() {
                   {isModelDropdownOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-[100] bg-background border border-border shadow-2xl rounded-2xl p-2 min-w-[300px]" align="center">
+              <SelectContent className="z-50 bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 min-w-[300px]" align="center">
                 {models.map(model => {
               const modelData = availableModels.find(m => m.id === model.id);
               return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
