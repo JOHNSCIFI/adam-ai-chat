@@ -1409,14 +1409,26 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files && files.length > 0) {
-      const totalSize = Array.from(files).reduce((sum, file) => sum + file.size, 0);
+      const newFiles = Array.from(files);
+      const combinedFiles = [...selectedFiles, ...newFiles];
+      
+      const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
       const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
 
       if (totalSize > maxTotalSize) {
-        console.error('Total file size too large');
+        toast.error('Total file size cannot exceed 100MB');
+        event.target.value = '';
         return;
       }
-      setSelectedFiles(prev => [...prev, ...Array.from(files)]);
+      
+      if (combinedFiles.length > 10) {
+        toast.error('Maximum 10 files allowed per message');
+        event.target.value = '';
+        return;
+      }
+      
+      setSelectedFiles(combinedFiles);
+      toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
       // Reset the input
       event.target.value = '';
     }
@@ -1960,9 +1972,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           e.stopPropagation();
           setIsDragOver(false);
           
-          const files = Array.from(e.dataTransfer.files);
-          if (files.length > 0) {
-            const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+          const newFiles = Array.from(e.dataTransfer.files);
+          if (newFiles.length > 0) {
+            // Combine existing files with new files
+            const combinedFiles = [...selectedFiles, ...newFiles];
+            
+            const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
             const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
             
             if (totalSize > maxTotalSize) {
@@ -1970,13 +1985,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               return;
             }
             
-            if (files.length > 10) {
+            if (combinedFiles.length > 10) {
               toast.error('Maximum 10 files allowed per message');
               return;
             }
             
-            setSelectedFiles(files);
-            toast.success(`${files.length} file(s) ready to upload`);
+            setSelectedFiles(combinedFiles);
+            toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
           }
         }}
       >
