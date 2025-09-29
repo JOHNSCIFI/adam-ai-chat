@@ -153,6 +153,7 @@ export default function Chat() {
   const [messageRatings, setMessageRatings] = useState<{[key: string]: 'like' | 'dislike'}>({});
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4.1-mini
     return location.state?.selectedModel || 'gpt-4.1-mini';
@@ -1940,7 +1941,55 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       )}
 
       {/* Messages area - takes all available space above input */}
-      <div className="flex-1 overflow-y-auto pb-32">
+      <div 
+        className="flex-1 overflow-y-auto pb-32 relative"
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragOver(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+          
+          const files = Array.from(e.dataTransfer.files);
+          if (files.length > 0) {
+            const totalSize = files.reduce((sum, file) => sum + file.size, 0);
+            const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
+            
+            if (totalSize > maxTotalSize) {
+              toast.error('Total file size cannot exceed 100MB');
+              return;
+            }
+            
+            if (files.length > 10) {
+              toast.error('Maximum 10 files allowed per message');
+              return;
+            }
+            
+            setSelectedFiles(files);
+            toast.success(`${files.length} file(s) ready to upload`);
+          }
+        }}
+      >
+        {/* Drag overlay */}
+        {isDragOver && (
+          <div className="absolute inset-0 bg-primary/10 border-2 border-dashed border-primary/50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="text-center">
+              <Paperclip className="h-12 w-12 text-primary mx-auto mb-4" />
+              <p className="text-lg font-medium text-primary">Drop files here to upload</p>
+              <p className="text-sm text-muted-foreground">Maximum 10 files, 100MB total</p>
+            </div>
+          </div>
+        )}
         <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
