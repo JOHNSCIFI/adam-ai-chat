@@ -35,8 +35,8 @@ const models = [{
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
-  name: 'Claude S4',
-  shortLabel: 'Claude S4',
+  name: 'Claude Sonnet 4',
+  shortLabel: 'Claude Sonnet 4',
   description: "Alternative for natural language and writing",
   type: 'pro'
 }, {
@@ -86,8 +86,8 @@ const availableModels = [{
   icon: 'openai'
 }, {
   id: 'claude-sonnet-4',
-  name: 'Claude S4',
-  shortLabel: 'Claude S4',
+  name: 'Claude Sonnet 4',
+  shortLabel: 'Claude Sonnet 4',
   description: 'Excellent for natural language tasks, writing, and creative work.',
   icon: 'claude'
 }, {
