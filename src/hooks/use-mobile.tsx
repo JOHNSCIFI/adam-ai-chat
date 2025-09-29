@@ -3,7 +3,6 @@ import { useState, useEffect } from "react";
 const MOBILE_BREAKPOINT = 768;
 
 export function useIsMobile() {
-  console.log("useIsMobile hook called");
   try {
     const [isMobile, setIsMobile] = useState<boolean | undefined>(undefined);
 
@@ -19,7 +18,6 @@ export function useIsMobile() {
 
     return !!isMobile;
   } catch (error) {
-    console.error("Error in useIsMobile hook:", error);
     return false;
   }
 }

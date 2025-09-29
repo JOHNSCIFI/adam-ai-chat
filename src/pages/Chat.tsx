@@ -153,7 +153,6 @@ export default function Chat() {
       if (!processedUserMessages.current.has(chatId)) {
         processedUserMessages.current.set(chatId, new Set());
       }
-      console.log(`[CHAT-INIT] Initialized chat ${chatId}, processed messages:`, Array.from(processedUserMessages.current.get(chatId) || []));
 
       // CRITICAL: Clear messages state immediately when switching chats to prevent cross-chat bleeding
       setMessages([]);
@@ -194,12 +193,10 @@ export default function Chat() {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`
         }, payload => {
-          console.log(`[REALTIME] Message received for chat ${chatId}:`, payload);
           const newMessage = payload.new as Message;
 
           // CRITICAL: Double-check message belongs to current chat to prevent leakage
           if (newMessage.chat_id !== chatId) {
-            console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
             return;
           }
           setMessages(prev => {
@@ -208,10 +205,8 @@ export default function Chat() {
             const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
             );
             if (existsById || existsByContent) {
-              console.log(`[REALTIME] Message already exists in chat ${chatId}, skipping`);
               return prev;
             }
-            console.log(`[REALTIME] Adding new message to chat ${chatId}`);
             // CRITICAL: Filter out any messages not belonging to current chat before adding new message
             const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
             return [...filteredPrev, newMessage];
@@ -224,12 +219,10 @@ export default function Chat() {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`
         }, payload => {
-          console.log(`[REALTIME] Message updated for chat ${chatId}:`, payload);
           const updatedMessage = payload.new as Message;
 
           // CRITICAL: Double-check message belongs to current chat
           if (updatedMessage.chat_id !== chatId) {
-            console.warn(`[REALTIME] Updated message chat_id ${updatedMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
             return;
           }
 
@@ -242,14 +235,12 @@ export default function Chat() {
                 }
               : msg
           ));
-          console.log(`[REALTIME] Successfully updated message ${updatedMessage.id} in chat ${chatId}`);
           scrollToBottom();
         })
         .subscribe();
 
       // SINGLE cleanup function that handles both event listener AND subscription
       return () => {
-        console.log(`[CLEANUP] Cleaning up chat ${chatId} - removing event listener and unsubscribing`);
         window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
         subscription.unsubscribe();
       };
@@ -269,23 +260,18 @@ export default function Chat() {
     autoDeleteTimerRef.current = setTimeout(async () => {
       if (!hasUserInteracted) {
         try {
-          console.log(`[AUTO-DELETE] Deleting inactive chat: ${chatId}`);
-          
           // Delete the chat and its messages
           const { error: deleteError } = await supabase
             .from('chats')
             .delete()
             .eq('id', chatId);
 
-          if (deleteError) {
-            console.error('Error auto-deleting chat:', deleteError);
-          } else {
-            console.log(`[AUTO-DELETE] Successfully deleted chat: ${chatId}`);
+          if (!deleteError) {
             // Navigate to home page
             window.location.href = '/';
           }
         } catch (error) {
-          console.error('Error in auto-delete:', error);
+          // Silently fail
         }
       }
     }, 2 * 60 * 1000); // 2 minutes
@@ -304,38 +290,21 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
-    console.log('Auto-trigger effect:', {
-      messagesLength: messages.length,
-      loading,
-      isGeneratingResponse,
-      chatId,
-      lastMessage: messages[messages.length - 1]
-    });
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
       // CRITICAL: Filter messages to only include those belonging to current chat
       const currentChatMessages = messages.filter(msg => msg.chat_id === chatId);
       if (currentChatMessages.length === 0) {
-        console.log(`[AUTO-TRIGGER] No messages for current chat ${chatId}, skipping`);
         return;
       }
       const lastMessage = currentChatMessages[currentChatMessages.length - 1];
 
       // Get processed messages Set for this specific chat
       const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set();
-      console.log(`[AUTO-TRIGGER] Chat ${chatId} - Last message:`, {
-        id: lastMessage.id,
-        content: lastMessage.content.substring(0, 50),
-        role: lastMessage.role,
-        chat_id: lastMessage.chat_id,
-        alreadyProcessed: chatProcessedMessages.has(lastMessage.id),
-        processedCount: chatProcessedMessages.size
-      });
 
       // Only trigger for user messages without file attachments (text-only)
       if (lastMessage.role === 'user' && (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         // CRITICAL: Verify message belongs to current chat
         if (lastMessage.chat_id && lastMessage.chat_id !== chatId) {
-          console.warn(`[AUTO-TRIGGER] Message chat_id ${lastMessage.chat_id} doesn't match current chat ${chatId}, skipping`);
           return;
         }
 
@@ -345,7 +314,6 @@ export default function Chat() {
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
-          console.log(`[AUTO-TRIGGER] Processing user message in chat ${chatId}:`, lastMessage.id);
 
           // Add to processed messages for this specific chat
           if (!processedUserMessages.current.has(chatId)) {
@@ -355,30 +323,21 @@ export default function Chat() {
 
           // Trigger AI response immediately for text-only messages
           setTimeout(() => {
-            console.log('Executing AI response trigger for:', lastMessage.content);
             triggerAIResponse(lastMessage.content, lastMessage.id);
           }, 100);
-        } else {
-          console.log('Message already processed, assistant response exists, or from image generation modal');
         }
-      } else {
-        console.log('Message has file attachments (webhook handled) or not a user message');
       }
-    } else {
-      console.log('Conditions not met for auto-trigger');
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
-      console.log('Skipping regenerate - already in progress');
       return;
     }
 
     // Find the assistant message to regenerate
     const assistantMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
     if (!assistantMessage) {
-      console.error('Assistant message not found for regeneration');
       return;
     }
 
@@ -401,13 +360,11 @@ export default function Chat() {
     }
 
     if (!userMessage) {
-      console.error('No user message found before assistant message');
       return;
     }
 
     setIsGeneratingResponse(true);
     try {
-      console.log('Regenerating response for user message:', userMessage, 'with model:', userModel);
 
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
@@ -480,37 +437,24 @@ export default function Chat() {
         scrollToBottom();
       }
     } catch (error) {
-      console.error('Error regenerating response:', error);
+      toast.error('Failed to regenerate response');
     } finally {
       setIsGeneratingResponse(false);
     }
   };
 
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
-    console.log('triggerAIResponse called:', {
-      userMessage,
-      userMessageId,
-      isGeneratingResponse,
-      loading,
-      selectedModel
-    });
     if (isGeneratingResponse || loading) {
-      console.log('Skipping AI response - already in progress');
       return;
     }
 
     // CRITICAL: Capture the original chat ID to prevent responses going to wrong chats
     const originalChatId = chatId;
     if (!originalChatId) {
-      console.error('No chat ID available for AI response');
       return;
     }
     setIsGeneratingResponse(true);
     try {
-      console.log('Starting AI response generation for chat:', originalChatId);
-
-      // Send message directly to webhook with selected model
-      console.log('Sending to webhook with model:', selectedModel);
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
@@ -530,15 +474,13 @@ export default function Chat() {
       }
       
       const aiResponse = await webhookResponse.json();
-      console.log('Webhook response received:', aiResponse);
       if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
         const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
-        console.log('Processing AI response content:', responseContent);
 
         // Handle image generation responses
         let fileAttachments: FileAttachment[] = [];
         if (aiResponse.image_url) {
-          console.log('Image URL found in AI response:', aiResponse.image_url);
+          console.log('[IMAGE-GEN] Image URL received from webhook:', aiResponse.image_url);
           fileAttachments = [{
             id: crypto.randomUUID(),
             name: `generated_image_${Date.now()}.png`,
@@ -573,7 +515,6 @@ export default function Chat() {
         });
 
         // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
-        console.log('Saving AI message to database for chat:', originalChatId);
         const {
           data: insertedAiMessage,
           error: saveError
@@ -592,10 +533,7 @@ export default function Chat() {
             }
             return;
           }
-          console.error('Error saving AI message:', saveError);
         } else {
-          console.log('AI message saved successfully to chat:', originalChatId);
-          
           // Update the message with the real database ID
           if (insertedAiMessage && chatId === originalChatId) {
             setMessages(prev => prev.map(msg => 
@@ -603,11 +541,8 @@ export default function Chat() {
             ));
           }
         }
-      } else {
-        console.log('No response content received from AI');
       }
     } catch (error) {
-      console.error('Error triggering AI response:', error);
 
       // Only show error in UI if user is still viewing the original chat
       if (chatId === originalChatId) {
@@ -623,7 +558,6 @@ export default function Chat() {
         scrollToBottom();
       }
     } finally {
-      console.log('AI response generation completed for chat:', originalChatId);
       setIsGeneratingResponse(false);
     }
   };
@@ -647,16 +581,6 @@ export default function Chat() {
         file_attachments: msg.file_attachments as any || []
       })) as Message[];
 
-      // Debug logging
-      typedMessages.forEach(msg => {
-        if (msg.file_attachments && msg.file_attachments.length > 0) {
-          console.log('Message with file attachments:', {
-            messageId: msg.id,
-            role: msg.role,
-            fileAttachments: msg.file_attachments
-          });
-        }
-      });
       setMessages(typedMessages);
     }
   };

@@ -278,7 +278,6 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
-    console.log('Search web functionality');
   };
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setMessage(e.target.value);
@@ -354,7 +353,6 @@ export default function Index() {
         }
       });
     } catch (error) {
-      console.error('Error starting chat:', error);
       toast.error('Failed to start chat. Please try again.');
     } finally {
       setLoading(false);
@@ -385,7 +383,7 @@ export default function Index() {
       if (messageError) throw messageError;
       navigate(`/chat/${chatData.id}`);
     } catch (error) {
-      console.error('Error starting chat with message:', error);
+      toast.error('Failed to start chat. Please try again.');
     } finally {
       setLoading(false);
     }
