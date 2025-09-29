@@ -17,164 +17,107 @@ import AuthModal from '@/components/AuthModal';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
-import geminiLogo from '@/assets/gemini-logo.png';
+
 import claudeLogo from '@/assets/claude-logo.png';
-import deepseekLogo from '@/assets/deepseek-logo.png';
-import grokLogo from '@/assets/grok-logo.png';
+
+
 const models = [{
-  id: 'gpt-4.1-mini',
-  name: 'OpenAI GPT-4.1 mini',
-  shortLabel: 'GPT-4.1 mini',
-  description: "Fast & efficient",
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: "Default model (fast + low cost)",
   type: 'free'
 }, {
   id: 'gpt-4o',
-  name: 'OpenAI GPT-4o',
+  name: 'GPT-4o',
   shortLabel: 'GPT-4o',
-  description: "Most accurate",
-  type: 'pro'
-}, {
-  id: 'gpt-5',
-  name: 'OpenAI GPT-5',
-  shortLabel: 'GPT-5',
-  description: "Most advanced",
-  type: 'pro'
-}, {
-  id: 'claude-opus-4',
-  name: 'Claude Opus 4',
-  shortLabel: 'Claude Opus 4',
-  description: "Most capable",
+  description: "High Quality option",
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
-  name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
-  description: "High performance",
+  name: 'Claude S4',
+  shortLabel: 'Claude S4',
+  description: "Alternative for natural language and writing",
   type: 'pro'
 }, {
-  id: 'deepseek-v31-terminus',
-  name: 'DeepSeek-V3.1 Terminus',
-  shortLabel: 'DeepSeek V3.1',
-  description: "Great for tasks",
-  type: 'pro'
-}, {
-  id: 'deepseek-r1',
-  name: 'DeepSeek R1',
-  shortLabel: 'DeepSeek R1',
-  description: "Enhanced reasoning",
-  type: 'pro'
-}, {
-  id: 'gemini-2-5-flash',
-  name: 'Gemini 2.5 Flash',
-  shortLabel: 'Gemini 2.5',
-  description: "Google's latest",
-  type: 'pro'
-}, {
-  id: 'grok-4',
-  name: 'Grok-4',
-  shortLabel: 'Grok-4',
-  description: "Advanced challenges",
-  type: 'pro'
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: "Create images with DALL·E 3",
+  type: 'action'
 }];
-const suggestionButtons = [{
-  icon: FileText,
-  label: 'Document Summary',
-  action: 'document-summary'
-}, {
-  icon: Edit3,
-  label: 'Email Response',
-  action: 'email-response'
-}, {
-  icon: Settings,
-  label: 'Improve Writing',
-  action: 'improve-writing'
-}, {
-  icon: BookOpen,
-  label: 'Knowledge Boost',
-  action: 'knowledge-boost'
-}];
-const additionalButtons = [{
-  icon: Lightbulb,
-  label: 'Business Ideas',
-  action: 'business-ideas'
-}, {
-  icon: FileText,
-  label: 'Text Summary',
-  action: 'text-summary'
-}, {
-  icon: BarChart3,
-  label: 'Calorie Check',
-  action: 'calorie-check'
-}, {
-  icon: ImageIcon,
-  label: 'Generate Image',
-  action: 'generate-image'
-}];
-const suggestionPrompts = {
-  'document-summary': ['Summarize this document in key points', 'Extract main insights from this document', 'Provide a brief overview of this document', 'Condense this document into essential information'],
-  'email-response': ['Draft a professional email response', 'Write a polite email reply', 'Compose a follow-up email', 'Create a business email response'],
-  'improve-writing': ['Make this writing clearer and more concise', 'Enhance the flow and readability', 'Polish and refine this text', 'Improve grammar and style'],
-  'knowledge-boost': ['Explain this concept simply', 'Help me understand this topic', 'Provide study notes on this subject', 'Break down this complex information'],
-  'business-ideas': ['Generate innovative business concepts', 'Brainstorm startup ideas', 'Create business model suggestions', 'Develop entrepreneurial opportunities'],
+
+const emojiCategories = {
+  'general': ['😊', '👍', '🔥', '💯', '🎉', '✨', '🚀', '💪', '🎯', '⭐'],
+  'emotions': ['😍', '🥰', '😂', '🤔', '😮', '🙄', '😎', '🤗', '😴', '🤯'],
+  'objects': ['📱', '💻', '🎮', '📸', '🎵', '📚', '✏️', '🔧', '💡', '🏆'],
+  'nature': ['🌟', '🌙', '☀️', '🌈', '🌸', '🌿', '🍀', '🦋', '🌊', '🔮'],
+  'food': ['🍕', '🍔', '🍰', '🍪', '☕', '🍵', '🥤', '🍎', '🥑', '🌮'],
+  'activities': ['🎨', '🎪', '🎭', '🎬', '🎤', '🎸', '🏃', '🚴', '🏊', '✈️']
+};
+
+const suggestionsByCategory = {
+  'code-review': ['Review this code for bugs', 'Optimize this function', 'Explain this algorithm', 'Suggest improvements'],
+  'content-writing': ['Write a blog post about...', 'Create social media content', 'Draft an email', 'Write product descriptions'],
+  'math-solving': ['Solve this equation', 'Explain this math concept', 'Calculate percentages', 'Help with statistics'],
+  'language-help': ['Translate this text', 'Check grammar and spelling', 'Improve writing style', 'Explain language rules'],
+  'creative-writing': ['Write a short story', 'Create a poem', 'Develop character ideas', 'Brainstorm plot concepts'],
+  'data-analysis': ['Analyze this dataset', 'Create data visualizations', 'Explain trends', 'Generate insights'],
+  'learning-help': ['Explain this concept simply', 'Create study materials', 'Quiz me on this topic', 'Provide examples'],
+  'brainstorming': ['Generate ideas for...', 'Creative solutions to...', 'Marketing strategies', 'Product features'],
+  'research-help': ['Research this topic', 'Find credible sources', 'Summarize findings', 'Compare different views'],
+  'productivity': ['Create a schedule', 'Organize tasks', 'Set priorities', 'Time management tips'],
+  'problem-solving': ['Help solve this problem', 'Break down complex issues', 'Find root causes', 'Generate solutions'],
   'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
   'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
   'generate-image': ['Create an image of...', 'Generate artwork showing...', 'Design a visual representation of...', 'Produce an illustration of...']
 };
 const availableModels = [{
-  id: 'gpt-4.1-mini',
-  name: 'OpenAI GPT-4.1 mini',
-  shortLabel: 'GPT-4.1 mini',
-  description: 'GPT-4.1 mini, developed by OpenAI, stands as one of the most efficient AI models available.',
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: 'Fast and cost-efficient model, perfect for most tasks.',
   icon: 'openai'
 }, {
   id: 'gpt-4o',
-  name: 'OpenAI GPT-4o',
+  name: 'GPT-4o',
   shortLabel: 'GPT-4o',
-  description: 'GPT-4o, OpenAI\'s newest flagship model, is designed for complex reasoning tasks.',
+  description: 'High-quality model for complex reasoning and accurate responses.',
   icon: 'openai'
-}, {
-  id: 'gpt-5',
-  name: 'OpenAI GPT-5',
-  shortLabel: 'GPT-5',
-  description: 'OpenAI\'s GPT-5 sets a new standard in artificial intelligence capabilities.',
-  icon: 'openai'
-}, {
-  id: 'claude-opus-4',
-  name: 'Claude Opus 4',
-  shortLabel: 'Claude Opus 4',
-  description: 'Claude Opus 4, Anthropic\'s most capable AI model, excels at complex reasoning and analysis.',
-  icon: 'claude'
 }, {
   id: 'claude-sonnet-4',
-  name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
-  description: 'Claude Sonnet 4 offers high-performance AI capabilities with exceptional reasoning.',
+  name: 'Claude S4',
+  shortLabel: 'Claude S4',
+  description: 'Excellent for natural language tasks, writing, and creative work.',
   icon: 'claude'
 }, {
-  id: 'deepseek-v31-terminus',
-  name: 'DeepSeek-V3.1 Terminus',
-  shortLabel: 'DeepSeek V3.1',
-  description: 'DeepSeek-V3.1 Terminus offers advanced AI capabilities great for most tasks.',
-  icon: 'deepseek'
-}, {
-  id: 'deepseek-r1',
-  name: 'DeepSeek R1',
-  shortLabel: 'DeepSeek R1',
-  description: 'DeepSeek R1 provides enhanced reasoning capabilities for complex problem solving.',
-  icon: 'deepseek'
-}, {
-  id: 'gemini-2-5-flash',
-  name: 'Gemini 2.5 Flash',
-  shortLabel: 'Gemini 2.5',
-  description: 'Gemini 2.5 Flash, Google\'s latest AI model, is designed for fast multimodal understanding.',
-  icon: 'gemini'
-}, {
-  id: 'grok-4',
-  name: 'Grok-4',
-  shortLabel: 'Grok-4',
-  description: 'Grok-4 is an advanced AI model designed for tackling intricate challenges.',
-  icon: 'grok'
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: 'Create stunning images and artwork using DALL·E 3.',
+  icon: 'openai'
 }];
+
+// Suggestion buttons for quick actions
+const suggestionButtons = [
+  { label: 'Code Review', action: 'code-review', icon: FileText },
+  { label: 'Writing Help', action: 'content-writing', icon: Edit3 },
+  { label: 'Math Help', action: 'math-solving', icon: BarChart3 },
+  { label: 'Learn Topic', action: 'learning-help', icon: BookOpen },
+];
+
+const additionalButtons = [
+  { label: 'Creative Writing', action: 'creative-writing', icon: Lightbulb },
+  { label: 'Data Analysis', action: 'data-analysis', icon: BarChart3 },
+  { label: 'Brainstorming', action: 'brainstorming', icon: Zap },
+  { label: 'Research Help', action: 'research-help', icon: Search },
+  { label: 'Productivity', action: 'productivity', icon: Settings },
+  { label: 'Problem Solving', action: 'problem-solving', icon: Lightbulb },
+];
+
+// Rename suggestionsByCategory to suggestionPrompts for consistency
+const suggestionPrompts = suggestionsByCategory;
+
 export default function Index() {
   const {
     user,
@@ -193,14 +136,8 @@ export default function Index() {
     switch (iconType) {
       case 'openai':
         return chatgptLogoSrc;
-      case 'gemini':
-        return geminiLogo;
       case 'claude':
         return claudeLogo;
-      case 'deepseek':
-        return deepseekLogo;
-      case 'grok':
-        return grokLogo;
       default:
         return chatgptLogoSrc;
     }
@@ -248,7 +185,7 @@ export default function Index() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-4.1-mini');
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [isDragOver, setIsDragOver] = useState(false);
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);
@@ -329,8 +266,7 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
-    const toolId = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    navigate(`/generate-image-openai/${toolId}`);
+    navigate('/image-generation');
   };
   const handleSearchWeb = () => {
     if (!user) {
@@ -465,10 +401,12 @@ export default function Index() {
     setShowMoreButtons(false);
     textareaRef.current?.focus();
   };
-  const handleSeeAllModels = () => {
-    navigate('/explore-tools');
-  };
   const handleModelSelect = (modelId: string) => {
+    if (modelId === 'generate-image') {
+      // Trigger image generation mode instead of setting as model
+      handleCreateImage();
+      return;
+    }
     setSelectedModel(modelId);
   };
   const scrollModels = (direction: 'left' | 'right') => {
@@ -564,7 +502,7 @@ export default function Index() {
           
           {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Select value={selectedModel} onValueChange={setSelectedModel} onOpenChange={setIsModelDropdownOpen}>
+            <Select value={selectedModel} onValueChange={handleModelSelect} onOpenChange={setIsModelDropdownOpen}>
               <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                   <h1 className="text-lg font-semibold">AdamGpt</h1>
@@ -726,7 +664,7 @@ export default function Index() {
 
               {/* Desktop model selector and voice controls */}
               {!isMobile && <div className="flex items-center gap-2">
-                  <Select value={selectedModel} onValueChange={setSelectedModel}>
+                  <Select value={selectedModel} onValueChange={handleModelSelect}>
                     <SelectTrigger className="w-[200px] h-10 bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl focus-visible:ring-2 focus-visible:ring-primary text-sm shadow-sm hover:bg-accent/50 transition-all duration-200" aria-label="Select AI model">
                       <SelectValue>
                         <div className="flex items-center gap-2">

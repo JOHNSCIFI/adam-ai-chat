@@ -21,67 +21,34 @@ import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator'
 import AuthModal from '@/components/AuthModal';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
-import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
-import deepseekLogo from '@/assets/deepseek-logo.png';
-import grokLogo from '@/assets/grok-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 const models = [{
-  id: 'gpt-4.1-mini',
-  name: 'OpenAI GPT-4.1 mini',
-  shortLabel: 'GPT-4.1 mini',
-  description: "Fast & efficient",
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: "Default model (fast + low cost)",
   type: 'free'
 }, {
   id: 'gpt-4o',
-  name: 'OpenAI GPT-4o',
+  name: 'GPT-4o',
   shortLabel: 'GPT-4o',
-  description: "Most accurate",
-  type: 'pro'
-}, {
-  id: 'gpt-5',
-  name: 'OpenAI GPT-5',
-  shortLabel: 'GPT-5',
-  description: "Most advanced",
-  type: 'pro'
-}, {
-  id: 'claude-opus-4',
-  name: 'Claude Opus 4',
-  shortLabel: 'Claude Opus 4',
-  description: "Most capable",
+  description: "High Quality option",
   type: 'pro'
 }, {
   id: 'claude-sonnet-4',
-  name: 'Claude Sonnet 4',
-  shortLabel: 'Claude Sonnet 4',
-  description: "High performance",
+  name: 'Claude S4',
+  shortLabel: 'Claude S4',
+  description: "Alternative for natural language and writing",
   type: 'pro'
 }, {
-  id: 'deepseek-v31-terminus',
-  name: 'DeepSeek-V3.1 Terminus',
-  shortLabel: 'DeepSeek V3.1',
-  description: "Great for tasks",
-  type: 'pro'
-}, {
-  id: 'deepseek-r1',
-  name: 'DeepSeek R1',
-  shortLabel: 'DeepSeek R1',
-  description: "Enhanced reasoning",
-  type: 'pro'
-}, {
-  id: 'gemini-2-5-flash',
-  name: 'Gemini 2.5 Flash',
-  shortLabel: 'Gemini 2.5',
-  description: "Google's latest",
-  type: 'pro'
-}, {
-  id: 'grok-4',
-  name: 'Grok-4',
-  shortLabel: 'Grok-4',
-  description: "Advanced challenges",
-  type: 'pro'
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: "Create images with DALL·E 3",
+  type: 'action'
 }];
 interface Message {
   id: string;
@@ -164,8 +131,8 @@ export default function Chat() {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
-    // Use model from navigation state if available, otherwise default to gpt-4.1-mini
-    return location.state?.selectedModel || 'gpt-4.1-mini';
+    // Use model from navigation state if available, otherwise default to gpt-4o-mini
+    return location.state?.selectedModel || 'gpt-4o-mini';
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1937,12 +1904,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
                         ) : model.id.includes('claude') ? (
                           <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                        ) : model.id.includes('deepseek') ? (
-                          <img src={deepseekLogo} alt="DeepSeek" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                        ) : model.id.includes('gemini') ? (
-                          <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                        ) : model.id.includes('grok') ? (
-                          <img src={grokLogo} alt="Grok" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
                         ) : (
                           <Bot className="h-3.5 w-3.5 flex-shrink-0" />
                         )}
@@ -2452,12 +2413,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                     <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
                                   ) : model.id.includes('claude') ? (
                                     <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                  ) : model.id.includes('deepseek') ? (
-                                    <img src={deepseekLogo} alt="DeepSeek" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                  ) : model.id.includes('gemini') ? (
-                                    <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                  ) : model.id.includes('grok') ? (
-                                    <img src={grokLogo} alt="Grok" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                  ) : (
+                                    <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                  )}
                                   ) : (
                                     <Bot className="h-3.5 w-3.5 flex-shrink-0" />
                                   )}

@@ -21,6 +21,7 @@ import Models from '@/pages/Models';
 import Privacy from '@/pages/Privacy';
 import Terms from '@/pages/Terms';
 import Cookies from '@/pages/Cookies';
+import ImageGeneration from '@/pages/ImageGeneration';
 import NotFound from '@/pages/NotFound';
 import About from '@/pages/About';
 import Contact from '@/pages/Contact';
@@ -129,6 +130,13 @@ function App() {
                     <ProtectedRoute>
                       <MainLayout>
                         <Help />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/image-generation" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <ImageGeneration />
                       </MainLayout>
                     </ProtectedRoute>
                   } />
