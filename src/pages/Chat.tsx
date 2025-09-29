@@ -2311,31 +2311,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                              {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                            </Button>
                            
-                           {/* Assistant message actions */}
-                           {message.role === 'assistant' && (
-                             <>
-                               {/* Volume/Speaker button */}
-                                <Button 
-                                  variant="ghost" 
-                                  size="sm" 
-                                  className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
-                                  onClick={() => speakMessage(message.id, message.content)}
-                                >
-                                  {speakingMessageId === message.id ? (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <rect x="6" y="4" width="4" height="16"></rect>
-                                      <rect x="14" y="4" width="4" height="16"></rect>
-                                    </svg>
-                                  ) : (
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-                                      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
-                                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-                                    </svg>
-                                  )}
-                                </Button>
-                               
-                               {/* Thumbs Up button - hide if disliked */}
+                            {/* Assistant message actions */}
+                            {message.role === 'assistant' && (
+                              <>
+                                {/* Thumbs Up button - hide if disliked */}
                                {messageRatings[message.id] !== 'dislike' && (
                                  <Button 
                                    variant="ghost" 
