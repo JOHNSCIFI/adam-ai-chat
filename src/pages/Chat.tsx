@@ -1134,14 +1134,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     
     try {
       if (newRating) {
-        await supabase.from('message_ratings').upsert({
+        await supabase.from('message_ratings' as any).upsert({
           message_id: messageId,
           user_id: user.id,
           rating: newRating
         });
         setMessageRatings(prev => ({ ...prev, [messageId]: newRating }));
       } else {
-        await supabase.from('message_ratings')
+        await supabase.from('message_ratings' as any)
           .delete()
           .eq('message_id', messageId)
           .eq('user_id', user.id);
@@ -1158,18 +1158,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
   // Load message ratings
   const loadMessageRatings = async () => {
-    if (!user || !chatId) return;
+    if (!user || !chatId || messages.length === 0) return;
     
     try {
       const { data } = await supabase
-        .from('message_ratings')
+        .from('message_ratings' as any)
         .select('message_id, rating')
         .eq('user_id', user.id)
         .in('message_id', messages.map(m => m.id));
       
       if (data) {
         const ratingsMap: {[key: string]: 'like' | 'dislike'} = {};
-        data.forEach(rating => {
+        data.forEach((rating: any) => {
           ratingsMap[rating.message_id] = rating.rating;
         });
         setMessageRatings(ratingsMap);
