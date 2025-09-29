@@ -17,7 +17,7 @@ import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
-import VoiceModeButton from '@/components/VoiceModeButton';
+
 import AuthModal from '@/components/AuthModal';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -2397,23 +2397,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
                     </Button>
                     
-                    <VoiceModeButton 
-                      onMessageSent={(messageId, content, role) => {
-                        if (role === 'user' && chatId) {
-                          if (!processedUserMessages.current.has(chatId)) {
-                            processedUserMessages.current.set(chatId, new Set());
-                          }
-                          processedUserMessages.current.get(chatId)!.add(messageId);
-                          fetchMessages();
-                        } else if (role === 'assistant') {
-                          setTimeout(() => {
-                            fetchMessages();
-                          }, 1000);
-                        }
-                      }} 
-                      chatId={chatId || 'temp'} 
-                      actualTheme={actualTheme}
-                    />
                   </div>
                 </>
               ) : (
@@ -2478,19 +2461,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </Button>
                     
-                    <VoiceModeButton onMessageSent={(messageId, content, role) => {
-                      if (role === 'user' && chatId) {
-                        if (!processedUserMessages.current.has(chatId)) {
-                          processedUserMessages.current.set(chatId, new Set());
-                        }
-                        processedUserMessages.current.get(chatId)!.add(messageId);
-                        fetchMessages();
-                      } else if (role === 'assistant') {
-                        setTimeout(() => {
-                          fetchMessages();
-                        }, 1000);
-                      }
-                    }} chatId={chatId || 'temp'} actualTheme={actualTheme} />
                   </div>
                 </>
               )}

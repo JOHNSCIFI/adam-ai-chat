@@ -11,7 +11,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import AuthModal from '@/components/AuthModal';
-import VoiceModeButton from '@/components/VoiceModeButton';
+
 import GoogleOneTab from '@/components/GoogleOneTab';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
@@ -234,7 +234,7 @@ export default function Index() {
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
-  const [voiceChatId, setVoiceChatId] = useState<string | null>(null);
+  
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [showMoreButtons, setShowMoreButtons] = useState(false);
@@ -398,44 +398,6 @@ export default function Index() {
       toast.error('Failed to start chat. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-  const handleVoiceMessageSent = async (messageId: string, content: string, role: 'user' | 'assistant') => {
-    console.log('Voice message sent:', {
-      messageId,
-      content,
-      role
-    });
-
-    // Change model to Google Gemini when voice mode is used
-    setSelectedModel('gemini');
-    if (role === 'user') {
-      // For user voice messages, create chat if needed and navigate
-      if (!user) return;
-      if (!voiceChatId) {
-        // Create new chat with voice message
-        try {
-          const {
-            data: chatData,
-            error: chatError
-          } = await supabase.from('chats').insert({
-            user_id: user.id,
-            title: content.length > 50 ? content.substring(0, 47) + '...' : content
-          }).select().single();
-          if (chatError) {
-            console.error('Error creating voice chat:', chatError);
-            return;
-          }
-          setVoiceChatId(chatData.id);
-          // Navigate to the new chat
-          navigate(`/chat/${chatData.id}`);
-        } catch (error) {
-          console.error('Error creating voice chat:', error);
-        }
-      } else {
-        // Navigate to existing voice chat
-        navigate(`/chat/${voiceChatId}`);
-      }
     }
   };
   const createChatWithMessage = async (userId: string, messageToSend: string) => {
@@ -781,7 +743,6 @@ export default function Index() {
                     {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                   </Button>
                   
-                  <VoiceModeButton onMessageSent={handleVoiceMessageSent} chatId={voiceChatId || 'temp'} actualTheme={actualTheme} />
                 </div>}
             </div>
 
@@ -810,7 +771,7 @@ export default function Index() {
                     {isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
                   </Button>
                   
-                  <VoiceModeButton onMessageSent={handleVoiceMessageSent} chatId={voiceChatId || 'temp'} actualTheme={actualTheme} />
+                  
                 </div>
               </div>}
           </div>

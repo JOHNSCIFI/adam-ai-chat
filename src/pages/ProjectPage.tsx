@@ -11,7 +11,7 @@ import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Tar
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
-import VoiceModeButton from '@/components/VoiceModeButton';
+
 import { toast } from 'sonner';
 interface Chat {
   id: string;
