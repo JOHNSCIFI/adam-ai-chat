@@ -22,12 +22,16 @@ serve(async (req) => {
     const body = await req.json();
     console.log('[WEBHOOK-HANDLER] Request body:', JSON.stringify(body));
 
-    const { chat_id, response_data, user_id } = body;
+    // Handle N8n structure: { body: { chatId: "..." }, image_base64: "..." }
+    const chat_id = body.body?.chatId || body.chat_id;
+    const user_id = body.body?.userId || body.user_id;
+    const image_base64 = body.image_base64;
+    const response_data = body.response_data;
 
-    if (!chat_id || !response_data) {
-      console.error('[WEBHOOK-HANDLER] Missing required fields:', { chat_id, response_data });
+    if (!chat_id) {
+      console.error('[WEBHOOK-HANDLER] Missing chat_id:', body);
       return new Response(
-        JSON.stringify({ error: 'Missing chat_id or response_data' }),
+        JSON.stringify({ error: 'Missing chat_id in body.chatId or chat_id' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -36,30 +40,34 @@ serve(async (req) => {
     let responseContent = '';
     let imageUrl = null;
     
-    if (Array.isArray(response_data) && response_data.length > 0) {
-      const analysisTexts = response_data.map(item => item.text || item.content || '').filter(text => text);
-      if (analysisTexts.length > 0) {
-        responseContent = analysisTexts.join('\n\n');
+    if (response_data) {
+      if (Array.isArray(response_data) && response_data.length > 0) {
+        const analysisTexts = response_data.map(item => item.text || item.content || '').filter(text => text);
+        if (analysisTexts.length > 0) {
+          responseContent = analysisTexts.join('\n\n');
+        }
+      } else if (response_data.text) {
+        responseContent = response_data.text;
+      } else if (response_data.analysis || response_data.content) {
+        responseContent = response_data.analysis || response_data.content;
+      } else if (typeof response_data === 'string') {
+        responseContent = response_data;
       }
-    } else if (response_data.text) {
-      responseContent = response_data.text;
-    } else if (response_data.analysis || response_data.content) {
-      responseContent = response_data.analysis || response_data.content;
-    } else if (typeof response_data === 'string') {
-      responseContent = response_data;
     }
 
-    // Handle image generation
-    if (response_data.image_base64) {
+    // Handle image generation (from root level or response_data)
+    const imageData = image_base64 || response_data?.image_base64;
+    if (imageData) {
       console.log('[WEBHOOK-HANDLER] Processing generated image');
       
       try {
         // Convert base64 to blob
-        const imageData = Uint8Array.from(atob(response_data.image_base64), c => c.charCodeAt(0));
+        const imageBytes = Uint8Array.from(atob(imageData), c => c.charCodeAt(0));
         
         // Generate unique filename
         const timestamp = Date.now();
-        const uniqueFileName = `generated_${timestamp}_${response_data.image_name || 'image.png'}`;
+        const imageName = body.image_name || response_data?.image_name || 'image.png';
+        const uniqueFileName = `generated_${timestamp}_${imageName}`;
         const filePath = user_id ? `${user_id}/${chat_id}/${uniqueFileName}` : `${chat_id}/${uniqueFileName}`;
         const bucketName = 'generated-images';
 
@@ -68,8 +76,8 @@ serve(async (req) => {
         // Upload to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
           .from(bucketName)
-          .upload(filePath, imageData, {
-            contentType: response_data.image_type || 'image/png',
+          .upload(filePath, imageBytes, {
+            contentType: body.image_type || response_data?.image_type || 'image/png',
             upsert: true
           });
 
@@ -102,9 +110,9 @@ serve(async (req) => {
     // Prepare file attachments if image exists
     const fileAttachments = imageUrl ? [{
       id: crypto.randomUUID(),
-      name: response_data.image_name || `generated_image_${Date.now()}.png`,
+      name: body.image_name || response_data?.image_name || `generated_image_${Date.now()}.png`,
       size: 0,
-      type: response_data.image_type || 'image/png',
+      type: body.image_type || response_data?.image_type || 'image/png',
       url: imageUrl
     }] : null;
 
