@@ -60,7 +60,7 @@ export class ImageEditor {
       this.fabricCanvas?.set('backgroundImage', img);
       this.fabricCanvas?.renderAll();
     };
-    img.src = this.canvas.toDataURL();
+    img.src = this.canvas.toDataURL('image/png');
 
     return this.fabricCanvas;
   }
