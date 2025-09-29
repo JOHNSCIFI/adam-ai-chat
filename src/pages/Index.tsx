@@ -459,6 +459,13 @@ export default function Index() {
       textareaRef.current?.focus();
     }, 0);
   };
+  const handleCreateImageClick = () => {
+    setIsImageMode(true);
+    setMessage('');
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 0);
+  };
   const handleExitImageMode = () => {
     setIsImageMode(false);
     setSelectedStyle(null);
@@ -648,7 +655,7 @@ export default function Index() {
                             </div>
                           </PopoverContent>
                         </Popover>
-                      </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={() => setSelectedModel('generate-image')} aria-label="Create an image">
+                      </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={handleCreateImageClick} aria-label="Create an image">
                         <ImageIcon className="h-4 w-4 mr-2" />
                         <span>Generate an image</span>
                       </Button>}
