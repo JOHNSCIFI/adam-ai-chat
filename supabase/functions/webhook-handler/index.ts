@@ -22,9 +22,18 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
     );
 
-    const body = await req.json();
+    let rawBody = await req.json();
     console.log('[WEBHOOK-HANDLER] ===== RAW REQUEST BODY =====');
-    console.log('[WEBHOOK-HANDLER] Full body structure:', JSON.stringify(body, null, 2).substring(0, 500));
+    console.log('[WEBHOOK-HANDLER] Raw body type:', Array.isArray(rawBody) ? 'Array' : typeof rawBody);
+    console.log('[WEBHOOK-HANDLER] Full body structure:', JSON.stringify(rawBody, null, 2).substring(0, 500));
+    
+    // Handle N8n sending array format: [{ body: { chatId: "..." }, image_base64: "..." }]
+    let body = rawBody;
+    if (Array.isArray(rawBody) && rawBody.length > 0) {
+      console.log('[WEBHOOK-HANDLER] Detected array format, extracting first element');
+      body = rawBody[0];
+    }
+    
     console.log('[WEBHOOK-HANDLER] Body keys:', Object.keys(body));
     console.log('[WEBHOOK-HANDLER] Has body.body?', !!body.body);
     console.log('[WEBHOOK-HANDLER] Has body.image_base64?', !!body.image_base64);
