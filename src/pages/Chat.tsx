@@ -1782,12 +1782,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        
                         {/* Message action buttons - copy, volume, thumbs up/down, refresh */}
                         <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
                             {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                           </Button>
                           
                           {/* Volume/Speaker button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
                               <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
@@ -1796,7 +1796,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           </Button>
                           
                           {/* Thumbs Up button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
                               <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
@@ -1804,14 +1804,15 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           </Button>
                           
                           {/* Thumbs Down button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 32 32" fill="none">
-                              <path d="M10.15625 6 C8.746094 6 7.515625 6.996094 7.21875 8.375 L5.0625 18.375 C4.667969 20.222656 6.113281 22 8 22 L13.75 22 L13.5625 22.75 C13.359375 22.90625 13.230469 22.972656 12.9375 23.375 C12.46875 24.015625 12 25.007813 12 26.34375 C12 27.769531 13.289063 29 14.90625 29 L15.3125 29 L15.625 28.71875 L22.40625 22 L27 22 L27 6 Z             M10.15625 8 L21 8 L21 20.59375 L14.59375 26.90625 C14.171875 26.824219 14 26.652344 14 26.34375 C14 25.441406 14.273438 24.882813 14.53125 24.53125 C14.789063 24.179688 14.96875 24.09375 14.96875 24.09375 L15.3125 23.90625 L15.4375 23.5 L16.03125 21.25 L16.34375 20 L8 20 C7.339844 20 6.894531 19.425781 7.03125 18.78125 L9.15625 8.78125 C9.257813 8.3125 9.679688 8 10.15625 8 Z             M23 8 L25 8 L25 20 L23 20 Z" fill="currentColor"/>
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
+                              <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
                             </svg>
                           </Button>
                           
                           {/* Refresh button */}
-                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm border shadow-sm hover:bg-muted transition-opacity">
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
                             <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                               <path d="M21 2v6h-6"></path>
                               <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
