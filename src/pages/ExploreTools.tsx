@@ -87,12 +87,12 @@ const tools: Tool[] = [
     route: '/deepseek-r1'
   },
   {
-    id: 'openai-gpt-4o-mini',
-    name: 'OpenAI GPT-4o-mini',
+    id: 'openai-gpt-4.1-mini',
+    name: 'OpenAI GPT-4.1-mini',
     description: 'Fast and efficient OpenAI model for everyday tasks',
     category: 'AI Models',
     icon: <Bot className="h-5 w-5" />,
-    route: '/openai-gpt-4o-mini'
+    route: '/openai-gpt-4.1-mini'
   },
   {
     id: 'openai-gpt-5',
@@ -258,7 +258,7 @@ export default function ExploreTools() {
       'openai-gpt-4-1',
       'deepseek-v31-terminus',
       'deepseek-r1',
-      'openai-gpt-4o-mini',
+      'openai-gpt-4.1-mini',
       'openai-gpt-5',
       'claude-opus-4',
       'claude-sonnet-4',
@@ -274,7 +274,7 @@ export default function ExploreTools() {
         'openai-gpt-4o': 'gpt-4o',
         'openai-gpt-4-1': 'gpt-4o',
         'openai-gpt-5': 'gpt-5',
-        'openai-gpt-4o-mini': 'gpt-4o-mini',
+        'openai-gpt-4.1-mini': 'gpt-4.1-mini',
         'claude-opus-4': 'claude-opus-4',
         'claude-sonnet-4': 'claude-sonnet-4',
         'deepseek-v31-terminus': 'deepseek-v31-terminus',
@@ -282,7 +282,7 @@ export default function ExploreTools() {
         'gemini-2-5-flash': 'gemini-2-5-flash',
         'grok-4': 'grok-4'
       };
-      const selectedModel = toolToModelMap[tool.id] || 'gpt-4o-mini';
+      const selectedModel = toolToModelMap[tool.id] || 'gpt-4.1-mini';
       navigate(`/chat/${chatId}`, { state: { selectedModel } });
     } else {
       // Generate unique ID for this tool session

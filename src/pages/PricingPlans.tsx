@@ -32,7 +32,7 @@ interface PlanFeature {
 
 const features: PlanFeature[] = [
   {
-    name: 'Access to OpenAI GPT-4o Mini',
+    name: 'Access to OpenAI GPT-4.1 Mini',
     free: true,
     pro: true,
     ultraPro: true
@@ -116,7 +116,7 @@ const faqData = [
   },
   {
     question: 'Which AI models are available on Chatbot App?',
-    answer: 'We offer access to the latest and most powerful AI models including OpenAI GPT-4o, GPT-4.1, Anthropic Claude, Google Gemini, DeepSeek, DeepSeek R1, Grok-3 Mini, and Grok-4. Free users get access to OpenAI GPT-4o Mini.'
+    answer: 'We offer access to the latest and most powerful AI models including OpenAI GPT-4o, GPT-4.1, Anthropic Claude, Google Gemini, DeepSeek, DeepSeek R1, Grok-3 Mini, and Grok-4. Free users get access to OpenAI GPT-4.1 Mini.'
   },
   {
     question: 'What file types can I upload and analyze?',
@@ -132,7 +132,7 @@ const faqData = [
   },
   {
     question: 'Is there a free trial available?',
-    answer: 'We offer a free plan that includes access to OpenAI GPT-4o Mini with limited messages per month. This allows you to try our platform before upgrading to a paid plan for full access to all features.'
+    answer: 'We offer a free plan that includes access to OpenAI GPT-4.1 Mini with limited messages per month. This allows you to try our platform before upgrading to a paid plan for full access to all features.'
   },
   {
     question: 'What payment methods do you accept?',
@@ -241,7 +241,7 @@ export default function PricingPlans() {
               <ul className="space-y-3 text-sm">
                 <li className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-green-500" />
-                  Access to OpenAI GPT-4o Mini
+                  Access to OpenAI GPT-4.1 Mini
                 </li>
                 <li className="flex items-center gap-2 text-muted-foreground">
                   <X className="w-4 h-4" />

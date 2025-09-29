@@ -17,7 +17,7 @@ const Pricing = () => {
     description: "Start free, upgrade anytime.",
     popular: false,
     features: [{
-      text: "Access to OpenAI's GPT-4o Mini",
+      text: "Access to OpenAI's GPT-4.1 Mini",
       included: true
     }, {
       text: "Access to multiple top AI models",
@@ -447,7 +447,7 @@ const Pricing = () => {
               </div>
               <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
                 <h4 className="font-semibold mb-3">Is there a free trial?</h4>
-                <p className="text-muted-foreground">Our Free plan gives you access to GPT-4o Mini with no time limit. Upgrade when ready for more features.</p>
+                <p className="text-muted-foreground">Our Free plan gives you access to GPT-4.1 Mini with no time limit. Upgrade when ready for more features.</p>
               </div>
               <div className="p-6 rounded-2xl bg-card border border-border hover:border-primary/30 transition-colors">
                 <h4 className="font-semibold mb-3">What payment methods do you accept?</h4>

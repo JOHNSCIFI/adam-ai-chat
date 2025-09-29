@@ -21,8 +21,8 @@ import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
 import grokLogo from '@/assets/grok-logo.png';
 const models = [{
-  id: 'gpt-4o-mini',
-  name: 'OpenAI GPT-4o mini',
+  id: 'gpt-4.1-mini',
+  name: 'OpenAI GPT-4.1 mini',
   description: "Fast & efficient",
   type: 'free'
 }, {
@@ -163,9 +163,9 @@ const suggestionPrompts = {
   ]
 };
 const availableModels = [{
-  id: 'gpt-4o-mini',
-  name: 'OpenAI GPT-4o mini',
-  description: 'GPT-4o mini, developed by OpenAI, stands as one of the most efficient AI models available.',
+  id: 'gpt-4.1-mini',
+  name: 'OpenAI GPT-4.1 mini',
+  description: 'GPT-4.1 mini, developed by OpenAI, stands as one of the most efficient AI models available.',
   icon: 'openai'
 }, {
   id: 'gpt-4o',
@@ -283,7 +283,7 @@ export default function Index() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [selectedModel, setSelectedModel] = useState('gpt-4.1-mini');
   const [isDragOver, setIsDragOver] = useState(false);
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);

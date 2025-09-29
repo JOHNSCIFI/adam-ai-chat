@@ -29,8 +29,8 @@ import grokLogo from '@/assets/grok-logo.png';
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
 const models = [{
-  id: 'gpt-4o-mini',
-  name: 'OpenAI GPT-4o mini',
+  id: 'gpt-4.1-mini',
+  name: 'OpenAI GPT-4.1 mini',
   description: "Fast & efficient",
   type: 'free'
 }, {
@@ -149,8 +149,8 @@ export default function Chat() {
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [selectedModel, setSelectedModel] = useState(() => {
-    // Use model from navigation state if available, otherwise default to gpt-4o-mini
-    return location.state?.selectedModel || 'gpt-4o-mini';
+    // Use model from navigation state if available, otherwise default to gpt-4.1-mini
+    return location.state?.selectedModel || 'gpt-4.1-mini';
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
