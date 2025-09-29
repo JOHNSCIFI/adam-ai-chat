@@ -187,36 +187,65 @@ export default function Chat() {
       window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
 
       // Set up real-time subscription for new messages  
-      const subscription = supabase.channel(`messages-${chatId}`).on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `chat_id=eq.${chatId}`
-      }, payload => {
-        console.log(`[REALTIME] Message received for chat ${chatId}:`, payload);
-        const newMessage = payload.new as Message;
+      const subscription = supabase.channel(`messages-${chatId}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          console.log(`[REALTIME] Message received for chat ${chatId}:`, payload);
+          const newMessage = payload.new as Message;
 
-        // CRITICAL: Double-check message belongs to current chat to prevent leakage
-        if (newMessage.chat_id !== chatId) {
-          console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
-          return;
-        }
-        setMessages(prev => {
-          // Check if message already exists (by real ID or temp ID) to prevent duplicates
-          const existsById = prev.find(msg => msg.id === newMessage.id);
-          const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
-          );
-          if (existsById || existsByContent) {
-            console.log(`[REALTIME] Message already exists in chat ${chatId}, skipping`);
-            return prev;
+          // CRITICAL: Double-check message belongs to current chat to prevent leakage
+          if (newMessage.chat_id !== chatId) {
+            console.warn(`[REALTIME] Message chat_id ${newMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
+            return;
           }
-          console.log(`[REALTIME] Adding new message to chat ${chatId}`);
-          // CRITICAL: Filter out any messages not belonging to current chat before adding new message
-          const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
-          return [...filteredPrev, newMessage];
-        });
-        scrollToBottom();
-      }).subscribe();
+          setMessages(prev => {
+            // Check if message already exists (by real ID or temp ID) to prevent duplicates
+            const existsById = prev.find(msg => msg.id === newMessage.id);
+            const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
+            );
+            if (existsById || existsByContent) {
+              console.log(`[REALTIME] Message already exists in chat ${chatId}, skipping`);
+              return prev;
+            }
+            console.log(`[REALTIME] Adding new message to chat ${chatId}`);
+            // CRITICAL: Filter out any messages not belonging to current chat before adding new message
+            const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
+            return [...filteredPrev, newMessage];
+          });
+          scrollToBottom();
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          console.log(`[REALTIME] Message updated for chat ${chatId}:`, payload);
+          const updatedMessage = payload.new as Message;
+
+          // CRITICAL: Double-check message belongs to current chat
+          if (updatedMessage.chat_id !== chatId) {
+            console.warn(`[REALTIME] Updated message chat_id ${updatedMessage.chat_id} doesn't match current chat ${chatId}, ignoring`);
+            return;
+          }
+
+          setMessages(prev => prev.map(msg => 
+            msg.id === updatedMessage.id 
+              ? { 
+                  ...msg, 
+                  content: updatedMessage.content,
+                  file_attachments: updatedMessage.file_attachments as any || []
+                }
+              : msg
+          ));
+          console.log(`[REALTIME] Successfully updated message ${updatedMessage.id} in chat ${chatId}`);
+          scrollToBottom();
+        })
+        .subscribe();
 
       // SINGLE cleanup function that handles both event listener AND subscription
       return () => {
@@ -417,17 +446,23 @@ export default function Chat() {
         }
 
         // Update the existing message in the database
-        const { error: updateError } = await supabase
+        console.log(`[REGENERATE] Updating message ${messageId} in database`);
+        const { data: updatedData, error: updateError } = await supabase
           .from('messages')
           .update({
             content: responseContent,
             file_attachments: fileAttachments.length > 0 ? fileAttachments as any : null
           })
-          .eq('id', messageId);
+          .eq('id', messageId)
+          .select()
+          .single();
 
         if (updateError) {
-          console.error('Error updating regenerated message:', updateError);
+          console.error('[REGENERATE] Error updating regenerated message:', updateError);
+          toast.error('Failed to save regenerated response');
         } else {
+          console.log(`[REGENERATE] Successfully updated message in database:`, updatedData);
+          
           // Update the local state with the same message ID
           setMessages(prev => prev.map(msg => 
             msg.id === messageId 
@@ -438,6 +473,8 @@ export default function Chat() {
                 }
               : msg
           ));
+          
+          toast.success('Response regenerated successfully');
         }
 
         scrollToBottom();
