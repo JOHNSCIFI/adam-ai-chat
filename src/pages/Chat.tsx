@@ -702,6 +702,106 @@ export default function Chat() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    
+    // Handle image generation mode
+    if (selectedModel === 'generate-image') {
+      console.log('[IMAGE-GEN] Image generation mode detected, calling generate-image function');
+      try {
+        // Create user message
+        const newUserMessage: Message = {
+          id: `temp-${Date.now()}`,
+          chat_id: chatId!,
+          content: userMessage,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          file_attachments: []
+        };
+        
+        setMessages(prev => [...prev, newUserMessage]);
+        scrollToBottom();
+        
+        // Save user message to database
+        const { data: insertedMessage, error: userError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: userMessage,
+            role: 'user',
+            file_attachments: []
+          })
+          .select()
+          .single();
+          
+        if (userError) throw userError;
+        
+        // Update with real ID
+        if (insertedMessage) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === newUserMessage.id ? { ...msg, id: insertedMessage.id } : msg
+          ));
+        }
+        
+        // Call generate-image function
+        console.log('[IMAGE-GEN] Calling generate-image function with prompt:', userMessage);
+        const { data: imageData, error: functionError } = await supabase.functions.invoke('generate-image', {
+          body: { prompt: userMessage }
+        });
+        
+        console.log('[IMAGE-GEN] Function response:', { imageData, functionError });
+        
+        if (functionError) throw functionError;
+        if (!imageData?.imageUrl) throw new Error('No image URL returned');
+        
+        // Create assistant message with generated image
+        const assistantMessage: Message = {
+          id: `temp-ai-${Date.now()}`,
+          chat_id: chatId!,
+          content: `Generated image: ${userMessage}`,
+          role: 'assistant',
+          created_at: new Date().toISOString(),
+          file_attachments: [{
+            id: `generated-${Date.now()}`,
+            name: 'generated-image.png',
+            size: 0,
+            type: 'image/png',
+            url: imageData.imageUrl
+          }]
+        };
+        
+        setMessages(prev => [...prev, assistantMessage]);
+        scrollToBottom();
+        
+        // Save assistant message with image
+        const { data: aiMessage, error: aiError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: assistantMessage.content,
+            role: 'assistant',
+            file_attachments: assistantMessage.file_attachments as any
+          })
+          .select()
+          .single();
+          
+        if (aiError) throw aiError;
+        
+        // Update with real ID
+        if (aiMessage) {
+          setMessages(prev => prev.map(msg => 
+            msg.id === assistantMessage.id ? { ...msg, id: aiMessage.id } : msg
+          ));
+        }
+        
+        toast.success('Image generated successfully!');
+      } catch (error: any) {
+        console.error('[IMAGE-GEN] Error:', error);
+        toast.error(error.message || 'Failed to generate image');
+      } finally {
+        setLoading(false);
+      }
+      return;
+    }
+    
     try {
       let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
