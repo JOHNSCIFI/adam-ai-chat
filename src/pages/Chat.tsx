@@ -488,13 +488,48 @@ export default function Chat() {
       }
       
       const aiResponse = await webhookResponse.json();
+      console.log('[AI-RESPONSE] Received response from webhook:', { 
+        hasResponse: !!aiResponse?.response, 
+        hasContent: !!aiResponse?.content, 
+        hasText: !!aiResponse?.text,
+        hasImageUrl: !!aiResponse?.image_url,
+        hasImageBase64: !!aiResponse?.image_base64
+      });
+      
+      // Handle image_base64 by uploading to storage first
+      if (aiResponse?.image_base64) {
+        console.log('[AI-RESPONSE] Image base64 detected, calling webhook-handler to upload...');
+        try {
+          const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
+            body: {
+              chat_id: originalChatId,
+              user_id: user.id,
+              image_base64: aiResponse.image_base64,
+              image_name: aiResponse.image_name || `generated_${Date.now()}.png`,
+              image_type: aiResponse.image_type || 'image/png'
+            }
+          });
+          
+          if (handlerError) {
+            console.error('[AI-RESPONSE] Webhook-handler error:', handlerError);
+          } else {
+            console.log('[AI-RESPONSE] Image uploaded successfully via webhook-handler');
+            toast.success('Image generated successfully!');
+          }
+        } catch (err) {
+          console.error('[AI-RESPONSE] Failed to upload image:', err);
+        }
+        // The webhook-handler will insert the message with the image, so we can return early
+        return;
+      }
+      
       if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
         const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
 
-        // Handle image generation responses
+        // Handle image URL responses (legacy/direct URL format)
         let fileAttachments: FileAttachment[] = [];
         if (aiResponse.image_url) {
-          console.log('[IMAGE-GEN] Image URL received from webhook:', aiResponse.image_url);
+          console.log('[AI-RESPONSE] Image URL received from webhook:', aiResponse.image_url);
           fileAttachments = [{
             id: crypto.randomUUID(),
             name: `generated_image_${Date.now()}.png`,
