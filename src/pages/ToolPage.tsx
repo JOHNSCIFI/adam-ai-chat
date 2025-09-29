@@ -1023,6 +1023,50 @@ export default function ToolPage() {
         for (const file of filesToProcess) {
           console.log('Processing file:', file.name, 'Type:', file.type);
 
+          let processedFile = file;
+          let processedBase64: string;
+
+          // For edit-image-openai tool, convert images to PNG format
+          if (toolName === 'edit-image-openai' && file.type.startsWith('image/')) {
+            try {
+              // Create canvas to convert image to PNG
+              const img = new Image();
+              const canvas = document.createElement('canvas');
+              const ctx = canvas.getContext('2d');
+              
+              await new Promise((resolve, reject) => {
+                img.onload = () => {
+                  canvas.width = img.naturalWidth;
+                  canvas.height = img.naturalHeight;
+                  ctx?.drawImage(img, 0, 0);
+                  resolve(void 0);
+                };
+                img.onerror = reject;
+                img.src = URL.createObjectURL(file);
+              });
+
+              // Convert to PNG blob
+              const pngBlob = await new Promise<Blob>((resolve, reject) => {
+                canvas.toBlob(
+                  (blob) => {
+                    if (blob) resolve(blob);
+                    else reject(new Error('Failed to convert to PNG'));
+                  },
+                  'image/png',
+                  1.0
+                );
+              });
+
+              // Create new file with PNG extension
+              const pngFileName = file.name.replace(/\.[^/.]+$/, '.png');
+              processedFile = new File([pngBlob], pngFileName, { type: 'image/png' });
+              console.log('Converted image to PNG:', pngFileName);
+            } catch (error) {
+              console.error('Error converting image to PNG:', error);
+              // Fall back to original file if conversion fails
+            }
+          }
+
           // Convert file to base64 for all file types
           base64FileData = await new Promise<string>(resolve => {
             const reader = new FileReader();
@@ -1032,25 +1076,25 @@ export default function ToolPage() {
               const base64 = result.split(',')[1];
               resolve(base64);
             };
-            reader.readAsDataURL(file);
+            reader.readAsDataURL(processedFile);
           });
 
           // Save file to appropriate storage bucket
-          const bucketName = file.type.startsWith('image/') ? 'chat-images' : 'chat-files';
-          const fileName = `${user.id}/${actualChatId}_${Date.now()}_${file.name}`;
+          const bucketName = processedFile.type.startsWith('image/') ? 'chat-images' : 'chat-files';
+          const fileName = `${user.id}/${actualChatId}_${Date.now()}_${processedFile.name}`;
           console.log('Uploading to storage:', fileName, 'Bucket:', bucketName);
           
           const {
             data: uploadData,
             error: uploadError
-          } = await supabase.storage.from(bucketName).upload(fileName, file, {
+          } = await supabase.storage.from(bucketName).upload(fileName, processedFile, {
             cacheControl: '3600',
             upsert: false
           });
           
           if (uploadError) {
             console.error('Error uploading file:', uploadError);
-            toast.error(`Failed to upload ${file.name}`);
+            toast.error(`Failed to upload ${processedFile.name}`);
             continue;
           }
           console.log('Upload successful:', uploadData);
@@ -1063,18 +1107,18 @@ export default function ToolPage() {
           
           const fileAttachment: FileAttachment = {
             id: crypto.randomUUID(),
-            name: file.name,
-            size: file.size,
-            type: file.type,
+            name: processedFile.name,
+            size: processedFile.size,
+            type: processedFile.type,
             url: urlData.publicUrl
           };
           fileAttachments.push(fileAttachment);
 
           // Store file info for webhook (use last file for webhook data)
           fileInfo = {
-            fileName: file.name,
-            fileSize: file.size,
-            fileType: file.type
+            fileName: processedFile.name,
+            fileSize: processedFile.size,
+            fileType: processedFile.type
           };
         }
       }
