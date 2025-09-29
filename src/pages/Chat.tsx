@@ -193,22 +193,36 @@ export default function Chat() {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`
         }, payload => {
+          console.log('[REALTIME-INSERT] New message received:', payload.new);
           const newMessage = payload.new as Message;
 
           // CRITICAL: Double-check message belongs to current chat to prevent leakage
           if (newMessage.chat_id !== chatId) {
+            console.log('[REALTIME-INSERT] Message rejected - wrong chat_id:', newMessage.chat_id, 'expected:', chatId);
             return;
           }
+          
+          console.log('[REALTIME-INSERT] Message accepted:', {
+            id: newMessage.id,
+            role: newMessage.role,
+            content: newMessage.content?.substring(0, 50),
+            hasFileAttachments: !!newMessage.file_attachments,
+            fileAttachmentsCount: newMessage.file_attachments?.length || 0,
+            fileAttachments: newMessage.file_attachments
+          });
+          
           setMessages(prev => {
             // Check if message already exists (by real ID or temp ID) to prevent duplicates
             const existsById = prev.find(msg => msg.id === newMessage.id);
             const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
             );
             if (existsById || existsByContent) {
+              console.log('[REALTIME-INSERT] Message duplicate, skipping');
               return prev;
             }
             // CRITICAL: Filter out any messages not belonging to current chat before adding new message
             const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
+            console.log('[REALTIME-INSERT] Adding message to state');
             return [...filteredPrev, newMessage];
           });
           scrollToBottom();
@@ -757,9 +771,17 @@ export default function Chat() {
           })
         });
         
+        console.log('[IMAGE-GEN] Webhook response status:', webhookResponse.status);
+        console.log('[IMAGE-GEN] Webhook response ok:', webhookResponse.ok);
+        
         if (!webhookResponse.ok) {
+          const errorText = await webhookResponse.text();
+          console.error('[IMAGE-GEN] Webhook error response:', errorText);
           throw new Error(`Webhook request failed: ${webhookResponse.status}`);
         }
+        
+        const webhookData = await webhookResponse.json();
+        console.log('[IMAGE-GEN] Webhook response data:', webhookData);
         
         console.log('[IMAGE-GEN] Webhook called successfully, waiting for response via realtime...');
         toast.success('Generating image... This may take a moment.');
