@@ -82,6 +82,7 @@ interface Message {
   created_at: string;
   file_attachments?: FileAttachment[];
   image_analysis?: ImageAnalysisResult[]; // Store image analysis results
+  model?: string; // Store the model used for assistant messages
 }
 interface FileAttachment {
   id: string;
@@ -355,6 +356,118 @@ export default function Chat() {
       console.log('Conditions not met for auto-trigger');
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
+
+  const regenerateResponse = async (messageId: string) => {
+    if (isGeneratingResponse || loading) {
+      console.log('Skipping regenerate - already in progress');
+      return;
+    }
+
+    // Find the assistant message to regenerate
+    const assistantMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
+    if (!assistantMessage) {
+      console.error('Assistant message not found for regeneration');
+      return;
+    }
+
+    // Find the user message that came before this assistant message
+    const messageIndex = messages.findIndex(msg => msg.id === messageId);
+    let userMessage = '';
+    let userModel = selectedModel; // Default to current selected model
+    
+    // Look backwards to find the previous user message
+    for (let i = messageIndex - 1; i >= 0; i--) {
+      if (messages[i].role === 'user') {
+        userMessage = messages[i].content;
+        break;
+      }
+    }
+
+    // Use the model from the original assistant message if available
+    if (assistantMessage.model) {
+      userModel = assistantMessage.model;
+    }
+
+    if (!userMessage) {
+      console.error('No user message found before assistant message');
+      return;
+    }
+
+    setIsGeneratingResponse(true);
+    try {
+      console.log('Regenerating response for user message:', userMessage, 'with model:', userModel);
+
+      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          type: 'text',
+          message: userMessage,
+          userId: user.id,
+          chatId: chatId,
+          model: userModel
+        })
+      });
+      
+      if (!webhookResponse.ok) {
+        throw new Error(`Webhook request failed: ${webhookResponse.status}`);
+      }
+      
+      const aiResponse = await webhookResponse.json();
+      console.log('Regenerated webhook response:', aiResponse);
+      
+      if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
+        const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
+
+        // Handle image generation responses
+        let fileAttachments: FileAttachment[] = [];
+        if (aiResponse.image_url) {
+          fileAttachments = [{
+            id: crypto.randomUUID(),
+            name: `generated_image_${Date.now()}.png`,
+            size: 0,
+            type: 'image/png',
+            url: aiResponse.image_url
+          }];
+        }
+
+        // Update the existing message instead of creating a new one
+        setMessages(prev => prev.map(msg => 
+          msg.id === messageId 
+            ? { 
+                ...msg, 
+                content: responseContent, 
+                file_attachments: fileAttachments,
+                model: userModel 
+              }
+            : msg
+        ));
+
+        // Update the message in the database
+        const { error: updateError } = await supabase
+          .from('messages')
+          .update({
+            content: responseContent,
+            model: userModel,
+            file_attachments: fileAttachments.length > 0 ? JSON.stringify(fileAttachments) : null
+          })
+          .eq('id', messageId);
+
+        if (updateError) {
+          console.error('Error updating regenerated message:', updateError);
+        }
+
+        scrollToBottom();
+      }
+    } catch (error) {
+      console.error('Error regenerating response:', error);
+    } finally {
+      setIsGeneratingResponse(false);
+    }
+  };
+
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
     console.log('triggerAIResponse called:', {
       userMessage,
@@ -423,7 +536,8 @@ export default function Chat() {
           content: responseContent,
           role: 'assistant',
           created_at: new Date().toISOString(),
-          file_attachments: fileAttachments
+          file_attachments: fileAttachments,
+          model: selectedModel
         };
 
         // Only update UI if user is still viewing the original chat
@@ -448,6 +562,7 @@ export default function Chat() {
           chat_id: originalChatId,
           content: responseContent,
           role: 'assistant',
+          model: selectedModel,
           file_attachments: fileAttachments as any
         });
         if (saveError) {
@@ -2019,15 +2134,21 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  </Button>
                                )}
                                
-                               {/* Refresh button */}
-                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                   <path d="M21 2v6h-6"></path>
-                                   <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
-                                   <path d="M3 22v-6h6"></path>
-                                   <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                                 </svg>
-                               </Button>
+                                {/* Refresh button */}
+                                <Button 
+                                  variant="ghost" 
+                                  size="sm" 
+                                  className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                  onClick={() => regenerateResponse(message.id)}
+                                  disabled={isGeneratingResponse}
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M21 2v6h-6"></path>
+                                    <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                                    <path d="M3 22v-6h6"></path>
+                                    <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                                  </svg>
+                                </Button>
                              </>
                            )}
                         </div>
