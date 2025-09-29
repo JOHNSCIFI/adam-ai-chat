@@ -1891,31 +1891,35 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  </svg>
                                </Button>
                                
-                               {/* Thumbs Up button */}
-                               <Button 
-                                 variant="ghost" 
-                                 size="sm" 
-                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${messageRatings[message.id] === 'like' ? 'bg-green-500/20 text-green-600' : ''}`}
-                                 onClick={() => rateMessage(message.id, 'like')}
-                               >
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'like' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                   <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
-                                   <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
-                                 </svg>
-                               </Button>
+                               {/* Thumbs Up button - hide if disliked */}
+                               {messageRatings[message.id] !== 'dislike' && (
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                   onClick={() => rateMessage(message.id, 'like')}
+                                 >
+                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'like' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                     <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
+                                     <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
+                                   </svg>
+                                 </Button>
+                               )}
                                
-                               {/* Thumbs Down button */}
-                               <Button 
-                                 variant="ghost" 
-                                 size="sm" 
-                                 className={`h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity ${messageRatings[message.id] === 'dislike' ? 'bg-red-500/20 text-red-600' : ''}`}
-                                 onClick={() => rateMessage(message.id, 'dislike')}
-                               >
-                                 <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'dislike' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                   <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
-                                   <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
-                                 </svg>
-                               </Button>
+                               {/* Thumbs Down button - hide if liked */}
+                               {messageRatings[message.id] !== 'like' && (
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                   onClick={() => rateMessage(message.id, 'dislike')}
+                                 >
+                                   <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'dislike' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                     <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
+                                     <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
+                                   </svg>
+                                 </Button>
+                               )}
                                
                                {/* Refresh button */}
                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity">
