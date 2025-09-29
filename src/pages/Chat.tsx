@@ -2028,7 +2028,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </h3>
               </div>
             </div> : <div className="space-y-6">
-              {messages.map(message => <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
+              {messages.map(message => {
+                console.log('[CHAT-RENDER] Rendering message:', {
+                  id: message.id,
+                  role: message.role,
+                  contentPreview: message.content?.substring(0, 50),
+                  hasFileAttachments: !!message.file_attachments,
+                  fileAttachmentsLength: message.file_attachments?.length || 0,
+                  fileAttachments: message.file_attachments
+                });
+                
+                return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
                         <div className={`${message.role === 'user' ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' : 'text-black dark:text-white rounded-2xl bg-transparent border-none'} px-3.5 py-2.5 relative break-words whitespace-pre-wrap`} style={{
@@ -2038,37 +2048,51 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   hyphens: 'auto'
                 }}>
                         
-          {/* File attachments */}
-          {message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-3">
-              {message.file_attachments.map((file, index) => <div key={index}>
-                  {isImageFile(file.type) && file.url ? <div className="space-y-2">
-                      <img src={file.url} alt={file.name || "Image"} className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
-                          url: file.url,
-                          name: file.name
-                        })} onError={e => {
-                          e.currentTarget.style.display = 'none';
-                        }} />
-                      <div className="flex gap-2">
-                        <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadImageFromChat(file.url, file.name)}>
-                          <Download className="h-3 w-3 mr-1" />
-                          Download
-                        </Button>
-                      </div>
-                    </div> : <div className={`flex items-center gap-3 p-3 rounded-xl border ${message.role === 'user' ? 'bg-black/10 border-white/20' : 'bg-accent border-border'}`}>
-                                     <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${message.role === 'user' ? 'bg-white/20' : 'bg-muted'}`}>
-                                       {getFileIcon(file.type)}
-                                     </div>
-                                     <div className="flex-1 min-w-0">
-                                       <p className="text-sm font-medium truncate text-foreground">
-                                         {file.name}
-                                       </p>
-                                       <p className="text-xs text-muted-foreground">
-                                         {formatFileSize(file.size)} • Click to open
-                                       </p>
-                                     </div>
-                                   </div>}
-                               </div>)}
-                           </div>}
+           {/* File attachments */}
+           {message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-3">
+               {message.file_attachments.map((file, index) => {
+                 console.log('[CHAT-RENDER] Rendering file attachment:', {
+                   index,
+                   fileName: file.name,
+                   fileType: file.type,
+                   fileUrl: file.url,
+                   isImage: isImageFile(file.type),
+                   hasUrl: !!file.url
+                 });
+                 
+                 return <div key={index}>
+                   {isImageFile(file.type) && file.url ? <div className="space-y-2">
+                       <img src={file.url} alt={file.name || "Image"} className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
+                           url: file.url,
+                           name: file.name
+                         })} onError={e => {
+                           console.error('[CHAT-RENDER] Image load error:', file.url);
+                           e.currentTarget.style.display = 'none';
+                         }} onLoad={() => {
+                           console.log('[CHAT-RENDER] Image loaded successfully:', file.url);
+                         }} />
+                       <div className="flex gap-2">
+                         <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadImageFromChat(file.url, file.name)}>
+                           <Download className="h-3 w-3 mr-1" />
+                           Download
+                         </Button>
+                       </div>
+                     </div> : <div className={`flex items-center gap-3 p-3 rounded-xl border ${message.role === 'user' ? 'bg-black/10 border-white/20' : 'bg-accent border-border'}`}>
+                                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center flex-shrink-0 ${message.role === 'user' ? 'bg-white/20' : 'bg-muted'}`}>
+                                        {getFileIcon(file.type)}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="text-sm font-medium truncate text-foreground">
+                                          {file.name}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">
+                                          {formatFileSize(file.size)} • Click to open
+                                        </p>
+                                      </div>
+                                    </div>}
+                                </div>;
+               })}
+                            </div>}
                         
                            {message.content && <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
                     wordBreak: 'break-word',
@@ -2257,7 +2281,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </div>
                     </div>
                   </div>
-                </div>)}
+                 </div>;
+               })}
               
               {/* Show image processing indicator when generating images */}
               {chatId && currentImagePrompts.get(chatId) && <div className="flex justify-start">
