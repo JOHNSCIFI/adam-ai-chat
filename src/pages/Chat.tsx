@@ -2842,9 +2842,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   <X className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
                 </Button>
                 
-                <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0 overflow-hidden px-0.5">
+                <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0 overflow-hidden">
                   {/* Real-time audio waveform visualization - fills right to left */}
-                  <div className="flex items-center justify-end gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 min-w-0 bg-muted/30 rounded-full px-1">
+                  <div className="flex items-center justify-end gap-[0.5px] sm:gap-[1px] h-4 sm:h-8 w-full flex-1 bg-muted/30 rounded-full px-0.5 sm:px-1">
                     {audioLevels.map((level, i) => {
                       // Calculate progress: how many bars should be "recorded" (filled)
                       // Assume max 60 seconds recording, scale progress accordingly
