@@ -161,6 +161,7 @@ export type Database = {
           embedding: string | null
           file_attachments: Json | null
           id: string
+          model: string | null
           role: string
           session_id: string | null
         }
@@ -171,6 +172,7 @@ export type Database = {
           embedding?: string | null
           file_attachments?: Json | null
           id?: string
+          model?: string | null
           role: string
           session_id?: string | null
         }
@@ -181,6 +183,7 @@ export type Database = {
           embedding?: string | null
           file_attachments?: Json | null
           id?: string
+          model?: string | null
           role?: string
           session_id?: string | null
         }
