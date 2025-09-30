@@ -1131,20 +1131,7 @@ export default function Chat() {
           }
 
           // Determine file type for webhook
-          let webhookType = 'file';
-          if (file.type.startsWith('image/')) {
-            webhookType = 'analyse_image';
-          } else if (file.type.includes('pdf')) {
-            webhookType = 'pdf';
-          } else if (file.type.includes('document') || file.type.includes('word')) {
-            webhookType = 'document';
-          } else if (file.type.startsWith('audio/')) {
-            webhookType = 'audio';
-          } else if (file.type.startsWith('video/')) {
-            webhookType = 'video';
-          } else if (file.type.startsWith('text/') || file.type.includes('json') || file.type.includes('csv')) {
-            webhookType = 'text';
-          }
+          const webhookType = file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
 
           // Send to webhook for analysis with PNG format
           try {
@@ -1160,7 +1147,7 @@ export default function Chat() {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                type: 'analyse-files',
+                type: webhookType,
                 fileName: finalFileName,
                 fileSize: file.size,
                 fileType: finalFileType, // Send PNG type for images
