@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code } from 'lucide-react';
+import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code, X } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -252,7 +252,7 @@ const Home = () => {
 
       {/* Pricing Section */}
       <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30" aria-labelledby="pricing-heading">
-        <div className="container mx-auto max-w-5xl">
+        <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 id="pricing-heading" className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
               Simple, Transparent Pricing
@@ -263,101 +263,171 @@ const Home = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Biweekly</h3>
-                <div className="text-3xl font-bold mb-1 text-foreground">$14.99 <span className="text-lg font-normal text-muted-foreground">/2 weeks</span></div>
-                <p className="text-muted-foreground">Perfect for regular users</p>
+            {/* Free Plan */}
+            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2 text-foreground">🆓 Free</h3>
+                <div className="text-4xl font-bold mb-2 text-foreground">€0 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
+                <p className="text-muted-foreground text-sm">Get started free, upgrade anytime.</p>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+              
+              <div className="space-y-3 mb-8 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">All AI models & features</span>
+                  <span className="text-foreground text-sm">Access to GPT-4o Mini only</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Unlimited model switching</span>
+                  <span className="text-muted-foreground text-sm">GPT-5, Claude, Gemini, DeepSeek, Grok</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Voice commands</span>
+                  <span className="text-muted-foreground text-sm">Voice mode</span>
                 </div>
-              </div>
-              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Start biweekly plan trial">
-                Start $0.99 Trial
-              </Button>
-            </div>
-            
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Monthly</h3>
-                <div className="text-3xl font-bold mb-1 text-foreground">$24.99 <span className="text-lg font-normal text-muted-foreground">/month</span></div>
-                <p className="text-muted-foreground">Great for professionals</p>
-              </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">All AI models & features</span>
+                  <span className="text-muted-foreground text-sm">Advanced file uploads</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Unlimited model switching</span>
+                  <span className="text-muted-foreground text-sm">Advanced search</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
-                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Priority support</span>
+                  <span className="text-muted-foreground text-sm">Premium features</span>
                 </div>
               </div>
-              <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with monthly plan">
+              
+              <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with free plan">
                 Get Started
               </Button>
             </div>
             
-            <div className="group relative p-8 rounded-lg bg-card border-2 border-primary hover:border-primary/70 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
+            {/* Pro Plan - Most Popular */}
+            <div className="group relative p-8 rounded-lg bg-card border-2 border-primary hover:border-primary/70 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground px-3 py-1 text-sm font-medium">
                   Most Popular
                 </Badge>
               </div>
-              <div className="mb-8">
-                <h3 className="text-xl font-semibold mb-2 text-foreground">Quarterly</h3>
-                <div className="text-3xl font-bold mb-1 text-foreground">$49.99 <span className="text-lg font-normal text-muted-foreground">/3 months</span></div>
-                <p className="text-muted-foreground">Best value for teams</p>
+              
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2 text-foreground">⭐ Pro</h3>
+                <div className="text-4xl font-bold mb-2 text-foreground">€19.99 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
+                <p className="text-muted-foreground text-sm">For professionals</p>
               </div>
-              <div className="space-y-4 mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+              
+              <div className="space-y-3 mb-8 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">All AI models & features</span>
+                  <span className="text-foreground text-sm">Access to all AI models: GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Unlimited model switching</span>
+                  <span className="text-foreground text-sm">Unlimited chats & model switching</span>
                 </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Premium support</span>
+                  <span className="text-foreground text-sm">Voice mode (text-to-speech)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">File uploads (up to 100MB)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Chat with PDFs (full access)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Image generation (~500 / month)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Priority support</span>
                 </div>
               </div>
-              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with quarterly plan">
-                Get Started
+              
+              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Pro plan">
+                Subscribe Now
+              </Button>
+            </div>
+            
+            {/* Ultra Pro Plan */}
+            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="mb-6">
+                <h3 className="text-2xl font-bold mb-2 text-foreground">🚀 Ultra Pro</h3>
+                <div className="text-4xl font-bold mb-2 text-foreground">€39.99 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
+                <p className="text-muted-foreground text-sm">For teams & power users</p>
+              </div>
+              
+              <div className="space-y-3 mb-8 flex-1">
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Everything in Pro</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Extended file & message limits</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Premium 24/7 support</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Image generation (~2,000 / month)</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Team collaboration features</span>
+                </div>
+                <div className="flex items-start gap-3">
+                  <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
+                  </div>
+                  <span className="text-foreground text-sm">Early access to new models</span>
+                </div>
+              </div>
+              
+              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Ultra Pro plan">
+                Subscribe Now
               </Button>
             </div>
           </div>
