@@ -777,14 +777,8 @@ export default function Index() {
                   <span className="text-sm font-medium">{suggestion.label}</span>
                 </Button>)}
               
-              {/* Show "See More" button on mobile */}
-              {!showMoreButtons && <Button onClick={() => handleSuggestionClick('see-more')} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap" aria-label="Show more suggestions" aria-expanded={showMoreButtons}>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-sm font-medium">See More</span>
-                </Button>}
-              
-              {/* Additional buttons when "See More" is clicked - mobile */}
-              {showMoreButtons && additionalButtons.map((button, index) => <Button key={`mobile-${index}`} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap" aria-label={`${button.label} suggestion`}>
+              {/* Additional buttons - mobile */}
+              {additionalButtons.map((button, index) => <Button key={`mobile-${index}`} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap" aria-label={`${button.label} suggestion`}>
                     <button.icon className="h-3.5 w-3.5 mr-1.5" />
                     <span className="text-sm font-medium">{button.label}</span>
                   </Button>)}
@@ -799,20 +793,12 @@ export default function Index() {
                   <span className="text-sm font-medium">{suggestion.label}</span>
                 </Button>)}
               
-              {/* Show "See More" button only when additional buttons are not shown */}
-              {!showMoreButtons && <Button onClick={() => handleSuggestionClick('see-more')} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary" aria-label="Show more suggestions" aria-expanded={showMoreButtons}>
-                  <Plus className="h-3.5 w-3.5 mr-1.5" />
-                  <span className="text-sm font-medium">See More</span>
-                </Button>}
+              {/* Additional buttons - desktop */}
+              {additionalButtons.map((button, index) => <Button key={index} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary" aria-label={`${button.label} suggestion`}>
+                  <button.icon className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-sm font-medium">{button.label}</span>
+                </Button>)}
             </div>
-            
-            {/* Additional buttons when "See More" is clicked - desktop */}
-            {showMoreButtons && <div className="flex flex-wrap gap-2 justify-center mt-2" role="group" aria-label="Additional suggestions">
-                {additionalButtons.map((button, index) => <Button key={index} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary" aria-label={`${button.label} suggestion`}>
-                    <button.icon className="h-3.5 w-3.5 mr-1.5" />
-                    <span className="text-sm font-medium">{button.label}</span>
-                  </Button>)}
-              </div>}
           </div>
         </div>}
 
