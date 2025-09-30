@@ -497,7 +497,7 @@ export default function Chat() {
       }
 
       // Determine request type based on attachments
-      const requestType = validAttachments.length > 0 ? 'analyze_image' : 'text';
+      const requestType = validAttachments.length > 0 ? 'analyse_image' : 'text';
       console.log('[REGENERATE] Request type:', requestType);
 
       const payload = {
