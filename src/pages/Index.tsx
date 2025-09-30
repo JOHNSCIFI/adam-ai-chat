@@ -782,7 +782,7 @@ export default function Index() {
                   block: 'center'
                 });
               }
-            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
+            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[48px] sm:min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
           
           {/* Recording UI - replaces buttons when recording */}
           {isRecording ? (
