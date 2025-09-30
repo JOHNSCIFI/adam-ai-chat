@@ -353,45 +353,30 @@ export default function Chat() {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    // Allow processing if there are files OR message (or both)
-    if ((initialFiles && initialFiles.length > 0 || initialMessage) && chatId && !hasProcessedInitialFiles.current) {
-      console.log('[INITIAL-FILES] Processing from home page:', { initialFiles, initialMessage });
+    if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
+      console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
       hasProcessedInitialFiles.current = true;
       shouldAutoSend.current = true;
       
       // Set the message and files
-      if (initialMessage) setInput(initialMessage);
-      if (initialFiles && initialFiles.length > 0) setSelectedFiles(initialFiles);
+      setInput(initialMessage);
+      setSelectedFiles(initialFiles);
       
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
   }, [chatId, location.state]);
 
-  // Auto-send when input and/or files are ready after being set from navigation
+  // Auto-send when input and files are ready after being set from navigation
   useEffect(() => {
-    // Allow auto-send if we have either message OR files (or both)
-    console.log('[INITIAL-AUTO-SEND] Checking conditions:', {
-      shouldAutoSend: shouldAutoSend.current,
-      hasInput: !!input,
-      filesCount: selectedFiles.length,
-      loading,
-      chatId
-    });
-    
-    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
-      console.log('[INITIAL-AUTO-SEND] Conditions met, will auto-send with:', { 
-        input, 
-        filesCount: selectedFiles.length,
-        files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
-      });
+    if (shouldAutoSend.current && input && selectedFiles.length > 0 && !loading && chatId) {
+      console.log('[INITIAL-FILES] Auto-sending message with files');
       shouldAutoSend.current = false;
       
       // Trigger send after a small delay to ensure UI is ready
       setTimeout(() => {
-        console.log('[INITIAL-AUTO-SEND] Calling sendMessage now');
         sendMessage();
-      }, 300);
+      }, 500);
     }
   }, [input, selectedFiles, loading, chatId]);
 
@@ -877,19 +862,7 @@ export default function Chat() {
   };
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    
-    console.log('[SEND-MESSAGE] Called with:', { 
-      hasInput: !!input.trim(), 
-      filesCount: selectedFiles.length,
-      files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })),
-      chatId,
-      loading
-    });
-    
-    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) {
-      console.log('[SEND-MESSAGE] Validation failed, returning');
-      return;
-    }
+    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) return;
 
     // Check if user is authenticated, show auth modal if not
     if (!user) {
@@ -897,17 +870,9 @@ export default function Chat() {
       setShowAuthModal(true);
       return;
     }
-    
-    console.log('[SEND-MESSAGE] Starting send process...');
     setLoading(true);
-    const userMessage = input.trim() || ''; // Allow empty message if files are present
+    const userMessage = input.trim();
     const files = [...selectedFiles];
-    
-    console.log('[SEND-MESSAGE] Processing:', { 
-      userMessage: userMessage || '(empty)', 
-      filesCount: files.length 
-    });
-    
     setInput('');
     setSelectedFiles([]);
     
@@ -921,20 +886,6 @@ export default function Chat() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-    
-    // Create user message and add to UI immediately (before processing files)
-    const newUserMessage: Message = {
-      id: `temp-${Date.now()}`,
-      chat_id: chatId!,
-      content: userMessage,
-      role: 'user',
-      created_at: new Date().toISOString(),
-      file_attachments: []
-    };
-    
-    // Add to UI immediately so user sees their message right away
-    setMessages(prev => [...prev, newUserMessage]);
-    scrollToBottom();
     
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
@@ -975,7 +926,20 @@ export default function Chat() {
           console.log('[IMAGE-GEN] Chat exists, proceeding...');
         }
         
-        // Save user message to database (reusing newUserMessage already shown in UI)
+        // Create user message
+        const newUserMessage: Message = {
+          id: `temp-${Date.now()}`,
+          chat_id: chatId!,
+          content: userMessage,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          file_attachments: []
+        };
+        
+        setMessages(prev => [...prev, newUserMessage]);
+        scrollToBottom();
+        
+        // Save user message to database
         const { data: insertedMessage, error: userError } = await supabase
           .from('messages')
           .insert({
@@ -1254,16 +1218,19 @@ export default function Chat() {
         }
       }
 
-      // Update the user message with file attachments after processing
-      if (tempFileAttachments.length > 0) {
-        setMessages(prev => prev.map(msg => 
-          msg.id === newUserMessage.id 
-            ? { ...msg, file_attachments: tempFileAttachments }
-            : msg
-        ));
-        // Update the local reference
-        newUserMessage.file_attachments = tempFileAttachments;
-      }
+      // Create clean user message with uploaded image URLs
+      const newUserMessage: Message = {
+        id: `temp-${Date.now()}`,
+        chat_id: chatId!,
+        content: userMessage,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        file_attachments: tempFileAttachments
+      };
+
+      // Add to UI immediately
+      setMessages(prev => [...prev, newUserMessage]);
+      scrollToBottom();
 
       // Start embedding generation in background (for user message content)
       const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
