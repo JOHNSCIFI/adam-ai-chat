@@ -23,6 +23,7 @@ import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import geminiLogo from '@/assets/gemini-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -56,6 +57,12 @@ const models = [{
   shortLabel: 'Gemini 2.5',
   description: "Fast Google AI model",
   type: 'free'
+}, {
+  id: 'deepseekv3',
+  name: 'DeepSeek V3',
+  shortLabel: 'DeepSeek V3',
+  description: "Advanced reasoning model",
+  type: 'pro'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -94,6 +101,12 @@ const availableModels = [{
   shortLabel: 'Gemini 2.5',
   description: 'Fast Google AI model with multimodal capabilities.',
   icon: 'gemini'
+}, {
+  id: 'deepseekv3',
+  name: 'DeepSeek V3',
+  shortLabel: 'DeepSeek V3',
+  description: 'Advanced reasoning model with strong performance.',
+  icon: 'deepseek'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -140,6 +153,8 @@ export default function Chat() {
         return claudeLogo;
       case 'gemini':
         return geminiLogo;
+      case 'deepseek':
+        return deepseekLogo;
       default:
         return chatgptLogoSrc;
     }
