@@ -456,46 +456,73 @@ const Home = () => {
               <Accordion type="single" collapsible className="space-y-4">
                 <AccordionItem value="item-1" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
-                    Is it free to use?
+                    What can I do with this AI?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    We offer a free trial to get you started. After that, you can choose from our flexible subscription plans starting at $14.99 biweekly.
+                    You can chat, create images, write texts, learn new things, and even get coding help — all in one place.
                   </AccordionContent>
                 </AccordionItem>
                 
                 <AccordionItem value="item-2" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
-                    Which AI models are available?
+                    Is it easy to use?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    You get access to all premium AI models including GPT-4, GPT-5, Claude, Gemini, DeepSeek, and more. Switch between models instantly based on your needs.
+                    Yes. Just start typing or speaking — no setup needed.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-3" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
-                    Can I cancel anytime?
+                    Can it help me study or learn?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    Yes, you can cancel your subscription at any time. No long-term contracts or cancellation fees.
+                    Absolutely. The AI can explain topics, summarize notes, and answer your questions like a study buddy.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-4" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
-                    Is my data secure?
+                    Can I create images with it?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    Absolutely. We use enterprise-grade security measures to protect your data. Your conversations are encrypted and never used to train AI models.
+                    Yes. You can generate unique images instantly from your ideas.
                   </AccordionContent>
                 </AccordionItem>
 
                 <AccordionItem value="item-5" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
                   <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
-                    Do you offer refunds?
+                    Does it work in different languages?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    Yes, we offer a 30-day money-back guarantee. If you're not satisfied, contact our support team for a full refund.
+                    Yes. You can chat naturally in 50+ languages.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-6" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
+                  <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
+                    Can it help with writing?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                    Yes. From short messages to full articles, the AI helps you write faster and better.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-7" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
+                  <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
+                    Can I talk to it with my voice?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                    Yes. You can use voice commands for hands-free conversations.
+                  </AccordionContent>
+                </AccordionItem>
+
+                <AccordionItem value="item-8" className="border rounded-xl px-6 hover:border-primary/30 transition-colors">
+                  <AccordionTrigger className="text-left hover:no-underline text-lg font-semibold">
+                    Is it good for fun too?
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground text-base leading-relaxed">
+                    Definitely. Chat casually, ask for jokes, or just have fun conversations.
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>
