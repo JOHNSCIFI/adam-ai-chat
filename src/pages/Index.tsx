@@ -213,11 +213,16 @@ export default function Index() {
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [showMoreButtons, setShowMoreButtons] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const {
     isMobile
   } = useSidebar();
@@ -311,48 +316,120 @@ export default function Index() {
       setShowMoreButtons(false);
     }
   };
-  const startRecording = () => {
+  const startRecording = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true; // Keep listening until manually stopped
-    recognition.interimResults = true; // Get results as user speaks
     
-    recognition.onresult = (event: any) => {
-      let transcript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+    try {
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      
+      // Set up audio context and analyzer
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      
+      // Start speech recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setMessage(transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            return;
+          }
+        };
+        
+        recognition.onend = () => {
+          if (recognitionRef.current) {
+            setIsRecording(false);
+          }
+        };
+        
+        recognitionRef.current = recognition;
+        recognition.start();
       }
-      setMessage(transcript);
-    };
-    
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Don't stop on these errors, just log them
-        return;
-      }
-      setIsRecording(false);
-    };
-    
-    // Only stop if explicitly called via stopRecording
-    recognition.onend = () => {
-      if (recognitionRef.current) {
-        setIsRecording(false);
-      }
-    };
-    
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+      
+      setIsRecording(true);
+      
+      // Animate waveform based on audio levels
+      const updateWaveform = () => {
+        if (!analyserRef.current) return;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Map audio data to 100 bars
+        const bars = 100;
+        const step = Math.floor(bufferLength / bars);
+        const newLevels = [];
+        
+        for (let i = 0; i < bars; i++) {
+          const index = i * step;
+          const value = dataArray[index] || 0;
+          // Normalize to 0-1 range and apply smoothing
+          newLevels.push(value / 255);
+        }
+        
+        setAudioLevels(newLevels);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
+      };
+      
+      updateWaveform();
+      
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Unable to access microphone');
+    }
   };
+  
   const stopRecording = () => {
+    // Stop speech recognition
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
     setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
   };
   const handleStartChat = async () => {
     // Allow sending if there's a message OR files
@@ -653,39 +730,36 @@ export default function Index() {
                   block: 'center'
                 });
               }
-            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
+            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
           
           {/* Recording UI - replaces buttons when recording */}
           {isRecording ? (
-            <div className="flex items-center gap-2 py-2 px-1 mb-3">
+            <div className="flex items-center gap-2 py-3 px-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-7 w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                className="h-8 w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
                 onClick={stopRecording}
                 aria-label="Cancel recording"
               >
                 <X className="h-4 w-4" />
               </Button>
               
-              <div className="flex-1 flex items-center justify-center gap-2">
-                {/* Realistic waveform animation */}
-                <div className="flex items-center justify-center gap-[1px] h-6">
-                  {[...Array(80)].map((_, i) => {
-                    // Create a more realistic waveform pattern
-                    const position = i / 80;
-                    const wave1 = Math.sin(position * Math.PI * 4) * 0.5 + 0.5;
-                    const wave2 = Math.sin(position * Math.PI * 8) * 0.3;
-                    const baseHeight = (wave1 + wave2) * 20 + 4;
+              <div className="flex-1 flex items-center justify-center gap-3">
+                {/* Real-time audio waveform visualization */}
+                <div className="flex items-center justify-center gap-[2px] h-8 flex-1 max-w-[600px]">
+                  {audioLevels.map((level, i) => {
+                    // Calculate height based on audio level
+                    const minHeight = 2;
+                    const maxHeight = 32;
+                    const height = minHeight + (level * (maxHeight - minHeight));
                     
                     return (
                       <div
                         key={i}
-                        className="w-[1px] bg-foreground/90 rounded-full"
+                        className="w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
                         style={{
-                          height: `${baseHeight}px`,
-                          animation: `waveform ${0.8 + (i % 10) * 0.05}s ease-in-out infinite`,
-                          animationDelay: `${i * 0.015}s`
+                          height: `${height}px`,
                         }}
                       />
                     );
@@ -693,18 +767,18 @@ export default function Index() {
                 </div>
                 
                 {/* Timer */}
-                <span className="text-sm font-medium tabular-nums text-foreground">
+                <span className="text-sm font-medium tabular-nums text-foreground flex-shrink-0">
                   {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
                 </span>
               </div>
               
               <Button
                 size="sm"
-                className="h-7 w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
                 onClick={stopRecording}
                 aria-label="Send recording"
               >
-                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </Button>
