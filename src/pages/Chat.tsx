@@ -2831,7 +2831,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             {/* Recording UI - appears below textarea when recording */}
             {isRecording && (
-              <div className="flex items-center gap-0.5 sm:gap-1 py-1 sm:py-2 px-0">
+              <div className="flex items-center gap-0.5 sm:gap-2 py-1 sm:py-2 px-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -2842,36 +2842,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   <X className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
                 </Button>
                 
-                <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0 overflow-hidden">
-                  {/* Real-time audio waveform visualization - fills right to left */}
-                  <div className="flex items-center justify-end gap-[0.5px] sm:gap-[1px] h-4 sm:h-8 w-full flex-1 bg-muted/30 rounded-full px-0.5 sm:px-1">
+                <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-2 min-w-0 overflow-hidden">
+                  {/* Real-time audio waveform visualization - mobile optimized */}
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
                     {audioLevels.map((level, i) => {
-                      // Calculate progress: how many bars should be "recorded" (filled)
-                      // Assume max 60 seconds recording, scale progress accordingly
-                      const maxDuration = 60; // seconds
-                      const progress = Math.min(recordingDuration / maxDuration, 1);
-                      const totalBars = audioLevels.length;
-                      const recordedBars = Math.floor(progress * totalBars);
-                      
-                      // Check if this bar is in the "recorded" section (from right side)
-                      const isRecorded = i >= (totalBars - recordedBars);
-                      
                       // Calculate height based on audio level
                       const minHeight = 2;
                       const maxHeight = isMobile ? 16 : 32;
-                      
-                      // If recorded: show actual audio level in dark color
-                      // If not recorded: show minimal height in light gray
-                      const height = isRecorded 
-                        ? minHeight + (level * (maxHeight - minHeight))
-                        : minHeight;
+                      const height = minHeight + (level * (maxHeight - minHeight));
                       
                       return (
                         <div
                           key={i}
-                          className={`w-[0.5px] sm:w-[2px] rounded-full transition-all duration-75 ease-out ${
-                            isRecorded ? 'bg-foreground' : 'bg-muted-foreground/20'
-                          }`}
+                          className="w-[0.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
                           style={{
                             height: `${height}px`,
                           }}
