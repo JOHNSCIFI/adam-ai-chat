@@ -315,8 +315,33 @@ export default function Index() {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (!SpeechRecognition) return;
     const recognition = new SpeechRecognition();
-    recognition.onresult = (event: any) => setMessage(prev => prev + event.results[0][0].transcript);
-    recognition.onend = () => setIsRecording(false);
+    recognition.continuous = true; // Keep listening until manually stopped
+    recognition.interimResults = true; // Get results as user speaks
+    
+    recognition.onresult = (event: any) => {
+      let transcript = '';
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setMessage(transcript);
+    };
+    
+    recognition.onerror = (event: any) => {
+      console.error('Speech recognition error:', event.error);
+      if (event.error === 'no-speech' || event.error === 'audio-capture') {
+        // Don't stop on these errors, just log them
+        return;
+      }
+      setIsRecording(false);
+    };
+    
+    // Only stop if explicitly called via stopRecording
+    recognition.onend = () => {
+      if (recognitionRef.current) {
+        setIsRecording(false);
+      }
+    };
+    
     recognitionRef.current = recognition;
     recognition.start();
     setIsRecording(true);
