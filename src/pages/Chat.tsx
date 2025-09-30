@@ -345,6 +345,12 @@ export default function Chat() {
       return;
     }
 
+    // Check if user is authenticated
+    if (!user) {
+      toast.error('Please sign in to regenerate responses');
+      return;
+    }
+
     // Find the assistant message to regenerate
     const assistantMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
     if (!assistantMessage) {
@@ -457,7 +463,7 @@ export default function Chat() {
       }
 
       // Determine request type based on attachments
-      const requestType = validAttachments.length > 0 ? 'analyse_image' : 'text';
+      const requestType = validAttachments.length > 0 ? 'analyse-files' : 'text';
       console.log('[REGENERATE] Request type:', requestType);
 
       // Build payload - if there's an image, send it directly in the body, not as fileAttachments array
