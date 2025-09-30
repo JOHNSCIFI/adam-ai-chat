@@ -682,7 +682,7 @@ export default function Chat() {
         const assistantMessage: Message = {
           id: crypto.randomUUID(),
           chat_id: originalChatId,
-          content: responseContent,
+          content: aiResponse.image_url ? '' : responseContent, // Don't show text for image generation
           role: 'assistant',
           created_at: new Date().toISOString(),
           file_attachments: fileAttachments,
