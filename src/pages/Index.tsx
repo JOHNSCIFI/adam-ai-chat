@@ -19,6 +19,7 @@ import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 
 import claudeLogo from '@/assets/claude-logo.png';
+import geminiLogo from '@/assets/gemini-logo.png';
 
 
 const models = [{
@@ -45,6 +46,12 @@ const models = [{
   shortLabel: 'Sonnet 4',
   description: "Great for writing",
   type: 'pro'
+}, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: "Fast Google AI model",
+  type: 'free'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -107,6 +114,12 @@ const availableModels = [{
   description: 'Great for writing',
   icon: 'claude'
 }, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: 'Fast Google AI model with multimodal capabilities.',
+  icon: 'gemini'
+}, {
   id: 'generate-image',
   name: 'Generate Image',
   shortLabel: 'Generate Image',
@@ -152,6 +165,8 @@ export default function Index() {
         return chatgptLogoSrc;
       case 'claude':
         return claudeLogo;
+      case 'gemini':
+        return geminiLogo;
       default:
         return chatgptLogoSrc;
     }
