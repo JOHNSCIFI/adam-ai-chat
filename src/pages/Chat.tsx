@@ -17,6 +17,7 @@ import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
+
 import AuthModal from '@/components/AuthModal';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -74,23 +75,13 @@ interface FileAttachment {
 }
 import { ImageEditModal } from '@/components/ImageEditModal';
 export default function Chat() {
-  const {
-    chatId
-  } = useParams();
+  const { chatId } = useParams();
   const location = useLocation();
-  const {
-    user,
-    userProfile
-  } = useAuth();
-  const {
-    actualTheme
-  } = useTheme();
+  const { user, userProfile } = useAuth();
+  const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
-  const {
-    state: sidebarState,
-    isMobile
-  } = useSidebar();
-
+  const { state: sidebarState, isMobile } = useSidebar();
+  
   // Choose the appropriate ChatGPT logo based on theme
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
   const collapsed = sidebarState === 'collapsed';
@@ -138,9 +129,7 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [messageRatings, setMessageRatings] = useState<{
-    [key: string]: 'like' | 'dislike';
-  }>({});
+  const [messageRatings, setMessageRatings] = useState<{[key: string]: 'like' | 'dislike'}>({});
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -195,62 +184,72 @@ export default function Chat() {
       window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
 
       // Set up real-time subscription for new messages  
-      const subscription = supabase.channel(`messages-${chatId}`).on('postgres_changes', {
-        event: 'INSERT',
-        schema: 'public',
-        table: 'messages',
-        filter: `chat_id=eq.${chatId}`
-      }, payload => {
-        console.log('[REALTIME-INSERT] New message received:', payload.new);
-        const newMessage = payload.new as Message;
+      const subscription = supabase.channel(`messages-${chatId}`)
+        .on('postgres_changes', {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          console.log('[REALTIME-INSERT] New message received:', payload.new);
+          const newMessage = payload.new as Message;
 
-        // CRITICAL: Double-check message belongs to current chat to prevent leakage
-        if (newMessage.chat_id !== chatId) {
-          console.log('[REALTIME-INSERT] Message rejected - wrong chat_id:', newMessage.chat_id, 'expected:', chatId);
-          return;
-        }
-        console.log('[REALTIME-INSERT] Message accepted:', {
-          id: newMessage.id,
-          role: newMessage.role,
-          content: newMessage.content?.substring(0, 50),
-          hasFileAttachments: !!newMessage.file_attachments,
-          fileAttachmentsCount: newMessage.file_attachments?.length || 0,
-          fileAttachments: newMessage.file_attachments
-        });
-        setMessages(prev => {
-          // Check if message already exists (by real ID or temp ID) to prevent duplicates
-          const existsById = prev.find(msg => msg.id === newMessage.id);
-          const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
-          );
-          if (existsById || existsByContent) {
-            console.log('[REALTIME-INSERT] Message duplicate, skipping');
-            return prev;
+          // CRITICAL: Double-check message belongs to current chat to prevent leakage
+          if (newMessage.chat_id !== chatId) {
+            console.log('[REALTIME-INSERT] Message rejected - wrong chat_id:', newMessage.chat_id, 'expected:', chatId);
+            return;
           }
-          // CRITICAL: Filter out any messages not belonging to current chat before adding new message
-          const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
-          console.log('[REALTIME-INSERT] Adding message to state');
-          return [...filteredPrev, newMessage];
-        });
-        scrollToBottom();
-      }).on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'messages',
-        filter: `chat_id=eq.${chatId}`
-      }, payload => {
-        const updatedMessage = payload.new as Message;
+          
+          console.log('[REALTIME-INSERT] Message accepted:', {
+            id: newMessage.id,
+            role: newMessage.role,
+            content: newMessage.content?.substring(0, 50),
+            hasFileAttachments: !!newMessage.file_attachments,
+            fileAttachmentsCount: newMessage.file_attachments?.length || 0,
+            fileAttachments: newMessage.file_attachments
+          });
+          
+          setMessages(prev => {
+            // Check if message already exists (by real ID or temp ID) to prevent duplicates
+            const existsById = prev.find(msg => msg.id === newMessage.id);
+            const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
+            );
+            if (existsById || existsByContent) {
+              console.log('[REALTIME-INSERT] Message duplicate, skipping');
+              return prev;
+            }
+            // CRITICAL: Filter out any messages not belonging to current chat before adding new message
+            const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
+            console.log('[REALTIME-INSERT] Adding message to state');
+            return [...filteredPrev, newMessage];
+          });
+          scrollToBottom();
+        })
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          const updatedMessage = payload.new as Message;
 
-        // CRITICAL: Double-check message belongs to current chat
-        if (updatedMessage.chat_id !== chatId) {
-          return;
-        }
-        setMessages(prev => prev.map(msg => msg.id === updatedMessage.id ? {
-          ...msg,
-          content: updatedMessage.content,
-          file_attachments: updatedMessage.file_attachments as any || []
-        } : msg));
-        scrollToBottom();
-      }).subscribe();
+          // CRITICAL: Double-check message belongs to current chat
+          if (updatedMessage.chat_id !== chatId) {
+            return;
+          }
+
+          setMessages(prev => prev.map(msg => 
+            msg.id === updatedMessage.id 
+              ? { 
+                  ...msg, 
+                  content: updatedMessage.content,
+                  file_attachments: updatedMessage.file_attachments as any || []
+                }
+              : msg
+          ));
+          scrollToBottom();
+        })
+        .subscribe();
 
       // SINGLE cleanup function that handles both event listener AND subscription
       return () => {
@@ -259,6 +258,7 @@ export default function Chat() {
       };
     }
   }, [chatId, user]);
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
@@ -303,6 +303,7 @@ export default function Chat() {
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
+
           // Add to processed messages for this specific chat
           if (!processedUserMessages.current.has(chatId)) {
             processedUserMessages.current.set(chatId, new Set());
@@ -321,23 +322,21 @@ export default function Chat() {
   // Handle initial files and message from navigation (from home page)
   const hasProcessedInitialData = useRef(false);
   const shouldAutoSend = useRef(false);
+  
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
-
+    
     // Handle message with or without files
-    if ((initialMessage || initialFiles && initialFiles.length > 0) && chatId && !hasProcessedInitialData.current) {
-      console.log('[INITIAL-DATA] Processing from home page:', {
-        initialFiles,
-        initialMessage
-      });
+    if ((initialMessage || (initialFiles && initialFiles.length > 0)) && chatId && !hasProcessedInitialData.current) {
+      console.log('[INITIAL-DATA] Processing from home page:', { initialFiles, initialMessage });
       hasProcessedInitialData.current = true;
       shouldAutoSend.current = true;
-
+      
       // Set the message and files
       setInput(initialMessage || '');
       setSelectedFiles(initialFiles || []);
-
+      
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
@@ -348,13 +347,14 @@ export default function Chat() {
     if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
       console.log('[INITIAL-DATA] Auto-sending message');
       shouldAutoSend.current = false;
-
+      
       // Trigger send after a small delay to ensure UI is ready
       setTimeout(() => {
         sendMessage();
       }, 500);
     }
   }, [input, selectedFiles, loading, chatId]);
+
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
       return;
@@ -377,7 +377,7 @@ export default function Chat() {
     let userMessage = '';
     let userMessageAttachments: FileAttachment[] = [];
     let userModel = selectedModel; // Default to current selected model
-
+    
     // Look backwards to find the previous user message
     for (let i = messageIndex - 1; i >= 0; i--) {
       if (messages[i].role === 'user') {
@@ -397,89 +397,102 @@ export default function Chat() {
       console.log('[REGENERATE] No message or attachments to regenerate');
       return;
     }
+
     console.log('[REGENERATE] User message:', userMessage || '(empty)');
     console.log('[REGENERATE] Attachments count:', userMessageAttachments.length);
+
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
     try {
       console.log('[REGENERATE] Starting regeneration with attachments:', userMessageAttachments);
 
       // Convert file URLs to base64 for webhook
-      const fileAttachmentsForWebhook = await Promise.all(userMessageAttachments.map(async file => {
-        try {
-          if (file.type.startsWith('image/')) {
-            console.log('[REGENERATE] Converting image to base64:', file.url);
+      const fileAttachmentsForWebhook = await Promise.all(
+        userMessageAttachments.map(async (file) => {
+          try {
+            if (file.type.startsWith('image/')) {
+              console.log('[REGENERATE] Converting image to base64:', file.url);
+              
+              // Fetch the image
+              const response = await fetch(file.url);
+              if (!response.ok) {
+                console.error('[REGENERATE] Failed to fetch image:', response.status);
+                return null;
+              }
+              
+              const blob = await response.blob();
+              console.log('[REGENERATE] Image fetched, blob size:', blob.size);
+              
+              // Convert to PNG using canvas
+              const img = new Image();
+              const imgUrl = URL.createObjectURL(blob);
+              
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = imgUrl;
+              });
+              
+              console.log('[REGENERATE] Image loaded, dimensions:', img.width, 'x', img.height);
 
-            // Fetch the image
-            const response = await fetch(file.url);
-            if (!response.ok) {
-              console.error('[REGENERATE] Failed to fetch image:', response.status);
-              return null;
-            }
-            const blob = await response.blob();
-            console.log('[REGENERATE] Image fetched, blob size:', blob.size);
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx?.drawImage(img, 0, 0);
+              URL.revokeObjectURL(imgUrl);
 
-            // Convert to PNG using canvas
-            const img = new Image();
-            const imgUrl = URL.createObjectURL(blob);
-            await new Promise((resolve, reject) => {
-              img.onload = resolve;
-              img.onerror = reject;
-              img.src = imgUrl;
-            });
-            console.log('[REGENERATE] Image loaded, dimensions:', img.width, 'x', img.height);
-            const canvas = document.createElement('canvas');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            const ctx = canvas.getContext('2d');
-            ctx?.drawImage(img, 0, 0);
-            URL.revokeObjectURL(imgUrl);
-
-            // Convert to PNG base64
-            const base64 = canvas.toDataURL('image/png').split(',')[1];
-            console.log('[REGENERATE] Converted to base64, length:', base64.length);
-            return {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: 'image/png',
-              fileData: base64,
-              isImage: true
-            };
-          } else {
-            // Handle non-image files (PDF, CSV, XML, etc.)
-            console.log('[REGENERATE] Processing non-image file:', file.type);
-            const response = await fetch(file.url);
-            if (!response.ok) {
-              console.error('[REGENERATE] Failed to fetch file:', response.status);
-              return null;
-            }
-            const blob = await response.blob();
-            const base64 = await new Promise<string>((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => {
-                const result = reader.result as string;
-                resolve(result.split(',')[1]);
+              // Convert to PNG base64
+              const base64 = canvas.toDataURL('image/png').split(',')[1];
+              console.log('[REGENERATE] Converted to base64, length:', base64.length);
+              
+              return {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: 'image/png',
+                fileData: base64,
+                isImage: true
               };
-              reader.onerror = reject;
-              reader.readAsDataURL(blob);
-            });
-            return {
-              fileName: file.name,
-              fileSize: file.size,
-              fileType: file.type,
-              fileData: base64,
-              isImage: false
-            };
+            } else {
+              // Handle non-image files (PDF, CSV, XML, etc.)
+              console.log('[REGENERATE] Processing non-image file:', file.type);
+              
+              const response = await fetch(file.url);
+              if (!response.ok) {
+                console.error('[REGENERATE] Failed to fetch file:', response.status);
+                return null;
+              }
+              
+              const blob = await response.blob();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const result = reader.result as string;
+                  resolve(result.split(',')[1]);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
+              });
+              
+              return {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                fileData: base64,
+                isImage: false
+              };
+            }
+          } catch (error) {
+            console.error('[REGENERATE] Error processing file:', error);
+            return null;
           }
-        } catch (error) {
-          console.error('[REGENERATE] Error processing file:', error);
-          return null;
-        }
-      }));
+        })
+      );
 
       // Filter out null values
       const validAttachments = fileAttachmentsForWebhook.filter(f => f !== null);
       console.log('[REGENERATE] Valid attachments after conversion:', validAttachments.length);
+      
       if (validAttachments.length > 0) {
         console.log('[REGENERATE] First attachment format check:', {
           hasFileName: 'fileName' in validAttachments[0],
@@ -504,6 +517,7 @@ export default function Chat() {
         chatId: chatId,
         model: userModel
       };
+
       if (validAttachments.length > 0) {
         // Send first attachment directly in body
         const firstAttachment = validAttachments[0];
@@ -512,7 +526,9 @@ export default function Chat() {
         payload.fileType = firstAttachment.fileType;
         payload.fileData = firstAttachment.fileData;
       }
+      
       console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
+
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
@@ -520,11 +536,14 @@ export default function Chat() {
         },
         body: JSON.stringify(payload)
       });
+      
       if (!webhookResponse.ok) {
         throw new Error(`Webhook request failed: ${webhookResponse.status}`);
       }
+      
       const aiResponse = await webhookResponse.json();
       console.log('Regenerated webhook response:', aiResponse);
+      
       if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
         const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
 
@@ -542,25 +561,33 @@ export default function Chat() {
 
         // Update the existing message in the database
         console.log(`[REGENERATE] Updating message ${messageId} in database`);
-        const {
-          data: updatedData,
-          error: updateError
-        } = await supabase.from('messages').update({
-          content: responseContent,
-          file_attachments: fileAttachments.length > 0 ? fileAttachments as any : null
-        }).eq('id', messageId).select().single();
+        const { data: updatedData, error: updateError } = await supabase
+          .from('messages')
+          .update({
+            content: responseContent,
+            file_attachments: fileAttachments.length > 0 ? fileAttachments as any : null
+          })
+          .eq('id', messageId)
+          .select()
+          .single();
+
         if (updateError) {
           console.error('[REGENERATE] Error updating regenerated message:', updateError);
         } else {
           console.log(`[REGENERATE] Successfully updated message in database:`, updatedData);
-
+          
           // Update the local state with the same message ID
-          setMessages(prev => prev.map(msg => msg.id === messageId ? {
-            ...msg,
-            content: responseContent,
-            file_attachments: fileAttachments
-          } : msg));
+          setMessages(prev => prev.map(msg => 
+            msg.id === messageId 
+              ? { 
+                  ...msg,
+                  content: responseContent,
+                  file_attachments: fileAttachments
+                }
+              : msg
+          ));
         }
+
         scrollToBottom();
       }
     } catch (error) {
@@ -570,6 +597,7 @@ export default function Chat() {
       setRegeneratingMessageId(null);
     }
   };
+
   const triggerAIResponse = async (userMessage: string, userMessageId: string) => {
     if (isGeneratingResponse || loading) {
       return;
@@ -595,26 +623,25 @@ export default function Chat() {
           model: selectedModel
         })
       });
+      
       if (!webhookResponse.ok) {
         throw new Error(`Webhook request failed: ${webhookResponse.status}`);
       }
+      
       const aiResponse = await webhookResponse.json();
-      console.log('[AI-RESPONSE] Received response from webhook:', {
-        hasResponse: !!aiResponse?.response,
-        hasContent: !!aiResponse?.content,
+      console.log('[AI-RESPONSE] Received response from webhook:', { 
+        hasResponse: !!aiResponse?.response, 
+        hasContent: !!aiResponse?.content, 
         hasText: !!aiResponse?.text,
         hasImageUrl: !!aiResponse?.image_url,
         hasImageBase64: !!aiResponse?.image_base64
       });
-
+      
       // Handle image_base64 by uploading to storage first
       if (aiResponse?.image_base64) {
         console.log('[AI-RESPONSE] Image base64 detected, calling webhook-handler to upload...');
         try {
-          const {
-            data: handlerData,
-            error: handlerError
-          } = await supabase.functions.invoke('webhook-handler', {
+          const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
             body: {
               chat_id: originalChatId,
               user_id: user.id,
@@ -623,6 +650,7 @@ export default function Chat() {
               image_type: aiResponse.image_type || 'image/png'
             }
           });
+          
           if (handlerError) {
             console.error('[AI-RESPONSE] Webhook-handler error:', handlerError);
           } else {
@@ -634,6 +662,7 @@ export default function Chat() {
         // The webhook-handler will insert the message with the image, so we can return early
         return;
       }
+      
       if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
         const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
 
@@ -684,6 +713,7 @@ export default function Chat() {
           role: 'assistant',
           file_attachments: fileAttachments as any
         }).select().single();
+        
         if (saveError) {
           // Check for authentication errors
           if (saveError.message?.includes('JWT') || saveError.message?.includes('unauthorized')) {
@@ -695,14 +725,14 @@ export default function Chat() {
         } else {
           // Update the message with the real database ID
           if (insertedAiMessage && chatId === originalChatId) {
-            setMessages(prev => prev.map(msg => msg.id === assistantMessage.id ? {
-              ...msg,
-              id: insertedAiMessage.id
-            } : msg));
+            setMessages(prev => prev.map(msg => 
+              msg.id === assistantMessage.id ? { ...msg, id: insertedAiMessage.id } : msg
+            ));
           }
         }
       }
     } catch (error) {
+
       // Only show error in UI if user is still viewing the original chat
       if (chatId === originalChatId) {
         const errorMessage: Message = {
@@ -739,6 +769,7 @@ export default function Chat() {
         ...msg,
         file_attachments: msg.file_attachments as any || []
       })) as Message[];
+
       setMessages(typedMessages);
     }
   };
@@ -844,9 +875,10 @@ export default function Chat() {
       setShowAuthModal(true);
       return;
     }
+    
     const userMessage = input.trim();
     const files = [...selectedFiles];
-
+    
     // Create temporary user message immediately to show in UI (for all cases)
     const tempUserMessage: Message = {
       id: `temp-${Date.now()}`,
@@ -862,12 +894,12 @@ export default function Chat() {
         url: URL.createObjectURL(file)
       }))
     };
-
+    
     // Clear input and files immediately
     setInput('');
     setSelectedFiles([]);
     setLoading(true);
-
+    
     // Reset image mode and selected style after sending message
     if (isImageMode) {
       setIsImageMode(false);
@@ -878,38 +910,42 @@ export default function Chat() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
-
+    
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
-
+      
       // Add to UI immediately so user sees their message
       setMessages(prev => [...prev, tempUserMessage]);
       scrollToBottom();
+      
       try {
         // First, ensure the chat exists
         console.log('[IMAGE-GEN] Checking if chat exists:', chatId);
-        const {
-          data: existingChat,
-          error: chatCheckError
-        } = await supabase.from('chats').select('id, user_id').eq('id', chatId).maybeSingle();
+        const { data: existingChat, error: chatCheckError } = await supabase
+          .from('chats')
+          .select('id, user_id')
+          .eq('id', chatId)
+          .maybeSingle();
+        
         if (chatCheckError) {
           console.error('[IMAGE-GEN] Error checking chat:', chatCheckError);
           throw chatCheckError;
         }
-
+        
         // If chat doesn't exist, create it
         if (!existingChat) {
           console.log('[IMAGE-GEN] Chat does not exist, creating it...');
-          const {
-            data: newChat,
-            error: createError
-          } = await supabase.from('chats').insert({
-            id: chatId,
-            // Use the chatId from URL
-            user_id: user.id,
-            title: userMessage.slice(0, 50) || 'New Chat'
-          }).select().single();
+          const { data: newChat, error: createError } = await supabase
+            .from('chats')
+            .insert({
+              id: chatId, // Use the chatId from URL
+              user_id: user.id,
+              title: userMessage.slice(0, 50) || 'New Chat'
+            })
+            .select()
+            .single();
+            
           if (createError) {
             console.error('[IMAGE-GEN] Error creating chat:', createError);
             throw createError;
@@ -918,19 +954,21 @@ export default function Chat() {
         } else {
           console.log('[IMAGE-GEN] Chat exists, proceeding...');
         }
-
+        
         // Save user message to database
-        const {
-          data: insertedMessage,
-          error: userError
-        } = await supabase.from('messages').insert({
-          chat_id: chatId,
-          content: userMessage,
-          role: 'user',
-          file_attachments: []
-        }).select().single();
+        const { data: insertedMessage, error: userError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: userMessage,
+            role: 'user',
+            file_attachments: []
+          })
+          .select()
+          .single();
+          
         if (userError) throw userError;
-
+        
         // CRITICAL: Mark this message as processed to prevent auto-trigger from handling it
         if (insertedMessage && chatId) {
           if (!processedUserMessages.current.has(chatId)) {
@@ -939,15 +977,14 @@ export default function Chat() {
           processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
           console.log('[IMAGE-GEN] Marked message as processed:', insertedMessage.id);
         }
-
+        
         // Update with real ID
         if (insertedMessage) {
-          setMessages(prev => prev.map(msg => msg.id === tempUserMessage.id ? {
-            ...msg,
-            id: insertedMessage.id
-          } : msg));
+          setMessages(prev => prev.map(msg => 
+            msg.id === tempUserMessage.id ? { ...msg, id: insertedMessage.id } : msg
+          ));
         }
-
+        
         // Send to N8n webhook for image generation
         console.log('[IMAGE-GEN] Calling N8n webhook with prompt:', userMessage);
         const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
@@ -963,23 +1000,24 @@ export default function Chat() {
             model: 'generate-image'
           })
         });
+        
         console.log('[IMAGE-GEN] Webhook response status:', webhookResponse.status);
         console.log('[IMAGE-GEN] Webhook response ok:', webhookResponse.ok);
+        
         if (!webhookResponse.ok) {
           const errorText = await webhookResponse.text();
           console.error('[IMAGE-GEN] Webhook error response:', errorText);
           throw new Error(`Webhook request failed: ${webhookResponse.status}`);
         }
+        
         const webhookData = await webhookResponse.json();
         console.log('[IMAGE-GEN] Webhook response data:', webhookData);
-
+        
         // Call webhook-handler to save the image
         if (webhookData && webhookData.image_base64) {
           console.log('[IMAGE-GEN] Calling webhook-handler to save image...');
-          const {
-            data: handlerData,
-            error: handlerError
-          } = await supabase.functions.invoke('webhook-handler', {
+          
+          const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
             body: {
               chat_id: chatId,
               user_id: user.id,
@@ -988,15 +1026,18 @@ export default function Chat() {
               image_type: webhookData.image_type || 'image/png'
             }
           });
+          
           if (handlerError) {
             console.error('[IMAGE-GEN] Webhook-handler error:', handlerError);
             throw handlerError;
           }
+          
           console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
         } else {
           console.error('[IMAGE-GEN] No image_base64 in webhook response');
           toast.error('Failed to receive generated image');
         }
+        
       } catch (error: any) {
         console.error('[IMAGE-GEN] Error:', error);
         toast.error(error.message || 'Failed to generate image');
@@ -1005,6 +1046,7 @@ export default function Chat() {
       }
       return;
     }
+    
     try {
       let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
@@ -1025,18 +1067,21 @@ export default function Chat() {
           let finalFileType = file.type;
           let finalFileName = file.name;
           let pngBase64 = '';
+
           if (file.type.startsWith('image/')) {
             try {
               console.log('[IMAGE-UPLOAD] Converting image to PNG format...');
-
+              
               // Convert image to PNG using canvas
               const img = new Image();
               const imgUrl = URL.createObjectURL(file);
+              
               await new Promise((resolve, reject) => {
                 img.onload = resolve;
                 img.onerror = reject;
                 img.src = imgUrl;
               });
+
               const canvas = document.createElement('canvas');
               canvas.width = img.width;
               canvas.height = img.height;
@@ -1046,35 +1091,40 @@ export default function Chat() {
 
               // Convert to PNG base64
               pngBase64 = canvas.toDataURL('image/png').split(',')[1];
-
+              
               // Convert base64 to blob for upload
               const pngBlob = await (await fetch(`data:image/png;base64,${pngBase64}`)).blob();
-
+              
               // Upload to chat-images bucket
               const timestamp = Date.now();
               const fileExt = 'png';
               finalFileName = `${file.name.replace(/\.[^/.]+$/, '')}.png`;
               const filePath = `${user.id}/${chatId}/${timestamp}_${finalFileName}`;
+              
               console.log('[IMAGE-UPLOAD] Uploading to storage:', filePath);
-              const {
-                data: uploadData,
-                error: uploadError
-              } = await supabase.storage.from('chat-images').upload(filePath, pngBlob, {
-                contentType: 'image/png',
-                upsert: false
-              });
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('chat-images')
+                .upload(filePath, pngBlob, {
+                  contentType: 'image/png',
+                  upsert: false
+                });
+
               if (uploadError) {
                 console.error('[IMAGE-UPLOAD] Upload error:', uploadError);
                 throw uploadError;
               }
+
               console.log('[IMAGE-UPLOAD] Upload successful:', uploadData);
 
               // Get public URL
-              const {
-                data: urlData
-              } = supabase.storage.from('chat-images').getPublicUrl(filePath);
+              const { data: urlData } = supabase.storage
+                .from('chat-images')
+                .getPublicUrl(filePath);
+
               finalFileUrl = urlData.publicUrl;
               finalFileType = 'image/png';
+              
               console.log('[IMAGE-UPLOAD] Public URL:', finalFileUrl);
             } catch (error) {
               console.error('[IMAGE-UPLOAD] Error converting/uploading image:', error);
@@ -1091,26 +1141,30 @@ export default function Chat() {
             // For non-image files, upload to Supabase storage
             try {
               console.log('[FILE-UPLOAD] Uploading non-image file to storage');
+              
               const filePath = `${user.id}/${chatId}/${Date.now()}_${finalFileName}`;
-              const {
-                data: uploadData,
-                error: uploadError
-              } = await supabase.storage.from('chat-files') // Use chat-files bucket for non-image files
-              .upload(filePath, file, {
-                cacheControl: '3600',
-                upsert: false
-              });
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('chat-files') // Use chat-files bucket for non-image files
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
+
               if (uploadError) {
                 console.error('[FILE-UPLOAD] Upload error:', uploadError);
                 throw uploadError;
               }
+
               console.log('[FILE-UPLOAD] Upload successful:', uploadData);
 
               // Get public URL
-              const {
-                data: urlData
-              } = supabase.storage.from('chat-files').getPublicUrl(filePath);
+              const { data: urlData } = supabase.storage
+                .from('chat-files')
+                .getPublicUrl(filePath);
+
               finalFileUrl = urlData.publicUrl;
+              
               console.log('[FILE-UPLOAD] Public URL:', finalFileUrl);
             } catch (error) {
               console.error('[FILE-UPLOAD] Error uploading file:', error);
@@ -1147,11 +1201,12 @@ export default function Chat() {
 
           // Send to webhook for analysis with PNG format
           try {
-            console.log('[WEBHOOK] Sending to webhook:', {
-              type: webhookType,
-              fileName: finalFileName,
-              fileType: finalFileType
+            console.log('[WEBHOOK] Sending to webhook:', { 
+              type: webhookType, 
+              fileName: finalFileName, 
+              fileType: finalFileType 
             });
+            
             const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
               method: 'POST',
               headers: {
@@ -1161,8 +1216,7 @@ export default function Chat() {
                 type: webhookType,
                 fileName: finalFileName,
                 fileSize: file.size,
-                fileType: finalFileType,
-                // Send PNG type for images
+                fileType: finalFileType, // Send PNG type for images
                 fileData: base64,
                 userId: user.id,
                 chatId: chatId,
@@ -1170,6 +1224,7 @@ export default function Chat() {
                 model: selectedModel
               })
             });
+            
             if (webhookResponse.ok) {
               const analysisResult = await webhookResponse.json();
               console.log('Webhook response:', analysisResult);
@@ -1206,10 +1261,11 @@ export default function Chat() {
       }
 
       // Update the temporary message with actual uploaded URLs
-      setMessages(prev => prev.map(msg => msg.id === tempUserMessage.id ? {
-        ...msg,
-        file_attachments: tempFileAttachments
-      } : msg));
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempUserMessage.id 
+          ? { ...msg, file_attachments: tempFileAttachments }
+          : msg
+      ));
 
       // Start embedding generation in background (for user message content)
       const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
@@ -1355,7 +1411,7 @@ export default function Chat() {
       } else if (fileType.startsWith('image/')) {
         // For images, analysis now handled by webhook only
         console.log('Image analysis skipped - using webhook only');
-
+        
         // Return empty string - images are processed by webhook
         return '';
       } else if (fileType.includes('pdf')) {
@@ -1579,21 +1635,24 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
+
     setSpeakingMessageId(messageId);
     console.log('Starting speech for message:', messageId);
+    
     const utterance = new SpeechSynthesisUtterance(content);
-
+    
     // More robust event handling
     const resetSpeaking = () => {
       console.log('Speech ended for message:', messageId);
       setSpeakingMessageId(null);
     };
+
     utterance.onend = resetSpeaking;
-    utterance.onerror = error => {
+    utterance.onerror = (error) => {
       console.log('Speech error for message:', messageId, error);
       resetSpeaking();
     };
-
+    
     // Fallback mechanism - check if speech is still active after expected duration
     const maxDuration = Math.max(content.length * 100, 5000); // Estimate based on content length, minimum 5 seconds
     const fallbackTimer = setTimeout(() => {
@@ -1609,8 +1668,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     utterance.addEventListener('end', () => {
       clearTimeout(fallbackTimer);
     });
+    
     window.speechSynthesis.speak(utterance);
-
+    
     // Additional monitoring for when speech synthesis state changes
     const monitorSpeech = setInterval(() => {
       if (speakingMessageId === messageId && !window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
@@ -1630,17 +1690,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   // Rating functionality
   const rateMessage = async (messageId: string, rating: 'like' | 'dislike') => {
     if (!user) return;
+    
     const currentRating = messageRatings[messageId];
     const newRating = currentRating === rating ? null : rating;
-
+    
     // Find the AI message being rated
     const aiMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
     if (!aiMessage) return;
-
+    
     // Find the user message that preceded this AI message
     const messageIndex = messages.findIndex(msg => msg.id === messageId);
     let userMessage = '';
-
+    
     // Look backwards to find the previous user message
     for (let i = messageIndex - 1; i >= 0; i--) {
       if (messages[i].role === 'user') {
@@ -1648,6 +1709,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         break;
       }
     }
+    
     try {
       if (newRating) {
         await supabase.from('message_ratings' as any).upsert({
@@ -1657,16 +1719,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           user_message: userMessage,
           ai_message: aiMessage.content
         });
-        setMessageRatings(prev => ({
-          ...prev,
-          [messageId]: newRating
-        }));
+        setMessageRatings(prev => ({ ...prev, [messageId]: newRating }));
       } else {
-        await supabase.from('message_ratings' as any).delete().eq('message_id', messageId).eq('user_id', user.id);
+        await supabase.from('message_ratings' as any)
+          .delete()
+          .eq('message_id', messageId)
+          .eq('user_id', user.id);
         setMessageRatings(prev => {
-          const updated = {
-            ...prev
-          };
+          const updated = { ...prev };
           delete updated[messageId];
           return updated;
         });
@@ -1679,14 +1739,16 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   // Load message ratings
   const loadMessageRatings = async () => {
     if (!user || !chatId || messages.length === 0) return;
+    
     try {
-      const {
-        data
-      } = await supabase.from('message_ratings' as any).select('message_id, rating').eq('user_id', user.id).in('message_id', messages.map(m => m.id));
+      const { data } = await supabase
+        .from('message_ratings' as any)
+        .select('message_id, rating')
+        .eq('user_id', user.id)
+        .in('message_id', messages.map(m => m.id));
+      
       if (data) {
-        const ratingsMap: {
-          [key: string]: 'like' | 'dislike';
-        } = {};
+        const ratingsMap: {[key: string]: 'like' | 'dislike'} = {};
         data.forEach((rating: any) => {
           ratingsMap[rating.message_id] = rating.rating;
         });
@@ -1705,6 +1767,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
       const combinedFiles = [...selectedFiles, ...newFiles];
+      
       const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
       const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
 
@@ -1713,11 +1776,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         event.target.value = '';
         return;
       }
+      
       if (combinedFiles.length > 10) {
         toast.error('Maximum 10 files allowed per message');
         event.target.value = '';
         return;
       }
+      
       setSelectedFiles(combinedFiles);
       console.log(`[FILES] ${newFiles.length} file(s) added (${combinedFiles.length} total)`);
       // Reset the input
@@ -1753,6 +1818,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         toast.error('Speech recognition not supported in this browser');
         return;
       }
+
       const recognition = new SpeechRecognition();
       recognition.continuous = true; // Keep listening until manually stopped
       recognition.interimResults = true; // Get results as user speaks
@@ -1764,6 +1830,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         }
         setInput(transcript);
       };
+
       recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         if (event.error === 'no-speech' || event.error === 'audio-capture') {
@@ -1780,10 +1847,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           setIsRecording(false);
         }
       };
+
       recognition.onstart = () => {
         console.log('🎤 Speech recognition started successfully');
         setIsRecording(true);
       };
+
       console.log('🚀 Starting speech recognition...');
       recognition.start();
       setMediaRecorder(recognition as any); // Store recognition instance
@@ -2064,27 +2133,50 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             </div>
           </div>
         </div>
-      </div>;
+      </div>
   }
-  return <div className="fixed inset-0 flex flex-col bg-background">
+  return (
+    <div className="fixed inset-0 flex flex-col bg-background">
       {/* Mobile Header with Sidebar Trigger */}
-      {isMobile && <div className="relative flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-          <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
+      {isMobile && (
+        <div className="relative flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+          <SidebarTrigger 
+            className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
+            aria-label="Open sidebar menu"
+          />
           
           {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Select value={selectedModel} onValueChange={setSelectedModel} onOpenChange={setIsModelDropdownOpen}>
-              <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
+              <SelectTrigger 
+                className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden"
+                aria-label="Select AI model"
+              >
                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
                   <h1 className="text-lg font-semibold">AdamGpt</h1>
-                  {isModelDropdownOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                  {isModelDropdownOpen ? (
+                    <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  )}
                 </div>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]" align="center">
-                {models.map(model => <SelectItem key={model.id} value={model.id} className="rounded-md px-2 py-1.5 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
+                {models.map(model => (
+                  <SelectItem 
+                    key={model.id} 
+                    value={model.id} 
+                    className="rounded-md px-2 py-1.5 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                  >
                      <div className="flex items-center w-full">
                        <div className="flex items-center gap-2 min-w-0 flex-1">
-                         {model.id.includes('gpt') || model.id === 'generate-image' ? <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" /> : model.id.includes('claude') ? <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" /> : <Bot className="h-3.5 w-3.5 flex-shrink-0" />}
+                         {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                           <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                         ) : model.id.includes('claude') ? (
+                           <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                         ) : (
+                           <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                         )}
                          <div className="min-w-0 flex-1">
                            <div className="font-medium text-sm truncate">{model.name}</div>
                            <div className="text-xs text-muted-foreground truncate">{model.description}</div>
@@ -2092,51 +2184,63 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        </div>
                        {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-auto">Pro</span>}
                      </div>
-                  </SelectItem>)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
-        </div>}
+        </div>
+      )}
 
       {/* Messages area - takes all available space above input */}
-      <div className="flex-1 overflow-y-auto pb-32 relative" onDragOver={e => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragOver(true);
-    }} onDragEnter={e => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragOver(true);
-    }} onDragLeave={e => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Only hide overlay if leaving the entire messages area
-      if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-        setIsDragOver(false);
-      }
-    }} onDrop={e => {
-      e.preventDefault();
-      e.stopPropagation();
-      setIsDragOver(false);
-      const newFiles = Array.from(e.dataTransfer.files);
-      if (newFiles.length > 0) {
-        // Combine existing files with new files
-        const combinedFiles = [...selectedFiles, ...newFiles];
-        const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
-        const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
-
-        if (totalSize > maxTotalSize) {
-          toast.error('Total file size cannot exceed 100MB');
-          return;
-        }
-        if (combinedFiles.length > 10) {
-          toast.error('Maximum 10 files allowed per message');
-          return;
-        }
-        setSelectedFiles(combinedFiles);
-        console.log(`[FILES] ${newFiles.length} file(s) added (${combinedFiles.length} total)`);
-      }
-    }}>
+      <div 
+        className="flex-1 overflow-y-auto pb-32 relative"
+        onDragOver={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragEnter={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(true);
+        }}
+        onDragLeave={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          // Only hide overlay if leaving the entire messages area
+          if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+            setIsDragOver(false);
+          }
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragOver(false);
+          
+          const newFiles = Array.from(e.dataTransfer.files);
+          if (newFiles.length > 0) {
+            // Combine existing files with new files
+            const combinedFiles = [...selectedFiles, ...newFiles];
+            
+            const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
+            const maxTotalSize = 100 * 1024 * 1024; // 100MB total per message
+            
+            if (totalSize > maxTotalSize) {
+              toast.error('Total file size cannot exceed 100MB');
+              return;
+            }
+            
+            if (combinedFiles.length > 10) {
+              toast.error('Maximum 10 files allowed per message');
+              return;
+            }
+            
+            setSelectedFiles(combinedFiles);
+            console.log(`[FILES] ${newFiles.length} file(s) added (${combinedFiles.length} total)`);
+          }
+        }}
+      >
         <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
           {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
               <div className="text-center max-w-md">
@@ -2146,46 +2250,48 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </div>
             </div> : <div className="space-y-6">
               {messages.map(message => {
-            console.log('[CHAT-RENDER] Rendering message:', {
-              id: message.id,
-              role: message.role,
-              contentPreview: message.content?.substring(0, 50),
-              hasFileAttachments: !!message.file_attachments,
-              fileAttachmentsLength: message.file_attachments?.length || 0,
-              fileAttachments: message.file_attachments
-            });
-            return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
+                console.log('[CHAT-RENDER] Rendering message:', {
+                  id: message.id,
+                  role: message.role,
+                  contentPreview: message.content?.substring(0, 50),
+                  hasFileAttachments: !!message.file_attachments,
+                  fileAttachmentsLength: message.file_attachments?.length || 0,
+                  fileAttachments: message.file_attachments
+                });
+                
+                return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[80%] md:max-w-[70%] relative`}>
                         <div className={`${message.role === 'user' ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' : 'text-black dark:text-white rounded-2xl bg-transparent border-none'} px-3.5 py-2.5 relative break-words whitespace-pre-wrap w-full`} style={{
-                    padding: '10px 14px',
-                    wordWrap: 'break-word',
-                    overflowWrap: 'break-word',
-                    hyphens: 'auto'
-                  }}>
+                  padding: '10px 14px',
+                  wordWrap: 'break-word',
+                  overflowWrap: 'break-word',
+                  hyphens: 'auto'
+                }}>
                         
            {/* File attachments */}
            {message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-3">
                {message.file_attachments.map((file, index) => {
-                        console.log('[CHAT-RENDER] Rendering file attachment:', {
-                          index,
-                          fileName: file.name,
-                          fileType: file.type,
-                          fileUrl: file.url,
-                          isImage: isImageFile(file.type),
-                          hasUrl: !!file.url
-                        });
-                        return <div key={index}>
+                 console.log('[CHAT-RENDER] Rendering file attachment:', {
+                   index,
+                   fileName: file.name,
+                   fileType: file.type,
+                   fileUrl: file.url,
+                   isImage: isImageFile(file.type),
+                   hasUrl: !!file.url
+                 });
+                 
+                  return <div key={index}>
                     {isImageFile(file.type) && file.url ? <div className="space-y-2">
                         <img src={file.url} alt={file.name || "Image"} className="max-w-full sm:max-w-[280px] md:max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
-                              url: file.url,
-                              name: file.name
-                            })} onError={e => {
-                              console.error('[CHAT-RENDER] Image load error:', file.url);
-                              e.currentTarget.style.display = 'none';
-                            }} onLoad={() => {
-                              console.log('[CHAT-RENDER] Image loaded successfully:', file.url);
-                            }} />
+                           url: file.url,
+                           name: file.name
+                         })} onError={e => {
+                           console.error('[CHAT-RENDER] Image load error:', file.url);
+                           e.currentTarget.style.display = 'none';
+                         }} onLoad={() => {
+                           console.log('[CHAT-RENDER] Image loaded successfully:', file.url);
+                         }} />
                        <div className="flex gap-2">
                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadImageFromChat(file.url, file.name)}>
                            <Download className="h-3 w-3 mr-1" />
@@ -2206,28 +2312,23 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                       </div>
                                     </div>}
                                 </div>;
-                      })}
+               })}
                             </div>}
                         
-                            {message.content && (regeneratingMessageId === message.id ? <div className="flex items-center gap-3 py-8">
+                            {message.content && (
+                              regeneratingMessageId === message.id ? (
+                                <div className="flex items-center gap-3 py-8">
                                   <div className="flex gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{
-                          animationDelay: '0ms',
-                          animationDuration: '1.4s'
-                        }}></div>
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{
-                          animationDelay: '200ms',
-                          animationDuration: '1.4s'
-                        }}></div>
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{
-                          animationDelay: '400ms',
-                          animationDuration: '1.4s'
-                        }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
                                   </div>
-                                </div> : <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
-                      wordBreak: 'break-word',
-                      overflowWrap: 'anywhere'
-                    }}>
+                                </div>
+                              ) : (
+                                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
+                     wordBreak: 'break-word',
+                     overflowWrap: 'anywhere'
+                   }}>
                                 {message.content.includes("🎨 Generating your image") ? <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
                                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
                                     <div>
@@ -2235,14 +2336,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                       <p className="text-xs text-muted-foreground">This may take a few moments</p>
                                     </div>
                                   </div> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                        code({
-                          node,
-                          className,
-                          children,
-                          ...props
-                        }: any) {
-                          const match = /language-(\w+)/.exec(className || '');
-                          const inline = !match;
+                       code({
+                         node,
+                         className,
+                         children,
+                         ...props
+                       }: any) {
+                         const match = /language-(\w+)/.exec(className || '');
+                         const inline = !match;
                           return inline ? <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
                                         {children}
                                       </code> : <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto max-w-full break-words !my-1">
@@ -2250,57 +2351,62 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                           {children}
                                         </code>
                                       </pre>;
-                        },
-                        p: ({
-                          children,
-                          ...props
-                        }) => {},
-                        h1: ({
-                          children,
-                          ...props
-                        }) => <h1 {...props} className="!my-1 !mb-1">
+                       },
+                       p: ({
+                         children,
+                         ...props
+                       }) => <p {...props} className="break-words overflow-wrap-anywhere !my-0" style={{
+                         wordBreak: 'break-word',
+                         overflowWrap: 'anywhere'
+                       }}>
+                                       {children}
+                                     </p>,
+                       h1: ({
+                         children,
+                         ...props
+                       }) => <h1 {...props} className="!my-1 !mb-1">
                                       {children}
                                     </h1>,
-                        h2: ({
-                          children,
-                          ...props
-                        }) => <h2 {...props} className="!my-1 !mb-1">
+                       h2: ({
+                         children,
+                         ...props
+                       }) => <h2 {...props} className="!my-1 !mb-1">
                                       {children}
                                     </h2>,
-                        h3: ({
-                          children,
-                          ...props
-                        }) => <h3 {...props} className="!my-0.5 !mb-0.5">
+                       h3: ({
+                         children,
+                         ...props
+                       }) => <h3 {...props} className="!my-0.5 !mb-0.5">
                                       {children}
                                     </h3>,
-                        h4: ({
-                          children,
-                          ...props
-                        }) => <h4 {...props} className="!my-0.5 !mb-0.5">
+                       h4: ({
+                         children,
+                         ...props
+                       }) => <h4 {...props} className="!my-0.5 !mb-0.5">
                                       {children}
                                     </h4>,
-                        ul: ({
-                          children,
-                          ...props
-                        }) => <ul {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                       ul: ({
+                         children,
+                         ...props
+                       }) => <ul {...props} className="!my-0 !leading-tight [&>li]:!my-0">
                                        {children}
                                      </ul>,
-                        ol: ({
-                          children,
-                          ...props
-                        }) => <ol {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                       ol: ({
+                         children,
+                         ...props
+                       }) => <ol {...props} className="!my-0 !leading-tight [&>li]:!my-0">
                                        {children}
                                      </ol>,
-                        li: ({
-                          children,
-                          ...props
-                        }) => <li {...props} className="!my-0">
+                       li: ({
+                         children,
+                         ...props
+                       }) => <li {...props} className="!my-0">
                                       {children}
                                     </li>,
-                        blockquote: ({
-                          children,
-                          ...props
-                        }) => <blockquote {...props} className="!my-1">
+                       blockquote: ({
+                         children,
+                         ...props
+                       }) => <blockquote {...props} className="!my-1">
                                       {children}
                                     </blockquote>,
                         table: ({
@@ -2311,72 +2417,105 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                          {children}
                                        </table>
                                      </div>,
-                        hr: ({
-                          ...props
-                        }) => <hr {...props} className="!my-1" />
-                      }}>
+                       hr: ({
+                         ...props
+                       }) => <hr {...props} className="!my-1" />
+                     }}>
                                  {message.content}
                                </ReactMarkdown>}
-                             </div>)}
+                             </div>
+                              )
+                            )}
                          
                        </div>
                        
                           {/* Message action buttons - hide while regenerating */}
-                          {regeneratingMessageId !== message.id && <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                          {regeneratingMessageId !== message.id && (
+                            <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                               {/* Copy button - always show */}
                               <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
                                 {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
                               </Button>
                            
                             {/* Assistant message actions */}
-                            {message.role === 'assistant' && <>
+                            {message.role === 'assistant' && (
+                              <>
                                 {/* Thumbs Up button - hide if disliked */}
-                               {messageRatings[message.id] !== 'dislike' && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => rateMessage(message.id, 'like')}>
+                               {messageRatings[message.id] !== 'dislike' && (
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                   onClick={() => rateMessage(message.id, 'like')}
+                                 >
                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'like' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3z"></path>
                                      <path d="M7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"></path>
                                    </svg>
-                                 </Button>}
+                                 </Button>
+                               )}
                                
                                {/* Thumbs Down button - hide if liked */}
-                               {messageRatings[message.id] !== 'like' && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => rateMessage(message.id, 'dislike')}>
+                               {messageRatings[message.id] !== 'like' && (
+                                 <Button 
+                                   variant="ghost" 
+                                   size="sm" 
+                                   className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                   onClick={() => rateMessage(message.id, 'dislike')}
+                                 >
                                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill={messageRatings[message.id] === 'dislike' ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                      <path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3z"></path>
                                      <path d="M17 2h3a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-3"></path>
                                    </svg>
-                                 </Button>}
+                                 </Button>
+                               )}
                                
                                   {/* Refresh button - disappears immediately when user sends new message */}
                                   {(() => {
-                        // Find current message index
-                        const currentIndex = messages.findIndex(msg => msg.id === message.id);
-                        // Find the last assistant message
-                        const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
-                        if (!lastAssistantMessage || lastAssistantMessage.id !== message.id) {
-                          return false;
-                        }
-
-                        // Check if there are ANY messages after this one (user or assistant)
-                        const hasMessagesAfter = currentIndex < messages.length - 1;
-
-                        // Hide button immediately if there are any messages after it
-                        return !hasMessagesAfter;
-                      })() && <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => regenerateResponse(message.id)} disabled={isGeneratingResponse}>
-                                      {isGeneratingResponse ? <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                                        </svg> : <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    // Find current message index
+                                    const currentIndex = messages.findIndex(msg => msg.id === message.id);
+                                    // Find the last assistant message
+                                    const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
+                                    
+                                    if (!lastAssistantMessage || lastAssistantMessage.id !== message.id) {
+                                      return false;
+                                    }
+                                    
+                                    // Check if there are ANY messages after this one (user or assistant)
+                                    const hasMessagesAfter = currentIndex < messages.length - 1;
+                                    
+                                    // Hide button immediately if there are any messages after it
+                                    return !hasMessagesAfter;
+                                   })() && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="sm" 
+                                      className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity"
+                                      onClick={() => regenerateResponse(message.id)}
+                                      disabled={isGeneratingResponse}
+                                    >
+                                      {isGeneratingResponse ? (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                          <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+                                        </svg>
+                                      ) : (
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                           <path d="M21 2v6h-6"></path>
                                           <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
                                           <path d="M3 22v-6h6"></path>
                                           <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
-                                        </svg>}
-                                    </Button>}
-                              </>}
-                          </div>}
+                                        </svg>
+                                      )}
+                                    </Button>
+                                  )}
+                              </>
+                            )}
+                          </div>
+                          )}
                     </div>
                   </div>
                  </div>;
-          })}
+               })}
               
               {/* Show image processing indicator when generating images */}
               {chatId && currentImagePrompts.get(chatId) && <div className="flex justify-start">
@@ -2419,28 +2558,47 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>)}
             </div>}
           
-          <div className={`relative bg-background border border-border rounded-xl p-3 transition-all duration-200 ${isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''}`}>
+          <div 
+            className={`relative bg-background border border-border rounded-xl p-3 transition-all duration-200 ${
+              isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
+            }`}
+          >
             {/* Drag and drop overlay */}
-            {isDragOver && <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-xl border-2 border-dashed border-primary">
+            {isDragOver && (
+              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-xl border-2 border-dashed border-primary">
                 <div className="text-center">
                   <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
                   <p className="text-base font-semibold text-primary">Drop files here</p>
                 </div>
-              </div>}
+              </div>
+            )}
             
-            {isRecording ? <div className="flex items-center gap-3 py-2 mb-3">
-                <Button variant="ghost" size="sm" onClick={stopRecording} className="h-8 w-8 rounded-full hover:bg-muted" aria-label="Cancel recording">
+            {isRecording ? (
+              <div className="flex items-center gap-3 py-2 mb-3">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={stopRecording}
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  aria-label="Cancel recording"
+                >
                   <X className="h-4 w-4" />
                 </Button>
                 
                 <div className="flex-1 flex items-center justify-center gap-3">
                   {/* Waveform animation */}
                   <div className="flex items-center gap-0.5 h-8">
-                    {[...Array(40)].map((_, i) => <div key={i} className="w-0.5 bg-foreground rounded-full animate-pulse" style={{
-                  height: `${Math.random() * 24 + 8}px`,
-                  animationDelay: `${i * 0.05}s`,
-                  animationDuration: `${0.8 + Math.random() * 0.4}s`
-                }} />)}
+                    {[...Array(40)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-0.5 bg-foreground rounded-full animate-pulse"
+                        style={{
+                          height: `${Math.random() * 24 + 8}px`,
+                          animationDelay: `${i * 0.05}s`,
+                          animationDuration: `${0.8 + Math.random() * 0.4}s`
+                        }}
+                      />
+                    ))}
                   </div>
                   
                   {/* Timer */}
@@ -2449,15 +2607,33 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </span>
                 </div>
                 
-                <Button variant="ghost" size="sm" onClick={stopRecording} className="h-8 w-8 rounded-full hover:bg-muted" aria-label="Send recording">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={stopRecording}
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  aria-label="Send recording"
+                >
                   <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
-              </div> : <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" rows={1} />}
+              </div>
+            ) : (
+              <Textarea 
+                ref={textareaRef} 
+                value={input} 
+                onChange={handleInputChange} 
+                onKeyDown={handleKeyDown} 
+                placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
+                className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
+                rows={1}
+              />
+            )}
             
             {/* Mobile Image mode controls */}
-            {!isRecording && isImageMode && <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+            {!isRecording && isImageMode && (
+              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
                 <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                   <ImageIcon2 className="h-3 w-3" />
                   <span>Image</span>
@@ -2490,24 +2666,42 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     </div>
                   </PopoverContent>
                 </Popover>
-              </div>}
+              </div>
+            )}
 
-            {!isRecording && <div className="flex items-center justify-between">
+            {!isRecording && (
+              <div className="flex items-center justify-between">
                 {/* Mobile controls */}
-                {isMobile ? <>
+                {isMobile ? (
+                <>
                   {/* Left side - Upload button */}
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" aria-label="Upload or create content">
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                        aria-label="Upload or create content"
+                      >
                         <Plus className="h-3.5 w-3.5" />
                       </Button>
                     </PopoverTrigger>
                     <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
-                      <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleFileUpload}
+                      >
                         <Paperclip className="h-4 w-4" />
                         Add photos & files
                       </Button>
-                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                        <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleCreateImageClick}
+                      >
                         <ImageIcon className="h-4 w-4" />
                         Generate an image
                       </Button>
@@ -2516,13 +2710,31 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
                   {/* Right side - Send/Voice controls */}
                   <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
-                    <Button size="sm" className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${input.trim().length > 0 || selectedFiles.length > 0 ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background' : isRecording ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'}`} onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : isRecording ? stopRecording : startRecording} aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : isRecording ? "Stop recording" : "Start voice recording"} aria-pressed={isRecording}>
-                      {input.trim().length > 0 || selectedFiles.length > 0 ? <SendHorizontalIcon className="h-3 w-3" /> : isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />}
+                    <Button 
+                      size="sm" 
+                      className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
+                        input.trim().length > 0 || selectedFiles.length > 0
+                          ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                          : isRecording 
+                            ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
+                            : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                      }`} 
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                      aria-pressed={isRecording}
+                    >
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                        <SendHorizontalIcon className="h-3 w-3" />
+                      ) : (
+                        isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
+                      )}
                     </Button>
                     
                   </div>
-                </> : (/* Desktop controls */
-            <>
+                </>
+              ) : (
+                /* Desktop controls */
+                <>
                   <div className="flex items-center gap-2">
                     <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
                       <PopoverTrigger asChild>
@@ -2554,7 +2766,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                           {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                <div className="flex items-center w-full">
                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                   {model.id.includes('gpt') || model.id === 'generate-image' ? <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" /> : model.id.includes('claude') ? <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" /> : <Bot className="h-3.5 w-3.5 flex-shrink-0" />}
+                                   {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                                     <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                   ) : model.id.includes('claude') ? (
+                                      <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                    ) : (
+                                      <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                    )}
                                    <div className="min-w-0 flex-1">
                                      <div className="font-medium text-sm truncate">{model.name}</div>
                                      <div className="text-xs text-muted-foreground truncate">{model.description}</div>
@@ -2566,13 +2784,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        </SelectContent>
                     </Select>
                     
-                    <Button size="sm" className={`h-8 w-8 rounded-full border border-border/50 ${input.trim().length > 0 || selectedFiles.length > 0 ? 'bg-foreground hover:bg-foreground/90 text-background' : isRecording ? 'bg-red-500 hover:bg-red-600 text-background' : 'bg-foreground hover:bg-foreground/90 text-background'}`} onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : isRecording ? stopRecording : startRecording} aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : isRecording ? "Stop recording" : "Start voice recording"}>
-                      {input.trim().length > 0 || selectedFiles.length > 0 ? <SendHorizontalIcon className="h-4 w-4" /> : isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+                    <Button 
+                      size="sm" 
+                      className={`h-8 w-8 rounded-full border border-border/50 ${
+                        input.trim().length > 0 || selectedFiles.length > 0
+                          ? 'bg-foreground hover:bg-foreground/90 text-background'
+                          : isRecording 
+                            ? 'bg-red-500 hover:bg-red-600 text-background' 
+                            : 'bg-foreground hover:bg-foreground/90 text-background'
+                      }`} 
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                    >
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                        <SendHorizontalIcon className="h-4 w-4" />
+                      ) : (
+                        isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
+                      )}
                     </Button>
                     
                   </div>
-                </>)}
-            </div>}
+                </>
+              )}
+            </div>
+            )}
           </div>
         </div>
       </div>
@@ -2584,25 +2819,35 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       {selectedImage && <ImagePopupModal isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} imageUrl={selectedImage.url} prompt={selectedImage.name} />}
 
       {/* Image edit modal */}
-      {showImageEditModal && imageToEdit && <ImageEditModal isOpen={showImageEditModal} onClose={() => {
-      setShowImageEditModal(false);
-      setImageToEdit(null);
-    }} imageFile={imageToEdit} onSaveImage={async editedBlob => {
-      try {
-        // Edited images are now handled by webhook only
-        console.log('Image editing completed - processed by webhook');
-      } catch (error) {
-        console.error('Error with edited image:', error);
-        toast.error('Failed to process edited image');
-      }
-    }} />}
+      {showImageEditModal && imageToEdit && <ImageEditModal 
+        isOpen={showImageEditModal} 
+        onClose={() => {
+          setShowImageEditModal(false);
+          setImageToEdit(null);
+        }} 
+        imageFile={imageToEdit} 
+        onSaveImage={async (editedBlob) => {
+          try {
+            // Edited images are now handled by webhook only
+            console.log('Image editing completed - processed by webhook');
+          } catch (error) {
+            console.error('Error with edited image:', error);
+            toast.error('Failed to process edited image');
+          }
+        }}
+      />}
 
       {/* Auth Modal */}
-      <AuthModal isOpen={showAuthModal} onClose={() => setShowAuthModal(false)} onSuccess={() => {
-      // Focus back to textarea after successful login
-      setTimeout(() => {
-        textareaRef.current?.focus();
-      }, 100);
-    }} />
-    </div>;
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)} 
+        onSuccess={() => {
+          // Focus back to textarea after successful login
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 100);
+        }} 
+      />
+    </div>
+  );
 }
