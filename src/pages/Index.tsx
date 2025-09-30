@@ -798,8 +798,8 @@ export default function Index() {
               </Button>
               
               <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-3 min-w-0 overflow-hidden">
-                {/* Real-time audio waveform visualization - fills left to right */}
-                <div className="flex items-center justify-start gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0 bg-muted/30 rounded-full px-1">
+                {/* Real-time audio waveform visualization - fills right to left */}
+                <div className="flex items-center justify-end gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0 bg-muted/30 rounded-full px-1">
                   {audioLevels.map((level, i) => {
                     // Calculate progress: how many bars should be "recorded" (filled)
                     // Assume max 60 seconds recording, scale progress accordingly
@@ -808,8 +808,8 @@ export default function Index() {
                     const totalBars = audioLevels.length;
                     const recordedBars = Math.floor(progress * totalBars);
                     
-                    // Check if this bar is in the "recorded" section
-                    const isRecorded = i < recordedBars;
+                    // Check if this bar is in the "recorded" section (from right side)
+                    const isRecorded = i >= (totalBars - recordedBars);
                     
                     // Calculate height based on audio level
                     const minHeight = 2;
