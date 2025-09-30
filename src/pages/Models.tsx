@@ -69,26 +69,6 @@ const Models = () => {
             </div>
           </div>
         </div>
-        
-        <div className="border-t border-border pt-8 animate-fade-in" style={{
-        animationDelay: '0.4s'
-      }}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground">
-              &copy; 2024 AdamGpt. All rights reserved.
-            </p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
-                <span>Enterprise Security</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>10,000+ Users</span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </footer>;
   return <div className="min-h-screen bg-background">
