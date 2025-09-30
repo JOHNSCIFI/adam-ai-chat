@@ -105,10 +105,21 @@ export default function Chat() {
     }
   };
   const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [isPopoverOpen, setIsPopoverOpen] = useState(false);
   const [hoveredMessage, setHoveredMessage] = useState<string | null>(null);
   const [copiedMessageId, setCopiedMessageId] = useState<string | null>(null);
+  const [isImageMode, setIsImageMode] = useState(false);
+  const [isStylesOpen, setIsStylesOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
+  const [tempTranscript, setTempTranscript] = useState('');
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
@@ -123,12 +134,20 @@ export default function Chat() {
   const [messageRatings, setMessageRatings] = useState<{[key: string]: 'like' | 'dislike'}>({});
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   const [regeneratingMessageId, setRegeneratingMessageId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
   });
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
@@ -251,6 +270,20 @@ export default function Chat() {
     scrollToBottom();
   }, [messages]);
 
+  // Timer for recording duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      setRecordingDuration(0);
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
+
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
     if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
@@ -292,6 +325,56 @@ export default function Chat() {
       }
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
+
+  // Handle initial files and message from navigation (from home page)
+  const hasProcessedInitialData = useRef(false);
+  const shouldAutoSend = useRef(false);
+  
+  useEffect(() => {
+    const initialFiles = location.state?.initialFiles;
+    const initialMessage = location.state?.initialMessage;
+    
+    console.log('[CHAT-INITIAL] Checking for initial data:', {
+      chatId,
+      hasInitialMessage: !!initialMessage,
+      hasInitialFiles: !!initialFiles,
+      filesCount: initialFiles?.length || 0,
+      hasProcessed: hasProcessedInitialData.current
+    });
+    
+    // Handle message with or without files
+    if ((initialMessage || (initialFiles && initialFiles.length > 0)) && chatId && !hasProcessedInitialData.current) {
+      console.log('[CHAT-INITIAL] Processing from home page:', { initialFiles, initialMessage: initialMessage?.substring(0, 50) });
+      hasProcessedInitialData.current = true;
+      shouldAutoSend.current = true;
+      
+      // Set the message and files
+      setInput(initialMessage || '');
+      setSelectedFiles(initialFiles || []);
+      
+      console.log('[CHAT-INITIAL] Set input and files, will auto-send');
+      
+      // Clear the navigation state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [chatId, location.state]);
+
+  // Auto-send when data is ready after being set from navigation
+  useEffect(() => {
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
+      console.log('[CHAT-INITIAL] Auto-sending message:', {
+        hasInput: !!input,
+        filesCount: selectedFiles.length,
+        chatId
+      });
+      shouldAutoSend.current = false;
+      
+      // Trigger send after a small delay to ensure UI is ready
+      setTimeout(() => {
+        sendMessage();
+      }, 500);
+    }
+  }, [input, selectedFiles, loading, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
@@ -2658,6 +2741,282 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         </div>
       </div>
 
+      {/* Input area - mobile design matching Index page */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border/20">
+        <div className={`px-3 py-3 ${!isMobile ? 'max-w-3xl mx-auto' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
+          {/* File attachments preview */}
+          {selectedFiles.length > 0 && <div className="mb-3 flex flex-wrap gap-2">
+              {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
+                  {getFileIcon(file.type)}
+                  <span className="truncate max-w-32">{file.name}</span>
+                  <button onClick={() => removeFile(index)} className="text-muted-foreground hover:text-foreground">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>)}
+            </div>}
+          
+          <div 
+            className={`relative bg-background border border-border rounded-xl p-3 transition-all duration-200 ${
+              isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
+            }`}
+          >
+            {/* Drag and drop overlay */}
+            {isDragOver && (
+              <div className="absolute inset-0 bg-primary/10 flex items-center justify-center z-50 rounded-xl border-2 border-dashed border-primary">
+                <div className="text-center">
+                  <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
+                  <p className="text-base font-semibold text-primary">Drop files here</p>
+                </div>
+              </div>
+            )}
+            
+            <Textarea 
+              ref={textareaRef} 
+              value={input} 
+              onChange={handleInputChange} 
+              onKeyDown={handleKeyDown} 
+              placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
+              className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
+              rows={1}
+            />
+            
+            {/* Recording UI - appears below textarea when recording */}
+            {isRecording && (
+              <div className="flex items-center gap-0.5 sm:gap-2 py-1 sm:py-2 px-0">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 sm:h-7 sm:w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                  onClick={cancelRecording}
+                  aria-label="Cancel recording"
+                >
+                  <X className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
+                </Button>
+                
+                <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-2 min-w-0 overflow-hidden">
+                  {/* Real-time audio waveform visualization - mobile optimized */}
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
+                    {audioLevels.map((level, i) => {
+                      // Calculate height based on audio level
+                      const minHeight = 2;
+                      const maxHeight = isMobile ? 16 : 32;
+                      const height = minHeight + (level * (maxHeight - minHeight));
+                      
+                      return (
+                        <div
+                          key={i}
+                          className="w-[0.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                          style={{
+                            height: `${height}px`,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Timer */}
+                  <span className="text-[9px] sm:text-xs font-medium tabular-nums text-foreground flex-shrink-0">
+                    {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                <Button
+                  size="sm"
+                  className="h-5 w-5 sm:h-7 sm:w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                  onClick={stopRecording}
+                  aria-label="Send recording"
+                >
+                  <svg className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                </Button>
+              </div>
+            )}
+            
+            {/* Mobile Image mode controls */}
+            {!isRecording && isImageMode && (
+              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+                <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
+                  <ImageIcon2 className="h-3 w-3" />
+                  <span>Image</span>
+                  <button onClick={handleExitImageMode} className="opacity-0 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5">
+                    <X className="h-3 w-3" />
+                  </button>
+                </div>
+                
+                {/* Styles dropdown */}
+                <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-6 px-2 text-xs gap-1 bg-muted hover:bg-muted/80">
+                      <Palette className="h-3 w-3" />
+                      Styles
+                      <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
+                    <div className="grid grid-cols-3 gap-3">
+                      {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
+                          <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                            <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                              {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium leading-tight">{style.name}</span>
+                        </button>)}
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+            )}
+
+            {!isRecording && (
+              <div className="flex items-center justify-between">
+                {/* Mobile controls */}
+                {isMobile ? (
+                <>
+                  {/* Left side - Upload button */}
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" 
+                        aria-label="Upload or create content"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-48 p-2 bg-background border shadow-lg z-50" align="start">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleFileUpload}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                        Add photos & files
+                      </Button>
+                        <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start gap-2"
+                        onClick={handleCreateImageClick}
+                      >
+                        <ImageIcon className="h-4 w-4" />
+                        Generate an image
+                      </Button>
+                    </PopoverContent>
+                  </Popover>
+
+                  {/* Right side - Send/Voice controls */}
+                  <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
+                    <Button 
+                      size="sm" 
+                      className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
+                        input.trim().length > 0 || selectedFiles.length > 0
+                          ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                          : isRecording 
+                            ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
+                            : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
+                      }`} 
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                      aria-pressed={isRecording}
+                    >
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                        <SendHorizontalIcon className="h-3 w-3" />
+                      ) : (
+                        isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
+                      )}
+                    </Button>
+                    
+                  </div>
+                </>
+              ) : (
+                /* Desktop controls */
+                <>
+                  <div className="flex items-center gap-2">
+                    <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                      <PopoverTrigger asChild>
+                        <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/50 text-muted-foreground">
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                          <Paperclip className="h-4 w-4" />
+                          Add photos & files
+                        </Button>
+                        <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                          <ImageIcon className="h-4 w-4" />
+                          Generate an image
+                        </Button>
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                      <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
+                        <SelectValue>
+                          <span className="text-sm font-medium">{selectedModelData?.shortLabel}</span>
+                        </SelectValue>
+                      </SelectTrigger>
+                       <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
+                          {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
+                               <div className="flex items-center w-full">
+                                 <div className="flex items-center gap-2 min-w-0 flex-1">
+                                   {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                                     <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                   ) : model.id.includes('claude') ? (
+                                      <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                    ) : (
+                                      <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                    )}
+                                   <div className="min-w-0 flex-1">
+                                     <div className="font-medium text-sm truncate">{model.name}</div>
+                                     <div className="text-xs text-muted-foreground truncate">{model.description}</div>
+                                   </div>
+                                 </div>
+                                 {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-auto">Pro</span>}
+                               </div>
+                            </SelectItem>)}
+                       </SelectContent>
+                    </Select>
+                    
+                    <Button 
+                      size="sm" 
+                      className={`h-8 w-8 rounded-full border border-border/50 ${
+                        input.trim().length > 0 || selectedFiles.length > 0
+                          ? 'bg-foreground hover:bg-foreground/90 text-background'
+                          : isRecording 
+                            ? 'bg-red-500 hover:bg-red-600 text-background' 
+                            : 'bg-foreground hover:bg-foreground/90 text-background'
+                      }`} 
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                    >
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                        <SendHorizontalIcon className="h-4 w-4" />
+                      ) : (
+                        isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
+                      )}
+                    </Button>
+                    
+                  </div>
+                </>
+              )}
+            </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Hidden file input */}
+      <input ref={fileInputRef} type="file" multiple onChange={handleFileChange} className="hidden" accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.csv,.json,.xml,.py,.js,.html,.css,.md" />
+
       {/* Image popup modal */}
       {selectedImage && <ImagePopupModal isOpen={!!selectedImage} onClose={() => setSelectedImage(null)} imageUrl={selectedImage.url} prompt={selectedImage.name} />}
 
@@ -2685,7 +3044,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
         onSuccess={() => {
-          // After successful login
+          // Focus back to textarea after successful login
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 100);
         }} 
       />
     </div>
