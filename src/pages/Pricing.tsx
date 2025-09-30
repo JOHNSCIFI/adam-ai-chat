@@ -11,120 +11,93 @@ const Pricing = () => {
   const [isYearly, setIsYearly] = useState(false);
   const plans = [{
     name: "Free",
+    emoji: "🆓",
     price: 0,
     yearlyPrice: 0,
     icon: Zap,
-    description: "Start free, upgrade anytime.",
+    description: "Get started free, upgrade anytime.",
     popular: false,
     features: [{
-      text: "Access to OpenAI's GPT-4.1 Mini",
+      text: "Access to GPT-4o Mini only",
       included: true
     }, {
-      text: "Access to multiple top AI models",
+      text: "GPT-5, Claude, Gemini, DeepSeek, Grok",
       included: false
     }, {
-      text: "Chat with all Models",
+      text: "Voice mode",
       included: false
     }, {
-      text: "Custom bots built for specific use cases",
+      text: "Advanced file uploads",
       included: false
     }, {
-      text: "Unlimited file uploads",
+      text: "Advanced search",
       included: false
     }, {
-      text: "Advanced web search capabilities",
-      included: false
-    }, {
-      text: "Image Generation",
-      included: false
-    }, {
-      text: "Chat with PDF files",
+      text: "Premium features",
       included: false
     }],
-    buttonText: "Get started",
+    buttonText: "Get Started",
     buttonVariant: "outline" as const
   }, {
     name: "Pro",
+    emoji: "⭐",
     price: 19.99,
     yearlyPrice: 15.99,
     icon: Star,
-    description: "$0.67 Per day",
+    description: "For professionals",
     popular: true,
     features: [{
-      text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)",
+      text: "Access to all AI models: GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok",
       included: true
     }, {
-      text: "Chat with all Models",
+      text: "Unlimited chats & model switching",
       included: true
     }, {
-      text: "Extended limits on messages, uploads, and analysis",
+      text: "Voice mode (text-to-speech)",
       included: true
     }, {
-      text: "Text-to-speech voice mode",
+      text: "File uploads (up to 100MB)",
       included: true
     }, {
-      text: "Custom bots built for specific use cases",
+      text: "Chat with PDFs (full access)",
       included: true
     }, {
-      text: "Unlimited file uploads",
-      included: true
-    }, {
-      text: "Advanced web search capabilities",
-      included: true
-    }, {
-      text: "Chat with PDF files",
-      included: true
-    }, {
-      text: "Access to image analysis",
-      included: true
-    }, {
-      text: "3,600 image generations per month",
-      included: true
-    }],
-    buttonText: "Subscribe",
-    buttonVariant: "default" as const
-  }, {
-    name: "Ultra Pro",
-    price: 39.99,
-    yearlyPrice: 31.99,
-    icon: Crown,
-    description: "$1.33 Per day",
-    popular: false,
-    features: [{
-      text: "Access to multiple AI models (GPT-4o, Claude, Gemini, Grok, DeepSeek)",
-      included: true
-    }, {
-      text: "Chat with all Models",
-      included: true
-    }, {
-      text: "Extended limits on messages, uploads, and analysis",
-      included: true
-    }, {
-      text: "Text-to-speech voice mode",
-      included: true
-    }, {
-      text: "Custom bots built for specific use cases",
-      included: true
-    }, {
-      text: "Unlimited file uploads",
-      included: true
-    }, {
-      text: "Advanced web search capabilities",
-      included: true
-    }, {
-      text: "Extended limits for Chat with PDF files",
-      included: true
-    }, {
-      text: "Access to image analysis",
-      included: true
-    }, {
-      text: "14,000 image generations per month",
+      text: "Image generation (~500 / month)",
       included: true
     }, {
       text: "Priority support",
       included: true
     }],
-    buttonText: "Subscribe",
+    buttonText: "Subscribe Now",
+    buttonVariant: "default" as const
+  }, {
+    name: "Ultra Pro",
+    emoji: "🚀",
+    price: 39.99,
+    yearlyPrice: 31.99,
+    icon: Crown,
+    description: "For teams & power users",
+    popular: false,
+    features: [{
+      text: "Everything in Pro",
+      included: true
+    }, {
+      text: "Extended file & message limits",
+      included: true
+    }, {
+      text: "Premium 24/7 support",
+      included: true
+    }, {
+      text: "Image generation (~2,000 / month)",
+      included: true
+    }, {
+      text: "Team collaboration features",
+      included: true
+    }, {
+      text: "Early access to new models",
+      included: true
+    }],
+    buttonText: "Subscribe Now",
     buttonVariant: "outline" as const
   }];
   const getPrice = (plan: typeof plans[0]) => {
@@ -273,21 +246,15 @@ const Pricing = () => {
                       </Badge>
                     </div>}
                   
-                  <div className="flex items-center gap-4 mb-6">
-                    <div className={`p-3 rounded-2xl ${plan.popular ? 'bg-primary/20' : 'bg-muted'}`}>
-                      <IconComponent className={`h-6 w-6 ${plan.popular ? 'text-primary' : 'text-muted-foreground'}`} />
-                    </div>
-                    <h3 className="text-2xl font-bold">{plan.name}</h3>
-                  </div>
-                  
-                  <div className="mb-8">
+                  <div className="mb-6">
+                    <h3 className="text-2xl font-bold mb-2">{plan.emoji} {plan.name}</h3>
                     <div className="flex items-baseline gap-2 mb-2">
-                      <span className="text-5xl font-bold">
-                        ${currentPrice}
+                      <span className="text-4xl font-bold">
+                        €{currentPrice}
                       </span>
-                      {plan.price > 0 && <span className="text-muted-foreground">
-                          /{isYearly ? 'year' : 'month'}
-                        </span>}
+                      <span className="text-muted-foreground text-lg">
+                        / month
+                      </span>
                     </div>
                     
                     {isYearly && savings > 0 && <Badge variant="secondary" className="bg-green-500/10 text-green-600 border-green-500/30 mb-2">
@@ -297,10 +264,14 @@ const Pricing = () => {
                     <p className="text-muted-foreground">{plan.description}</p>
                   </div>
                   
-                  <div className="space-y-4 mb-8">
+                  <div className="space-y-3 mb-8">
                     {plan.features.map((feature, featureIndex) => <div key={featureIndex} className="flex items-start gap-3">
-                        {feature.included ? <Check className="h-5 w-5 text-green-500 flex-shrink-0 mt-0.5" /> : <X className="h-5 w-5 text-muted-foreground flex-shrink-0 mt-0.5" />}
-                        <span className={feature.included ? '' : 'text-muted-foreground'}>
+                        {feature.included ? <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <Check className="h-3 w-3 text-primary-foreground" />
+                          </div> : <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <X className="h-3 w-3 text-muted-foreground" />
+                          </div>}
+                        <span className={`text-sm ${feature.included ? 'text-foreground' : 'text-muted-foreground'}`}>
                           {feature.text}
                         </span>
                       </div>)}
