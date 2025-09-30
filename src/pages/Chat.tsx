@@ -418,7 +418,7 @@ export default function Chat() {
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
     try {
-      console.log('[REGENERATE] Regenerating with attachments:', userMessageAttachments);
+      console.log('[REGENERATE] Starting regeneration with attachments:', userMessageAttachments);
 
       // Convert image URLs to base64 for webhook
       const fileAttachmentsForWebhook = await Promise.all(
@@ -429,7 +429,13 @@ export default function Chat() {
               
               // Fetch the image
               const response = await fetch(file.url);
+              if (!response.ok) {
+                console.error('[REGENERATE] Failed to fetch image:', response.status);
+                return null;
+              }
+              
               const blob = await response.blob();
+              console.log('[REGENERATE] Image fetched, blob size:', blob.size);
               
               // Convert to PNG using canvas
               const img = new Image();
@@ -440,6 +446,8 @@ export default function Chat() {
                 img.onerror = reject;
                 img.src = imgUrl;
               });
+              
+              console.log('[REGENERATE] Image loaded, dimensions:', img.width, 'x', img.height);
 
               const canvas = document.createElement('canvas');
               canvas.width = img.width;
@@ -450,38 +458,61 @@ export default function Chat() {
 
               // Convert to PNG base64
               const base64 = canvas.toDataURL('image/png').split(',')[1];
+              console.log('[REGENERATE] Converted to base64, length:', base64.length);
               
-              return {
+              const converted = {
                 fileName: file.name,
                 fileSize: file.size,
                 fileType: 'image/png',
                 fileData: base64
               };
+              
+              console.log('[REGENERATE] Returning converted attachment:', { 
+                fileName: converted.fileName, 
+                fileType: converted.fileType, 
+                dataLength: converted.fileData.length 
+              });
+              
+              return converted;
             } catch (error) {
               console.error('[REGENERATE] Error converting image to base64:', error);
               return null;
             }
           }
+          console.log('[REGENERATE] Skipping non-image file:', file.type);
           return null;
         })
       );
 
       // Filter out null values
       const validAttachments = fileAttachmentsForWebhook.filter(f => f !== null);
+      console.log('[REGENERATE] Valid attachments after conversion:', validAttachments.length);
+      
+      if (validAttachments.length > 0) {
+        console.log('[REGENERATE] First attachment format check:', {
+          hasFileName: 'fileName' in validAttachments[0],
+          hasFileData: 'fileData' in validAttachments[0],
+          hasUrl: 'url' in validAttachments[0]
+        });
+      }
+
+      const payload = {
+        type: 'text',
+        message: userMessage,
+        userId: user.id,
+        chatId: chatId,
+        model: userModel,
+        fileAttachments: validAttachments.length > 0 ? validAttachments : undefined
+      };
+      
+      console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
 
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({
-          type: 'text',
-          message: userMessage,
-          userId: user.id,
-          chatId: chatId,
-          model: userModel,
-          fileAttachments: validAttachments.length > 0 ? validAttachments : undefined
-        })
+        body: JSON.stringify(payload)
       });
       
       if (!webhookResponse.ok) {
