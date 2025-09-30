@@ -214,6 +214,7 @@ export default function Index() {
   const [showMoreButtons, setShowMoreButtons] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
+  const [tempTranscript, setTempTranscript] = useState('');
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -350,7 +351,7 @@ export default function Index() {
           for (let i = 0; i < event.results.length; i++) {
             transcript += event.results[i][0].transcript;
           }
-          setMessage(transcript);
+          setTempTranscript(transcript);
         };
         
         recognition.onerror = (event: any) => {
@@ -405,14 +406,9 @@ export default function Index() {
   };
   
   const stopRecording = () => {
-    // Capture final transcript before stopping
-    if (recognitionRef.current) {
-      // Add a small delay to ensure final transcript is captured
-      setTimeout(() => {
-        recognitionRef.current?.stop();
-        recognitionRef.current = null;
-      }, 100);
-    }
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
     
     // Stop audio analysis
     if (animationFrameRef.current) {
@@ -436,7 +432,10 @@ export default function Index() {
     setIsRecording(false);
     setAudioLevels(Array(100).fill(0));
     
-    // Keep the transcribed text in the textarea (message state is preserved)
+    // Now set the message from temporary transcript
+    setMessage(tempTranscript);
+    setTempTranscript('');
+    
     // Focus textarea after stopping to show the text
     setTimeout(() => {
       textareaRef.current?.focus();
