@@ -2740,29 +2740,51 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             )}
             
             {isRecording ? (
-              <div className="flex items-center gap-3 py-2 mb-3">
-                <div className="flex-1 flex items-center justify-center gap-0.5">
-                  {/* Waveform visualization with real audio levels */}
-                  {audioLevels.map((level, index) => (
-                    <div
-                      key={index}
-                      className="w-0.5 bg-red-500 rounded-full transition-all duration-100"
-                      style={{
-                        height: `${Math.max(8, level * 40)}px`,
-                        opacity: 0.3 + level * 0.7
-                      }}
-                    />
-                  ))}
-                </div>
-                
+              <div className="flex items-center gap-2 py-3 px-1 mb-3">
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
                   onClick={stopRecording}
-                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  aria-label="Cancel recording"
+                >
+                  <X className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                </Button>
+                
+                <div className="flex-1 flex items-center justify-center gap-3">
+                  {/* Real-time audio waveform visualization */}
+                  <div className="flex items-center justify-center gap-[1px] sm:gap-[2px] h-8 flex-1 max-w-[600px] overflow-hidden">
+                    {audioLevels.map((level, i) => {
+                      // Calculate height based on audio level
+                      const minHeight = 2;
+                      const maxHeight = 32;
+                      const height = minHeight + (level * (maxHeight - minHeight));
+                      
+                      return (
+                        <div
+                          key={i}
+                          className="w-[1.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                          style={{
+                            height: `${height}px`,
+                          }}
+                        />
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Timer */}
+                  <span className="text-sm font-medium tabular-nums text-foreground flex-shrink-0">
+                    {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                <Button
+                  size="sm"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                  onClick={stopRecording}
                   aria-label="Done recording"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
