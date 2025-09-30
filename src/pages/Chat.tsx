@@ -327,25 +327,15 @@ export default function Chat() {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    console.log('[CHAT-INITIAL] Checking for initial data:', {
-      chatId,
-      hasInitialMessage: !!initialMessage,
-      hasInitialFiles: !!initialFiles,
-      filesCount: initialFiles?.length || 0,
-      hasProcessed: hasProcessedInitialData.current
-    });
-    
     // Handle message with or without files
     if ((initialMessage || (initialFiles && initialFiles.length > 0)) && chatId && !hasProcessedInitialData.current) {
-      console.log('[CHAT-INITIAL] Processing from home page:', { initialFiles, initialMessage: initialMessage?.substring(0, 50) });
+      console.log('[INITIAL-DATA] Processing from home page:', { initialFiles, initialMessage });
       hasProcessedInitialData.current = true;
       shouldAutoSend.current = true;
       
       // Set the message and files
       setInput(initialMessage || '');
       setSelectedFiles(initialFiles || []);
-      
-      console.log('[CHAT-INITIAL] Set input and files, will auto-send');
       
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
@@ -355,11 +345,7 @@ export default function Chat() {
   // Auto-send when data is ready after being set from navigation
   useEffect(() => {
     if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
-      console.log('[CHAT-INITIAL] Auto-sending message:', {
-        hasInput: !!input,
-        filesCount: selectedFiles.length,
-        chatId
-      });
+      console.log('[INITIAL-DATA] Auto-sending message');
       shouldAutoSend.current = false;
       
       // Trigger send after a small delay to ensure UI is ready
