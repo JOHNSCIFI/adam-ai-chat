@@ -393,12 +393,14 @@ export default function Chat() {
     // Find the user message that came before this assistant message
     const messageIndex = messages.findIndex(msg => msg.id === messageId);
     let userMessage = '';
+    let userMessageAttachments: FileAttachment[] = [];
     let userModel = selectedModel; // Default to current selected model
     
     // Look backwards to find the previous user message
     for (let i = messageIndex - 1; i >= 0; i--) {
       if (messages[i].role === 'user') {
         userMessage = messages[i].content;
+        userMessageAttachments = messages[i].file_attachments || [];
         break;
       }
     }
@@ -414,6 +416,15 @@ export default function Chat() {
 
     setIsGeneratingResponse(true);
     try {
+      console.log('[REGENERATE] Regenerating with attachments:', userMessageAttachments);
+
+      // Prepare file attachments for webhook
+      const fileAttachmentsForWebhook = userMessageAttachments.map(file => ({
+        url: file.url,
+        name: file.name,
+        type: file.type,
+        size: file.size
+      }));
 
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
@@ -425,7 +436,8 @@ export default function Chat() {
           message: userMessage,
           userId: user.id,
           chatId: chatId,
-          model: userModel
+          model: userModel,
+          fileAttachments: fileAttachmentsForWebhook.length > 0 ? fileAttachmentsForWebhook : undefined
         })
       });
       
