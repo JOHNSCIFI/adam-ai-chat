@@ -305,32 +305,32 @@ export default function Chat() {
   }, [messages, loading, isGeneratingResponse, chatId]);
 
   // Handle initial files and message from navigation (from home page)
-  const hasProcessedInitialFiles = useRef(false);
+  const hasProcessedInitialData = useRef(false);
   const shouldAutoSend = useRef(false);
   
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    // Allow files with or without message
-    if (initialFiles && initialFiles.length > 0 && chatId && !hasProcessedInitialFiles.current) {
-      console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
-      hasProcessedInitialFiles.current = true;
+    // Handle message with or without files
+    if ((initialMessage || (initialFiles && initialFiles.length > 0)) && chatId && !hasProcessedInitialData.current) {
+      console.log('[INITIAL-DATA] Processing from home page:', { initialFiles, initialMessage });
+      hasProcessedInitialData.current = true;
       shouldAutoSend.current = true;
       
-      // Set the message and files (message can be empty)
+      // Set the message and files
       setInput(initialMessage || '');
-      setSelectedFiles(initialFiles);
+      setSelectedFiles(initialFiles || []);
       
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
   }, [chatId, location.state]);
 
-  // Auto-send when files are ready after being set from navigation (with or without message)
+  // Auto-send when data is ready after being set from navigation
   useEffect(() => {
-    if (shouldAutoSend.current && selectedFiles.length > 0 && !loading && chatId) {
-      console.log('[INITIAL-FILES] Auto-sending message with files');
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
+      console.log('[INITIAL-DATA] Auto-sending message');
       shouldAutoSend.current = false;
       
       // Trigger send after a small delay to ensure UI is ready
@@ -338,7 +338,7 @@ export default function Chat() {
         sendMessage();
       }, 500);
     }
-  }, [selectedFiles, loading, chatId]);
+  }, [input, selectedFiles, loading, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
