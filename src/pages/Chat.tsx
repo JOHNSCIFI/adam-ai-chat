@@ -1133,7 +1133,7 @@ export default function Chat() {
               const filePath = `${user.id}/${chatId}/${Date.now()}_${finalFileName}`;
               
               const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('chat-images') // Using same bucket for all files
+                .from('chat-files') // Use chat-files bucket for non-image files
                 .upload(filePath, file, {
                   cacheControl: '3600',
                   upsert: false
@@ -1148,7 +1148,7 @@ export default function Chat() {
 
               // Get public URL
               const { data: urlData } = supabase.storage
-                .from('chat-images')
+                .from('chat-files')
                 .getPublicUrl(filePath);
 
               finalFileUrl = urlData.publicUrl;
