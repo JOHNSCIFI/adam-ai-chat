@@ -334,23 +334,22 @@ export default function Index() {
       }]).select().single();
       if (chatError) throw chatError;
 
-      // Insert user message
-      const {
-        error: messageError
-      } = await supabase.from('messages').insert({
-        chat_id: chatData.id,
-        content: message,
-        role: 'user'
-      });
-      if (messageError) throw messageError;
-
-      // Clear message and navigate immediately to chat page
-      // Pass the selected model via navigation state so Chat page uses same model
+      // Store the message and files for Chat page to process
+      const messageText = message;
+      const filesToSend = [...selectedFiles];
+      
+      // Clear message and files
       setMessage('');
+      setSelectedFiles([]);
+      
+      // Navigate to chat page with files and message to send
+      // Chat page will handle creating the message and sending to webhook
       navigate(`/chat/${chatData.id}`, {
         replace: true,
         state: {
-          selectedModel: selectedModel
+          selectedModel: selectedModel,
+          initialFiles: filesToSend,
+          initialMessage: messageText
         }
       });
     } catch (error) {

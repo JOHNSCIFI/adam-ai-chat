@@ -344,6 +344,34 @@ export default function Chat() {
     }
   }, [messages, loading, isGeneratingResponse, chatId]);
 
+  // Handle initial files and message from navigation (from home page)
+  const hasProcessedInitialFiles = useRef(false);
+  useEffect(() => {
+    const initialFiles = location.state?.initialFiles;
+    const initialMessage = location.state?.initialMessage;
+    
+    if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
+      console.log('[INITIAL-FILES] Processing files from home page:', initialFiles);
+      hasProcessedInitialFiles.current = true;
+      
+      // Set the message and files
+      setInput(initialMessage);
+      setSelectedFiles(initialFiles);
+      
+      // Auto-send after a short delay to ensure UI and state are ready
+      setTimeout(async () => {
+        try {
+          await sendMessage();
+        } catch (error) {
+          console.error('[INITIAL-FILES] Error sending message:', error);
+        }
+      }, 800);
+      
+      // Clear the navigation state to prevent re-triggering
+      window.history.replaceState({}, document.title);
+    }
+  }, [chatId, location.state]);
+
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
       return;
