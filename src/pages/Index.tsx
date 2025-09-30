@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useMessageLimit } from '@/hooks/useMessageLimit';
@@ -132,6 +132,7 @@ const additionalButtons: typeof suggestionButtons = [];
 const suggestionPrompts = suggestionsByCategory;
 
 export default function Index() {
+  const location = useLocation();
   const {
     user,
     loading: authLoading,
@@ -199,7 +200,10 @@ export default function Index() {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
-  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
+  const [selectedModel, setSelectedModel] = useState(() => {
+    // Use model from navigation state if available, otherwise default to gpt-4o-mini
+    return location.state?.selectedModel || 'gpt-4o-mini';
+  });
   const [isDragOver, setIsDragOver] = useState(false);
   const [modelsScrollPosition, setModelsScrollPosition] = useState(0);
   const [isImageMode, setIsImageMode] = useState(false);

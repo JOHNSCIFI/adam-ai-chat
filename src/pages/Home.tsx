@@ -82,15 +82,14 @@ const Home = () => {
                 size="sm" 
                 className="w-full mt-auto"
                 onClick={() => {
-                  localStorage.setItem('selectedModel', 'gpt-4o');
                   if (typeof window !== 'undefined' && (window as any).gtag) {
                     (window as any).gtag('event', 'model_select', {
-                      model: 'gpt-5'
+                      model: 'gpt-4o'
                     });
                   }
-                  navigate('/?focus=chat');
+                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
                 }}
-                aria-label="Switch to GPT-5 and start a new chat"
+                aria-label="Switch to GPT-4o and start a new chat"
               >
                 Try with this model
               </Button>
@@ -110,13 +109,12 @@ const Home = () => {
                 size="sm" 
                 className="w-full mt-auto"
                 onClick={() => {
-                  localStorage.setItem('selectedModel', 'claude-3-5-sonnet-20241022');
                   if (typeof window !== 'undefined' && (window as any).gtag) {
                     (window as any).gtag('event', 'model_select', {
-                      model: 'claude'
+                      model: 'claude-sonnet-4'
                     });
                   }
-                  navigate('/?focus=chat');
+                  navigate('/', { state: { selectedModel: 'claude-sonnet-4' } });
                 }}
                 aria-label="Switch to Claude and start a new chat"
               >
@@ -124,7 +122,7 @@ const Home = () => {
               </Button>
             </div>
             
-            {/* Gemini */}
+            {/* Gemini - maps to gpt-4o since not available in dropdown */}
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
@@ -138,21 +136,20 @@ const Home = () => {
                 size="sm" 
                 className="w-full mt-auto"
                 onClick={() => {
-                  localStorage.setItem('selectedModel', 'gemini-2.0-flash-exp');
                   if (typeof window !== 'undefined' && (window as any).gtag) {
                     (window as any).gtag('event', 'model_select', {
-                      model: 'gemini'
+                      model: 'gpt-4o'
                     });
                   }
-                  navigate('/?focus=chat');
+                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
                 }}
-                aria-label="Switch to Gemini and start a new chat"
+                aria-label="Switch to GPT-4o and start a new chat"
               >
                 Try with this model
               </Button>
             </div>
             
-            {/* DeepSeek */}
+            {/* DeepSeek - maps to gpt-4o since not available in dropdown */}
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
@@ -166,15 +163,14 @@ const Home = () => {
                 size="sm" 
                 className="w-full mt-auto"
                 onClick={() => {
-                  localStorage.setItem('selectedModel', 'deepseek-chat');
                   if (typeof window !== 'undefined' && (window as any).gtag) {
                     (window as any).gtag('event', 'model_select', {
-                      model: 'deepseek'
+                      model: 'gpt-4o'
                     });
                   }
-                  navigate('/?focus=chat');
+                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
                 }}
-                aria-label="Switch to DeepSeek and start a new chat"
+                aria-label="Switch to GPT-4o and start a new chat"
               >
                 Try with this model
               </Button>
