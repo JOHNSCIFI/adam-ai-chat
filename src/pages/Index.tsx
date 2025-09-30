@@ -798,18 +798,35 @@ export default function Index() {
               </Button>
               
               <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-3 min-w-0 overflow-hidden">
-                {/* Real-time audio waveform visualization - mobile optimized */}
-                <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
+                {/* Real-time audio waveform visualization - fills left to right */}
+                <div className="flex items-center justify-start gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0 bg-muted/30 rounded-full px-1">
                   {audioLevels.map((level, i) => {
+                    // Calculate progress: how many bars should be "recorded" (filled)
+                    // Assume max 60 seconds recording, scale progress accordingly
+                    const maxDuration = 60; // seconds
+                    const progress = Math.min(recordingDuration / maxDuration, 1);
+                    const totalBars = audioLevels.length;
+                    const recordedBars = Math.floor(progress * totalBars);
+                    
+                    // Check if this bar is in the "recorded" section
+                    const isRecorded = i < recordedBars;
+                    
                     // Calculate height based on audio level
                     const minHeight = 2;
                     const maxHeight = isMobile ? 16 : 32;
-                    const height = minHeight + (level * (maxHeight - minHeight));
+                    
+                    // If recorded: show actual audio level in dark color
+                    // If not recorded: show minimal height in light gray
+                    const height = isRecorded 
+                      ? minHeight + (level * (maxHeight - minHeight))
+                      : minHeight;
                     
                     return (
                       <div
                         key={i}
-                        className="w-[0.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                        className={`w-[0.5px] sm:w-[2px] rounded-full transition-all duration-75 ease-out ${
+                          isRecorded ? 'bg-foreground' : 'bg-muted-foreground/20'
+                        }`}
                         style={{
                           height: `${height}px`,
                         }}
