@@ -1027,7 +1027,8 @@ export default function Chat() {
               user_id: user.id,
               image_base64: webhookData.image_base64,
               image_name: webhookData.image_name || 'generated_image.png',
-              image_type: webhookData.image_type || 'image/png'
+              image_type: webhookData.image_type || 'image/png',
+              model: 'generate-image' // Pass the model to webhook-handler
             }
           });
           

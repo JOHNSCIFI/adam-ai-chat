@@ -43,10 +43,12 @@ serve(async (req) => {
     const user_id = body.body?.userId || body.user_id;
     const image_base64 = body.image_base64;
     const response_data = body.response_data;
+    const model = body.model || body.body?.model; // Extract model from request
 
     console.log('[WEBHOOK-HANDLER] ===== EXTRACTED VALUES =====');
     console.log('[WEBHOOK-HANDLER] chat_id:', chat_id);
     console.log('[WEBHOOK-HANDLER] user_id:', user_id);
+    console.log('[WEBHOOK-HANDLER] model:', model);
     console.log('[WEBHOOK-HANDLER] Has image_base64?', !!image_base64);
     console.log('[WEBHOOK-HANDLER] Image base64 length:', image_base64?.length || 0);
     console.log('[WEBHOOK-HANDLER] Has response_data?', !!response_data);
@@ -184,6 +186,7 @@ serve(async (req) => {
         content: responseContent || 'Generated image',
         role: 'assistant',
         file_attachments: fileAttachments,
+        model: model, // Save the model field
         created_at: new Date().toISOString()
       })
       .select()
