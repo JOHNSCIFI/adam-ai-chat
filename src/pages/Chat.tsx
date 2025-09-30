@@ -2566,16 +2566,24 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  </Button>
                                )}
                                
-                                  {/* Refresh button - only show on last AI response with no messages after it */}
+                                  {/* Refresh button - show on last AI response, with thinking animation during generation */}
                                   {(() => {
                                     // Find current message index
                                     const currentIndex = messages.findIndex(msg => msg.id === message.id);
-                                    // Check if there are any messages after this one
-                                    const hasMessagesAfter = currentIndex < messages.length - 1;
                                     // Find the last assistant message
                                     const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
-                                    // Only show if it's the last assistant message AND no messages after it
-                                    return lastAssistantMessage && lastAssistantMessage.id === message.id && !hasMessagesAfter;
+                                    
+                                    if (!lastAssistantMessage || lastAssistantMessage.id !== message.id) {
+                                      return false;
+                                    }
+                                    
+                                    // Check if there are any assistant messages after this one
+                                    const hasAssistantMessagesAfter = messages.slice(currentIndex + 1).some(msg => msg.role === 'assistant');
+                                    
+                                    // Show button if:
+                                    // 1. It's the last assistant message AND
+                                    // 2. No assistant messages after it (can have user messages during generation)
+                                    return !hasAssistantMessagesAfter;
                                    })() && (
                                     <Button 
                                       variant="ghost" 
