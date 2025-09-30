@@ -431,23 +431,6 @@ const Home = () => {
               </Button>
             </div>
           </div>
-          
-          <div className="text-center mt-12">
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" aria-hidden="true" />
-                <span>30-day money back guarantee</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" aria-hidden="true" />
-                <span>10,000+ satisfied users</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4" aria-hidden="true" />
-                <span>24/7 customer support</span>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
