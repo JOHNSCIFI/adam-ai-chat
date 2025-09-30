@@ -347,7 +347,7 @@ export default function Chat() {
 
     // Check if user is authenticated
     if (!user) {
-      toast.error('Please sign in to regenerate responses');
+      console.warn('[REGENERATE] User not authenticated');
       return;
     }
 
@@ -558,7 +558,6 @@ export default function Chat() {
 
         if (updateError) {
           console.error('[REGENERATE] Error updating regenerated message:', updateError);
-          toast.error('Failed to save regenerated response');
         } else {
           console.log(`[REGENERATE] Successfully updated message in database:`, updatedData);
           
@@ -572,14 +571,12 @@ export default function Chat() {
                 }
               : msg
           ));
-          
-          toast.success('Response regenerated successfully');
         }
 
         scrollToBottom();
       }
     } catch (error) {
-      toast.error('Failed to regenerate response');
+      console.error('[REGENERATE] Error:', error);
     } finally {
       setIsGeneratingResponse(false);
       setRegeneratingMessageId(null);
@@ -643,7 +640,6 @@ export default function Chat() {
             console.error('[AI-RESPONSE] Webhook-handler error:', handlerError);
           } else {
             console.log('[AI-RESPONSE] Image uploaded successfully via webhook-handler');
-            toast.success('Image generated successfully!');
           }
         } catch (err) {
           console.error('[AI-RESPONSE] Failed to upload image:', err);
@@ -1025,7 +1021,6 @@ export default function Chat() {
           }
           
           console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
-          toast.success('Image generated successfully!');
         } else {
           console.error('[IMAGE-GEN] No image_base64 in webhook response');
           toast.error('Failed to receive generated image');
@@ -1777,7 +1772,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       }
       
       setSelectedFiles(combinedFiles);
-      toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
+      console.log(`[FILES] ${newFiles.length} file(s) added (${combinedFiles.length} total)`);
       // Reset the input
       event.target.value = '';
     }
@@ -2335,7 +2330,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             }
             
             setSelectedFiles(combinedFiles);
-            toast.success(`${newFiles.length} file(s) added (${combinedFiles.length} total)`);
+            console.log(`[FILES] ${newFiles.length} file(s) added (${combinedFiles.length} total)`);
           }
         }}
       >
@@ -2875,12 +2870,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           try {
             // Edited images are now handled by webhook only
             console.log('Image editing completed - processed by webhook');
-            toast.success('Image edited successfully');
           } catch (error) {
             console.error('Error with edited image:', error);
             toast.error('Failed to process edited image');
           }
-        }} 
+        }}
       />}
 
       {/* Auth Modal */}
