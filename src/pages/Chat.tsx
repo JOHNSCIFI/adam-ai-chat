@@ -136,6 +136,7 @@ export default function Chat() {
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [regeneratingMessageId, setRegeneratingMessageId] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
@@ -415,6 +416,7 @@ export default function Chat() {
     }
 
     setIsGeneratingResponse(true);
+    setRegeneratingMessageId(messageId);
     try {
       console.log('[REGENERATE] Regenerating with attachments:', userMessageAttachments);
 
@@ -542,6 +544,7 @@ export default function Chat() {
       toast.error('Failed to regenerate response');
     } finally {
       setIsGeneratingResponse(false);
+      setRegeneratingMessageId(null);
     }
   };
 
@@ -2343,103 +2346,115 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                })}
                             </div>}
                         
-                           {message.content && <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'anywhere'
-                  }}>
-                               {message.content.includes("🎨 Generating your image") ? <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
-                                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                   <div>
-                                     <p className="text-sm font-medium">Generating your image...</p>
-                                     <p className="text-xs text-muted-foreground">This may take a few moments</p>
-                                   </div>
-                                 </div> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
-                      code({
-                        node,
-                        className,
-                        children,
-                        ...props
-                      }: any) {
-                        const match = /language-(\w+)/.exec(className || '');
-                        const inline = !match;
-                        return inline ? <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
+                            {message.content && (
+                              regeneratingMessageId === message.id ? (
+                                <div className="flex items-center gap-3 py-8">
+                                  <div className="flex gap-1">
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
+                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
+                     wordBreak: 'break-word',
+                     overflowWrap: 'anywhere'
+                   }}>
+                                {message.content.includes("🎨 Generating your image") ? <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                    <div>
+                                      <p className="text-sm font-medium">Generating your image...</p>
+                                      <p className="text-xs text-muted-foreground">This may take a few moments</p>
+                                    </div>
+                                  </div> : <ReactMarkdown remarkPlugins={[remarkGfm]} components={{
+                       code({
+                         node,
+                         className,
+                         children,
+                         ...props
+                       }: any) {
+                         const match = /language-(\w+)/.exec(className || '');
+                         const inline = !match;
+                         return inline ? <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
+                                        {children}
+                                      </code> : <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-1">
+                                        <code {...props}>
+                                          {children}
+                                        </code>
+                                      </pre>;
+                       },
+                       p: ({
+                         children,
+                         ...props
+                       }) => <p {...props} className="break-words overflow-wrap-anywhere !my-0" style={{
+                         wordBreak: 'break-word',
+                         overflowWrap: 'anywhere'
+                       }}>
                                        {children}
-                                     </code> : <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-1">
-                                       <code {...props}>
-                                         {children}
-                                       </code>
-                                     </pre>;
-                      },
-                      p: ({
-                        children,
-                        ...props
-                      }) => <p {...props} className="break-words overflow-wrap-anywhere !my-0" style={{
-                        wordBreak: 'break-word',
-                        overflowWrap: 'anywhere'
-                      }}>
+                                     </p>,
+                       h1: ({
+                         children,
+                         ...props
+                       }) => <h1 {...props} className="!my-1 !mb-1">
                                       {children}
-                                    </p>,
-                      h1: ({
-                        children,
-                        ...props
-                      }) => <h1 {...props} className="!my-1 !mb-1">
-                                     {children}
-                                   </h1>,
-                      h2: ({
-                        children,
-                        ...props
-                      }) => <h2 {...props} className="!my-1 !mb-1">
-                                     {children}
-                                   </h2>,
-                      h3: ({
-                        children,
-                        ...props
-                      }) => <h3 {...props} className="!my-0.5 !mb-0.5">
-                                     {children}
-                                   </h3>,
-                      h4: ({
-                        children,
-                        ...props
-                      }) => <h4 {...props} className="!my-0.5 !mb-0.5">
-                                     {children}
-                                   </h4>,
-                      ul: ({
-                        children,
-                        ...props
-                      }) => <ul {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                                    </h1>,
+                       h2: ({
+                         children,
+                         ...props
+                       }) => <h2 {...props} className="!my-1 !mb-1">
                                       {children}
-                                    </ul>,
-                      ol: ({
-                        children,
-                        ...props
-                      }) => <ol {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                                    </h2>,
+                       h3: ({
+                         children,
+                         ...props
+                       }) => <h3 {...props} className="!my-0.5 !mb-0.5">
                                       {children}
-                                    </ol>,
-                      li: ({
-                        children,
-                        ...props
-                      }) => <li {...props} className="!my-0">
-                                     {children}
-                                   </li>,
-                      blockquote: ({
-                        children,
-                        ...props
-                      }) => <blockquote {...props} className="!my-1">
-                                     {children}
-                                   </blockquote>,
-                      table: ({
-                        children,
-                        ...props
-                      }) => <table {...props} className="!my-1">
-                                     {children}
-                                   </table>,
-                      hr: ({
-                        ...props
-                      }) => <hr {...props} className="!my-1" />
-                    }}>
-                                {message.content}
-                              </ReactMarkdown>}
-                            </div>}
+                                    </h3>,
+                       h4: ({
+                         children,
+                         ...props
+                       }) => <h4 {...props} className="!my-0.5 !mb-0.5">
+                                      {children}
+                                    </h4>,
+                       ul: ({
+                         children,
+                         ...props
+                       }) => <ul {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                                       {children}
+                                     </ul>,
+                       ol: ({
+                         children,
+                         ...props
+                       }) => <ol {...props} className="!my-0 !leading-tight [&>li]:!my-0">
+                                       {children}
+                                     </ol>,
+                       li: ({
+                         children,
+                         ...props
+                       }) => <li {...props} className="!my-0">
+                                      {children}
+                                    </li>,
+                       blockquote: ({
+                         children,
+                         ...props
+                       }) => <blockquote {...props} className="!my-1">
+                                      {children}
+                                    </blockquote>,
+                       table: ({
+                         children,
+                         ...props
+                       }) => <table {...props} className="!my-1">
+                                      {children}
+                                    </table>,
+                       hr: ({
+                         ...props
+                       }) => <hr {...props} className="!my-1" />
+                     }}>
+                                 {message.content}
+                               </ReactMarkdown>}
+                             </div>
+                              )
+                            )}
                          
                        </div>
                        
