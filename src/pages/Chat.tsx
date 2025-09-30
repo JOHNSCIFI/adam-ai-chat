@@ -418,13 +418,54 @@ export default function Chat() {
     try {
       console.log('[REGENERATE] Regenerating with attachments:', userMessageAttachments);
 
-      // Prepare file attachments for webhook
-      const fileAttachmentsForWebhook = userMessageAttachments.map(file => ({
-        url: file.url,
-        name: file.name,
-        type: file.type,
-        size: file.size
-      }));
+      // Convert image URLs to base64 for webhook
+      const fileAttachmentsForWebhook = await Promise.all(
+        userMessageAttachments.map(async (file) => {
+          if (file.type.startsWith('image/')) {
+            try {
+              console.log('[REGENERATE] Converting image to base64:', file.url);
+              
+              // Fetch the image
+              const response = await fetch(file.url);
+              const blob = await response.blob();
+              
+              // Convert to PNG using canvas
+              const img = new Image();
+              const imgUrl = URL.createObjectURL(blob);
+              
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = imgUrl;
+              });
+
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx?.drawImage(img, 0, 0);
+              URL.revokeObjectURL(imgUrl);
+
+              // Convert to PNG base64
+              const base64 = canvas.toDataURL('image/png').split(',')[1];
+              
+              return {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: 'image/png',
+                fileData: base64
+              };
+            } catch (error) {
+              console.error('[REGENERATE] Error converting image to base64:', error);
+              return null;
+            }
+          }
+          return null;
+        })
+      );
+
+      // Filter out null values
+      const validAttachments = fileAttachmentsForWebhook.filter(f => f !== null);
 
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
@@ -437,7 +478,7 @@ export default function Chat() {
           userId: user.id,
           chatId: chatId,
           model: userModel,
-          fileAttachments: fileAttachmentsForWebhook.length > 0 ? fileAttachmentsForWebhook : undefined
+          fileAttachments: validAttachments.length > 0 ? validAttachments : undefined
         })
       });
       
