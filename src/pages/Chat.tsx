@@ -86,10 +86,6 @@ export default function Chat() {
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
   const collapsed = sidebarState === 'collapsed';
 
-  // Auto-deletion timer
-  const autoDeleteTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-
   // Calculate proper centering based on sidebar state
   const getContainerStyle = () => {
     if (collapsed) {
@@ -261,43 +257,6 @@ export default function Chat() {
       };
     }
   }, [chatId, user]);
-
-  // Auto-deletion timer
-  useEffect(() => {
-    if (!chatId || !user || hasUserInteracted) return;
-
-    // Clear any existing timer
-    if (autoDeleteTimerRef.current) {
-      clearTimeout(autoDeleteTimerRef.current);
-    }
-
-    // Set timer for 2 minutes (120 seconds)
-    autoDeleteTimerRef.current = setTimeout(async () => {
-      if (!hasUserInteracted) {
-        try {
-          // Delete the chat and its messages
-          const { error: deleteError } = await supabase
-            .from('chats')
-            .delete()
-            .eq('id', chatId);
-
-          if (!deleteError) {
-            // Navigate to home page
-            window.location.href = '/';
-          }
-        } catch (error) {
-          // Silently fail
-        }
-      }
-    }, 2 * 60 * 1000); // 2 minutes
-
-    // Cleanup timer on unmount
-    return () => {
-      if (autoDeleteTimerRef.current) {
-        clearTimeout(autoDeleteTimerRef.current);
-      }
-    };
-  }, [chatId, user, hasUserInteracted]);
 
   useEffect(() => {
     scrollToBottom();
@@ -2168,11 +2127,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const value = e.target.value;
     setInput(value);
-    
-    // Mark user interaction to prevent auto-deletion
-    if (value.trim()) {
-      setHasUserInteracted(true);
-    }
 
     // Auto-resize textarea
     if (textareaRef.current) {
