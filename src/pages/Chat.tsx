@@ -2751,30 +2751,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             {/* Recording UI - appears below textarea when recording */}
             {isRecording && (
-              <div className="flex items-center gap-1 sm:gap-2 py-1.5 sm:py-2 px-0">
+              <div className="flex items-center gap-0.5 sm:gap-2 py-1 sm:py-2 px-0">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-6 w-6 sm:h-7 sm:w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                  className="h-5 w-5 sm:h-7 sm:w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
                   onClick={stopRecording}
                   aria-label="Cancel recording"
                 >
-                  <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                  <X className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
                 </Button>
                 
-                <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0">
+                <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-2 min-w-0 overflow-hidden">
                   {/* Real-time audio waveform visualization - mobile optimized */}
-                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-5 sm:h-6 flex-1 max-w-[250px] sm:max-w-[600px] min-w-0">
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-4 sm:h-6 flex-1 max-w-[180px] sm:max-w-[600px] min-w-0">
                     {audioLevels.map((level, i) => {
                       // Calculate height based on audio level
                       const minHeight = 2;
-                      const maxHeight = isMobile ? 20 : 24;
+                      const maxHeight = isMobile ? 16 : 24;
                       const height = minHeight + (level * (maxHeight - minHeight));
                       
                       return (
                         <div
                           key={i}
-                          className="w-[0.75px] sm:w-[1px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                          className="w-[0.5px] sm:w-[1px] bg-foreground rounded-full transition-all duration-75 ease-out"
                           style={{
                             height: `${height}px`,
                           }}
@@ -2784,18 +2784,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </div>
                   
                   {/* Timer */}
-                  <span className="text-[10px] sm:text-xs font-medium tabular-nums text-foreground flex-shrink-0">
+                  <span className="text-[9px] sm:text-xs font-medium tabular-nums text-foreground flex-shrink-0">
                     {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
                 
                 <Button
                   size="sm"
-                  className="h-6 w-6 sm:h-7 sm:w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                  className="h-5 w-5 sm:h-7 sm:w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
                   onClick={stopRecording}
                   aria-label="Send recording"
                 >
-                  <svg className="h-3 w-3 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
