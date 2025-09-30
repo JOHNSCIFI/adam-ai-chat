@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { supabase } from '@/integrations/supabase/client';
-import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp } from 'lucide-react';
+import { Paperclip, Mic, MicOff, ImageIcon, Globe, Edit3, BookOpen, Search, FileText, Plus, ChevronLeft, ChevronRight, X, Palette, BarChart3, Lightbulb, Settings, Zap, Menu, ChevronDown, ChevronUp, Mail, Pen, Briefcase, Apple } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 
@@ -63,20 +63,24 @@ const emojiCategories = {
 };
 
 const suggestionsByCategory = {
+  'document-summary': ['Summarize this document', 'Extract key points from document', 'Provide document overview', 'Analyze document content'],
+  'email-response': ['Draft a professional email', 'Reply to this email', 'Write a formal response', 'Compose an email reply'],
+  'improve-writing': ['Refine this text', 'Polish my writing', 'Improve clarity and style', 'Make this more professional'],
+  'learning-help': ['Explain this concept simply', 'Create study materials', 'Quiz me on this topic', 'Provide examples'],
+  'business-ideas': ['Generate business ideas', 'Brainstorm startup concepts', 'Suggest business strategies', 'Create business plans'],
+  'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
+  'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
+  'generate-image': ['Create an image of...', 'Generate artwork showing...', 'Design a visual representation of...', 'Produce an illustration of...'],
   'code-review': ['Review this code for bugs', 'Optimize this function', 'Explain this algorithm', 'Suggest improvements'],
   'content-writing': ['Write a blog post about...', 'Create social media content', 'Draft an email', 'Write product descriptions'],
   'math-solving': ['Solve this equation', 'Explain this math concept', 'Calculate percentages', 'Help with statistics'],
   'language-help': ['Translate this text', 'Check grammar and spelling', 'Improve writing style', 'Explain language rules'],
   'creative-writing': ['Write a short story', 'Create a poem', 'Develop character ideas', 'Brainstorm plot concepts'],
   'data-analysis': ['Analyze this dataset', 'Create data visualizations', 'Explain trends', 'Generate insights'],
-  'learning-help': ['Explain this concept simply', 'Create study materials', 'Quiz me on this topic', 'Provide examples'],
   'brainstorming': ['Generate ideas for...', 'Creative solutions to...', 'Marketing strategies', 'Product features'],
   'research-help': ['Research this topic', 'Find credible sources', 'Summarize findings', 'Compare different views'],
   'productivity': ['Create a schedule', 'Organize tasks', 'Set priorities', 'Time management tips'],
-  'problem-solving': ['Help solve this problem', 'Break down complex issues', 'Find root causes', 'Generate solutions'],
-  'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
-  'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
-  'generate-image': ['Create an image of...', 'Generate artwork showing...', 'Design a visual representation of...', 'Produce an illustration of...']
+  'problem-solving': ['Help solve this problem', 'Break down complex issues', 'Find root causes', 'Generate solutions']
 };
 const availableModels = [{
   id: 'gpt-4o-mini',
@@ -112,20 +116,17 @@ const availableModels = [{
 
 // Suggestion buttons for quick actions
 const suggestionButtons = [
-  { label: 'Code Review', action: 'code-review', icon: FileText },
-  { label: 'Writing Help', action: 'content-writing', icon: Edit3 },
-  { label: 'Math Help', action: 'math-solving', icon: BarChart3 },
-  { label: 'Learn Topic', action: 'learning-help', icon: BookOpen },
+  { label: 'Document Summary', action: 'document-summary', icon: FileText },
+  { label: 'Email Response', action: 'email-response', icon: Mail },
+  { label: 'Improve Writing', action: 'improve-writing', icon: Pen },
+  { label: 'Knowledge Boost', action: 'learning-help', icon: BookOpen },
+  { label: 'Business Ideas', action: 'business-ideas', icon: Briefcase },
+  { label: 'Text Summary', action: 'text-summary', icon: FileText },
+  { label: 'Calorie Check', action: 'calorie-check', icon: Apple },
+  { label: 'Generate Image', action: 'generate-image', icon: ImageIcon },
 ];
 
-const additionalButtons = [
-  { label: 'Creative Writing', action: 'creative-writing', icon: Lightbulb },
-  { label: 'Data Analysis', action: 'data-analysis', icon: BarChart3 },
-  { label: 'Brainstorming', action: 'brainstorming', icon: Zap },
-  { label: 'Research Help', action: 'research-help', icon: Search },
-  { label: 'Productivity', action: 'productivity', icon: Settings },
-  { label: 'Problem Solving', action: 'problem-solving', icon: Lightbulb },
-];
+const additionalButtons: typeof suggestionButtons = [];
 
 // Rename suggestionsByCategory to suggestionPrompts for consistency
 const suggestionPrompts = suggestionsByCategory;
