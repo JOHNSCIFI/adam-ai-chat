@@ -1154,7 +1154,7 @@ export default function Chat() {
                 'Content-Type': 'application/json'
               },
               body: JSON.stringify({
-                type: webhookType,
+                type: 'analyse-files',
                 fileName: finalFileName,
                 fileSize: file.size,
                 fileType: finalFileType, // Send PNG type for images
