@@ -377,9 +377,14 @@ export default function Chat() {
       userModel = assistantMessage.model;
     }
 
-    if (!userMessage) {
+    // Allow regeneration if there's either a message or file attachments
+    if (!userMessage && userMessageAttachments.length === 0) {
+      console.log('[REGENERATE] No message or attachments to regenerate');
       return;
     }
+
+    console.log('[REGENERATE] User message:', userMessage || '(empty)');
+    console.log('[REGENERATE] Attachments count:', userMessageAttachments.length);
 
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
