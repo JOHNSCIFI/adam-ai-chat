@@ -2354,8 +2354,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 
                 return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
-                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[70%] relative`}>
-                        <div className={`${message.role === 'user' ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' : 'text-black dark:text-white rounded-2xl bg-transparent border-none'} px-3.5 py-2.5 relative break-words whitespace-pre-wrap`} style={{
+                    <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[80%] md:max-w-[70%] relative`}>
+                        <div className={`${message.role === 'user' ? 'text-black dark:text-white bg-[#DEE7F4] dark:bg-[#374151] rounded-2xl' : 'text-black dark:text-white rounded-2xl bg-transparent border-none'} px-3.5 py-2.5 relative break-words whitespace-pre-wrap w-full`} style={{
                   padding: '10px 14px',
                   wordWrap: 'break-word',
                   overflowWrap: 'break-word',
@@ -2374,9 +2374,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                    hasUrl: !!file.url
                  });
                  
-                 return <div key={index}>
-                   {isImageFile(file.type) && file.url ? <div className="space-y-2">
-                       <img src={file.url} alt={file.name || "Image"} className="max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
+                  return <div key={index}>
+                    {isImageFile(file.type) && file.url ? <div className="space-y-2">
+                        <img src={file.url} alt={file.name || "Image"} className="max-w-full sm:max-w-[280px] md:max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
                            url: file.url,
                            name: file.name
                          })} onError={e => {
@@ -2437,10 +2437,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        }: any) {
                          const match = /language-(\w+)/.exec(className || '');
                          const inline = !match;
-                         return inline ? <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
+                          return inline ? <code className="bg-muted/50 px-1.5 py-0.5 rounded text-sm break-words" {...props}>
                                         {children}
-                                      </code> : <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto break-words !my-1">
-                                        <code {...props}>
+                                      </code> : <pre className="bg-muted/50 p-4 rounded-lg text-sm overflow-x-auto max-w-full break-words !my-1">
+                                        <code className="block max-w-full" {...props}>
                                           {children}
                                         </code>
                                       </pre>;
@@ -2502,12 +2502,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        }) => <blockquote {...props} className="!my-1">
                                       {children}
                                     </blockquote>,
-                       table: ({
-                         children,
-                         ...props
-                       }) => <table {...props} className="!my-1">
-                                      {children}
-                                    </table>,
+                        table: ({
+                          children,
+                          ...props
+                        }) => <div className="overflow-x-auto max-w-full">
+                                       <table {...props} className="!my-1 min-w-full">
+                                         {children}
+                                       </table>
+                                     </div>,
                        hr: ({
                          ...props
                        }) => <hr {...props} className="!my-1" />
