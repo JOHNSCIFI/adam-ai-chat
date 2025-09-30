@@ -640,9 +640,24 @@ export default function Index() {
               </div>
             </div>}
           
-          {/* Recording UI */}
-          {isRecording ? (
-            <div className="flex items-center gap-2 py-3 px-1">
+          <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              handleStartChat();
+            }
+            }} onFocus={e => {
+              // Prevent default scroll behavior on mobile
+              if (window.innerWidth < 768) {
+                e.target.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+              }
+            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
+          
+          {/* Recording UI - shows below textarea */}
+          {isRecording && (
+            <div className="flex items-center gap-2 py-2 px-1 mb-3 border-t border-border/30">
               <Button
                 variant="ghost"
                 size="sm"
@@ -694,21 +709,6 @@ export default function Index() {
                 </svg>
               </Button>
             </div>
-          ) : (
-            <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-              e.preventDefault();
-              handleStartChat();
-            }
-            }} onFocus={e => {
-              // Prevent default scroll behavior on mobile
-              if (window.innerWidth < 768) {
-                e.target.scrollIntoView({
-                  behavior: 'smooth',
-                  block: 'center'
-                });
-              }
-            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
           )}
           
           {/* Mobile-first redesigned input controls */}
