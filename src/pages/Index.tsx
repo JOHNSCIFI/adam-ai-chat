@@ -213,11 +213,17 @@ export default function Index() {
   const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [showMoreButtons, setShowMoreButtons] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
+  const [tempTranscript, setTempTranscript] = useState('');
   const navigate = useNavigate();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modelsContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const {
     isMobile
   } = useSidebar();
@@ -311,48 +317,129 @@ export default function Index() {
       setShowMoreButtons(false);
     }
   };
-  const startRecording = () => {
+  const startRecording = async () => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-    if (!SpeechRecognition) return;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true; // Keep listening until manually stopped
-    recognition.interimResults = true; // Get results as user speaks
     
-    recognition.onresult = (event: any) => {
-      let transcript = '';
-      for (let i = 0; i < event.results.length; i++) {
-        transcript += event.results[i][0].transcript;
+    try {
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      
+      // Set up audio context and analyzer
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      
+      // Start speech recognition
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setTempTranscript(transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            return;
+          }
+        };
+        
+        recognition.onend = () => {
+          if (recognitionRef.current) {
+            setIsRecording(false);
+          }
+        };
+        
+        recognitionRef.current = recognition;
+        recognition.start();
       }
-      setMessage(transcript);
-    };
-    
-    recognition.onerror = (event: any) => {
-      console.error('Speech recognition error:', event.error);
-      if (event.error === 'no-speech' || event.error === 'audio-capture') {
-        // Don't stop on these errors, just log them
-        return;
-      }
-      setIsRecording(false);
-    };
-    
-    // Only stop if explicitly called via stopRecording
-    recognition.onend = () => {
-      if (recognitionRef.current) {
-        setIsRecording(false);
-      }
-    };
-    
-    recognitionRef.current = recognition;
-    recognition.start();
-    setIsRecording(true);
+      
+      setIsRecording(true);
+      
+      // Animate waveform based on audio levels
+      const updateWaveform = () => {
+        if (!analyserRef.current) return;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Map audio data to 100 bars
+        const bars = 100;
+        const step = Math.floor(bufferLength / bars);
+        const newLevels = [];
+        
+        for (let i = 0; i < bars; i++) {
+          const index = i * step;
+          const value = dataArray[index] || 0;
+          // Normalize to 0-1 range and apply smoothing
+          newLevels.push(value / 255);
+        }
+        
+        setAudioLevels(newLevels);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
+      };
+      
+      updateWaveform();
+      
+    } catch (error) {
+      console.error('Error accessing microphone:', error);
+      toast.error('Unable to access microphone');
+    }
   };
+  
   const stopRecording = () => {
+    // Stop speech recognition
     recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
     setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Now set the message from temporary transcript
+    setMessage(tempTranscript);
+    setTempTranscript('');
+    
+    // Focus textarea after stopping to show the text
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 150);
   };
   const handleStartChat = async () => {
     // Allow sending if there's a message OR files
@@ -369,6 +456,8 @@ export default function Index() {
     }
     setLoading(true);
     try {
+      console.log('[INDEX] Creating new chat with message:', message.substring(0, 50));
+      
       // Create new chat
       const {
         data: chatData,
@@ -379,6 +468,8 @@ export default function Index() {
       }]).select().single();
       if (chatError) throw chatError;
 
+      console.log('[INDEX] Chat created:', chatData.id);
+
       // Store the message and files for Chat page to process
       const messageText = message;
       const filesToSend = [...selectedFiles];
@@ -386,6 +477,12 @@ export default function Index() {
       // Clear message and files
       setMessage('');
       setSelectedFiles([]);
+      
+      console.log('[INDEX] Navigating to chat with state:', {
+        chatId: chatData.id,
+        hasMessage: !!messageText,
+        filesCount: filesToSend.length
+      });
       
       // Navigate to chat page with files and message to send
       // Chat page will handle creating the message and sending to webhook
@@ -398,6 +495,7 @@ export default function Index() {
         }
       });
     } catch (error) {
+      console.error('[INDEX] Failed to create chat:', error);
       toast.error('Failed to start chat. Please try again.');
     } finally {
       setLoading(false);
@@ -640,54 +738,7 @@ export default function Index() {
               </div>
             </div>}
           
-          {/* Recording UI */}
-          {isRecording ? (
-            <div className="flex items-center gap-3 py-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
-                onClick={stopRecording}
-                aria-label="Cancel recording"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-              
-              <div className="flex-1 flex items-center justify-center gap-3">
-                {/* Waveform animation */}
-                <div className="flex items-center gap-0.5 h-8">
-                  {[...Array(40)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-0.5 bg-foreground rounded-full animate-pulse"
-                      style={{
-                        height: `${Math.random() * 24 + 8}px`,
-                        animationDelay: `${i * 0.05}s`,
-                        animationDuration: `${0.8 + Math.random() * 0.4}s`
-                      }}
-                    />
-                  ))}
-                </div>
-                
-                {/* Timer */}
-                <span className="text-sm font-medium tabular-nums min-w-[40px] text-right">
-                  {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
-                </span>
-              </div>
-              
-              <Button
-                size="sm"
-                className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
-                onClick={stopRecording}
-                aria-label="Send recording"
-              >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-              </Button>
-            </div>
-          ) : (
-            <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
+          <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleStartChat();
@@ -700,11 +751,62 @@ export default function Index() {
                   block: 'center'
                 });
               }
-            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
-          )}
+            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
           
-          {/* Mobile-first redesigned input controls */}
-          {!isRecording && (
+          {/* Recording UI - replaces buttons when recording */}
+          {isRecording ? (
+            <div className="flex items-center gap-2 py-3 px-1">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                onClick={stopRecording}
+                aria-label="Cancel recording"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex-1 flex items-center justify-center gap-3">
+                {/* Real-time audio waveform visualization */}
+                <div className="flex items-center justify-center gap-[2px] h-8 flex-1 max-w-[600px]">
+                  {audioLevels.map((level, i) => {
+                    // Calculate height based on audio level
+                    const minHeight = 2;
+                    const maxHeight = 32;
+                    const height = minHeight + (level * (maxHeight - minHeight));
+                    
+                    return (
+                      <div
+                        key={i}
+                        className="w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                        style={{
+                          height: `${height}px`,
+                        }}
+                      />
+                    );
+                  })}
+                </div>
+                
+                {/* Timer */}
+                <span className="text-sm font-medium tabular-nums text-foreground flex-shrink-0">
+                  {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+              
+              <Button
+                size="sm"
+                className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                onClick={stopRecording}
+                aria-label="Send recording"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </Button>
+            </div>
+          ) : (
+            // Mobile-first redesigned input controls
+
             <div className="flex flex-col gap-3">
             {/* File upload controls row */}
             <div className="flex items-center justify-between">
