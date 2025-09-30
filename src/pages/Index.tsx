@@ -768,7 +768,7 @@ export default function Index() {
               
               <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-3 min-w-0 overflow-hidden">
                 {/* Real-time audio waveform visualization - mobile optimized */}
-                <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[180px] sm:max-w-[600px] min-w-0">
+                <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[280px] sm:max-w-[600px] min-w-0">
                   {audioLevels.map((level, i) => {
                     // Calculate height based on audio level
                     const minHeight = 2;
