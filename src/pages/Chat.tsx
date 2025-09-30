@@ -615,24 +615,8 @@ export default function Chat() {
           console.error('[REGENERATE] Error deleting old message:', deleteError);
         }
         
-        // Fetch the newly created message
-        const { data: newMessage, error: fetchError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', chatId)
-          .eq('role', 'assistant')
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
-          
-        if (!fetchError && newMessage) {
-          console.log('[REGENERATE] Fetched new message:', newMessage);
-          // Add the new message to state
-          setMessages(prev => [...prev, {
-            ...newMessage,
-            file_attachments: (newMessage.file_attachments as unknown) as FileAttachment[] | undefined
-          } as Message]);
-        }
+        // The realtime subscription will automatically add the new message
+        console.log('[REGENERATE] Waiting for realtime subscription to add new message...');
         
         scrollToBottom();
         return;
