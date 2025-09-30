@@ -60,52 +60,124 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 id="models-heading" className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-              Choose Your AI Model
+              Pick the Right AI for Every Task
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Select from the world's most advanced AI models, each optimized for different tasks.
+              Explore the world's leading AI models and start with the one that fits your goal.
             </p>
           </div>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="text-center">
+            {/* OpenAI GPT-4/5 */}
+            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
                   <img src={chatgptLogoSrc} alt="OpenAI ChatGPT logo" className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI GPT-4</h3>
-                <p className="text-sm text-muted-foreground">Advanced reasoning and problem-solving capabilities</p>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI<br />GPT-4 / GPT-5</h3>
+                <p className="text-sm text-muted-foreground mb-4">Advanced reasoning, problem-solving, and coding power.</p>
               </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="w-full mt-auto"
+                onClick={() => {
+                  localStorage.setItem('selectedModel', 'gpt-4o');
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'model_select', {
+                      model: 'gpt-5'
+                    });
+                  }
+                  navigate('/?focus=chat');
+                }}
+                aria-label="Switch to GPT-5 and start a new chat"
+              >
+                Try with this model
+              </Button>
             </div>
             
-            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="text-center">
-                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img src={geminiLogo} alt="Google Gemini logo" className="w-12 h-12 object-contain" />
-                </div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">Google Gemini</h3>
-                <p className="text-sm text-muted-foreground">Excellent for multimodal tasks and analysis</p>
-              </div>
-            </div>
-            
-            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="text-center">
+            {/* Claude */}
+            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
                   <img src={claudeLogo} alt="Anthropic Claude logo" className="w-12 h-12 object-contain" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2 text-foreground">Anthropic Claude</h3>
-                <p className="text-sm text-muted-foreground">Best for writing and creative tasks</p>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Anthropic<br />Claude</h3>
+                <p className="text-sm text-muted-foreground mb-4">Ideal for writing, analysis, and creative tasks.</p>
               </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="w-full mt-auto"
+                onClick={() => {
+                  localStorage.setItem('selectedModel', 'claude-3-5-sonnet-20241022');
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'model_select', {
+                      model: 'claude'
+                    });
+                  }
+                  navigate('/?focus=chat');
+                }}
+                aria-label="Switch to Claude and start a new chat"
+              >
+                Try with this model
+              </Button>
             </div>
             
-            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="text-center">
+            {/* Gemini */}
+            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="text-center flex-1">
+                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
+                  <img src={geminiLogo} alt="Google Gemini logo" className="w-12 h-12 object-contain" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Google<br />Gemini</h3>
+                <p className="text-sm text-muted-foreground mb-4">Multimodal AI for text, vision, and analysis.</p>
+              </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="w-full mt-auto"
+                onClick={() => {
+                  localStorage.setItem('selectedModel', 'gemini-2.0-flash-exp');
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'model_select', {
+                      model: 'gemini'
+                    });
+                  }
+                  navigate('/?focus=chat');
+                }}
+                aria-label="Switch to Gemini and start a new chat"
+              >
+                Try with this model
+              </Button>
+            </div>
+            
+            {/* DeepSeek */}
+            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
                   <img src={deepseekLogo} alt="DeepSeek logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">DeepSeek</h3>
-                <p className="text-sm text-muted-foreground">Specialized in coding and technical analysis</p>
+                <p className="text-sm text-muted-foreground mb-4">Specialized in technical tasks and data-heavy coding.</p>
               </div>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="w-full mt-auto"
+                onClick={() => {
+                  localStorage.setItem('selectedModel', 'deepseek-chat');
+                  if (typeof window !== 'undefined' && (window as any).gtag) {
+                    (window as any).gtag('event', 'model_select', {
+                      model: 'deepseek'
+                    });
+                  }
+                  navigate('/?focus=chat');
+                }}
+                aria-label="Switch to DeepSeek and start a new chat"
+              >
+                Try with this model
+              </Button>
             </div>
           </div>
         </div>
