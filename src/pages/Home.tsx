@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Image, FileText, PenTool, Star, Users, Award, Zap, Target, Mic, Globe, Check, Shield, Clock, Sparkles } from 'lucide-react';
+import { Brain, Image, FileText, PenTool, Star, Users, Award, Zap, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -132,96 +132,60 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                  <Brain className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Multi-LLM Access</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Access multiple AI models from one unified interface. Switch between GPT-4, Claude, Gemini and more.
-                  </p>
-                </div>
+          {/* 6 Feature Cards Grid - 3 per row on desktop, 2 on tablet, 1 on mobile */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Feature 1: Multi-Model Access */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Brain className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Multi-Model Access</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Switch between GPT-4, GPT-5, Claude, Gemini, and more – all in one place.</p>
             </div>
             
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                  <Target className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Smart Model Selection</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Pick the best AI model for your specific task - research, coding, writing, or image generation.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                  <Mic className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Voice Commands</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Use your voice to interact naturally with any AI model for hands-free conversations.
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="flex items-start gap-4">
-                <div className="flex-shrink-0 w-12 h-12 bg-primary rounded-lg flex items-center justify-center">
-                  <Globe className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-2 text-foreground">Global Language Support</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    Communicate in 50+ languages with natural understanding and accurate translations.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Core Features Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Brain className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
-              </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">AI Chatbot</h3>
-              <p className="text-sm text-muted-foreground">Intelligent conversations with multiple AI models</p>
-            </div>
-            
-            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <Image className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
+            {/* Feature 2: AI Image Generation */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Image className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold mb-2 text-foreground">AI Image Generation</h3>
-              <p className="text-sm text-muted-foreground">Create stunning visuals with AI-powered tools</p>
+              <p className="text-sm text-muted-foreground leading-relaxed">Create stunning visuals instantly with AI-powered tools.</p>
             </div>
             
-            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <FileText className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
+            {/* Feature 3: Learning & Study Support */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <BookOpen className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">Ask PDF</h3>
-              <p className="text-sm text-muted-foreground">Extract insights from documents instantly</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Learning & Study Support</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Summarize texts, explain concepts, and prepare for exams with AI assistance.</p>
             </div>
             
-            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2">
-              <div className="w-12 h-12 bg-primary rounded-lg flex items-center justify-center mx-auto mb-4">
-                <PenTool className="h-6 w-6 text-primary-foreground" aria-hidden="true" />
+            {/* Feature 4: Coding & Tech Help */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Code className="h-6 w-6 text-primary" aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-semibold mb-2 text-foreground">AI Writing</h3>
-              <p className="text-sm text-muted-foreground">Generate content with advanced writing assistance</p>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Coding & Tech Help</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Get instant coding support, debugging, and technical insights.</p>
+            </div>
+            
+            {/* Feature 5: Voice & Language Support */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <Mic className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Voice & Language Support</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Chat hands-free with voice commands and over 50 languages.</p>
+            </div>
+            
+            {/* Feature 6: Ask Your Files */}
+            <div className="group text-center p-6 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col h-full">
+              <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <FileText className="h-6 w-6 text-primary" aria-hidden="true" />
+              </div>
+              <h3 className="text-lg font-semibold mb-2 text-foreground">Ask Your Files</h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">Upload PDFs or docs and extract key insights in seconds.</p>
             </div>
           </div>
         </div>
