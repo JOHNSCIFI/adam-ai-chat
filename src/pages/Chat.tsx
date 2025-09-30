@@ -489,7 +489,7 @@ export default function Chat() {
       }
       console.log('[REGENERATE] Request type:', requestType);
 
-      // Build payload - if there's an image, send it directly in the body, not as fileAttachments array
+      // Build payload - send first attachment directly in the body
       let payload: any = {
         type: requestType,
         message: userMessage,
@@ -499,12 +499,12 @@ export default function Chat() {
       };
 
       if (validAttachments.length > 0) {
-        // Send first image directly in body
-        const firstImage = validAttachments[0];
-        payload.fileName = firstImage.fileName;
-        payload.fileSize = firstImage.fileSize;
-        payload.fileType = firstImage.fileType;
-        payload.fileData = firstImage.fileData;
+        // Send first attachment directly in body
+        const firstAttachment = validAttachments[0];
+        payload.fileName = firstAttachment.fileName;
+        payload.fileSize = firstAttachment.fileSize;
+        payload.fileType = firstAttachment.fileType;
+        payload.fileData = firstAttachment.fileData;
       }
       
       console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
@@ -1126,8 +1126,39 @@ export default function Chat() {
               });
             }
           } else {
-            // For non-image files, use original file
-            finalFileUrl = URL.createObjectURL(file);
+            // For non-image files, upload to Supabase storage
+            try {
+              console.log('[FILE-UPLOAD] Uploading non-image file to storage');
+              
+              const filePath = `${user.id}/${chatId}/${Date.now()}_${finalFileName}`;
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('chat-images') // Using same bucket for all files
+                .upload(filePath, file, {
+                  cacheControl: '3600',
+                  upsert: false
+                });
+
+              if (uploadError) {
+                console.error('[FILE-UPLOAD] Upload error:', uploadError);
+                throw uploadError;
+              }
+
+              console.log('[FILE-UPLOAD] Upload successful:', uploadData);
+
+              // Get public URL
+              const { data: urlData } = supabase.storage
+                .from('chat-images')
+                .getPublicUrl(filePath);
+
+              finalFileUrl = urlData.publicUrl;
+              
+              console.log('[FILE-UPLOAD] Public URL:', finalFileUrl);
+            } catch (error) {
+              console.error('[FILE-UPLOAD] Error uploading file:', error);
+              // Fallback to blob URL (will only work in current session)
+              finalFileUrl = URL.createObjectURL(file);
+            }
           }
 
           // Create file attachment with storage URL
