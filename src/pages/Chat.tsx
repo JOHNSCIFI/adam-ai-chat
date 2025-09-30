@@ -2566,7 +2566,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  </Button>
                                )}
                                
-                                  {/* Refresh button - show on last AI response, with thinking animation during generation */}
+                                  {/* Refresh button - disappears immediately when user sends new message */}
                                   {(() => {
                                     // Find current message index
                                     const currentIndex = messages.findIndex(msg => msg.id === message.id);
@@ -2577,13 +2577,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                       return false;
                                     }
                                     
-                                    // Check if there are any assistant messages after this one
-                                    const hasAssistantMessagesAfter = messages.slice(currentIndex + 1).some(msg => msg.role === 'assistant');
+                                    // Check if there are ANY messages after this one (user or assistant)
+                                    const hasMessagesAfter = currentIndex < messages.length - 1;
                                     
-                                    // Show button if:
-                                    // 1. It's the last assistant message AND
-                                    // 2. No assistant messages after it (can have user messages during generation)
-                                    return !hasAssistantMessagesAfter;
+                                    // Hide button immediately if there are any messages after it
+                                    return !hasMessagesAfter;
                                    })() && (
                                     <Button 
                                       variant="ghost" 
