@@ -56,6 +56,39 @@ const models = [{
   description: "Create images with DALL·E 3",
   type: 'pro'
 }];
+
+const availableModels = [{
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: 'Fast and cost-efficient model, perfect for most tasks.',
+  icon: 'openai'
+}, {
+  id: 'gpt-4o',
+  name: 'GPT-4o',
+  shortLabel: 'GPT-4o',
+  description: 'High-quality model for complex reasoning and accurate responses.',
+  icon: 'openai'
+}, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: 'Most advanced OpenAI model with superior capabilities and reasoning.',
+  icon: 'openai'
+}, {
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
+  description: 'Excellent for natural language tasks, writing, and creative work.',
+  icon: 'claude'
+}, {
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: 'Create stunning images and artwork using DALL·E 3.',
+  icon: 'openai'
+}];
+
 interface Message {
   id: string;
   chat_id: string;
@@ -84,6 +117,19 @@ export default function Chat() {
   
   // Choose the appropriate ChatGPT logo based on theme
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  
+  // Helper function to get model icon
+  const getModelIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'openai':
+        return chatgptLogoSrc;
+      case 'claude':
+        return claudeLogo;
+      default:
+        return chatgptLogoSrc;
+    }
+  };
+  
   const collapsed = sidebarState === 'collapsed';
 
   // Calculate proper centering based on sidebar state
@@ -2348,7 +2394,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 aria-label="Select AI model"
               >
                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                  <h1 className="text-lg font-semibold">AdamGpt</h1>
+                  <span className="text-lg font-semibold">{selectedModelData?.shortLabel || 'AdamGpt'}</span>
                   {isModelDropdownOpen ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (
@@ -2356,31 +2402,34 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   )}
                 </div>
               </SelectTrigger>
-              <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]" align="center">
-                {models.map(model => (
-                  <SelectItem 
-                    key={model.id} 
-                    value={model.id} 
-                    className="rounded-md px-2 py-1.5 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
-                  >
-                     <div className="flex items-center w-full gap-2">
-                       <div className="flex items-center gap-2 min-w-0 flex-1">
-                         {model.id.includes('gpt') || model.id === 'generate-image' ? (
-                           <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                         ) : model.id.includes('claude') ? (
-                           <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                         ) : (
-                           <Bot className="h-3.5 w-3.5 flex-shrink-0" />
-                         )}
-                         <div className="min-w-0 flex-1">
-                           <div className="font-medium text-sm truncate">{model.name}</div>
-                           <div className="text-xs text-muted-foreground truncate">{model.description}</div>
-                         </div>
-                       </div>
-                       {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0">Pro</span>}
-                     </div>
-                  </SelectItem>
-                ))}
+              <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
+                {models.map(model => {
+                  const modelData = availableModels.find(m => m.id === model.id);
+                  return (
+                    <SelectItem 
+                      key={model.id} 
+                      value={model.id} 
+                      className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    >
+                      <div className="flex items-center w-full gap-2">
+                        <div className="flex items-center gap-3 flex-1 min-w-0">
+                          <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
+                            <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
+                          </div>
+                        </div>
+                        {model.type === 'pro' && (
+                          <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
+                            Pro
+                          </span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
