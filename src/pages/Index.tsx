@@ -405,9 +405,14 @@ export default function Index() {
   };
   
   const stopRecording = () => {
-    // Stop speech recognition
-    recognitionRef.current?.stop();
-    recognitionRef.current = null;
+    // Capture final transcript before stopping
+    if (recognitionRef.current) {
+      // Add a small delay to ensure final transcript is captured
+      setTimeout(() => {
+        recognitionRef.current?.stop();
+        recognitionRef.current = null;
+      }, 100);
+    }
     
     // Stop audio analysis
     if (animationFrameRef.current) {
@@ -430,6 +435,12 @@ export default function Index() {
     analyserRef.current = null;
     setIsRecording(false);
     setAudioLevels(Array(100).fill(0));
+    
+    // Keep the transcribed text in the textarea (message state is preserved)
+    // Focus textarea after stopping to show the text
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 150);
   };
   const handleStartChat = async () => {
     // Allow sending if there's a message OR files
