@@ -346,31 +346,38 @@ export default function Chat() {
 
   // Handle initial files and message from navigation (from home page)
   const hasProcessedInitialFiles = useRef(false);
+  const shouldAutoSend = useRef(false);
+  
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
     if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
-      console.log('[INITIAL-FILES] Processing files from home page:', initialFiles);
+      console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
       hasProcessedInitialFiles.current = true;
+      shouldAutoSend.current = true;
       
       // Set the message and files
       setInput(initialMessage);
       setSelectedFiles(initialFiles);
       
-      // Auto-send after a short delay to ensure UI and state are ready
-      setTimeout(async () => {
-        try {
-          await sendMessage();
-        } catch (error) {
-          console.error('[INITIAL-FILES] Error sending message:', error);
-        }
-      }, 800);
-      
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
   }, [chatId, location.state]);
+
+  // Auto-send when input and files are ready after being set from navigation
+  useEffect(() => {
+    if (shouldAutoSend.current && input && selectedFiles.length > 0 && !loading && chatId) {
+      console.log('[INITIAL-FILES] Auto-sending message with files');
+      shouldAutoSend.current = false;
+      
+      // Trigger send after a small delay to ensure UI is ready
+      setTimeout(() => {
+        sendMessage();
+      }, 500);
+    }
+  }, [input, selectedFiles, loading, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
