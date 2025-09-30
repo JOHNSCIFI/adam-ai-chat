@@ -356,21 +356,20 @@ export default function Chat() {
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
-
-          // Add to processed messages for this specific chat
+          console.log('[AUTO-TRIGGER] Processing message:', lastMessage.id, 'Model:', selectedModel);
+          
+          // CRITICAL: Mark as processed IMMEDIATELY to prevent duplicate triggers
           if (!processedUserMessages.current.has(chatId)) {
             processedUserMessages.current.set(chatId, new Set());
           }
           processedUserMessages.current.get(chatId)!.add(lastMessage.id);
 
-          // Trigger AI response immediately for text-only messages
-          setTimeout(() => {
-            triggerAIResponse(lastMessage.content, lastMessage.id);
-          }, 100);
+          // Trigger AI response with current selected model
+          triggerAIResponse(lastMessage.content, lastMessage.id);
         }
       }
     }
-  }, [messages, loading, isGeneratingResponse, chatId]);
+  }, [messages, loading, isGeneratingResponse, chatId, selectedModel]);
 
   // Handle initial files and message from navigation (from home page)
   const hasProcessedInitialData = useRef(false);
