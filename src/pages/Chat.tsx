@@ -570,6 +570,38 @@ export default function Chat() {
         
         console.log('[REGENERATE] Webhook-handler saved new message:', handlerData);
         
+        // Delete old image from storage if it exists
+        if (assistantMessage.file_attachments && assistantMessage.file_attachments.length > 0) {
+          for (const attachment of assistantMessage.file_attachments) {
+            if (attachment.url && attachment.type.startsWith('image/')) {
+              try {
+                // Extract the file path from the URL
+                const urlObj = new URL(attachment.url);
+                const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)/);
+                
+                if (pathMatch) {
+                  const bucketName = pathMatch[1];
+                  const filePath = pathMatch[2];
+                  
+                  console.log('[REGENERATE] Deleting old image:', { bucketName, filePath });
+                  
+                  const { error: deleteStorageError } = await supabase.storage
+                    .from(bucketName)
+                    .remove([filePath]);
+                    
+                  if (deleteStorageError) {
+                    console.error('[REGENERATE] Error deleting old image from storage:', deleteStorageError);
+                  } else {
+                    console.log('[REGENERATE] Successfully deleted old image from storage');
+                  }
+                }
+              } catch (error) {
+                console.error('[REGENERATE] Error parsing image URL:', error);
+              }
+            }
+          }
+        }
+        
         // Delete the old message
         const { error: deleteError } = await supabase
           .from('messages')
@@ -2386,7 +2418,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                   <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
                                   <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
                                 </div>
-                                <span className="text-sm text-muted-foreground">Regenerating...</span>
                               </div>
                             )}
                         
