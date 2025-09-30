@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Brain, Image, FileText, PenTool, Star, Users, Award, Zap, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code } from 'lucide-react';
+import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code } from 'lucide-react';
 import AdamGptLogo from '@/components/AdamGptLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -36,29 +36,20 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8" role="main">
         <div className="container mx-auto max-w-4xl text-center">
-          <div className="mb-8">
-            <Badge variant="outline" className="mb-6 text-sm font-medium border-muted-foreground/20 text-muted-foreground">
-              <Zap className="h-4 w-4 mr-2" aria-hidden="true" />
-              25+ AI Models Available
-            </Badge>
-          </div>
           
           <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 text-foreground leading-tight">
-            Your Complete
+            One Platform.
             <br />
-            <span className="text-primary">AI Assistant</span>
+            <span className="text-primary">All Your AI Models.</span>
           </h1>
           
           <p className="text-lg sm:text-xl text-muted-foreground mb-12 max-w-2xl mx-auto leading-relaxed">
-            Access GPT-4, Claude, Gemini and more powerful AI models from a single, intuitive interface.
+            Chat, create images, write, code, and learn with GPT-4, GPT-5, Claude, Gemini, and more – all from a single platform.
           </p>
           
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <div className="flex justify-center">
             <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using AdamGpt now">
-              Start Free Trial
-            </Button>
-            <Button size="lg" variant="outline" onClick={() => navigate('/pricing')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="View pricing plans">
-              View Pricing
+              Start Now
             </Button>
           </div>
         </div>
@@ -199,7 +190,7 @@ const Home = () => {
               Simple, Transparent Pricing
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that fits your needs. All plans include access to 25+ AI models.
+              Choose the plan that fits your needs. Access all features and AI capabilities.
             </p>
           </div>
           
@@ -215,7 +206,7 @@ const Home = () => {
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Access to 25+ LLM models</span>
+                  <span className="text-foreground">All AI models & features</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
@@ -246,7 +237,7 @@ const Home = () => {
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Access to 25+ LLM models</span>
+                  <span className="text-foreground">All AI models & features</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
@@ -282,7 +273,7 @@ const Home = () => {
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground">Access to 25+ LLM models</span>
+                  <span className="text-foreground">All AI models & features</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
@@ -356,7 +347,7 @@ const Home = () => {
                     Which AI models are available?
                   </AccordionTrigger>
                   <AccordionContent className="text-muted-foreground text-base leading-relaxed">
-                    You get access to 25+ premium AI models including GPT-4, Claude, Gemini, DeepSeek, and many more. Switch between models instantly based on your needs.
+                    You get access to all premium AI models including GPT-4, GPT-5, Claude, Gemini, DeepSeek, and more. Switch between models instantly based on your needs.
                   </AccordionContent>
                 </AccordionItem>
 
