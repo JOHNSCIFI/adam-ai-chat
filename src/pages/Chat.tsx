@@ -8,7 +8,7 @@ import { useSidebar, SidebarTrigger } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ChevronDown, ChevronUp, Bot, Mail, Pen, BookOpen, Briefcase, Apple } from 'lucide-react';
+import { MessageSquare, Plus, Paperclip, Copy, Check, X, FileText, ImageIcon, Mic, MicOff, Download, MoreHorizontal, Image as ImageIcon2, Palette, ChevronDown, ChevronUp, Bot } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { StopIcon } from '@/components/ui/stop-icon';
 import { toast } from 'sonner';
@@ -56,27 +56,6 @@ const models = [{
   description: "Create images with DALL·E 3",
   type: 'pro'
 }];
-
-// Suggestion buttons for quick actions
-const suggestionButtons = [
-  { label: 'Document Summary', action: 'document-summary', icon: FileText },
-  { label: 'Email Response', action: 'email-response', icon: Mail },
-  { label: 'Improve Writing', action: 'improve-writing', icon: Pen },
-  { label: 'Knowledge Boost', action: 'learning-help', icon: BookOpen },
-  { label: 'Business Ideas', action: 'business-ideas', icon: Briefcase },
-  { label: 'Text Summary', action: 'text-summary', icon: FileText },
-  { label: 'Calorie Check', action: 'calorie-check', icon: Apple },
-];
-
-const suggestionsByCategory = {
-  'document-summary': ['Summarize this document', 'Extract key points from document', 'Provide document overview', 'Analyze document content'],
-  'email-response': ['Draft a professional email', 'Reply to this email', 'Write a formal response', 'Compose an email reply'],
-  'improve-writing': ['Refine this text', 'Polish my writing', 'Improve clarity and style', 'Make this more professional'],
-  'learning-help': ['Explain this concept simply', 'Create study materials', 'Quiz me on this topic', 'Provide examples'],
-  'business-ideas': ['Generate business ideas', 'Brainstorm startup concepts', 'Suggest business strategies', 'Create business plans'],
-  'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
-  'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
-};
 interface Message {
   id: string;
   chat_id: string;
@@ -154,7 +133,6 @@ export default function Chat() {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [regeneratingMessageId, setRegeneratingMessageId] = useState<string | null>(null);
-  const [showSuggestions, setShowSuggestions] = useState<string | null>(null);
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
@@ -1799,18 +1777,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       event.target.value = '';
     }
   };
-
-  const handleSuggestionClick = (action: string) => {
-    // Show specific suggestions for the clicked button
-    setShowSuggestions(action);
-    textareaRef.current?.focus();
-  };
-
-  const handlePromptClick = (prompt: string) => {
-    setInput(prompt);
-    setShowSuggestions(null);
-    textareaRef.current?.focus();
-  };
   const removeFile = (index: number) => {
     setSelectedFiles(prev => prev.filter((_, i) => i !== index));
   };
@@ -2369,82 +2335,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         }}
       >
         <div className={`w-full px-4 py-6 ${!isMobile ? '' : ''}`} style={!isMobile ? getContainerStyle() : {}}>
-          {messages.length === 0 ? <div className="flex flex-col items-center justify-center h-full min-h-[70vh]">
-              <div className="text-center max-w-3xl w-full px-4">
+          {messages.length === 0 ? <div className="flex items-center justify-center h-full min-h-[70vh]">
+              <div className="text-center max-w-md">
                 <h3 className="text-2xl font-normal mb-6 text-foreground">
                   How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
                 </h3>
-                
-                {/* Suggestion buttons - horizontal scroll on mobile */}
-                {!showSuggestions && (
-                  <div className="w-full mb-4 sm:mb-6">
-                    {/* Mobile: Horizontal scroll */}
-                    <div className="sm:hidden">
-                      <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide" role="group" aria-label="Quick suggestions">
-                        {suggestionButtons.map((suggestion, index) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion.action)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap"
-                            aria-label={`${suggestion.label} suggestion`}
-                          >
-                            <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-                            <span className="text-sm font-medium">{suggestion.label}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-
-                    {/* Desktop: Wrapped layout */}
-                    <div className="hidden sm:block">
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {suggestionButtons.map((suggestion, index) => (
-                          <Button
-                            key={index}
-                            onClick={() => handleSuggestionClick(suggestion.action)}
-                            variant="ghost"
-                            size="sm"
-                            className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary"
-                            aria-label={`${suggestion.label} suggestion`}
-                          >
-                            <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
-                            <span className="text-sm font-medium">{suggestion.label}</span>
-                          </Button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Suggestion prompts */}
-                {showSuggestions && suggestionsByCategory[showSuggestions as keyof typeof suggestionsByCategory] && (
-                  <div className="w-full mb-4 sm:mb-6">
-                    <div className="space-y-4" role="list" aria-label="Suggested prompts">
-                      {suggestionsByCategory[showSuggestions as keyof typeof suggestionsByCategory].map((prompt, index) => (
-                        <div key={index} role="listitem">
-                          <Button
-                            onClick={() => handlePromptClick(prompt)}
-                            variant="outline"
-                            className="w-full text-left h-auto py-3 px-4 rounded-xl hover:bg-accent/50 transition-all justify-start"
-                          >
-                            <span className="text-sm">{prompt}</span>
-                          </Button>
-                        </div>
-                      ))}
-                      <Button
-                        onClick={() => setShowSuggestions(null)}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full rounded-xl hover:bg-accent/50 transition-all"
-                      >
-                        <X className="h-4 w-4 mr-2" />
-                        <span className="text-sm">Close suggestions</span>
-                      </Button>
-                    </div>
-                  </div>
-                )}
               </div>
             </div> : <div className="space-y-6">
               {messages.map(message => {
