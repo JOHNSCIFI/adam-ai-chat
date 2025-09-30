@@ -2035,6 +2035,37 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       textareaRef.current?.focus();
     }, 150);
   };
+  
+  const cancelRecording = () => {
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
+    setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Discard the transcript without saving
+    setTempTranscript('');
+  };
   const generateChatTitleFromConversation = async (chatId: string, messages: Message[]) => {
     // Only update if we have enough messages for context (2-3 messages minimum)
     if (messages.length < 3) return null;
@@ -2756,7 +2787,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   variant="ghost"
                   size="sm"
                   className="h-5 w-5 sm:h-7 sm:w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
-                  onClick={stopRecording}
+                  onClick={cancelRecording}
                   aria-label="Cancel recording"
                 >
                   <X className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
@@ -2764,11 +2795,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 
                 <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-2 min-w-0 overflow-hidden">
                   {/* Real-time audio waveform visualization - mobile optimized */}
-                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-4 sm:h-6 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
                     {audioLevels.map((level, i) => {
                       // Calculate height based on audio level
                       const minHeight = 2;
-                      const maxHeight = isMobile ? 16 : 24;
+                      const maxHeight = isMobile ? 16 : 32;
                       const height = minHeight + (level * (maxHeight - minHeight));
                       
                       return (

@@ -441,6 +441,37 @@ export default function Index() {
       textareaRef.current?.focus();
     }, 150);
   };
+  
+  const cancelRecording = () => {
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
+    setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Discard the transcript without saving
+    setTempTranscript('');
+  };
   const handleStartChat = async () => {
     // Allow sending if there's a message OR files
     if ((!message.trim() && selectedFiles.length === 0) || loading) return;
@@ -755,12 +786,12 @@ export default function Index() {
           
           {/* Recording UI - replaces buttons when recording */}
           {isRecording ? (
-            <div className="flex items-center gap-0.5 sm:gap-2 py-1 sm:py-3 px-0">
+              <div className="flex items-center gap-0.5 sm:gap-2 py-1 sm:py-3 px-0">
               <Button
                 variant="ghost"
                 size="sm"
                 className="h-5 w-5 sm:h-8 sm:w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
-                onClick={stopRecording}
+                onClick={cancelRecording}
                 aria-label="Cancel recording"
               >
                 <X className="h-2.5 w-2.5 sm:h-4 sm:w-4" />
