@@ -496,8 +496,12 @@ export default function Chat() {
         });
       }
 
+      // Determine request type based on attachments
+      const requestType = validAttachments.length > 0 ? 'analyze_image' : 'text';
+      console.log('[REGENERATE] Request type:', requestType);
+
       const payload = {
-        type: 'text',
+        type: requestType,
         message: userMessage,
         userId: user.id,
         chatId: chatId,
