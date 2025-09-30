@@ -2458,12 +2458,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                          
                        </div>
                        
-                         {/* Message action buttons */}
-                         <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                           {/* Copy button - always show */}
-                           <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
-                             {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
-                           </Button>
+                          {/* Message action buttons - hide while regenerating */}
+                          {regeneratingMessageId !== message.id && (
+                            <div className={`flex gap-1 mt-2 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                              {/* Copy button - always show */}
+                              <Button variant="ghost" size="sm" className="h-7 w-7 p-0 bg-background/80 backdrop-blur-sm hover:bg-muted transition-opacity" onClick={() => copyToClipboard(message.content, message.id)}>
+                                {copiedMessageId === message.id ? <Check className="h-3 w-3 text-green-500" /> : <Copy className="h-3 w-3" />}
+                              </Button>
                            
                             {/* Assistant message actions */}
                             {message.role === 'assistant' && (
@@ -2525,9 +2526,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                       )}
                                     </Button>
                                   )}
-                             </>
-                           )}
-                        </div>
+                              </>
+                            )}
+                          </div>
+                          )}
                     </div>
                   </div>
                  </div>;
