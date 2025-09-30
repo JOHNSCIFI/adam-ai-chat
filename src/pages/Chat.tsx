@@ -118,6 +118,8 @@ export default function Chat() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
+  const [tempTranscript, setTempTranscript] = useState('');
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{
     url: string;
@@ -141,6 +143,11 @@ export default function Chat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
@@ -1905,65 +1912,128 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   };
   const isImageFile = (type: string) => type.startsWith('image/');
   const startRecording = async () => {
-    console.log('🎤 Starting speech recognition...');
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
     try {
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      
+      // Set up audio context and analyzer
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      
+      // Start speech recognition
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      if (!SpeechRecognition) {
-        toast.error('Speech recognition not supported in this browser');
-        return;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setTempTranscript(transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            return;
+          }
+        };
+        
+        recognition.onend = () => {
+          if (recognitionRef.current) {
+            setIsRecording(false);
+          }
+        };
+        
+        recognitionRef.current = recognition;
+        recognition.start();
       }
-
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true; // Keep listening until manually stopped
-      recognition.interimResults = true; // Get results as user speaks
-
-      recognition.onresult = (event: any) => {
-        let transcript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+      
+      setIsRecording(true);
+      
+      // Animate waveform based on audio levels
+      const updateWaveform = () => {
+        if (!analyserRef.current) return;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Map audio data to 100 bars
+        const bars = 100;
+        const step = Math.floor(bufferLength / bars);
+        const newLevels = [];
+        
+        for (let i = 0; i < bars; i++) {
+          const index = i * step;
+          const value = dataArray[index] || 0;
+          // Normalize to 0-1 range and apply smoothing
+          newLevels.push(value / 255);
         }
-        setInput(transcript);
+        
+        setAudioLevels(newLevels);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
       };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
-        if (event.error === 'no-speech' || event.error === 'audio-capture') {
-          // Don't stop on these errors, just log them
-          return;
-        }
-        setIsRecording(false);
-        toast.error(`Speech recognition error: ${event.error}`);
-      };
-
-      // Only stop if explicitly called via stopRecording
-      recognition.onend = () => {
-        if (mediaRecorder) {
-          setIsRecording(false);
-        }
-      };
-
-      recognition.onstart = () => {
-        console.log('🎤 Speech recognition started successfully');
-        setIsRecording(true);
-      };
-
-      console.log('🚀 Starting speech recognition...');
-      recognition.start();
-      setMediaRecorder(recognition as any); // Store recognition instance
+      
+      updateWaveform();
+      
     } catch (error) {
-      console.error('❌ Failed to start speech recognition:', error);
-      setIsRecording(false);
-      toast.error('Failed to start speech recognition');
+      console.error('Error accessing microphone:', error);
+      toast.error('Unable to access microphone');
     }
   };
+  
   const stopRecording = () => {
-    console.log('🛑 Stopping speech recognition...');
-    if (mediaRecorder && 'stop' in mediaRecorder) {
-      console.log('✅ Stopping active recognition instance');
-      (mediaRecorder as any).stop();
-      setMediaRecorder(null);
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
     setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Now set the input from temporary transcript
+    setInput(tempTranscript);
+    setTempTranscript('');
+    
+    // Focus textarea after stopping to show the text
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 150);
   };
   const generateChatTitleFromConversation = async (chatId: string, messages: Message[]) => {
     // Only update if we have enough messages for context (2-3 messages minimum)
@@ -2671,36 +2741,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             {isRecording ? (
               <div className="flex items-center gap-3 py-2 mb-3">
-                <Button 
-                  variant="ghost"
-                  size="sm"
-                  onClick={stopRecording}
-                  className="h-8 w-8 rounded-full hover:bg-muted"
-                  aria-label="Cancel recording"
-                >
-                  <X className="h-4 w-4" />
-                </Button>
-                
-                <div className="flex-1 flex items-center justify-center gap-3">
-                  {/* Waveform animation */}
-                  <div className="flex items-center gap-0.5 h-8">
-                    {[...Array(40)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-0.5 bg-foreground rounded-full animate-pulse"
-                        style={{
-                          height: `${Math.random() * 24 + 8}px`,
-                          animationDelay: `${i * 0.05}s`,
-                          animationDuration: `${0.8 + Math.random() * 0.4}s`
-                        }}
-                      />
-                    ))}
-                  </div>
-                  
-                  {/* Timer */}
-                  <span className="text-sm font-medium tabular-nums min-w-[40px] text-right">
-                    {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
-                  </span>
+                <div className="flex-1 flex items-center justify-center gap-0.5">
+                  {/* Waveform visualization with real audio levels */}
+                  {audioLevels.map((level, index) => (
+                    <div
+                      key={index}
+                      className="w-0.5 bg-red-500 rounded-full transition-all duration-100"
+                      style={{
+                        height: `${Math.max(8, level * 40)}px`,
+                        opacity: 0.3 + level * 0.7
+                      }}
+                    />
+                  ))}
                 </div>
                 
                 <Button
@@ -2708,10 +2760,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   size="sm"
                   onClick={stopRecording}
                   className="h-8 w-8 rounded-full hover:bg-muted"
-                  aria-label="Send recording"
+                  aria-label="Done recording"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
               </div>
