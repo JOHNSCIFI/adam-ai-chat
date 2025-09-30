@@ -135,45 +135,45 @@ const Features = () => {
                 </Button>
               </div>
               
-              <div className="order-1 lg:order-2 grid grid-cols-2 gap-6">
-                <div className="space-y-6">
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-green-500/30 transition-all duration-300 animate-fade-in" style={{
+              <div className="order-1 lg:order-2 grid grid-cols-2 gap-3 md:gap-4 lg:gap-6">
+                <div className="space-y-3 md:space-y-4 lg:space-y-6">
+                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 hover:border-green-500/30 transition-all duration-300 animate-fade-in" style={{
                 animationDelay: '0.1s'
               }}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-10 h-10 object-contain" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-3 lg:mb-4">
+                      <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain" />
                     </div>
-                    <h3 className="font-bold text-sm mb-2">ChatGPT</h3>
-                    <p className="text-xs text-muted-foreground">Advanced reasoning</p>
+                    <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">ChatGPT</h3>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Advanced reasoning</p>
                   </div>
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-purple-500/30 transition-all duration-300 animate-fade-in" style={{
+                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 hover:border-purple-500/30 transition-all duration-300 animate-fade-in" style={{
                 animationDelay: '0.3s'
               }}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img src={deepseekLogo} alt="DeepSeek" className="w-10 h-10 object-contain" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-3 lg:mb-4">
+                      <img src={deepseekLogo} alt="DeepSeek" className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain" />
                     </div>
-                    <h3 className="font-bold text-sm mb-2">DeepSeek</h3>
-                    <p className="text-xs text-muted-foreground">Coding specialist</p>
+                    <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">DeepSeek</h3>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Coding specialist</p>
                   </div>
                 </div>
-                <div className="space-y-6 pt-8">
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-orange-500/30 transition-all duration-300 animate-fade-in" style={{
+                <div className="space-y-3 md:space-y-4 lg:space-y-6 pt-4 md:pt-6 lg:pt-8">
+                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 hover:border-orange-500/30 transition-all duration-300 animate-fade-in" style={{
                 animationDelay: '0.2s'
               }}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img src={claudeLogo} alt="Claude" className="w-10 h-10 object-contain" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-3 lg:mb-4">
+                      <img src={claudeLogo} alt="Claude" className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain" />
                     </div>
-                    <h3 className="font-bold text-sm mb-2">Claude</h3>
-                    <p className="text-xs text-muted-foreground">Creative writing</p>
+                    <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">Claude</h3>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Creative writing</p>
                   </div>
-                  <div className="bg-card border border-border rounded-2xl p-8 hover:border-blue-500/30 transition-all duration-300 animate-fade-in" style={{
+                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 hover:border-blue-500/30 transition-all duration-300 animate-fade-in" style={{
                 animationDelay: '0.4s'
               }}>
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-2xl flex items-center justify-center mb-4">
-                      <img src={geminiLogo} alt="Gemini" className="w-10 h-10 object-contain" />
+                    <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-3 lg:mb-4">
+                      <img src={geminiLogo} alt="Gemini" className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain" />
                     </div>
-                    <h3 className="font-bold text-sm mb-2">Gemini</h3>
-                    <p className="text-xs text-muted-foreground">Multimodal tasks</p>
+                    <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">Gemini</h3>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Multimodal tasks</p>
                   </div>
                 </div>
               </div>
