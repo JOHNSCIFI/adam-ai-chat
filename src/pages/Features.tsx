@@ -20,18 +20,18 @@ const Features = () => {
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       
     </nav>;
-  const Footer = () => <footer className="py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
+  const Footer = () => <footer className="py-8 md:py-12 lg:py-16 px-4 bg-gradient-to-b from-muted/30 to-muted/60">
       <div className="container max-w-6xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
-          <div className="animate-fade-in">
-            <div className="flex items-center space-x-2 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-12">
+          <div className="animate-fade-in sm:col-span-2 lg:col-span-1">
+            <div className="flex items-center space-x-2 mb-4 md:mb-6">
               <div className="relative">
-                <AdamGptLogo className="h-7 w-7" />
-                <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
+                <AdamGptLogo className="h-6 w-6 md:h-7 md:w-7" />
+                <Sparkles className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+              <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
             </div>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xs">
               Your gateway to the world's most advanced AI models, unified in one intelligent platform.
             </p>
           </div>
@@ -39,52 +39,52 @@ const Features = () => {
           <div className="animate-fade-in" style={{
           animationDelay: '0.1s'
         }}>
-            <h3 className="font-bold mb-6 text-lg">Product</h3>
-            <div className="space-y-3">
-              <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
-              <button onClick={() => navigate('/pricing')} className="block text-muted-foreground hover:text-primary transition-colors">Pricing</button>
-              <button onClick={() => navigate('/models')} className="block text-muted-foreground hover:text-primary transition-colors">AI Models</button>
-              <a href="/image-generation" className="block text-muted-foreground hover:text-primary transition-colors">Image Generation</a>
+            <h3 className="font-bold mb-3 md:mb-6 text-base md:text-lg">Product</h3>
+            <div className="space-y-2 md:space-y-3">
+              <button onClick={() => navigate('/features')} className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Features</button>
+              <button onClick={() => navigate('/pricing')} className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Pricing</button>
+              <button onClick={() => navigate('/models')} className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">AI Models</button>
+              <a href="/image-generation" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Image Generation</a>
             </div>
           </div>
           
           <div className="animate-fade-in" style={{
           animationDelay: '0.2s'
         }}>
-            <h3 className="font-bold mb-6 text-lg">Company</h3>
-            <div className="space-y-3">
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
-              <a href="/explore-tools" className="block text-muted-foreground hover:text-primary transition-colors">Explore Tools</a>
-              <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">Help Center</a>
+            <h3 className="font-bold mb-3 md:mb-6 text-base md:text-lg">Company</h3>
+            <div className="space-y-2 md:space-y-3">
+              <a href="/help" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">About</a>
+              <a href="/explore-tools" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Explore Tools</a>
+              <a href="/help" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Help Center</a>
             </div>
           </div>
           
           <div className="animate-fade-in" style={{
           animationDelay: '0.3s'
         }}>
-            <h3 className="font-bold mb-6 text-lg">Legal</h3>
-            <div className="space-y-3">
-              <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
-              <a href="/terms" className="block text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
-              <a href="/cookie-policy" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
+            <h3 className="font-bold mb-3 md:mb-6 text-base md:text-lg">Legal</h3>
+            <div className="space-y-2 md:space-y-3">
+              <a href="/privacy" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="/terms" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
+              <a href="/cookie-policy" className="block text-sm md:text-base text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
             </div>
           </div>
         </div>
         
-        <div className="border-t border-border pt-8 animate-fade-in" style={{
+        <div className="border-t border-border pt-6 md:pt-8 animate-fade-in" style={{
         animationDelay: '0.4s'
       }}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <p className="text-muted-foreground">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
+            <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
               &copy; 2024 AdamGpt. All rights reserved.
             </p>
-            <div className="flex items-center gap-6 text-sm text-muted-foreground">
+            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-xs md:text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4" />
+                <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span>Enterprise Security</span>
               </div>
               <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
+                <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
                 <span>10,000+ Users</span>
               </div>
             </div>
