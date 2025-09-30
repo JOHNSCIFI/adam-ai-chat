@@ -371,12 +371,25 @@ export default function Chat() {
   // Auto-send when input and/or files are ready after being set from navigation
   useEffect(() => {
     // Allow auto-send if we have either message OR files (or both)
+    console.log('[INITIAL-AUTO-SEND] Checking conditions:', {
+      shouldAutoSend: shouldAutoSend.current,
+      hasInput: !!input,
+      filesCount: selectedFiles.length,
+      loading,
+      chatId
+    });
+    
     if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
-      console.log('[INITIAL-FILES] Auto-sending with:', { hasInput: !!input, filesCount: selectedFiles.length });
+      console.log('[INITIAL-AUTO-SEND] Conditions met, will auto-send with:', { 
+        input, 
+        filesCount: selectedFiles.length,
+        files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
+      });
       shouldAutoSend.current = false;
       
       // Trigger send after a small delay to ensure UI is ready
       setTimeout(() => {
+        console.log('[INITIAL-AUTO-SEND] Calling sendMessage now');
         sendMessage();
       }, 300);
     }
@@ -864,7 +877,19 @@ export default function Chat() {
   };
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) return;
+    
+    console.log('[SEND-MESSAGE] Called with:', { 
+      hasInput: !!input.trim(), 
+      filesCount: selectedFiles.length,
+      files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size })),
+      chatId,
+      loading
+    });
+    
+    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) {
+      console.log('[SEND-MESSAGE] Validation failed, returning');
+      return;
+    }
 
     // Check if user is authenticated, show auth modal if not
     if (!user) {
@@ -872,9 +897,17 @@ export default function Chat() {
       setShowAuthModal(true);
       return;
     }
+    
+    console.log('[SEND-MESSAGE] Starting send process...');
     setLoading(true);
     const userMessage = input.trim() || ''; // Allow empty message if files are present
     const files = [...selectedFiles];
+    
+    console.log('[SEND-MESSAGE] Processing:', { 
+      userMessage: userMessage || '(empty)', 
+      filesCount: files.length 
+    });
+    
     setInput('');
     setSelectedFiles([]);
     
