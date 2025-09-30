@@ -969,6 +969,15 @@ export default function Chat() {
           
         if (userError) throw userError;
         
+        // CRITICAL: Mark this message as processed to prevent auto-trigger from handling it
+        if (insertedMessage && chatId) {
+          if (!processedUserMessages.current.has(chatId)) {
+            processedUserMessages.current.set(chatId, new Set());
+          }
+          processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          console.log('[IMAGE-GEN] Marked message as processed:', insertedMessage.id);
+        }
+        
         // Update with real ID
         if (insertedMessage) {
           setMessages(prev => prev.map(msg => 
