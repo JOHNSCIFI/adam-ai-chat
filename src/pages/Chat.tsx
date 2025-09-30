@@ -2751,30 +2751,30 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             {/* Recording UI - appears below textarea when recording */}
             {isRecording && (
-              <div className="flex items-center gap-2 py-3 px-1 mb-3">
+              <div className="flex items-center gap-2 py-2 px-1">
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-8 w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                  className="h-7 w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
                   onClick={stopRecording}
                   aria-label="Cancel recording"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-3.5 w-3.5" />
                 </Button>
                 
-                <div className="flex-1 flex items-center justify-center gap-3">
-                  {/* Real-time audio waveform visualization */}
-                  <div className="flex items-center justify-center gap-[2px] h-8 flex-1 max-w-[600px]">
+                <div className="flex-1 flex items-center justify-center gap-2">
+                  {/* Real-time audio waveform visualization - thinner bars */}
+                  <div className="flex items-center justify-center gap-[1px] h-6 flex-1 max-w-[600px]">
                     {audioLevels.map((level, i) => {
                       // Calculate height based on audio level
                       const minHeight = 2;
-                      const maxHeight = 32;
+                      const maxHeight = 24;
                       const height = minHeight + (level * (maxHeight - minHeight));
                       
                       return (
                         <div
                           key={i}
-                          className="w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                          className="w-[1px] bg-foreground rounded-full transition-all duration-75 ease-out"
                           style={{
                             height: `${height}px`,
                           }}
@@ -2784,18 +2784,18 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </div>
                   
                   {/* Timer */}
-                  <span className="text-sm font-medium tabular-nums text-foreground flex-shrink-0">
+                  <span className="text-xs font-medium tabular-nums text-foreground flex-shrink-0">
                     {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
                   </span>
                 </div>
                 
                 <Button
                   size="sm"
-                  className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                  className="h-7 w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
                   onClick={stopRecording}
                   aria-label="Send recording"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
