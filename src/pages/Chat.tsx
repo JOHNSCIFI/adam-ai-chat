@@ -353,13 +353,14 @@ export default function Chat() {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
+    // Allow files-only or files with message from index page
+    if (initialFiles && initialFiles.length > 0 && chatId && !hasProcessedInitialFiles.current) {
       console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
       hasProcessedInitialFiles.current = true;
       shouldAutoSend.current = true;
       
-      // Set the message and files
-      setInput(initialMessage);
+      // Set the message and files (message can be empty string)
+      setInput(initialMessage || '');
       setSelectedFiles(initialFiles);
       
       // Clear the navigation state to prevent re-triggering
