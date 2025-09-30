@@ -2377,7 +2377,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            <div className="text-xs text-muted-foreground truncate">{model.description}</div>
                          </div>
                        </div>
-                       {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-auto">Pro</span>}
+                       {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-2">Pro</span>}
                      </div>
                   </SelectItem>
                 ))}
