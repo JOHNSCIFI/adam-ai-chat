@@ -879,7 +879,7 @@ export default function Chat() {
     const userMessage = input.trim();
     const files = [...selectedFiles];
     
-    // Create temporary user message immediately to show in UI
+    // Create temporary user message immediately to show in UI (for all cases)
     const tempUserMessage: Message = {
       id: `temp-${Date.now()}`,
       chat_id: chatId!,
@@ -895,11 +895,7 @@ export default function Chat() {
       }))
     };
     
-    // Add to UI immediately so user sees their message
-    setMessages(prev => [...prev, tempUserMessage]);
-    scrollToBottom();
-    
-    // Clear input and files
+    // Clear input and files immediately
     setInput('');
     setSelectedFiles([]);
     setLoading(true);
@@ -918,6 +914,11 @@ export default function Chat() {
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
+      
+      // Add to UI immediately so user sees their message
+      setMessages(prev => [...prev, tempUserMessage]);
+      scrollToBottom();
+      
       try {
         // First, ensure the chat exists
         console.log('[IMAGE-GEN] Checking if chat exists:', chatId);
@@ -954,19 +955,6 @@ export default function Chat() {
           console.log('[IMAGE-GEN] Chat exists, proceeding...');
         }
         
-        // Create user message
-        const newUserMessage: Message = {
-          id: `temp-${Date.now()}`,
-          chat_id: chatId!,
-          content: userMessage,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          file_attachments: []
-        };
-        
-        setMessages(prev => [...prev, newUserMessage]);
-        scrollToBottom();
-        
         // Save user message to database
         const { data: insertedMessage, error: userError } = await supabase
           .from('messages')
@@ -984,7 +972,7 @@ export default function Chat() {
         // Update with real ID
         if (insertedMessage) {
           setMessages(prev => prev.map(msg => 
-            msg.id === newUserMessage.id ? { ...msg, id: insertedMessage.id } : msg
+            msg.id === tempUserMessage.id ? { ...msg, id: insertedMessage.id } : msg
           ));
         }
         
