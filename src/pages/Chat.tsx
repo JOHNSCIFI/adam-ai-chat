@@ -501,13 +501,17 @@ export default function Chat() {
         });
       }
 
-      // Determine request type based on file type
+      // Determine request type based on model and file type
       let requestType = 'text';
-      if (validAttachments.length > 0) {
+      
+      // Check if this was originally an image generation request
+      if (userModel === 'generate-image') {
+        requestType = 'generate_image';
+      } else if (validAttachments.length > 0) {
         // Check if the first attachment is an image
         requestType = validAttachments[0].isImage ? 'analyse-image' : 'analyse-files';
       }
-      console.log('[REGENERATE] Request type:', requestType);
+      console.log('[REGENERATE] Request type:', requestType, 'Model:', userModel);
 
       // Build payload - send first attachment directly in the body
       let payload: any = {
