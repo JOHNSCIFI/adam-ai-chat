@@ -456,6 +456,8 @@ export default function Index() {
     }
     setLoading(true);
     try {
+      console.log('[INDEX] Creating new chat with message:', message.substring(0, 50));
+      
       // Create new chat
       const {
         data: chatData,
@@ -466,6 +468,8 @@ export default function Index() {
       }]).select().single();
       if (chatError) throw chatError;
 
+      console.log('[INDEX] Chat created:', chatData.id);
+
       // Store the message and files for Chat page to process
       const messageText = message;
       const filesToSend = [...selectedFiles];
@@ -473,6 +477,12 @@ export default function Index() {
       // Clear message and files
       setMessage('');
       setSelectedFiles([]);
+      
+      console.log('[INDEX] Navigating to chat with state:', {
+        chatId: chatData.id,
+        hasMessage: !!messageText,
+        filesCount: filesToSend.length
+      });
       
       // Navigate to chat page with files and message to send
       // Chat page will handle creating the message and sending to webhook
@@ -485,6 +495,7 @@ export default function Index() {
         }
       });
     } catch (error) {
+      console.error('[INDEX] Failed to create chat:', error);
       toast.error('Failed to start chat. Please try again.');
     } finally {
       setLoading(false);
