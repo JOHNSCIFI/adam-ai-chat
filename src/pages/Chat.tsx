@@ -353,13 +353,14 @@ export default function Chat() {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
+    // Allow files with or without message
+    if (initialFiles && initialFiles.length > 0 && chatId && !hasProcessedInitialFiles.current) {
       console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
       hasProcessedInitialFiles.current = true;
       shouldAutoSend.current = true;
       
-      // Set the message and files
-      setInput(initialMessage);
+      // Set the message and files (message can be empty)
+      setInput(initialMessage || '');
       setSelectedFiles(initialFiles);
       
       // Clear the navigation state to prevent re-triggering
@@ -367,9 +368,9 @@ export default function Chat() {
     }
   }, [chatId, location.state]);
 
-  // Auto-send when input and files are ready after being set from navigation
+  // Auto-send when files are ready after being set from navigation (with or without message)
   useEffect(() => {
-    if (shouldAutoSend.current && input && selectedFiles.length > 0 && !loading && chatId) {
+    if (shouldAutoSend.current && selectedFiles.length > 0 && !loading && chatId) {
       console.log('[INITIAL-FILES] Auto-sending message with files');
       shouldAutoSend.current = false;
       
@@ -378,7 +379,7 @@ export default function Chat() {
         sendMessage();
       }, 500);
     }
-  }, [input, selectedFiles, loading, chatId]);
+  }, [selectedFiles, loading, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
     if (isGeneratingResponse || loading) {
@@ -870,11 +871,34 @@ export default function Chat() {
       setShowAuthModal(true);
       return;
     }
-    setLoading(true);
+    
     const userMessage = input.trim();
     const files = [...selectedFiles];
+    
+    // Create temporary user message immediately to show in UI
+    const tempUserMessage: Message = {
+      id: `temp-${Date.now()}`,
+      chat_id: chatId!,
+      content: userMessage,
+      role: 'user',
+      created_at: new Date().toISOString(),
+      file_attachments: files.map((file, index) => ({
+        id: `temp-file-${Date.now()}-${index}`,
+        name: file.name,
+        size: file.size,
+        type: file.type,
+        url: URL.createObjectURL(file)
+      }))
+    };
+    
+    // Add to UI immediately so user sees their message
+    setMessages(prev => [...prev, tempUserMessage]);
+    scrollToBottom();
+    
+    // Clear input and files
     setInput('');
     setSelectedFiles([]);
+    setLoading(true);
     
     // Reset image mode and selected style after sending message
     if (isImageMode) {
@@ -1218,19 +1242,12 @@ export default function Chat() {
         }
       }
 
-      // Create clean user message with uploaded image URLs
-      const newUserMessage: Message = {
-        id: `temp-${Date.now()}`,
-        chat_id: chatId!,
-        content: userMessage,
-        role: 'user',
-        created_at: new Date().toISOString(),
-        file_attachments: tempFileAttachments
-      };
-
-      // Add to UI immediately
-      setMessages(prev => [...prev, newUserMessage]);
-      scrollToBottom();
+      // Update the temporary message with actual uploaded URLs
+      setMessages(prev => prev.map(msg => 
+        msg.id === tempUserMessage.id 
+          ? { ...msg, file_attachments: tempFileAttachments }
+          : msg
+      ));
 
       // Start embedding generation in background (for user message content)
       const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
@@ -1243,7 +1260,7 @@ export default function Chat() {
         chat_id: chatId,
         content: userMessage,
         role: 'user',
-        file_attachments: newUserMessage.file_attachments as any,
+        file_attachments: tempFileAttachments as any,
         embedding: null // Will be updated by background process
       }).select().single();
       if (userError) {
@@ -1268,7 +1285,7 @@ export default function Chat() {
 
       // Update the message with the real ID from database
       if (insertedMessage) {
-        setMessages(prev => prev.map(msg => msg.id === newUserMessage.id ? {
+        setMessages(prev => prev.map(msg => msg.id === tempUserMessage.id ? {
           ...msg,
           id: insertedMessage.id // Update with real ID
         } : msg));
