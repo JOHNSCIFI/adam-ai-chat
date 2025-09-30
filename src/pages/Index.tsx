@@ -43,7 +43,7 @@ const models = [{
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
   shortLabel: 'Sonnet 4',
-  description: "Alternative for natural language and writing",
+  description: "Great for writing",
   type: 'pro'
 }, {
   id: 'generate-image',
@@ -104,7 +104,7 @@ const availableModels = [{
   id: 'claude-sonnet-4',
   name: 'Claude Sonnet 4',
   shortLabel: 'Sonnet 4',
-  description: 'Excellent for natural language tasks, writing, and creative work.',
+  description: 'Great for writing',
   icon: 'claude'
 }, {
   id: 'generate-image',
