@@ -386,11 +386,11 @@ export default function Chat() {
     try {
       console.log('[REGENERATE] Starting regeneration with attachments:', userMessageAttachments);
 
-      // Convert image URLs to base64 for webhook
+      // Convert file URLs to base64 for webhook
       const fileAttachmentsForWebhook = await Promise.all(
         userMessageAttachments.map(async (file) => {
-          if (file.type.startsWith('image/')) {
-            try {
+          try {
+            if (file.type.startsWith('image/')) {
               console.log('[REGENERATE] Converting image to base64:', file.url);
               
               // Fetch the image
@@ -426,27 +426,46 @@ export default function Chat() {
               const base64 = canvas.toDataURL('image/png').split(',')[1];
               console.log('[REGENERATE] Converted to base64, length:', base64.length);
               
-              const converted = {
+              return {
                 fileName: file.name,
                 fileSize: file.size,
                 fileType: 'image/png',
-                fileData: base64
+                fileData: base64,
+                isImage: true
               };
+            } else {
+              // Handle non-image files (PDF, CSV, XML, etc.)
+              console.log('[REGENERATE] Processing non-image file:', file.type);
               
-              console.log('[REGENERATE] Returning converted attachment:', { 
-                fileName: converted.fileName, 
-                fileType: converted.fileType, 
-                dataLength: converted.fileData.length 
+              const response = await fetch(file.url);
+              if (!response.ok) {
+                console.error('[REGENERATE] Failed to fetch file:', response.status);
+                return null;
+              }
+              
+              const blob = await response.blob();
+              const base64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => {
+                  const result = reader.result as string;
+                  resolve(result.split(',')[1]);
+                };
+                reader.onerror = reject;
+                reader.readAsDataURL(blob);
               });
               
-              return converted;
-            } catch (error) {
-              console.error('[REGENERATE] Error converting image to base64:', error);
-              return null;
+              return {
+                fileName: file.name,
+                fileSize: file.size,
+                fileType: file.type,
+                fileData: base64,
+                isImage: false
+              };
             }
+          } catch (error) {
+            console.error('[REGENERATE] Error processing file:', error);
+            return null;
           }
-          console.log('[REGENERATE] Skipping non-image file:', file.type);
-          return null;
         })
       );
 
@@ -462,8 +481,12 @@ export default function Chat() {
         });
       }
 
-      // Determine request type based on attachments
-      const requestType = validAttachments.length > 0 ? 'analyse-files' : 'text';
+      // Determine request type based on file type
+      let requestType = 'text';
+      if (validAttachments.length > 0) {
+        // Check if the first attachment is an image
+        requestType = validAttachments[0].isImage ? 'analyse-image' : 'analyse-files';
+      }
       console.log('[REGENERATE] Request type:', requestType);
 
       // Build payload - if there's an image, send it directly in the body, not as fileAttachments array
