@@ -353,30 +353,32 @@ export default function Chat() {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
     
-    if (initialFiles && initialFiles.length > 0 && initialMessage && chatId && !hasProcessedInitialFiles.current) {
-      console.log('[INITIAL-FILES] Processing files from home page:', { initialFiles, initialMessage });
+    // Allow processing if there are files OR message (or both)
+    if ((initialFiles && initialFiles.length > 0 || initialMessage) && chatId && !hasProcessedInitialFiles.current) {
+      console.log('[INITIAL-FILES] Processing from home page:', { initialFiles, initialMessage });
       hasProcessedInitialFiles.current = true;
       shouldAutoSend.current = true;
       
       // Set the message and files
-      setInput(initialMessage);
-      setSelectedFiles(initialFiles);
+      if (initialMessage) setInput(initialMessage);
+      if (initialFiles && initialFiles.length > 0) setSelectedFiles(initialFiles);
       
       // Clear the navigation state to prevent re-triggering
       window.history.replaceState({}, document.title);
     }
   }, [chatId, location.state]);
 
-  // Auto-send when input and files are ready after being set from navigation
+  // Auto-send when input and/or files are ready after being set from navigation
   useEffect(() => {
-    if (shouldAutoSend.current && input && selectedFiles.length > 0 && !loading && chatId) {
-      console.log('[INITIAL-FILES] Auto-sending message with files');
+    // Allow auto-send if we have either message OR files (or both)
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
+      console.log('[INITIAL-FILES] Auto-sending with:', { hasInput: !!input, filesCount: selectedFiles.length });
       shouldAutoSend.current = false;
       
       // Trigger send after a small delay to ensure UI is ready
       setTimeout(() => {
         sendMessage();
-      }, 500);
+      }, 300);
     }
   }, [input, selectedFiles, loading, chatId]);
 
@@ -871,7 +873,7 @@ export default function Chat() {
       return;
     }
     setLoading(true);
-    const userMessage = input.trim();
+    const userMessage = input.trim() || ''; // Allow empty message if files are present
     const files = [...selectedFiles];
     setInput('');
     setSelectedFiles([]);
@@ -886,6 +888,20 @@ export default function Chat() {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
     }
+    
+    // Create user message and add to UI immediately (before processing files)
+    const newUserMessage: Message = {
+      id: `temp-${Date.now()}`,
+      chat_id: chatId!,
+      content: userMessage,
+      role: 'user',
+      created_at: new Date().toISOString(),
+      file_attachments: []
+    };
+    
+    // Add to UI immediately so user sees their message right away
+    setMessages(prev => [...prev, newUserMessage]);
+    scrollToBottom();
     
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
@@ -926,20 +942,7 @@ export default function Chat() {
           console.log('[IMAGE-GEN] Chat exists, proceeding...');
         }
         
-        // Create user message
-        const newUserMessage: Message = {
-          id: `temp-${Date.now()}`,
-          chat_id: chatId!,
-          content: userMessage,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          file_attachments: []
-        };
-        
-        setMessages(prev => [...prev, newUserMessage]);
-        scrollToBottom();
-        
-        // Save user message to database
+        // Save user message to database (reusing newUserMessage already shown in UI)
         const { data: insertedMessage, error: userError } = await supabase
           .from('messages')
           .insert({
@@ -1218,19 +1221,16 @@ export default function Chat() {
         }
       }
 
-      // Create clean user message with uploaded image URLs
-      const newUserMessage: Message = {
-        id: `temp-${Date.now()}`,
-        chat_id: chatId!,
-        content: userMessage,
-        role: 'user',
-        created_at: new Date().toISOString(),
-        file_attachments: tempFileAttachments
-      };
-
-      // Add to UI immediately
-      setMessages(prev => [...prev, newUserMessage]);
-      scrollToBottom();
+      // Update the user message with file attachments after processing
+      if (tempFileAttachments.length > 0) {
+        setMessages(prev => prev.map(msg => 
+          msg.id === newUserMessage.id 
+            ? { ...msg, file_attachments: tempFileAttachments }
+            : msg
+        ));
+        // Update the local reference
+        newUserMessage.file_attachments = tempFileAttachments;
+      }
 
       // Start embedding generation in background (for user message content)
       const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
