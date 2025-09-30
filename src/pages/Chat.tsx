@@ -2363,7 +2363,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     value={model.id} 
                     className="rounded-md px-2 py-1.5 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
                   >
-                     <div className="flex items-center w-full">
+                     <div className="flex items-center w-full gap-2">
                        <div className="flex items-center gap-2 min-w-0 flex-1">
                          {model.id.includes('gpt') || model.id === 'generate-image' ? (
                            <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
@@ -2377,7 +2377,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            <div className="text-xs text-muted-foreground truncate">{model.description}</div>
                          </div>
                        </div>
-                       {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-2">Pro</span>}
+                       {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0">Pro</span>}
                      </div>
                   </SelectItem>
                 ))}
