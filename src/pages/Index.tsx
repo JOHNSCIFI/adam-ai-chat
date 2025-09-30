@@ -311,8 +311,7 @@ export default function Index() {
     setIsRecording(false);
   };
   const handleStartChat = async () => {
-    // Allow sending if there's a message OR files
-    if ((!message.trim() && selectedFiles.length === 0) || loading) return;
+    if (!message.trim() || loading) return;
     if (!user) {
       setPendingMessage(message);
       localStorage.setItem('pendingChatMessage', message);
@@ -331,7 +330,7 @@ export default function Index() {
         error: chatError
       } = await supabase.from('chats').insert([{
         user_id: user.id,
-        title: message.trim() ? message.slice(0, 50) : (selectedFiles.length > 0 ? `${selectedFiles[0].name.slice(0, 30)}...` : 'New Chat')
+        title: message.slice(0, 50) || 'New Chat'
       }]).select().single();
       if (chatError) throw chatError;
 
