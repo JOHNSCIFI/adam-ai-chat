@@ -116,6 +116,7 @@ export default function Chat() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [pendingImageGenerations, setPendingImageGenerations] = useState<Set<string>>(new Set());
   const [selectedImage, setSelectedImage] = useState<{
@@ -261,6 +262,20 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Timer for recording duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      setRecordingDuration(0);
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
@@ -1801,149 +1816,46 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const startRecording = async () => {
     console.log('🎤 Starting speech recognition...');
     try {
-      // Check if browser supports Web Speech API
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
       if (!SpeechRecognition) {
-        console.error('❌ Speech recognition not supported in this browser');
         toast.error('Speech recognition not supported in this browser');
         return;
       }
 
-      // Check if we're on HTTPS or localhost
-      const isSecureContext = window.isSecureContext || window.location.protocol === 'https:' || window.location.hostname === 'localhost';
-      const isChromeBased = /Chrome|Chromium|Edge/.test(navigator.userAgent) && !/Safari/.test(navigator.userAgent);
-      console.log('🔐 Security context check:', {
-        isSecureContext,
-        isChromeBased,
-        protocol: window.location.protocol,
-        hostname: window.location.hostname,
-        userAgent: navigator.userAgent
-      });
-
-      // For Chrome-based browsers on HTTP (non-localhost), show a helpful message
-      if (isChromeBased && !isSecureContext && window.location.hostname !== 'localhost') {
-        console.error('❌ Chrome-based browsers require HTTPS for speech recognition');
-        toast.error('Speech recognition requires HTTPS in this browser. Please use HTTPS or try Safari.');
-        return;
-      }
-      console.log('✅ Speech recognition supported, creating instance...');
       const recognition = new SpeechRecognition();
+      recognition.continuous = true; // Keep listening until manually stopped
+      recognition.interimResults = true; // Get results as user speaks
 
-      // Configure recognition with better settings for different browsers
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
+      recognition.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setInput(transcript);
+      };
 
-      // Add timeout handling for Chrome-based browsers
-      if (isChromeBased) {
-        recognition.maxAlternatives = 1;
-      }
-      console.log('🔧 Speech recognition configured:', {
-        continuous: recognition.continuous,
-        interimResults: recognition.interimResults,
-        lang: recognition.lang,
-        maxAlternatives: recognition.maxAlternatives || 'default'
-      });
-      let finalTranscript = '';
-      let recognitionTimeout: NodeJS.Timeout;
+      recognition.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        if (event.error === 'no-speech' || event.error === 'audio-capture') {
+          // Don't stop on these errors, just log them
+          return;
+        }
+        setIsRecording(false);
+        toast.error(`Speech recognition error: ${event.error}`);
+      };
+
+      // Only stop if explicitly called via stopRecording
+      recognition.onend = () => {
+        if (mediaRecorder) {
+          setIsRecording(false);
+        }
+      };
+
       recognition.onstart = () => {
         console.log('🎤 Speech recognition started successfully');
         setIsRecording(true);
-
-        // Set a timeout to restart recognition if it stops unexpectedly
-        recognitionTimeout = setTimeout(() => {
-          console.log('⏰ Recognition timeout - restarting...');
-          if (mediaRecorder === recognition) {
-            recognition.stop();
-          }
-        }, 30000); // 30 second timeout
       };
-      recognition.onresult = event => {
-        console.log('📝 Speech recognition result received:', event);
-        if (recognitionTimeout) {
-          clearTimeout(recognitionTimeout);
-        }
-        let interimTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          console.log(`📄 Result ${i}:`, {
-            transcript,
-            isFinal: event.results[i].isFinal,
-            confidence: event.results[i][0].confidence
-          });
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-            console.log('✅ Final transcript updated:', finalTranscript);
-          } else {
-            interimTranscript += transcript;
-            console.log('📝 Interim transcript:', interimTranscript);
-          }
-        }
 
-        // Update input with final transcript
-        if (finalTranscript) {
-          const textToAdd = finalTranscript.trim();
-          console.log('📝 Preparing to update input with:', textToAdd);
-          setInput(prevInput => {
-            const newInput = prevInput + (prevInput ? ' ' : '') + textToAdd;
-            console.log('📝 Updating input field:', {
-              prevInput,
-              textToAdd,
-              newInput
-            });
-            return newInput;
-          });
-          finalTranscript = ''; // Clear after capturing the value
-        }
-      };
-      recognition.onerror = event => {
-        console.error('❌ Speech recognition error:', {
-          error: event.error,
-          message: event.message,
-          timestamp: new Date().toISOString(),
-          browser: isChromeBased ? 'Chrome-based' : 'Other'
-        });
-        if (recognitionTimeout) {
-          clearTimeout(recognitionTimeout);
-        }
-        setIsRecording(false);
-        setMediaRecorder(null);
-
-        // Show user-friendly error message with browser-specific advice
-        switch (event.error) {
-          case 'network':
-            if (isChromeBased) {
-              toast.error('Network error: Try using Safari or enable HTTPS. Chrome-based browsers need secure connection for speech recognition.');
-            } else {
-              toast.error('Network error - please check your internet connection');
-            }
-            break;
-          case 'not-allowed':
-            toast.error('Microphone access denied - please allow microphone permission');
-            break;
-          case 'no-speech':
-            toast.error('No speech detected - please try speaking again');
-            break;
-          case 'audio-capture':
-            toast.error('Audio capture failed - please check your microphone');
-            break;
-          default:
-            toast.error(`Speech recognition error: ${event.error}`);
-        }
-      };
-      recognition.onend = () => {
-        console.log('🛑 Speech recognition ended');
-        if (recognitionTimeout) {
-          clearTimeout(recognitionTimeout);
-        }
-        setIsRecording(false);
-        setMediaRecorder(null);
-
-        // Focus on textarea
-        if (textareaRef.current) {
-          textareaRef.current.focus();
-        }
-      };
       console.log('🚀 Starting speech recognition...');
       recognition.start();
       setMediaRecorder(recognition as any); // Store recognition instance
@@ -1956,13 +1868,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const stopRecording = () => {
     console.log('🛑 Stopping speech recognition...');
     if (mediaRecorder && 'stop' in mediaRecorder) {
-      console.log('🔴 Calling stop on recognition instance');
+      console.log('✅ Stopping active recognition instance');
       (mediaRecorder as any).stop();
       setMediaRecorder(null);
-      setIsRecording(false);
-    } else {
-      console.log('⚠️ No active recognition instance to stop');
     }
+    setIsRecording(false);
   };
   const generateChatTitleFromConversation = async (chatId: string, messages: Message[]) => {
     // Only update if we have enough messages for context (2-3 messages minimum)
@@ -2665,18 +2575,67 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>
               </div>
             )}
-            <Textarea 
-              ref={textareaRef} 
-              value={input} 
-              onChange={handleInputChange} 
-              onKeyDown={handleKeyDown} 
-              placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
-              className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
-              rows={1}
-            />
+            
+            {isRecording ? (
+              <div className="flex items-center gap-3 py-2 mb-3">
+                <Button 
+                  variant="ghost"
+                  size="sm"
+                  onClick={stopRecording}
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  aria-label="Cancel recording"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+                
+                <div className="flex-1 flex items-center justify-center gap-3">
+                  {/* Waveform animation */}
+                  <div className="flex items-center gap-0.5 h-8">
+                    {[...Array(40)].map((_, i) => (
+                      <div
+                        key={i}
+                        className="w-0.5 bg-foreground rounded-full animate-pulse"
+                        style={{
+                          height: `${Math.random() * 24 + 8}px`,
+                          animationDelay: `${i * 0.05}s`,
+                          animationDuration: `${0.8 + Math.random() * 0.4}s`
+                        }}
+                      />
+                    ))}
+                  </div>
+                  
+                  {/* Timer */}
+                  <span className="text-sm font-medium tabular-nums min-w-[40px] text-right">
+                    {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                  </span>
+                </div>
+                
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={stopRecording}
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  aria-label="Send recording"
+                >
+                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                </Button>
+              </div>
+            ) : (
+              <Textarea 
+                ref={textareaRef} 
+                value={input} 
+                onChange={handleInputChange} 
+                onKeyDown={handleKeyDown} 
+                placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
+                className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
+                rows={1}
+              />
+            )}
             
             {/* Mobile Image mode controls */}
-            {isImageMode && (
+            {!isRecording && isImageMode && (
               <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
                 <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                   <ImageIcon2 className="h-3 w-3" />
@@ -2713,9 +2672,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </div>
             )}
 
-            <div className="flex items-center justify-between">
-              {/* Mobile controls */}
-              {isMobile ? (
+            {!isRecording && (
+              <div className="flex items-center justify-between">
+                {/* Mobile controls */}
+                {isMobile ? (
                 <>
                   {/* Left side - Upload button */}
                   <Popover>
@@ -2850,6 +2810,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </>
               )}
             </div>
+            )}
           </div>
         </div>
       </div>
