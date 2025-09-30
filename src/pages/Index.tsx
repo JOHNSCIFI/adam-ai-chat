@@ -699,17 +699,17 @@ export default function Index() {
                   <Button 
                     size="sm" 
                     className={`h-9 w-9 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-offset-2 flex-shrink-0 ${
-                      message.trim().length > 0
+                      message.trim().length > 0 || selectedFiles.length > 0
                         ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                         : isRecording 
                           ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
                           : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                     }`} 
-                    onClick={message.trim().length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
-                    aria-label={message.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
+                    onClick={message.trim().length > 0 || selectedFiles.length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
+                    aria-label={message.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
                     aria-pressed={isRecording}
                   >
-                    {message.trim().length > 0 ? (
+                    {message.trim().length > 0 || selectedFiles.length > 0 ? (
                       <SendHorizontalIcon className="h-4 w-4" />
                     ) : (
                       isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
@@ -743,17 +743,17 @@ export default function Index() {
                   <Button 
                     size="sm" 
                     className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
-                      message.trim().length > 0
+                      message.trim().length > 0 || selectedFiles.length > 0
                         ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                         : isRecording 
                           ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
                           : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                     }`} 
-                    onClick={message.trim().length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
-                    aria-label={message.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
+                    onClick={message.trim().length > 0 || selectedFiles.length > 0 ? handleStartChat : (isRecording ? stopRecording : startRecording)} 
+                    aria-label={message.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")} 
                     aria-pressed={isRecording}
                   >
-                    {message.trim().length > 0 ? (
+                    {message.trim().length > 0 || selectedFiles.length > 0 ? (
                       <SendHorizontalIcon className="h-3 w-3" />
                     ) : (
                       isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />

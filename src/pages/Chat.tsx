@@ -2658,17 +2658,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     <Button 
                       size="sm" 
                       className={`h-7 w-7 rounded-full focus-visible:ring-2 focus-visible:ring-offset-1 flex-shrink-0 ${
-                        input.trim().length > 0
+                        input.trim().length > 0 || selectedFiles.length > 0
                           ? 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                           : isRecording 
                             ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
                             : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                       }`} 
-                      onClick={input.trim().length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
-                      aria-label={input.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
                       aria-pressed={isRecording}
                     >
-                      {input.trim().length > 0 ? (
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
                         <SendHorizontalIcon className="h-3 w-3" />
                       ) : (
                         isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
@@ -2732,16 +2732,16 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                     <Button 
                       size="sm" 
                       className={`h-8 w-8 rounded-full border border-border/50 ${
-                        input.trim().length > 0
+                        input.trim().length > 0 || selectedFiles.length > 0
                           ? 'bg-foreground hover:bg-foreground/90 text-background'
                           : isRecording 
                             ? 'bg-red-500 hover:bg-red-600 text-background' 
                             : 'bg-foreground hover:bg-foreground/90 text-background'
                       }`} 
-                      onClick={input.trim().length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
-                      aria-label={input.trim().length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
+                      onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
+                      aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
                     >
-                      {input.trim().length > 0 ? (
+                      {input.trim().length > 0 || selectedFiles.length > 0 ? (
                         <SendHorizontalIcon className="h-4 w-4" />
                       ) : (
                         isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
