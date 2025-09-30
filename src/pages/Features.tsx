@@ -100,7 +100,7 @@ const Features = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent"></div>
         <div className="container max-w-6xl mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-            Explore more features in <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">Chatbot App</span>
+            Powerful Features of <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AdamGpt</span>
           </h1>
         </div>
       </section>
