@@ -2739,8 +2739,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </div>
             )}
             
-            {isRecording ? (
-              <div className="flex items-center gap-2 py-3 px-1">
+            <Textarea 
+              ref={textareaRef} 
+              value={input} 
+              onChange={handleInputChange} 
+              onKeyDown={handleKeyDown} 
+              placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
+              className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
+              rows={1}
+            />
+            
+            {/* Recording UI - appears below textarea when recording */}
+            {isRecording && (
+              <div className="flex items-center gap-2 py-3 px-1 mb-3">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -2789,16 +2800,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </svg>
                 </Button>
               </div>
-            ) : (
-              <Textarea 
-                ref={textareaRef} 
-                value={input} 
-                onChange={handleInputChange} 
-                onKeyDown={handleKeyDown} 
-                placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
-                className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
-                rows={1}
-              />
             )}
             
             {/* Mobile Image mode controls */}
