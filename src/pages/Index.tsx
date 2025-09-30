@@ -998,16 +998,16 @@ export default function Index() {
 
       {/* Suggestion buttons - horizontal scroll on mobile */}
       {!showSuggestions && <div className="w-full max-w-3xl mb-4 sm:mb-6">
-          {/* Mobile: Horizontal scroll like models */}
+          {/* Mobile: Wrapped layout like desktop */}
           <div className="sm:hidden">
-            <div className="flex gap-2 overflow-x-auto pb-2 px-1 scrollbar-hide" role="group" aria-label="Quick suggestions">
-              {suggestionButtons.map((suggestion, index) => <Button key={index} onClick={() => handleSuggestionClick(suggestion.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap" aria-label={`${suggestion.label} suggestion`}>
+            <div className="flex flex-wrap gap-2 justify-center" role="group" aria-label="Quick suggestions">
+              {suggestionButtons.map((suggestion, index) => <Button key={index} onClick={() => handleSuggestionClick(suggestion.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary" aria-label={`${suggestion.label} suggestion`}>
                   <suggestion.icon className="h-3.5 w-3.5 mr-1.5" />
                   <span className="text-sm font-medium">{suggestion.label}</span>
                 </Button>)}
               
               {/* Additional buttons - mobile */}
-              {additionalButtons.map((button, index) => <Button key={`mobile-${index}`} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0 whitespace-nowrap" aria-label={`${button.label} suggestion`}>
+              {additionalButtons.map((button, index) => <Button key={`mobile-${index}`} onClick={() => handleSuggestionClick(button.action)} variant="ghost" size="sm" className="h-9 px-4 rounded-full border border-border/30 hover:border-border/60 hover:bg-accent/50 transition-all focus-visible:ring-2 focus-visible:ring-primary" aria-label={`${button.label} suggestion`}>
                     <button.icon className="h-3.5 w-3.5 mr-1.5" />
                     <span className="text-sm font-medium">{button.label}</span>
                   </Button>)}
