@@ -85,6 +85,29 @@ serve(async (req) => {
       }
     }
 
+    // Also check for generated images bucket
+    const { data: generatedImageFiles, error: generatedImagesError } = await supabase.storage
+      .from('generated-images')
+      .list(`${userId}/${chatId}`, {
+        limit: 100,
+        sortBy: { column: 'name', order: 'asc' }
+      });
+
+    if (generatedImageFiles && !generatedImagesError && generatedImageFiles.length > 0) {
+      const generatedFilePaths = generatedImageFiles.map(file => `${userId}/${chatId}/${file.name}`);
+      
+      const { error: deleteGeneratedError } = await supabase.storage
+        .from('generated-images')
+        .remove(generatedFilePaths);
+
+      if (!deleteGeneratedError) {
+        deletedCount += generatedFilePaths.length;
+        console.log(`Deleted ${generatedFilePaths.length} images from generated-images bucket`);
+      } else {
+        console.error('Error deleting from generated-images:', deleteGeneratedError);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true,

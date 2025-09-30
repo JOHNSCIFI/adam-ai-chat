@@ -602,7 +602,10 @@ export default function Chat() {
           }
         }
         
-        // Delete the old message
+        // Remove old message from local state first
+        setMessages(prev => prev.filter(msg => msg.id !== messageId));
+        
+        // Delete the old message from database
         const { error: deleteError } = await supabase
           .from('messages')
           .delete()
@@ -624,13 +627,11 @@ export default function Chat() {
           
         if (!fetchError && newMessage) {
           console.log('[REGENERATE] Fetched new message:', newMessage);
-          // Replace old message with new one in local state
-          setMessages(prev => prev.map(msg => 
-            msg.id === messageId ? {
-              ...newMessage,
-              file_attachments: (newMessage.file_attachments as unknown) as FileAttachment[] | undefined
-            } as Message : msg
-          ));
+          // Add the new message to state
+          setMessages(prev => [...prev, {
+            ...newMessage,
+            file_attachments: (newMessage.file_attachments as unknown) as FileAttachment[] | undefined
+          } as Message]);
         }
         
         scrollToBottom();

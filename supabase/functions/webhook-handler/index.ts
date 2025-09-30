@@ -183,7 +183,7 @@ serve(async (req) => {
       .from('messages')
       .insert({
         chat_id: chat_id,
-        content: responseContent || 'Generated image',
+        content: responseContent || '',
         role: 'assistant',
         file_attachments: fileAttachments,
         model: model, // Save the model field
