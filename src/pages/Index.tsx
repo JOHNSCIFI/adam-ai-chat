@@ -642,47 +642,55 @@ export default function Index() {
           
           {/* Recording UI */}
           {isRecording ? (
-            <div className="flex items-center gap-3 py-2">
+            <div className="flex items-center gap-2 py-3 px-1">
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                className="h-7 w-7 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
                 onClick={stopRecording}
                 aria-label="Cancel recording"
               >
                 <X className="h-4 w-4" />
               </Button>
               
-              <div className="flex-1 flex items-center justify-center gap-3">
-                {/* Waveform animation */}
-                <div className="flex items-center gap-0.5 h-8">
-                  {[...Array(40)].map((_, i) => (
-                    <div
-                      key={i}
-                      className="w-0.5 bg-foreground rounded-full animate-pulse"
-                      style={{
-                        height: `${Math.random() * 24 + 8}px`,
-                        animationDelay: `${i * 0.05}s`,
-                        animationDuration: `${0.8 + Math.random() * 0.4}s`
-                      }}
-                    />
-                  ))}
+              <div className="flex-1 flex items-center justify-center gap-2">
+                {/* Realistic waveform animation */}
+                <div className="flex items-center justify-center gap-[1px] h-6">
+                  {[...Array(80)].map((_, i) => {
+                    // Create a more realistic waveform pattern
+                    const position = i / 80;
+                    const wave1 = Math.sin(position * Math.PI * 4) * 0.5 + 0.5;
+                    const wave2 = Math.sin(position * Math.PI * 8) * 0.3;
+                    const baseHeight = (wave1 + wave2) * 20 + 4;
+                    
+                    return (
+                      <div
+                        key={i}
+                        className="w-[1px] bg-foreground/90 rounded-full"
+                        style={{
+                          height: `${baseHeight}px`,
+                          animation: `waveform ${0.8 + (i % 10) * 0.05}s ease-in-out infinite`,
+                          animationDelay: `${i * 0.015}s`
+                        }}
+                      />
+                    );
+                  })}
                 </div>
                 
                 {/* Timer */}
-                <span className="text-sm font-medium tabular-nums min-w-[40px] text-right">
+                <span className="text-sm font-medium tabular-nums text-foreground">
                   {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
                 </span>
               </div>
               
               <Button
                 size="sm"
-                className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                className="h-7 w-7 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
                 onClick={stopRecording}
                 aria-label="Send recording"
               >
-                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
               </Button>
             </div>
