@@ -2334,7 +2334,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Mobile Header with Sidebar Trigger */}
       {isMobile && (
-        <div className="relative flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+        <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
           <SidebarTrigger 
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
@@ -2389,7 +2389,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
 
       {/* Messages area - takes all available space above input */}
       <div 
-        className="flex-1 overflow-y-auto pb-32 relative"
+        className={`flex-1 overflow-y-auto pb-32 relative ${isMobile ? 'pt-[72px]' : ''}`}
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();

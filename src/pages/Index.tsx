@@ -669,7 +669,7 @@ export default function Index() {
   };
   return <div className="flex-1 flex flex-col min-h-screen">
       {/* Mobile Header with Sidebar Trigger */}
-      {isMobile && <div className="relative flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
+      {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
           <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
           
           {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
@@ -706,7 +706,7 @@ export default function Index() {
           </div>
         </div>}
       
-      <div className="flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200" onDragOver={e => {
+      <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''}`} onDragOver={e => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(true);
