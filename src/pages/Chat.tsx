@@ -500,14 +500,23 @@ export default function Chat() {
       const requestType = validAttachments.length > 0 ? 'analyse_image' : 'text';
       console.log('[REGENERATE] Request type:', requestType);
 
-      const payload = {
+      // Build payload - if there's an image, send it directly in the body, not as fileAttachments array
+      let payload: any = {
         type: requestType,
         message: userMessage,
         userId: user.id,
         chatId: chatId,
-        model: userModel,
-        fileAttachments: validAttachments.length > 0 ? validAttachments : undefined
+        model: userModel
       };
+
+      if (validAttachments.length > 0) {
+        // Send first image directly in body
+        const firstImage = validAttachments[0];
+        payload.fileName = firstImage.fileName;
+        payload.fileSize = firstImage.fileSize;
+        payload.fileType = firstImage.fileType;
+        payload.fileData = firstImage.fileData;
+      }
       
       console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
 
