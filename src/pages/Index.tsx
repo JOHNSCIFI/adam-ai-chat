@@ -657,7 +657,7 @@ export default function Index() {
           
           {/* Recording UI - shows below textarea */}
           {isRecording && (
-            <div className="flex items-center gap-2 py-2 px-1 mb-3 border-t border-border/30">
+            <div className="flex items-center gap-2 py-2 px-1 mb-3">
               <Button
                 variant="ghost"
                 size="sm"
