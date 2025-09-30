@@ -255,10 +255,10 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-16">
             <h2 id="pricing-heading" className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
-              Simple, Transparent Pricing
+              Choose Your Plan. Unlock the Power of AI.
             </h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Choose the plan that fits your needs. Access all features and AI capabilities.
+              Start free with GPT-4 and upgrade anytime for full access to GPT-5, Claude, Gemini, DeepSeek, Grok, and more.
             </p>
           </div>
           
