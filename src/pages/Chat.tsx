@@ -548,6 +548,64 @@ export default function Chat() {
       const aiResponse = await webhookResponse.json();
       console.log('Regenerated webhook response:', aiResponse);
       
+      // Handle image generation - call webhook-handler to save the image
+      if (userModel === 'generate-image' && aiResponse.image_base64) {
+        console.log('[REGENERATE] Image generation response received, calling webhook-handler...');
+        
+        const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
+          body: {
+            chat_id: chatId,
+            user_id: user.id,
+            image_base64: aiResponse.image_base64,
+            image_name: aiResponse.image_name || 'generated_image.png',
+            image_type: aiResponse.image_type || 'image/png',
+            model: 'generate-image'
+          }
+        });
+        
+        if (handlerError) {
+          console.error('[REGENERATE] Webhook-handler error:', handlerError);
+          throw handlerError;
+        }
+        
+        console.log('[REGENERATE] Webhook-handler saved new message:', handlerData);
+        
+        // Delete the old message
+        const { error: deleteError } = await supabase
+          .from('messages')
+          .delete()
+          .eq('id', messageId);
+          
+        if (deleteError) {
+          console.error('[REGENERATE] Error deleting old message:', deleteError);
+        }
+        
+        // Fetch the newly created message
+        const { data: newMessage, error: fetchError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', chatId)
+          .eq('role', 'assistant')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+          
+        if (!fetchError && newMessage) {
+          console.log('[REGENERATE] Fetched new message:', newMessage);
+          // Replace old message with new one in local state
+          setMessages(prev => prev.map(msg => 
+            msg.id === messageId ? {
+              ...newMessage,
+              file_attachments: (newMessage.file_attachments as unknown) as FileAttachment[] | undefined
+            } as Message : msg
+          ));
+        }
+        
+        scrollToBottom();
+        return;
+      }
+      
+      // Handle regular text responses
       if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
         const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
 
@@ -2274,8 +2332,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   hyphens: 'auto'
                 }}>
                         
-           {/* File attachments */}
-           {message.file_attachments && message.file_attachments.length > 0 && <div className="mb-3 space-y-3">
+           {/* File attachments - hide while regenerating */}
+           {message.file_attachments && message.file_attachments.length > 0 && regeneratingMessageId !== message.id && <div className="mb-3 space-y-3">
                {message.file_attachments.map((file, index) => {
                  console.log('[CHAT-RENDER] Rendering file attachment:', {
                    index,
@@ -2320,16 +2378,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                })}
                             </div>}
                         
-                            {message.content && (
-                              regeneratingMessageId === message.id ? (
-                                <div className="flex items-center gap-3 py-8">
-                                  <div className="flex gap-1">
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
-                                    <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
-                                  </div>
+                            {/* Show loading animation when regenerating */}
+                            {regeneratingMessageId === message.id && (
+                              <div className="flex items-center gap-3 py-8">
+                                <div className="flex gap-1">
+                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
+                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
+                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
                                 </div>
-                              ) : (
+                                <span className="text-sm text-muted-foreground">Regenerating...</span>
+                              </div>
+                            )}
+                        
+                            {message.content && regeneratingMessageId !== message.id && (
                                 <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
                      wordBreak: 'break-word',
                      overflowWrap: 'anywhere'
@@ -2427,10 +2488,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        }) => <hr {...props} className="!my-1" />
                      }}>
                                  {message.content}
-                               </ReactMarkdown>}
-                             </div>
-                              )
-                            )}
+                                </ReactMarkdown>}
+                              </div>
+                            )
+                          }
                          
                        </div>
                        
