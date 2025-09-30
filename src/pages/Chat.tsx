@@ -2740,15 +2740,15 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             )}
             
             {isRecording ? (
-              <div className="flex items-center gap-3 py-2 mb-3">
-                <div className="flex-1 flex items-center justify-center gap-0.5">
-                  {/* Waveform visualization with real audio levels */}
+              <div className="flex items-center gap-2 sm:gap-3 py-2 mb-3">
+                <div className="flex-1 flex items-center justify-center gap-[1px] sm:gap-[2px] overflow-hidden">
+                  {/* Waveform visualization with real audio levels - responsive for mobile */}
                   {audioLevels.map((level, index) => (
                     <div
                       key={index}
-                      className="w-0.5 bg-red-500 rounded-full transition-all duration-100"
+                      className="w-[1.5px] sm:w-[2px] bg-red-500 rounded-full transition-all duration-100"
                       style={{
-                        height: `${Math.max(8, level * 40)}px`,
+                        height: `${Math.max(4, level * 40)}px`,
                         opacity: 0.3 + level * 0.7
                       }}
                     />
@@ -2759,10 +2759,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   variant="ghost"
                   size="sm"
                   onClick={stopRecording}
-                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full hover:bg-muted flex-shrink-0"
                   aria-label="Done recording"
                 >
-                  <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                  <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </Button>
