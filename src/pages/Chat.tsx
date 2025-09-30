@@ -2764,7 +2764,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 
                 <div className="flex-1 flex items-center justify-center gap-0.5 sm:gap-2 min-w-0 overflow-hidden">
                   {/* Real-time audio waveform visualization - mobile optimized */}
-                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-4 sm:h-6 flex-1 max-w-[280px] sm:max-w-[600px] min-w-0">
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-4 sm:h-6 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
                     {audioLevels.map((level, i) => {
                       // Calculate height based on audio level
                       const minHeight = 2;
