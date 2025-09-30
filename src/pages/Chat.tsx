@@ -1193,6 +1193,12 @@ export default function Chat() {
       return;
     }
     
+    // CRITICAL: Mark message as processed to prevent auto-trigger useEffect from firing
+    if (!processedUserMessages.current.has(chatId)) {
+      processedUserMessages.current.set(chatId, new Set());
+    }
+    processedUserMessages.current.get(chatId)!.add(tempUserMessage.id);
+    
     // CRITICAL: Add user message to UI immediately BEFORE processing files
     setMessages(prev => [...prev, tempUserMessage]);
     scrollToBottom();
