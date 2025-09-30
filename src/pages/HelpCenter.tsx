@@ -70,45 +70,59 @@ const HelpCenter = () => {
           <h2 className="text-2xl font-semibold text-foreground mb-6">Frequently Asked Questions</h2>
           
           <Accordion type="single" collapsible className="space-y-4">
-            <AccordionItem value="what-is-adamgpt" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>What is AdamGpt?</AccordionTrigger>
+            <AccordionItem value="what-can-i-do" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>What can I do with this AI?</AccordionTrigger>
               <AccordionContent>
-                AdamGpt is a comprehensive AI platform that provides access to multiple advanced AI models including GPT-4o, Claude, Gemini, and DeepSeek through a single, unified interface.
+                You can chat, create images, write texts, learn new things, and even get coding help — all in one place.
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="which-models" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>Which AI models are available?</AccordionTrigger>
+            <AccordionItem value="easy-to-use" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Is it easy to use?</AccordionTrigger>
               <AccordionContent>
-                We offer access to OpenAI GPT-4o, Google Gemini, Anthropic Claude, and DeepSeek. Each model has unique strengths - GPT-4o for general tasks, Gemini for multimodal analysis, Claude for writing, and DeepSeek for coding.
+                Yes. Just start typing or speaking — no setup needed.
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="how-to-start" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>How do I get started?</AccordionTrigger>
+            <AccordionItem value="study-learn" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Can it help me study or learn?</AccordionTrigger>
               <AccordionContent>
-                Simply click "Try now" to access our chat interface. You can start using AI models immediately. For advanced features, you can create an account and choose a subscription plan that fits your needs.
+                Absolutely. The AI can explain topics, summarize notes, and answer your questions like a study buddy.
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="pricing" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>What are the pricing plans?</AccordionTrigger>
+            <AccordionItem value="create-images" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Can I create images with it?</AccordionTrigger>
               <AccordionContent>
-                We offer flexible pricing plans including a free tier for basic usage, plus paid plans with additional features and higher usage limits. Visit our pricing page for detailed information.
+                Yes. You can generate unique images instantly from your ideas.
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="image-generation" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>Can I generate images?</AccordionTrigger>
+            <AccordionItem value="languages" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Does it work in different languages?</AccordionTrigger>
               <AccordionContent>
-                Yes! Our platform includes AI image generation capabilities. You can create, edit, and enhance images using text prompts through our integrated image generation tools.
+                Yes. You can chat naturally in 50+ languages.
               </AccordionContent>
             </AccordionItem>
             
-            <AccordionItem value="pdf-analysis" className="border border-border rounded-lg px-6">
-              <AccordionTrigger>How does PDF analysis work?</AccordionTrigger>
+            <AccordionItem value="writing-help" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Can it help with writing?</AccordionTrigger>
               <AccordionContent>
-                Upload any PDF document and ask questions about its content. Our AI can extract information, summarize key points, and answer specific questions about your documents.
+                Yes. From short messages to full articles, the AI helps you write faster and better.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="voice-commands" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Can I talk to it with my voice?</AccordionTrigger>
+              <AccordionContent>
+                Yes. You can use voice commands for hands-free conversations.
+              </AccordionContent>
+            </AccordionItem>
+            
+            <AccordionItem value="for-fun" className="border border-border rounded-lg px-6">
+              <AccordionTrigger>Is it good for fun too?</AccordionTrigger>
+              <AccordionContent>
+                Definitely. Chat casually, ask for jokes, or just have fun conversations.
               </AccordionContent>
             </AccordionItem>
           </Accordion>
