@@ -2774,7 +2774,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       return (
                         <div
                           key={i}
-                          className="w-[0.5px] sm:w-[1px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                          className="w-[0.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
                           style={{
                             height: `${height}px`,
                           }}
