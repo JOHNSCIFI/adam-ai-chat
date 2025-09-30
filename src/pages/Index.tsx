@@ -195,6 +195,7 @@ export default function Index() {
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
@@ -225,6 +226,20 @@ export default function Index() {
       }
     }
   }, [user]);
+
+  // Timer for recording duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      setRecordingDuration(0);
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isRecording]);
   if (authLoading) {
     return <div className="flex-1 flex items-center justify-center">
         <div className="flex items-center space-x-2">
@@ -595,23 +610,73 @@ export default function Index() {
                 <p className="text-base font-semibold text-primary">Drop files here</p>
               </div>
             </div>}
-          <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
+          
+          {/* Recording UI */}
+          {isRecording ? (
+            <div className="flex items-center gap-3 py-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                onClick={stopRecording}
+                aria-label="Cancel recording"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              
+              <div className="flex-1 flex items-center justify-center gap-3">
+                {/* Waveform animation */}
+                <div className="flex items-center gap-0.5 h-8">
+                  {[...Array(40)].map((_, i) => (
+                    <div
+                      key={i}
+                      className="w-0.5 bg-foreground rounded-full animate-pulse"
+                      style={{
+                        height: `${Math.random() * 24 + 8}px`,
+                        animationDelay: `${i * 0.05}s`,
+                        animationDuration: `${0.8 + Math.random() * 0.4}s`
+                      }}
+                    />
+                  ))}
+                </div>
+                
+                {/* Timer */}
+                <span className="text-sm font-medium tabular-nums min-w-[40px] text-right">
+                  {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                </span>
+              </div>
+              
+              <Button
+                size="sm"
+                className="h-8 w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                onClick={stopRecording}
+                aria-label="Send recording"
+              >
+                <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </Button>
+            </div>
+          ) : (
+            <Textarea ref={textareaRef} value={message} onChange={handleInputChange} onKeyDown={e => {
             if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
               handleStartChat();
             }
-          }} onFocus={e => {
-            // Prevent default scroll behavior on mobile
-            if (window.innerWidth < 768) {
-              e.target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-              });
-            }
-          }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
+            }} onFocus={e => {
+              // Prevent default scroll behavior on mobile
+              if (window.innerWidth < 768) {
+                e.target.scrollIntoView({
+                  behavior: 'smooth',
+                  block: 'center'
+                });
+              }
+            }} placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" rows={1} aria-label={isImageMode ? "Describe an image" : "Type your message"} />
+          )}
           
           {/* Mobile-first redesigned input controls */}
-          <div className="flex flex-col gap-3">
+          {!isRecording && (
+            <div className="flex flex-col gap-3">
             {/* File upload controls row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -765,6 +830,7 @@ export default function Index() {
                 </div>
               </div>}
           </div>
+          )}
         </div>
       </div>
 
