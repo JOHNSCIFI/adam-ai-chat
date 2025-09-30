@@ -2751,7 +2751,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             
             {/* Recording UI - appears below textarea when recording */}
             {isRecording && (
-              <div className="flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-0.5 sm:px-1">
+              <div className="flex items-center gap-1 sm:gap-2 py-1.5 sm:py-2 px-0">
                 <Button
                   variant="ghost"
                   size="sm"
@@ -2762,9 +2762,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   <X className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                 </Button>
                 
-                <div className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2">
+                <div className="flex-1 flex items-center justify-center gap-1 sm:gap-2 min-w-0">
                   {/* Real-time audio waveform visualization - mobile optimized */}
-                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-5 sm:h-6 flex-1 max-w-[400px] sm:max-w-[600px]">
+                  <div className="flex items-center justify-center gap-[0.5px] sm:gap-[1px] h-5 sm:h-6 flex-1 max-w-[250px] sm:max-w-[600px] min-w-0">
                     {audioLevels.map((level, i) => {
                       // Calculate height based on audio level
                       const minHeight = 2;

@@ -755,7 +755,7 @@ export default function Index() {
           
           {/* Recording UI - replaces buttons when recording */}
           {isRecording ? (
-            <div className="flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-3 px-0.5 sm:px-1">
+            <div className="flex items-center gap-1 sm:gap-2 py-1.5 sm:py-3 px-0">
               <Button
                 variant="ghost"
                 size="sm"
@@ -766,9 +766,9 @@ export default function Index() {
                 <X className="h-3 w-3 sm:h-4 sm:w-4" />
               </Button>
               
-              <div className="flex-1 flex items-center justify-center gap-1.5 sm:gap-3">
+              <div className="flex-1 flex items-center justify-center gap-1 sm:gap-3 min-w-0">
                 {/* Real-time audio waveform visualization - mobile optimized */}
-                <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-5 sm:h-8 flex-1 max-w-[400px] sm:max-w-[600px]">
+                <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-5 sm:h-8 flex-1 max-w-[250px] sm:max-w-[600px] min-w-0">
                   {audioLevels.map((level, i) => {
                     // Calculate height based on audio level
                     const minHeight = 2;
