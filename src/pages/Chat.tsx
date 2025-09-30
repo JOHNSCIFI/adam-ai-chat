@@ -22,6 +22,7 @@ import AuthModal from '@/components/AuthModal';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
+import geminiLogo from '@/assets/gemini-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -49,6 +50,12 @@ const models = [{
   shortLabel: 'Sonnet 4',
   description: "Great for writing tasks",
   type: 'pro'
+}, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: "Fast Google AI model",
+  type: 'free'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -81,6 +88,12 @@ const availableModels = [{
   shortLabel: 'Sonnet 4',
   description: 'Great for writing tasks',
   icon: 'claude'
+}, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: 'Fast Google AI model with multimodal capabilities.',
+  icon: 'gemini'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -125,6 +138,8 @@ export default function Chat() {
         return chatgptLogoSrc;
       case 'claude':
         return claudeLogo;
+      case 'gemini':
+        return geminiLogo;
       default:
         return chatgptLogoSrc;
     }
@@ -3025,14 +3040,16 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
                           {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                <div className="flex items-center w-full">
-                                 <div className="flex items-center gap-2 min-w-0 flex-1">
-                                   {model.id.includes('gpt') || model.id === 'generate-image' ? (
-                                     <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                   ) : model.id.includes('claude') ? (
-                                      <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                    ) : (
-                                      <Bot className="h-3.5 w-3.5 flex-shrink-0" />
-                                    )}
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                                      <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                    ) : model.id.includes('claude') ? (
+                                       <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                     ) : model.id.includes('gemini') ? (
+                                       <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                     ) : (
+                                       <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                     )}
                                    <div className="min-w-0 flex-1">
                                      <div className="font-medium text-sm truncate">{model.name}</div>
                                      <div className="text-xs text-muted-foreground truncate">{model.description}</div>
