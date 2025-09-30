@@ -938,25 +938,108 @@ export default function Chat() {
             continue;
           }
 
-          // Create temporary file attachment for UI display
+          // For images, convert to PNG and upload to storage
+          let finalFileUrl = '';
+          let finalFileType = file.type;
+          let finalFileName = file.name;
+          let pngBase64 = '';
+
+          if (file.type.startsWith('image/')) {
+            try {
+              console.log('[IMAGE-UPLOAD] Converting image to PNG format...');
+              
+              // Convert image to PNG using canvas
+              const img = new Image();
+              const imgUrl = URL.createObjectURL(file);
+              
+              await new Promise((resolve, reject) => {
+                img.onload = resolve;
+                img.onerror = reject;
+                img.src = imgUrl;
+              });
+
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              ctx?.drawImage(img, 0, 0);
+              URL.revokeObjectURL(imgUrl);
+
+              // Convert to PNG base64
+              pngBase64 = canvas.toDataURL('image/png').split(',')[1];
+              
+              // Convert base64 to blob for upload
+              const pngBlob = await (await fetch(`data:image/png;base64,${pngBase64}`)).blob();
+              
+              // Upload to chat-images bucket
+              const timestamp = Date.now();
+              const fileExt = 'png';
+              finalFileName = `${file.name.replace(/\.[^/.]+$/, '')}.png`;
+              const filePath = `${user.id}/${chatId}/${timestamp}_${finalFileName}`;
+              
+              console.log('[IMAGE-UPLOAD] Uploading to storage:', filePath);
+              
+              const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('chat-images')
+                .upload(filePath, pngBlob, {
+                  contentType: 'image/png',
+                  upsert: false
+                });
+
+              if (uploadError) {
+                console.error('[IMAGE-UPLOAD] Upload error:', uploadError);
+                throw uploadError;
+              }
+
+              console.log('[IMAGE-UPLOAD] Upload successful:', uploadData);
+
+              // Get public URL
+              const { data: urlData } = supabase.storage
+                .from('chat-images')
+                .getPublicUrl(filePath);
+
+              finalFileUrl = urlData.publicUrl;
+              finalFileType = 'image/png';
+              
+              console.log('[IMAGE-UPLOAD] Public URL:', finalFileUrl);
+            } catch (error) {
+              console.error('[IMAGE-UPLOAD] Error converting/uploading image:', error);
+              // Fallback to original file
+              finalFileUrl = URL.createObjectURL(file);
+              pngBase64 = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve((reader.result as string).split(',')[1]);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+              });
+            }
+          } else {
+            // For non-image files, use original file
+            finalFileUrl = URL.createObjectURL(file);
+          }
+
+          // Create file attachment with storage URL
           tempFileAttachments.push({
             id: `temp-file-${Date.now()}-${Math.random()}`,
-            name: file.name,
+            name: finalFileName,
             size: file.size,
-            type: file.type,
-            url: URL.createObjectURL(file)
+            type: finalFileType,
+            url: finalFileUrl
           });
 
-          // Convert file to base64 for webhook
-          const reader = new FileReader();
-          const base64 = await new Promise<string>((resolve, reject) => {
-            reader.onload = () => {
-              const result = reader.result as string;
-              resolve(result.split(',')[1]);
-            };
-            reader.onerror = reject;
-            reader.readAsDataURL(file);
-          });
+          // Convert file to base64 for webhook (PNG for images)
+          let base64 = pngBase64;
+          if (!file.type.startsWith('image/')) {
+            const reader = new FileReader();
+            base64 = await new Promise<string>((resolve, reject) => {
+              reader.onload = () => {
+                const result = reader.result as string;
+                resolve(result.split(',')[1]);
+              };
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          }
 
           // Determine file type for webhook
           let webhookType = 'file';
@@ -974,8 +1057,14 @@ export default function Chat() {
             webhookType = 'text';
           }
 
-          // Send to webhook for analysis
+          // Send to webhook for analysis with PNG format
           try {
+            console.log('[WEBHOOK] Sending to webhook:', { 
+              type: webhookType, 
+              fileName: finalFileName, 
+              fileType: finalFileType 
+            });
+            
             const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
               method: 'POST',
               headers: {
@@ -983,9 +1072,9 @@ export default function Chat() {
               },
               body: JSON.stringify({
                 type: webhookType,
-                fileName: file.name,
+                fileName: finalFileName,
                 fileSize: file.size,
-                fileType: file.type,
+                fileType: finalFileType, // Send PNG type for images
                 fileData: base64,
                 userId: user.id,
                 chatId: chatId,
@@ -993,6 +1082,7 @@ export default function Chat() {
                 model: selectedModel
               })
             });
+            
             if (webhookResponse.ok) {
               const analysisResult = await webhookResponse.json();
               console.log('Webhook response:', analysisResult);
@@ -1028,7 +1118,7 @@ export default function Chat() {
         }
       }
 
-      // Create clean user message
+      // Create clean user message with uploaded image URLs
       const newUserMessage: Message = {
         id: `temp-${Date.now()}`,
         chat_id: chatId!,
@@ -1037,45 +1127,6 @@ export default function Chat() {
         created_at: new Date().toISOString(),
         file_attachments: tempFileAttachments
       };
-
-      // Save image files to Supabase storage for persistence
-      const persistentFileAttachments: FileAttachment[] = [];
-      for (const file of tempFileAttachments) {
-        if (isImageFile(file.type)) {
-          try {
-            // Convert file to base64 and save to storage
-            const response = await fetch(file.url);
-            const blob = await response.blob();
-            const reader = new FileReader();
-            const base64 = await new Promise<string>(resolve => {
-              reader.onload = () => {
-                const result = reader.result as string;
-                resolve(result.split(',')[1]);
-              };
-              reader.readAsDataURL(blob);
-            });
-
-            // Images are now handled by webhook - no need for separate storage
-            persistentFileAttachments.push({
-              id: `temp-file-${Date.now()}-${Math.random()}`,
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              url: file.url // Use existing blob URL
-            });
-          } catch (error) {
-            console.error('Error saving image to storage:', error);
-            // Fallback to blob URL if storage fails
-            persistentFileAttachments.push(file);
-          }
-        } else {
-          // Non-image files keep blob URL for now
-          persistentFileAttachments.push(file);
-        }
-      }
-
-      // Update message with persistent file attachments
-      newUserMessage.file_attachments = persistentFileAttachments;
 
       // Add to UI immediately
       setMessages(prev => [...prev, newUserMessage]);
