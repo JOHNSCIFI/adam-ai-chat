@@ -2566,12 +2566,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                  </Button>
                                )}
                                
-                                 {/* Refresh button - only show on last AI response */}
-                                 {(() => {
-                                   // Find the last assistant message
-                                   const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
-                                   return lastAssistantMessage && lastAssistantMessage.id === message.id;
-                                  })() && (
+                                  {/* Refresh button - only show on last AI response with no messages after it */}
+                                  {(() => {
+                                    // Find current message index
+                                    const currentIndex = messages.findIndex(msg => msg.id === message.id);
+                                    // Check if there are any messages after this one
+                                    const hasMessagesAfter = currentIndex < messages.length - 1;
+                                    // Find the last assistant message
+                                    const lastAssistantMessage = [...messages].reverse().find(msg => msg.role === 'assistant');
+                                    // Only show if it's the last assistant message AND no messages after it
+                                    return lastAssistantMessage && lastAssistantMessage.id === message.id && !hasMessagesAfter;
+                                   })() && (
                                     <Button 
                                       variant="ghost" 
                                       size="sm" 
