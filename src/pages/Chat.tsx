@@ -1193,6 +1193,10 @@ export default function Chat() {
       return;
     }
     
+    // CRITICAL: Add user message to UI immediately BEFORE processing files
+    setMessages(prev => [...prev, tempUserMessage]);
+    scrollToBottom();
+    
     try {
       let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
