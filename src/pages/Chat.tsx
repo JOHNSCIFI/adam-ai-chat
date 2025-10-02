@@ -191,6 +191,7 @@ export default function Chat() {
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [isGeneratingResponse, setIsGeneratingResponse] = useState(false);
+  const isRegeneratingRef = useRef(false); // Immediate lock to prevent duplicate regenerate calls
   const [isRecording, setIsRecording] = useState(false);
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
@@ -321,15 +322,16 @@ export default function Chat() {
             // Remove old message from local state
             setMessages(prev => prev.filter(msg => msg.id !== regeneratingMessageId));
             
-            // Clear regeneration states
-            setRegeneratingMessageId(null);
-            setIsGeneratingResponse(false);
-            setHiddenMessageIds(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(regeneratingMessageId);
-              return newSet;
-            });
-            oldMessageBackupRef.current = null;
+              // Clear regeneration states
+              setRegeneratingMessageId(null);
+              setIsGeneratingResponse(false);
+              isRegeneratingRef.current = false; // Release lock
+              setHiddenMessageIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(regeneratingMessageId);
+                return newSet;
+              });
+              oldMessageBackupRef.current = null;
           }
           
           setMessages(prev => {
@@ -402,7 +404,8 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
-    if (messages.length > 0 && !loading && !isGeneratingResponse && chatId) {
+    // Also check the ref for immediate synchronous state
+    if (messages.length > 0 && !loading && !isGeneratingResponse && !isRegeneratingRef.current && chatId) {
       // CRITICAL: Filter messages to only include those belonging to current chat
       const currentChatMessages = messages.filter(msg => msg.chat_id === chatId);
       if (currentChatMessages.length === 0) {
@@ -492,13 +495,19 @@ export default function Chat() {
   }, [input, selectedFiles, loading, chatId]);
 
   const regenerateResponse = async (messageId: string) => {
-    if (isGeneratingResponse || loading) {
+    // Immediate synchronous check to prevent race conditions
+    if (isRegeneratingRef.current || isGeneratingResponse || loading) {
+      console.log('[REGENERATE] Already regenerating, skipping duplicate call');
       return;
     }
+
+    // Set lock immediately
+    isRegeneratingRef.current = true;
 
     // Check if user is authenticated
     if (!user) {
       console.warn('[REGENERATE] User not authenticated');
+      isRegeneratingRef.current = false;
       return;
     }
 
@@ -568,6 +577,7 @@ export default function Chat() {
       // Clear regeneration states
       setRegeneratingMessageId(null);
       setIsGeneratingResponse(false);
+      isRegeneratingRef.current = false;
       oldMessageBackupRef.current = null;
       
       toast.error('Response timeout. Please try again.');
@@ -802,6 +812,7 @@ export default function Chat() {
       
       setIsGeneratingResponse(false);
       setRegeneratingMessageId(null);
+      isRegeneratingRef.current = false; // Release lock
       oldMessageBackupRef.current = null;
       
       toast.error('Failed to regenerate response. Please try again.');
@@ -2635,12 +2646,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         
                             {/* Show think animation when regenerating or hidden */}
                             {(regeneratingMessageId === message.id || hiddenMessageIds.has(message.id)) && (
-                              <div className="flex items-center gap-3 py-8">
-                                <div className="flex gap-1">
-                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
-                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
-                                  <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
-                                </div>
+                              <div className="flex items-center space-x-2 py-8">
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                               </div>
                             )}
                         
