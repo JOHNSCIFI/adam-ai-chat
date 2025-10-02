@@ -2590,6 +2590,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   fileAttachments: message.file_attachments
                 });
                 
+                
+                console.log('[RENDER] Message:', message.id, 'isHidden:', hiddenMessageIds.has(message.id), 'isRegenerating:', regeneratingMessageId === message.id, 'hiddenSet:', Array.from(hiddenMessageIds));
+                
                 return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[80%] md:max-w-[70%] relative`}>
@@ -2647,15 +2650,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                             </div>}
                         
                             {/* Show think animation when regenerating or hidden */}
-                            {hiddenMessageIds.has(message.id) ? (
-                              <div className="flex items-center justify-center py-6 min-h-[80px]">
-                                <div className="flex items-center space-x-2">
-                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                            {hiddenMessageIds.has(message.id) && (
+                              <div className="flex flex-col items-center justify-center py-8 min-h-[120px] bg-red-500/20 rounded-lg">
+                                <p className="text-sm mb-4 text-red-600 dark:text-red-400 font-bold">REGENERATING...</p>
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-4 h-4 bg-red-600 rounded-full animate-bounce"></div>
+                                  <div className="w-4 h-4 bg-red-600 rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                                  <div className="w-4 h-4 bg-red-600 rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                                 </div>
                               </div>
-                            ) : message.content ? (
+                            )}
+                            
+                            {/* Show message content if not hidden */}
+                            {!hiddenMessageIds.has(message.id) && message.content && (
                                 <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
                      wordBreak: 'break-word',
                      overflowWrap: 'anywhere'
@@ -2755,7 +2762,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                    {message.content}
                                  </ReactMarkdown>}
                                </div>
-                             ) : null}
+                             )}
                           
                         </div>
                        
