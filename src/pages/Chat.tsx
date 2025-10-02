@@ -501,6 +501,24 @@ export default function Chat() {
     setRegeneratingMessageId(messageId);
     try {
       console.log('[REGENERATE] Starting regeneration with attachments:', userMessageAttachments);
+      
+      // DELETE OLD MESSAGE FIRST (before N8n creates a new one via webhook-handler)
+      console.log('[REGENERATE] Deleting old message BEFORE calling N8n');
+      
+      // Remove old message from local state first
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
+      // Delete the old message from database
+      const { error: deleteError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+        
+      if (deleteError) {
+        console.error('[REGENERATE] Error deleting old message:', deleteError);
+      } else {
+        console.log('[REGENERATE] Successfully deleted old message');
+      }
 
       // Convert file URLs to base64 for webhook
       const fileAttachmentsForWebhook = await Promise.all(
@@ -629,6 +647,9 @@ export default function Chat() {
       
       console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
 
+      // Call N8n webhook (N8n will call webhook-handler in background to create new message)
+      console.log('[REGENERATE] Calling N8n webhook (N8n will call webhook-handler)');
+      
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
@@ -641,10 +662,13 @@ export default function Chat() {
         throw new Error(`Webhook request failed: ${webhookResponse.status}`);
       }
       
-      const aiResponse = await webhookResponse.json();
-      console.log('Regenerated webhook response:', aiResponse);
+      console.log('[REGENERATE] Webhook called successfully, N8n will process and call webhook-handler');
+      console.log('[REGENERATE] Waiting for realtime subscription to add new message...');
       
-      // Handle image generation - call webhook-handler to save the image
+      scrollToBottom();
+      
+      // Note: For image generation, we still need special handling
+      const aiResponse = await webhookResponse.json();
       if (userModel === 'generate-image' && aiResponse.image_base64) {
         console.log('[REGENERATE] Image generation response received, calling webhook-handler...');
         
@@ -671,7 +695,6 @@ export default function Chat() {
           for (const attachment of assistantMessage.file_attachments) {
             if (attachment.url && attachment.type.startsWith('image/')) {
               try {
-                // Extract the file path from the URL
                 const urlObj = new URL(attachment.url);
                 const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)/);
                 
@@ -679,7 +702,7 @@ export default function Chat() {
                   const bucketName = pathMatch[1];
                   const filePath = pathMatch[2];
                   
-                  console.log('[REGENERATE] Deleting old image:', { bucketName, filePath });
+                  console.log('[REGENERATE] Deleting old generated image:', { bucketName, filePath });
                   
                   const { error: deleteStorageError } = await supabase.storage
                     .from(bucketName)
@@ -698,48 +721,10 @@ export default function Chat() {
           }
         }
         
-        // Remove old message from local state first
-        setMessages(prev => prev.filter(msg => msg.id !== messageId));
-        
-        // Delete the old message from database
-        const { error: deleteError } = await supabase
-          .from('messages')
-          .delete()
-          .eq('id', messageId);
-          
-        if (deleteError) {
-          console.error('[REGENERATE] Error deleting old message:', deleteError);
-        }
-        
-        // The realtime subscription will automatically add the new message
-        console.log('[REGENERATE] Waiting for realtime subscription to add new message...');
-        
+        console.log('[REGENERATE] Image generation: waiting for realtime subscription to add new message...');
         scrollToBottom();
         return;
       }
-      
-      // For webhook flow: Delete old message first, new message will be created via webhook-handler
-      console.log('[REGENERATE] Deleting old message before webhook creates new one');
-      
-      // Remove old message from local state first
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      
-      // Delete the old message from database
-      const { error: deleteError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('id', messageId);
-        
-      if (deleteError) {
-        console.error('[REGENERATE] Error deleting old message:', deleteError);
-      } else {
-        console.log('[REGENERATE] Successfully deleted old message, webhook-handler will create new one');
-      }
-      
-      // The webhook-handler will create a new message, and realtime subscription will add it
-      console.log('[REGENERATE] Waiting for webhook-handler to create new message via realtime...');
-      
-      scrollToBottom();
     } catch (error) {
       console.error('[REGENERATE] Error:', error);
     } finally {
