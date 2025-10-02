@@ -212,6 +212,7 @@ export default function Chat() {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [regeneratingMessageId, setRegeneratingMessageId] = useState<string | null>(null);
+  const [hiddenMessageIds, setHiddenMessageIds] = useState<Set<string>>(new Set());
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
@@ -224,6 +225,8 @@ export default function Chat() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const mediaStreamRef = useRef<MediaStream | null>(null);
+  const regenerateTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const oldMessageBackupRef = useRef<{messageId: string, content: string, fileAttachments: FileAttachment[]} | null>(null);
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
@@ -291,6 +294,43 @@ export default function Chat() {
             fileAttachmentsCount: newMessage.file_attachments?.length || 0,
             fileAttachments: newMessage.file_attachments
           });
+          
+          // If this is a new assistant message and we're regenerating, delete the old message
+          if (newMessage.role === 'assistant' && regeneratingMessageId) {
+            console.log('[REALTIME-INSERT] New assistant message during regeneration, deleting old message:', regeneratingMessageId);
+            
+            // Clear the timeout
+            if (regenerateTimeoutRef.current) {
+              clearTimeout(regenerateTimeoutRef.current);
+              regenerateTimeoutRef.current = null;
+            }
+            
+            // Delete old message from database
+            supabase
+              .from('messages')
+              .delete()
+              .eq('id', regeneratingMessageId)
+              .then(({ error }) => {
+                if (error) {
+                  console.error('[REALTIME-INSERT] Error deleting old message:', error);
+                } else {
+                  console.log('[REALTIME-INSERT] Successfully deleted old message from database');
+                }
+              });
+            
+            // Remove old message from local state
+            setMessages(prev => prev.filter(msg => msg.id !== regeneratingMessageId));
+            
+            // Clear regeneration states
+            setRegeneratingMessageId(null);
+            setIsGeneratingResponse(false);
+            setHiddenMessageIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(regeneratingMessageId);
+              return newSet;
+            });
+            oldMessageBackupRef.current = null;
+          }
           
           setMessages(prev => {
             // Check if message already exists (by real ID or temp ID) to prevent duplicates
@@ -497,28 +537,44 @@ export default function Chat() {
     console.log('[REGENERATE] User message:', userMessage || '(empty)');
     console.log('[REGENERATE] Attachments count:', userMessageAttachments.length);
 
+    // Backup the old message
+    oldMessageBackupRef.current = {
+      messageId: messageId,
+      content: assistantMessage.content,
+      fileAttachments: assistantMessage.file_attachments || []
+    };
+
+    // Hide the old message (it will show loading animation)
+    setHiddenMessageIds(prev => {
+      const newSet = new Set(prev);
+      newSet.add(messageId);
+      return newSet;
+    });
+
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
+
+    // Set timeout to restore old message if no response in 60 seconds
+    regenerateTimeoutRef.current = setTimeout(() => {
+      console.log('[REGENERATE] Timeout - no response in 60 seconds, restoring old message');
+      
+      // Restore the old message visibility
+      setHiddenMessageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
+      
+      // Clear regeneration states
+      setRegeneratingMessageId(null);
+      setIsGeneratingResponse(false);
+      oldMessageBackupRef.current = null;
+      
+      toast.error('Response timeout. Please try again.');
+    }, 60000); // 60 seconds
+
     try {
       console.log('[REGENERATE] Starting regeneration with attachments:', userMessageAttachments);
-      
-      // DELETE OLD MESSAGE FIRST (before N8n creates a new one via webhook-handler)
-      console.log('[REGENERATE] Deleting old message BEFORE calling N8n');
-      
-      // Remove old message from local state first
-      setMessages(prev => prev.filter(msg => msg.id !== messageId));
-      
-      // Delete the old message from database
-      const { error: deleteError } = await supabase
-        .from('messages')
-        .delete()
-        .eq('id', messageId);
-        
-      if (deleteError) {
-        console.error('[REGENERATE] Error deleting old message:', deleteError);
-      } else {
-        console.log('[REGENERATE] Successfully deleted old message');
-      }
 
       // Convert file URLs to base64 for webhook
       const fileAttachmentsForWebhook = await Promise.all(
@@ -663,7 +719,7 @@ export default function Chat() {
       }
       
       console.log('[REGENERATE] Webhook called successfully, N8n will process and call webhook-handler');
-      console.log('[REGENERATE] Waiting for realtime subscription to add new message...');
+      console.log('[REGENERATE] Waiting for realtime subscription to add new message and delete old one...');
       
       scrollToBottom();
       
@@ -727,9 +783,28 @@ export default function Chat() {
       }
     } catch (error) {
       console.error('[REGENERATE] Error:', error);
-    } finally {
+      
+      // Clear timeout on error
+      if (regenerateTimeoutRef.current) {
+        clearTimeout(regenerateTimeoutRef.current);
+        regenerateTimeoutRef.current = null;
+      }
+      
+      // Restore the old message on error
+      if (oldMessageBackupRef.current && oldMessageBackupRef.current.messageId === messageId) {
+        console.log('[REGENERATE] Error occurred, restoring old message');
+        setHiddenMessageIds(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(messageId);
+          return newSet;
+        });
+      }
+      
       setIsGeneratingResponse(false);
       setRegeneratingMessageId(null);
+      oldMessageBackupRef.current = null;
+      
+      toast.error('Failed to regenerate response. Please try again.');
     }
   };
 
@@ -2569,7 +2644,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                               </div>
                             )}
                         
-                            {message.content && regeneratingMessageId !== message.id && (
+                            {/* Show loading animation if message is hidden during regeneration */}
+                            {hiddenMessageIds.has(message.id) && (
+                              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+                                <div>
+                                  <p className="text-sm font-medium">Regenerating response...</p>
+                                  <p className="text-xs text-muted-foreground">This may take a few moments</p>
+                                </div>
+                              </div>
+                            )}
+                        
+                            {/* Show message content if not hidden */}
+                            {message.content && !hiddenMessageIds.has(message.id) && (
                                 <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
                      wordBreak: 'break-word',
                      overflowWrap: 'anywhere'
@@ -2666,7 +2753,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                          ...props
                        }) => <hr {...props} className="!my-1" />
                      }}>
-                                 {message.content}
+                                  {message.content}
                                 </ReactMarkdown>}
                               </div>
                             )
