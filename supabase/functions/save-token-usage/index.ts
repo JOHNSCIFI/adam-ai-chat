@@ -25,7 +25,7 @@ serve(async (req) => {
     let rawBody = await req.json();
     console.log('[SAVE-TOKEN-USAGE] Raw body:', JSON.stringify(rawBody));
 
-    // Handle array format from N8n: [{ totalTokens: 87, userId: "...", model: "..." }]
+    // Handle array format from N8n: [{ input: 58, output: 87, userId: "...", model: "..." }]
     let body = rawBody;
     if (Array.isArray(rawBody) && rawBody.length > 0) {
       console.log('[SAVE-TOKEN-USAGE] Array format detected, extracting first element');
@@ -34,18 +34,20 @@ serve(async (req) => {
 
     const userId = body.userId || body.user_id;
     const model = body.model;
-    const totalTokens = body.totalTokens || body.total_tokens;
+    const inputTokens = body.input || body.input_tokens || 0;
+    const outputTokens = body.output || body.output_tokens || 0;
 
     console.log('[SAVE-TOKEN-USAGE] Extracted values:', {
       userId,
       model,
-      totalTokens
+      inputTokens,
+      outputTokens
     });
 
-    if (!userId || !model || !totalTokens) {
+    if (!userId || !model || (inputTokens === 0 && outputTokens === 0)) {
       console.error('[SAVE-TOKEN-USAGE] Missing required fields');
       return new Response(
-        JSON.stringify({ error: 'Missing required fields: userId, model, totalTokens' }),
+        JSON.stringify({ error: 'Missing required fields: userId, model, and at least one of input/output tokens' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -56,7 +58,8 @@ serve(async (req) => {
       .insert({
         user_id: userId,
         model: model,
-        total_tokens: totalTokens
+        input_tokens: inputTokens,
+        output_tokens: outputTokens
       })
       .select()
       .single();

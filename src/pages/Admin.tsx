@@ -12,16 +12,34 @@ interface UserTokenUsage {
   user_id: string;
   email: string;
   display_name: string;
-  total_tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+  total_cost: number;
   message_count: number;
   models_used: string[];
 }
 
 interface TokenUsageByModel {
   model: string;
-  total_tokens: number;
+  input_tokens: number;
+  output_tokens: number;
+  total_cost: number;
   usage_count: number;
 }
+
+// Token pricing per 1M tokens (in USD)
+const MODEL_PRICING: Record<string, { input: number; output: number }> = {
+  'gpt-4o-mini': { input: 0.15, output: 0.60 },
+  'gpt-4o': { input: 5.00, output: 15.00 },
+  'gpt-5': { input: 1.25, output: 10.00 },
+  'gpt-5-mini': { input: 1.25, output: 10.00 },
+  'gpt-5-nano': { input: 1.25, output: 10.00 },
+};
+
+const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
+  const pricing = MODEL_PRICING[model] || { input: 0, output: 0 };
+  return (inputTokens / 1_000_000 * pricing.input) + (outputTokens / 1_000_000 * pricing.output);
+};
 
 export default function Admin() {
   const { user } = useAuth();
@@ -99,6 +117,9 @@ export default function Admin() {
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
         const profile = usage.profiles;
+        const inputTokens = usage.input_tokens || 0;
+        const outputTokens = usage.output_tokens || 0;
+        const cost = calculateCost(usage.model, inputTokens, outputTokens);
 
         // Aggregate by user
         if (!userMap.has(userId)) {
@@ -106,14 +127,18 @@ export default function Admin() {
             user_id: userId,
             email: profile?.email || 'Unknown',
             display_name: profile?.display_name || 'Unknown User',
-            total_tokens: 0,
+            input_tokens: 0,
+            output_tokens: 0,
+            total_cost: 0,
             message_count: 0,
             models_used: []
           });
         }
 
         const userUsage = userMap.get(userId)!;
-        userUsage.total_tokens += usage.total_tokens || 0;
+        userUsage.input_tokens += inputTokens;
+        userUsage.output_tokens += outputTokens;
+        userUsage.total_cost += cost;
         userUsage.message_count += 1;
         if (!userUsage.models_used.includes(usage.model)) {
           userUsage.models_used.push(usage.model);
@@ -124,21 +149,25 @@ export default function Admin() {
         if (!modelMap.has(model)) {
           modelMap.set(model, {
             model,
-            total_tokens: 0,
+            input_tokens: 0,
+            output_tokens: 0,
+            total_cost: 0,
             usage_count: 0
           });
         }
 
         const modelUsage = modelMap.get(model)!;
-        modelUsage.total_tokens += usage.total_tokens || 0;
+        modelUsage.input_tokens += inputTokens;
+        modelUsage.output_tokens += outputTokens;
+        modelUsage.total_cost += cost;
         modelUsage.usage_count += 1;
 
         // Overall totals
-        totalTokensSum += usage.total_tokens || 0;
+        totalTokensSum += inputTokens + outputTokens;
       });
 
-      setUserUsages(Array.from(userMap.values()).sort((a, b) => b.total_tokens - a.total_tokens));
-      setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_tokens - a.total_tokens));
+      setUserUsages(Array.from(userMap.values()).sort((a, b) => b.total_cost - a.total_cost));
+      setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_cost - a.total_cost));
       setTotalTokens(totalTokensSum);
     } catch (error) {
       console.error('Error fetching token usage:', error);
@@ -207,7 +236,9 @@ export default function Admin() {
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Messages</TableHead>
-                <TableHead className="text-right">Total Tokens</TableHead>
+                <TableHead className="text-right">Input Tokens</TableHead>
+                <TableHead className="text-right">Output Tokens</TableHead>
+                <TableHead className="text-right">Total Cost</TableHead>
                 <TableHead>Models Used</TableHead>
               </TableRow>
             </TableHeader>
@@ -217,7 +248,9 @@ export default function Admin() {
                   <TableCell className="font-medium">{usage.display_name}</TableCell>
                   <TableCell>{usage.email}</TableCell>
                   <TableCell className="text-right">{usage.message_count}</TableCell>
-                  <TableCell className="text-right">{usage.total_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{usage.input_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{usage.output_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {usage.models_used.map((model) => (
@@ -231,7 +264,7 @@ export default function Admin() {
               ))}
               {userUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="text-center text-muted-foreground">
                     No token usage data available
                   </TableCell>
                 </TableRow>
@@ -253,8 +286,10 @@ export default function Admin() {
               <TableRow>
                 <TableHead>Model</TableHead>
                 <TableHead className="text-right">Usage Count</TableHead>
-                <TableHead className="text-right">Total Tokens</TableHead>
-                <TableHead className="text-right">Avg Tokens/Use</TableHead>
+                <TableHead className="text-right">Input Tokens</TableHead>
+                <TableHead className="text-right">Output Tokens</TableHead>
+                <TableHead className="text-right">Total Cost</TableHead>
+                <TableHead className="text-right">Avg Cost/Use</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -262,15 +297,17 @@ export default function Admin() {
                 <TableRow key={usage.model}>
                   <TableCell className="font-medium">{usage.model}</TableCell>
                   <TableCell className="text-right">{usage.usage_count}</TableCell>
-                  <TableCell className="text-right">{usage.total_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{usage.input_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right">{usage.output_tokens.toLocaleString()}</TableCell>
+                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
                   <TableCell className="text-right font-mono">
-                    {Math.round(usage.total_tokens / usage.usage_count).toLocaleString()}
+                    ${(usage.total_cost / usage.usage_count).toFixed(4)}
                   </TableCell>
                 </TableRow>
               ))}
               {modelUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No model usage data available
                   </TableCell>
                 </TableRow>

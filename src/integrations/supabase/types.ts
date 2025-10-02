@@ -267,22 +267,25 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          input_tokens: number
           model: string
-          total_tokens: number
+          output_tokens: number
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          input_tokens?: number
           model: string
-          total_tokens: number
+          output_tokens?: number
           user_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          input_tokens?: number
           model?: string
-          total_tokens?: number
+          output_tokens?: number
           user_id?: string
         }
         Relationships: [
