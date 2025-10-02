@@ -718,53 +718,28 @@ export default function Chat() {
         return;
       }
       
-      // Handle regular text responses
-      if (aiResponse?.response || aiResponse?.content || aiResponse?.text) {
-        const responseContent = aiResponse.response || aiResponse.content || aiResponse.text;
-
-        // Handle image generation responses
-        let fileAttachments: FileAttachment[] = [];
-        if (aiResponse.image_url) {
-          fileAttachments = [{
-            id: crypto.randomUUID(),
-            name: `generated_image_${Date.now()}.png`,
-            size: 0,
-            type: 'image/png',
-            url: aiResponse.image_url
-          }];
-        }
-
-        // Update the existing message in the database
-        console.log(`[REGENERATE] Updating message ${messageId} in database`);
-        const { data: updatedData, error: updateError } = await supabase
-          .from('messages')
-          .update({
-            content: responseContent,
-            file_attachments: fileAttachments.length > 0 ? fileAttachments as any : null
-          })
-          .eq('id', messageId)
-          .select()
-          .single();
-
-        if (updateError) {
-          console.error('[REGENERATE] Error updating regenerated message:', updateError);
-        } else {
-          console.log(`[REGENERATE] Successfully updated message in database:`, updatedData);
-          
-          // Update the local state with the same message ID
-          setMessages(prev => prev.map(msg => 
-            msg.id === messageId 
-              ? { 
-                  ...msg,
-                  content: responseContent,
-                  file_attachments: fileAttachments
-                }
-              : msg
-          ));
-        }
-
-        scrollToBottom();
+      // For webhook flow: Delete old message first, new message will be created via webhook-handler
+      console.log('[REGENERATE] Deleting old message before webhook creates new one');
+      
+      // Remove old message from local state first
+      setMessages(prev => prev.filter(msg => msg.id !== messageId));
+      
+      // Delete the old message from database
+      const { error: deleteError } = await supabase
+        .from('messages')
+        .delete()
+        .eq('id', messageId);
+        
+      if (deleteError) {
+        console.error('[REGENERATE] Error deleting old message:', deleteError);
+      } else {
+        console.log('[REGENERATE] Successfully deleted old message, webhook-handler will create new one');
       }
+      
+      // The webhook-handler will create a new message, and realtime subscription will add it
+      console.log('[REGENERATE] Waiting for webhook-handler to create new message via realtime...');
+      
+      scrollToBottom();
     } catch (error) {
       console.error('[REGENERATE] Error:', error);
     } finally {
