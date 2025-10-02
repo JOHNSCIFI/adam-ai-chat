@@ -1371,7 +1371,7 @@ export default function Chat() {
       let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
 
-      // Handle file analysis via webhook
+      // Process files first to get URLs
       if (files.length > 0) {
         console.log('Sending files to webhook for analysis...');
         for (const file of files) {
@@ -1516,73 +1516,6 @@ export default function Chat() {
             });
           }
 
-          // Determine file type for webhook
-          const webhookType = file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
-
-          // Send to webhook for analysis with PNG format
-          try {
-            console.log('[WEBHOOK] Sending to webhook:', { 
-              type: webhookType, 
-              fileName: finalFileName, 
-              fileType: finalFileType 
-            });
-            
-            const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json'
-              },
-              body: JSON.stringify({
-                type: webhookType,
-                fileName: finalFileName,
-                fileSize: file.size,
-                fileType: finalFileType, // Send PNG type for images
-                fileData: base64,
-                userId: user.id,
-                chatId: chatId,
-                message: userMessage,
-                model: selectedModel
-              })
-            });
-            
-            if (webhookResponse.ok) {
-              const analysisResult = await webhookResponse.json();
-              console.log('Webhook response:', analysisResult);
-
-              // Check for response_data field first (N8n webhook format)
-              if (analysisResult.response_data) {
-                console.log('Found response_data in webhook response');
-                aiAnalysisResponse += `\n\n${analysisResult.response_data}`;
-              }
-              // Handle array response format from webhook
-              else if (Array.isArray(analysisResult) && analysisResult.length > 0) {
-                const analysisTexts = analysisResult.map(item => item.text || item.content || '').filter(text => text);
-                if (analysisTexts.length > 0) {
-                  aiAnalysisResponse += `\n\n${analysisTexts.join('\n\n')}`;
-                } else {
-                  console.log('No valid text/content found in array response, will wait for realtime message');
-                }
-              } else if (analysisResult.text) {
-                aiAnalysisResponse += `\n\n${analysisResult.text}`;
-              } else if (analysisResult.analysis || analysisResult.content) {
-                aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content}`;
-              } else {
-                // Don't show generic message - wait for realtime subscription to deliver actual response
-                console.log('Webhook response lacks expected fields, waiting for realtime message from webhook-handler');
-              }
-            } else {
-              aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
-            }
-          } catch (error) {
-            console.error('Webhook error:', error);
-            // Check for authentication errors from webhook
-            if (error instanceof Error && (error.message?.includes('unauthorized') || error.message?.includes('authentication'))) {
-              setShowAuthModal(true);
-              setLoading(false);
-              return;
-            }
-            aiAnalysisResponse += `\n\nError analyzing ${file.name}: Network error`;
-          }
         }
       }
 
@@ -1596,7 +1529,9 @@ export default function Chat() {
       // Start embedding generation in background (for user message content)
       const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
 
-      // Add user message to database
+      // CRITICAL: Save user message to database FIRST before calling webhook
+      // This ensures proper ordering - user message arrives before AI response
+      console.log('[FILE-MESSAGE] Saving user message to database with file attachments');
       const {
         data: insertedMessage,
         error: userError
@@ -1615,17 +1550,8 @@ export default function Chat() {
         }
         throw userError;
       }
-
-      // Only mark as processed if there are files (since file messages get AI analysis above)
-      // Messages without files should be handled by auto-trigger
-      if (insertedMessage && files.length > 0 && chatId) {
-        // Add to processed messages for this specific chat
-        if (!processedUserMessages.current.has(chatId)) {
-          processedUserMessages.current.set(chatId, new Set());
-        }
-        processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
-        console.log(`[FILE-MESSAGE] Marked message ${insertedMessage.id} as processed in chat ${chatId}`);
-      }
+      
+      console.log('[FILE-MESSAGE] User message saved, ID:', insertedMessage?.id);
 
       // Update the message with the real ID from database
       if (insertedMessage) {
@@ -1644,11 +1570,77 @@ export default function Chat() {
         });
       }
 
-      // If files were analyzed, the webhook-handler will save the AI response
-      // Just wait for realtime subscription to pick it up - this ensures proper ordering
-      if (aiAnalysisResponse && files.length > 0) {
-        console.log('[FILE-UPLOAD] Webhook processed file, waiting for realtime to deliver AI response');
-        // Don't create temporary message - webhook-handler will save it and realtime will pick it up
+      // NOW call webhook for file analysis AFTER user message is saved to database
+      // This ensures user message appears before AI response
+      if (files.length > 0 && insertedMessage) {
+        console.log('[WEBHOOK] User message saved, now calling webhook for analysis');
+        
+        for (const file of files) {
+          const attachment = tempFileAttachments.find(a => a.name === file.name || a.name.includes(file.name.replace(/\.[^/.]+$/, '')));
+          if (!attachment) continue;
+
+          // Get base64 data
+          let base64 = '';
+          if (file.type.startsWith('image/')) {
+            // For images, convert to PNG base64
+            const img = new Image();
+            const imgUrl = URL.createObjectURL(file);
+            await new Promise((resolve, reject) => {
+              img.onload = resolve;
+              img.onerror = reject;
+              img.src = imgUrl;
+            });
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+            ctx?.drawImage(img, 0, 0);
+            URL.revokeObjectURL(imgUrl);
+            base64 = canvas.toDataURL('image/png').split(',')[1];
+          } else {
+            // For non-images, read as base64
+            const reader = new FileReader();
+            base64 = await new Promise<string>((resolve, reject) => {
+              reader.onload = () => resolve((reader.result as string).split(',')[1]);
+              reader.onerror = reject;
+              reader.readAsDataURL(file);
+            });
+          }
+
+          const webhookType = file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
+          
+          try {
+            console.log('[WEBHOOK] Sending file to webhook:', attachment.name);
+            await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                type: webhookType,
+                fileName: attachment.name,
+                fileSize: file.size,
+                fileType: attachment.type,
+                fileData: base64,
+                userId: user.id,
+                chatId: chatId,
+                message: userMessage,
+                model: selectedModel
+              })
+            });
+            console.log('[WEBHOOK] File sent successfully, waiting for AI response via realtime');
+          } catch (error) {
+            console.error('[WEBHOOK] Error sending file:', error);
+          }
+        }
+
+        // Mark as processed to prevent auto-trigger
+        if (chatId) {
+          if (!processedUserMessages.current.has(chatId)) {
+            processedUserMessages.current.set(chatId, new Set());
+          }
+          processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          console.log(`[FILE-MESSAGE] Marked message ${insertedMessage.id} as processed`);
+        }
+        
         scrollToBottom();
       } else if (userMessage && files.length === 0) {
         // Don't call AI here - let the auto-trigger handle it to avoid duplicates
