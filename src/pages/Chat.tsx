@@ -312,9 +312,9 @@ export default function Chat() {
               setLoading(false);
               setIsGeneratingResponse(false);
               
-              // If we're regenerating, also clear regeneration-specific states
+              // If we're regenerating, clear regeneration states AND remove the old hidden message
               if (regeneratingMessageId) {
-                console.log('[REALTIME-INSERT] Clearing regeneration states');
+                console.log('[REALTIME-INSERT] Clearing regeneration states and removing old message');
                 
                 // Clear the timeout
                 if (regenerateTimeoutRef.current) {
@@ -322,7 +322,14 @@ export default function Chat() {
                   regenerateTimeoutRef.current = null;
                 }
                 
-                // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
+                // Remove the old hidden message from state (it was deleted from DB but kept for animation)
+                setMessages(prev => {
+                  const filtered = prev.filter(msg => msg.id !== regeneratingMessageId);
+                  console.log('[REALTIME-INSERT] Removed old message, remaining count:', filtered.length);
+                  return filtered;
+                });
+                
+                // Clear regeneration states
                 setRegeneratingMessageId(null);
                 isRegeneratingRef.current = false;
                 setHiddenMessageIds(prev => {
@@ -402,6 +409,35 @@ export default function Chat() {
             );
             setTimeout(() => scrollToBottom(), 50);
             return updated;
+          });
+        })
+        .on('postgres_changes', {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'messages',
+          filter: `chat_id=eq.${chatId}`
+        }, payload => {
+          console.log('[REALTIME-DELETE] Message deleted:', payload.old);
+          const deletedMessage = payload.old as Message;
+
+          // CRITICAL: Double-check message belongs to current chat
+          if (deletedMessage.chat_id !== chatId) {
+            console.log('[REALTIME-DELETE] Message rejected - wrong chat_id');
+            return;
+          }
+
+          // Check if this message is being regenerated - if so, keep it visible with animation
+          if (regeneratingMessageId === deletedMessage.id) {
+            console.log('[REALTIME-DELETE] Message is being regenerated, keeping in state with animation');
+            return;
+          }
+
+          // Remove the deleted message from local state
+          setMessages(prev => {
+            console.log('[REALTIME-DELETE] Removing message from state:', deletedMessage.id);
+            const filtered = prev.filter(msg => msg.id !== deletedMessage.id);
+            console.log('[REALTIME-DELETE] Messages count after deletion:', filtered.length);
+            return filtered;
           });
         })
         .subscribe(status => {
@@ -587,8 +623,16 @@ export default function Chat() {
     console.log('[REGENERATE] User message:', userMessage || '(empty)');
     console.log('[REGENERATE] Attachments count:', userMessageAttachments.length);
 
-    // IMMEDIATELY delete the old message from database
-    console.log('[REGENERATE] Deleting old message from database immediately:', messageId);
+    // Mark the message as regenerating (show animation, keep in state for now)
+    setRegeneratingMessageId(messageId);
+    setHiddenMessageIds(prev => {
+      const newSet = new Set(prev);
+      newSet.add(messageId);
+      return newSet;
+    });
+
+    // IMMEDIATELY delete the old message from database (but keep in local state with animation)
+    console.log('[REGENERATE] Deleting old message from database:', messageId);
     
     // Delete from Supabase
     const { error: deleteError } = await supabase
@@ -600,6 +644,12 @@ export default function Chat() {
       console.error('[REGENERATE] Error deleting old message:', deleteError);
       toast.error('Failed to delete old message');
       isRegeneratingRef.current = false;
+      setRegeneratingMessageId(null);
+      setHiddenMessageIds(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(messageId);
+        return newSet;
+      });
       return;
     }
     
@@ -636,11 +686,12 @@ export default function Chat() {
       }
     }
     
-    // Remove from local state immediately
-    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    // DON'T remove from local state yet - let the DELETE real-time event handle it
+    // This keeps the message visible with the animation until the new one arrives
+    // setMessages(prev => prev.filter(msg => msg.id !== messageId));
 
     setIsGeneratingResponse(true);
-    setRegeneratingMessageId(messageId);
+    // regeneratingMessageId already set above
 
     // Set timeout to handle if no response in 60 seconds
     regenerateTimeoutRef.current = setTimeout(() => {
