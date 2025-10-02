@@ -5,18 +5,21 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Users, MessageSquare } from 'lucide-react';
+import { Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
+
+interface ModelUsageDetail {
+  model: string;
+  input_tokens: number;
+  output_tokens: number;
+  cost: number;
+}
 
 interface UserTokenUsage {
   user_id: string;
   email: string;
   display_name: string;
-  input_tokens: number;
-  output_tokens: number;
-  total_cost: number;
-  message_count: number;
-  models_used: string[];
+  model_usages: ModelUsageDetail[];
 }
 
 interface TokenUsageByModel {
@@ -24,7 +27,6 @@ interface TokenUsageByModel {
   input_tokens: number;
   output_tokens: number;
   total_cost: number;
-  usage_count: number;
 }
 
 // Token pricing per 1M tokens (in USD)
@@ -48,7 +50,6 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userUsages, setUserUsages] = useState<UserTokenUsage[]>([]);
   const [modelUsages, setModelUsages] = useState<TokenUsageByModel[]>([]);
-  const [totalTokens, setTotalTokens] = useState(0);
 
   useEffect(() => {
     checkAdminAccess();
@@ -109,50 +110,43 @@ export default function Admin() {
 
       if (tokenError) throw tokenError;
 
-      // Aggregate by user
+      // Aggregate by user and model
       const userMap = new Map<string, UserTokenUsage>();
       const modelMap = new Map<string, TokenUsageByModel>();
-      let totalTokensSum = 0;
 
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
         const profile = usage.profiles;
         const inputTokens = usage.input_tokens || 0;
         const outputTokens = usage.output_tokens || 0;
-        const cost = calculateCost(usage.model, inputTokens, outputTokens);
+        const model = usage.model;
+        const cost = calculateCost(model, inputTokens, outputTokens);
 
-        // Aggregate by user
+        // Aggregate by user with model breakdown
         if (!userMap.has(userId)) {
           userMap.set(userId, {
             user_id: userId,
             email: profile?.email || 'Unknown',
             display_name: profile?.display_name || 'Unknown User',
-            input_tokens: 0,
-            output_tokens: 0,
-            total_cost: 0,
-            message_count: 0,
-            models_used: []
+            model_usages: []
           });
         }
 
         const userUsage = userMap.get(userId)!;
-        userUsage.input_tokens += inputTokens;
-        userUsage.output_tokens += outputTokens;
-        userUsage.total_cost += cost;
-        userUsage.message_count += 1;
-        if (!userUsage.models_used.includes(usage.model)) {
-          userUsage.models_used.push(usage.model);
-        }
+        userUsage.model_usages.push({
+          model,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens,
+          cost
+        });
 
         // Aggregate by model
-        const model = usage.model;
         if (!modelMap.has(model)) {
           modelMap.set(model, {
             model,
             input_tokens: 0,
             output_tokens: 0,
-            total_cost: 0,
-            usage_count: 0
+            total_cost: 0
           });
         }
 
@@ -160,15 +154,10 @@ export default function Admin() {
         modelUsage.input_tokens += inputTokens;
         modelUsage.output_tokens += outputTokens;
         modelUsage.total_cost += cost;
-        modelUsage.usage_count += 1;
-
-        // Overall totals
-        totalTokensSum += inputTokens + outputTokens;
       });
 
-      setUserUsages(Array.from(userMap.values()).sort((a, b) => b.total_cost - a.total_cost));
+      setUserUsages(Array.from(userMap.values()));
       setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_cost - a.total_cost));
-      setTotalTokens(totalTokensSum);
     } catch (error) {
       console.error('Error fetching token usage:', error);
       toast.error('Failed to load token usage data');
@@ -199,18 +188,7 @@ export default function Admin() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
-            <MessageSquare className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalTokens.toLocaleString()}</div>
-            <p className="text-xs text-muted-foreground">Total consumed</p>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-4 md:grid-cols-1">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Active Users</CardTitle>
@@ -227,7 +205,7 @@ export default function Admin() {
       <Card>
         <CardHeader>
           <CardTitle>Token Usage by User</CardTitle>
-          <CardDescription>Detailed breakdown of token consumption per user</CardDescription>
+          <CardDescription>Detailed breakdown of token consumption per user and model</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -235,36 +213,40 @@ export default function Admin() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead className="text-right">Messages</TableHead>
+                <TableHead>Model</TableHead>
                 <TableHead className="text-right">Input Tokens</TableHead>
                 <TableHead className="text-right">Output Tokens</TableHead>
-                <TableHead className="text-right">Total Cost</TableHead>
-                <TableHead>Models Used</TableHead>
+                <TableHead className="text-right">Cost</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {userUsages.map((usage) => (
-                <TableRow key={usage.user_id}>
-                  <TableCell className="font-medium">{usage.display_name}</TableCell>
-                  <TableCell>{usage.email}</TableCell>
-                  <TableCell className="text-right">{usage.message_count}</TableCell>
-                  <TableCell className="text-right">{usage.input_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{usage.output_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
-                  <TableCell>
-                    <div className="flex flex-wrap gap-1">
-                      {usage.models_used.map((model) => (
-                        <Badge key={model} variant="secondary" className="text-xs">
-                          {model}
-                        </Badge>
-                      ))}
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {userUsages.flatMap((usage) => 
+                usage.model_usages.map((modelUsage, idx) => (
+                  <TableRow key={`${usage.user_id}-${modelUsage.model}`}>
+                    {idx === 0 && (
+                      <>
+                        <TableCell className="font-medium" rowSpan={usage.model_usages.length}>
+                          {usage.display_name}
+                        </TableCell>
+                        <TableCell rowSpan={usage.model_usages.length}>
+                          {usage.email}
+                        </TableCell>
+                      </>
+                    )}
+                    <TableCell>
+                      <Badge variant="secondary" className="text-xs">
+                        {modelUsage.model}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">{modelUsage.input_tokens.toLocaleString()}</TableCell>
+                    <TableCell className="text-right">{modelUsage.output_tokens.toLocaleString()}</TableCell>
+                    <TableCell className="text-right font-mono">${modelUsage.cost.toFixed(4)}</TableCell>
+                  </TableRow>
+                ))
+              )}
               {userUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
+                  <TableCell colSpan={6} className="text-center text-muted-foreground">
                     No token usage data available
                   </TableCell>
                 </TableRow>
@@ -285,29 +267,23 @@ export default function Admin() {
             <TableHeader>
               <TableRow>
                 <TableHead>Model</TableHead>
-                <TableHead className="text-right">Usage Count</TableHead>
                 <TableHead className="text-right">Input Tokens</TableHead>
                 <TableHead className="text-right">Output Tokens</TableHead>
                 <TableHead className="text-right">Total Cost</TableHead>
-                <TableHead className="text-right">Avg Cost/Use</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {modelUsages.map((usage) => (
                 <TableRow key={usage.model}>
                   <TableCell className="font-medium">{usage.model}</TableCell>
-                  <TableCell className="text-right">{usage.usage_count}</TableCell>
                   <TableCell className="text-right">{usage.input_tokens.toLocaleString()}</TableCell>
                   <TableCell className="text-right">{usage.output_tokens.toLocaleString()}</TableCell>
                   <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
-                  <TableCell className="text-right font-mono">
-                    ${(usage.total_cost / usage.usage_count).toFixed(4)}
-                  </TableCell>
                 </TableRow>
               ))}
               {modelUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     No model usage data available
                   </TableCell>
                 </TableRow>

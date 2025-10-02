@@ -52,17 +52,48 @@ serve(async (req) => {
       );
     }
 
-    // Save to database
-    const { data, error } = await supabaseClient
+    // Check if record exists for this user and model
+    const { data: existingRecord } = await supabaseClient
       .from('token_usage')
-      .insert({
-        user_id: userId,
-        model: model,
-        input_tokens: inputTokens,
-        output_tokens: outputTokens
-      })
-      .select()
-      .single();
+      .select('id, input_tokens, output_tokens')
+      .eq('user_id', userId)
+      .eq('model', model)
+      .maybeSingle();
+
+    let data, error;
+
+    if (existingRecord) {
+      // Update existing record by adding to the token counts
+      console.log('[SAVE-TOKEN-USAGE] Updating existing record:', existingRecord.id);
+      const result = await supabaseClient
+        .from('token_usage')
+        .update({
+          input_tokens: existingRecord.input_tokens + inputTokens,
+          output_tokens: existingRecord.output_tokens + outputTokens
+        })
+        .eq('id', existingRecord.id)
+        .select()
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    } else {
+      // Insert new record
+      console.log('[SAVE-TOKEN-USAGE] Creating new record');
+      const result = await supabaseClient
+        .from('token_usage')
+        .insert({
+          user_id: userId,
+          model: model,
+          input_tokens: inputTokens,
+          output_tokens: outputTokens
+        })
+        .select()
+        .single();
+      
+      data = result.data;
+      error = result.error;
+    }
 
     if (error) {
       console.error('[SAVE-TOKEN-USAGE] Database error:', error);
