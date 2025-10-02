@@ -2633,24 +2633,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                })}
                             </div>}
                         
-                            {/* Show loading animation when regenerating */}
-                            {regeneratingMessageId === message.id && (
+                            {/* Show think animation when regenerating or hidden */}
+                            {(regeneratingMessageId === message.id || hiddenMessageIds.has(message.id)) && (
                               <div className="flex items-center gap-3 py-8">
                                 <div className="flex gap-1">
                                   <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '0ms', animationDuration: '1.4s' }}></div>
                                   <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '200ms', animationDuration: '1.4s' }}></div>
                                   <div className="w-2 h-2 rounded-full bg-foreground animate-pulse" style={{ animationDelay: '400ms', animationDuration: '1.4s' }}></div>
-                                </div>
-                              </div>
-                            )}
-                        
-                            {/* Show loading animation if message is hidden during regeneration */}
-                            {hiddenMessageIds.has(message.id) && (
-                              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted/30">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                                <div>
-                                  <p className="text-sm font-medium">Regenerating response...</p>
-                                  <p className="text-xs text-muted-foreground">This may take a few moments</p>
                                 </div>
                               </div>
                             )}
