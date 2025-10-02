@@ -1547,20 +1547,26 @@ export default function Chat() {
               const analysisResult = await webhookResponse.json();
               console.log('Webhook response:', analysisResult);
 
+              // Check for response_data field first (N8n webhook format)
+              if (analysisResult.response_data) {
+                console.log('Found response_data in webhook response');
+                aiAnalysisResponse += `\n\n${analysisResult.response_data}`;
+              }
               // Handle array response format from webhook
-              if (Array.isArray(analysisResult) && analysisResult.length > 0) {
+              else if (Array.isArray(analysisResult) && analysisResult.length > 0) {
                 const analysisTexts = analysisResult.map(item => item.text || item.content || '').filter(text => text);
                 if (analysisTexts.length > 0) {
                   aiAnalysisResponse += `\n\n${analysisTexts.join('\n\n')}`;
                 } else {
-                  aiAnalysisResponse += `\n\nFile analyzed successfully`;
+                  console.log('No valid text/content found in array response, will wait for realtime message');
                 }
               } else if (analysisResult.text) {
                 aiAnalysisResponse += `\n\n${analysisResult.text}`;
               } else if (analysisResult.analysis || analysisResult.content) {
                 aiAnalysisResponse += `\n\n${analysisResult.analysis || analysisResult.content}`;
               } else {
-                aiAnalysisResponse += `\n\nFile analyzed successfully`;
+                // Don't show generic message - wait for realtime subscription to deliver actual response
+                console.log('Webhook response lacks expected fields, waiting for realtime message from webhook-handler');
               }
             } else {
               aiAnalysisResponse += `\n\nError analyzing ${file.name}: ${webhookResponse.statusText}`;
