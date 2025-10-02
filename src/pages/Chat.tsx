@@ -2601,7 +2601,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 }}>
                         
            {/* File attachments - hide while regenerating */}
-           {message.file_attachments && message.file_attachments.length > 0 && regeneratingMessageId !== message.id && <div className="mb-3 space-y-3">
+           {message.file_attachments && message.file_attachments.length > 0 && !hiddenMessageIds.has(message.id) && regeneratingMessageId !== message.id && <div className="mb-3 space-y-3">
                {message.file_attachments.map((file, index) => {
                  console.log('[CHAT-RENDER] Rendering file attachment:', {
                    index,
@@ -2647,21 +2647,15 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                             </div>}
                         
                             {/* Show think animation when regenerating or hidden */}
-                            {(regeneratingMessageId === message.id || hiddenMessageIds.has(message.id)) && (
-                              <>
-                                {console.log('[ANIMATION] Showing regenerate animation for message:', message.id, 'regeneratingId:', regeneratingMessageId, 'isHidden:', hiddenMessageIds.has(message.id))}
-                                <div className="flex items-center justify-center py-6">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-                                  </div>
+                            {hiddenMessageIds.has(message.id) ? (
+                              <div className="flex items-center justify-center py-6 min-h-[80px]">
+                                <div className="flex items-center space-x-2">
+                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
                                 </div>
-                              </>
-                            )}
-                        
-                            {/* Show message content if not hidden */}
-                            {message.content && !hiddenMessageIds.has(message.id) && (
+                              </div>
+                            ) : message.content ? (
                                 <div className="prose prose-sm max-w-none dark:prose-invert prose-headings:text-current prose-p:text-current prose-strong:text-current prose-em:text-current prose-code:text-current prose-pre:bg-muted/50 prose-pre:text-current break-words overflow-hidden [&>*]:!my-0 [&>p]:!my-0 [&>h1]:!my-1 [&>h2]:!my-0.5 [&>h3]:!my-0.5 [&>h4]:!my-0 [&>h5]:!my-0 [&>h6]:!my-0 [&>ul]:!my-0 [&>ol]:!my-0 [&>blockquote]:!my-0 [&>pre]:!my-0 [&>table]:!my-0 [&>hr]:!my-0 [&>li]:!my-0 [&>br]:hidden" style={{
                      wordBreak: 'break-word',
                      overflowWrap: 'anywhere'
@@ -2758,13 +2752,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                          ...props
                        }) => <hr {...props} className="!my-1" />
                      }}>
-                                  {message.content}
-                                </ReactMarkdown>}
-                              </div>
-                            )
-                          }
-                         
-                       </div>
+                                   {message.content}
+                                 </ReactMarkdown>}
+                               </div>
+                             ) : null}
+                          
+                        </div>
                        
                           {/* Message action buttons - hide while regenerating */}
                           {regeneratingMessageId !== message.id && (
