@@ -50,3 +50,6 @@ verify_jwt = false
 
 [functions.webhook-handler]
 verify_jwt = false
+
+[functions.save-token-usage]
+verify_jwt = false

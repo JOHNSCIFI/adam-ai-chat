@@ -27,6 +27,7 @@ import Contact from '@/pages/Contact';
 import HelpCenter from '@/pages/HelpCenter';
 import RefundPolicy from '@/pages/RefundPolicy';
 import CancelSubscription from '@/pages/CancelSubscription';
+import Admin from '@/pages/Admin';
 
 const queryClient = new QueryClient();
 
@@ -129,6 +130,13 @@ function App() {
                     <ProtectedRoute>
                       <MainLayout>
                         <Help />
+                      </MainLayout>
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/admin" element={
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Admin />
                       </MainLayout>
                     </ProtectedRoute>
                   } />
