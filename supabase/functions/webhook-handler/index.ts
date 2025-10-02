@@ -39,11 +39,11 @@ serve(async (req) => {
     console.log('[WEBHOOK-HANDLER] Has body.image_base64?', !!body.image_base64);
 
     // Handle N8n structure: { body: { chatId: "..." }, image_base64: "..." }
-    const chat_id = body.body?.chatId || body.chat_id;
-    const user_id = body.body?.userId || body.user_id;
+    const chat_id = body.body?.chatId || body.chat_id || body.chatId;
+    const user_id = body.body?.userId || body.user_id || body.userId;
     const image_base64 = body.image_base64;
-    const response_data = body.response_data;
-    const model = body.model || body.body?.model; // Extract model from request
+    const response_data = body.response_data || body.response || body.text || body.content;
+    const model = body.model || body.body?.model || body.type; // Extract model from request
 
     console.log('[WEBHOOK-HANDLER] ===== EXTRACTED VALUES =====');
     console.log('[WEBHOOK-HANDLER] chat_id:', chat_id);
@@ -65,20 +65,26 @@ serve(async (req) => {
     let responseContent = '';
     let imageUrl = null;
     
+    console.log('[WEBHOOK-HANDLER] ===== PARSING RESPONSE DATA =====');
+    console.log('[WEBHOOK-HANDLER] response_data type:', typeof response_data);
+    console.log('[WEBHOOK-HANDLER] response_data is array?', Array.isArray(response_data));
+    
     if (response_data) {
       if (Array.isArray(response_data) && response_data.length > 0) {
         const analysisTexts = response_data.map(item => item.text || item.content || '').filter(text => text);
         if (analysisTexts.length > 0) {
           responseContent = analysisTexts.join('\n\n');
         }
-      } else if (response_data.text) {
+      } else if (typeof response_data === 'object' && response_data.text) {
         responseContent = response_data.text;
-      } else if (response_data.analysis || response_data.content) {
+      } else if (typeof response_data === 'object' && (response_data.analysis || response_data.content)) {
         responseContent = response_data.analysis || response_data.content;
       } else if (typeof response_data === 'string') {
         responseContent = response_data;
       }
     }
+    
+    console.log('[WEBHOOK-HANDLER] Parsed responseContent:', responseContent?.substring(0, 100) || 'EMPTY');
 
     // Handle image generation (from root level or response_data)
     const imageData = image_base64 || response_data?.image_base64;
