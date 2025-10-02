@@ -213,6 +213,7 @@ export default function Chat() {
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
   const [regeneratingMessageId, setRegeneratingMessageId] = useState<string | null>(null);
+  const regeneratingMessageIdRef = useRef<string | null>(null); // Ref to track current regenerating message ID
   const [hiddenMessageIds, setHiddenMessageIds] = useState<Set<string>>(new Set());
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
@@ -307,39 +308,39 @@ export default function Chat() {
           if (newMessage.role === 'assistant') {
             console.log('[REALTIME-INSERT] New assistant message received, clearing all loading states');
             
-            // Use setTimeout with 0 to ensure state updates are batched and processed immediately
-            setTimeout(() => {
-              setLoading(false);
-              setIsGeneratingResponse(false);
+            setLoading(false);
+            setIsGeneratingResponse(false);
+            
+            // If we're regenerating, clear regeneration states AND remove the old hidden message
+            // Use the ref to get the current regenerating message ID
+            const currentRegeneratingId = regeneratingMessageIdRef.current;
+            if (currentRegeneratingId) {
+              console.log('[REALTIME-INSERT] Clearing regeneration states and removing old message:', currentRegeneratingId);
               
-              // If we're regenerating, clear regeneration states AND remove the old hidden message
-              if (regeneratingMessageId) {
-                console.log('[REALTIME-INSERT] Clearing regeneration states and removing old message');
-                
-                // Clear the timeout
-                if (regenerateTimeoutRef.current) {
-                  clearTimeout(regenerateTimeoutRef.current);
-                  regenerateTimeoutRef.current = null;
-                }
-                
-                // Remove the old hidden message from state (it was deleted from DB but kept for animation)
-                setMessages(prev => {
-                  const filtered = prev.filter(msg => msg.id !== regeneratingMessageId);
-                  console.log('[REALTIME-INSERT] Removed old message, remaining count:', filtered.length);
-                  return filtered;
-                });
-                
-                // Clear regeneration states
-                setRegeneratingMessageId(null);
-                isRegeneratingRef.current = false;
-                setHiddenMessageIds(prev => {
-                  const newSet = new Set(prev);
-                  newSet.delete(regeneratingMessageId);
-                  return newSet;
-                });
-                oldMessageBackupRef.current = null;
+              // Clear the timeout
+              if (regenerateTimeoutRef.current) {
+                clearTimeout(regenerateTimeoutRef.current);
+                regenerateTimeoutRef.current = null;
               }
-            }, 0);
+              
+              // Remove the old hidden message from state (it was deleted from DB but kept for animation)
+              setMessages(prev => {
+                const filtered = prev.filter(msg => msg.id !== currentRegeneratingId);
+                console.log('[REALTIME-INSERT] Removed old message, remaining count:', filtered.length);
+                return filtered;
+              });
+              
+              // Clear regeneration states
+              setRegeneratingMessageId(null);
+              regeneratingMessageIdRef.current = null; // Clear the ref too
+              isRegeneratingRef.current = false;
+              setHiddenMessageIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(currentRegeneratingId);
+                return newSet;
+              });
+              oldMessageBackupRef.current = null;
+            }
           }
           
           // Add message to state immediately with forced re-render
@@ -427,7 +428,9 @@ export default function Chat() {
           }
 
           // Check if this message is being regenerated - if so, keep it visible with animation
-          if (regeneratingMessageId === deletedMessage.id) {
+          // Use the ref to get the current regenerating message ID
+          const currentRegeneratingId = regeneratingMessageIdRef.current;
+          if (currentRegeneratingId === deletedMessage.id) {
             console.log('[REALTIME-DELETE] Message is being regenerated, keeping in state with animation');
             return;
           }
@@ -626,6 +629,7 @@ export default function Chat() {
     // Mark the message as regenerating (show animation, keep in database for now)
     console.log('[REGENERATE] Marking message as regenerating:', messageId);
     setRegeneratingMessageId(messageId);
+    regeneratingMessageIdRef.current = messageId; // Set the ref for realtime handler
     setHiddenMessageIds(prev => {
       const newSet = new Set(prev);
       newSet.add(messageId);
@@ -640,6 +644,7 @@ export default function Chat() {
       
       // Clear regeneration states and restore message visibility
       setRegeneratingMessageId(null);
+      regeneratingMessageIdRef.current = null; // Clear the ref
       setHiddenMessageIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
@@ -887,6 +892,7 @@ export default function Chat() {
       
       setIsGeneratingResponse(false);
       setRegeneratingMessageId(null);
+      regeneratingMessageIdRef.current = null; // Clear the ref
       setHiddenMessageIds(prev => {
         const newSet = new Set(prev);
         newSet.delete(messageId);
