@@ -179,119 +179,190 @@ export default function Admin() {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-        <p className="text-muted-foreground">Monitor token usage across all users</p>
-      </div>
-      </div>
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto p-6 space-y-8 animate-fade-in">
+        {/* Header Section */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border border-primary/20">
+          <div className="relative z-10">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Users className="h-6 w-6 text-primary" />
+              </div>
+              <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
+            </div>
+            <p className="text-muted-foreground text-lg">Monitor AI model usage and token consumption across your platform</p>
+          </div>
+          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+        </div>
 
-      {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-1">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+        {/* Stats Card */}
+        <div className="grid gap-6 md:grid-cols-3">
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Active Users</CardTitle>
+              <Users className="h-5 w-5 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{userUsages.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">With token usage</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Models</CardTitle>
+              <Badge variant="secondary" className="h-5 px-2">{modelUsages.length}</Badge>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">{modelUsages.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">AI models in use</p>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
+              <span className="text-primary text-lg font-bold">$</span>
+            </CardHeader>
+            <CardContent>
+              <div className="text-3xl font-bold text-foreground">
+                ${modelUsages.reduce((sum, m) => sum + m.total_cost, 0).toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">Across all models</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* User Token Usage Table */}
+        <Card className="border-border/50 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+              <CardTitle className="text-xl">Token Usage by User</CardTitle>
+            </div>
+            <CardDescription className="text-base">Detailed breakdown of token consumption per user and model</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{userUsages.length}</div>
-            <p className="text-xs text-muted-foreground">With token usage</p>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="font-semibold text-foreground">User</TableHead>
+                    <TableHead className="font-semibold text-foreground">Email</TableHead>
+                    <TableHead className="font-semibold text-foreground">Model</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Input Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Output Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Cost</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {userUsages.flatMap((usage) => 
+                    usage.model_usages.map((modelUsage, idx) => (
+                      <TableRow key={`${usage.user_id}-${modelUsage.model}`} className="hover:bg-muted/50 transition-colors">
+                        {idx === 0 && (
+                          <>
+                            <TableCell className="font-semibold text-foreground" rowSpan={usage.model_usages.length}>
+                              <div className="flex items-center gap-2">
+                                <div className="h-2 w-2 rounded-full bg-primary/60" />
+                                {usage.display_name}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground" rowSpan={usage.model_usages.length}>
+                              {usage.email}
+                            </TableCell>
+                          </>
+                        )}
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
+                            {modelUsage.model}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-muted-foreground">
+                          {modelUsage.input_tokens.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-mono text-muted-foreground">
+                          {modelUsage.output_tokens.toLocaleString()}
+                        </TableCell>
+                        <TableCell className="text-right font-mono font-semibold text-foreground">
+                          ${modelUsage.cost.toFixed(4)}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                  {userUsages.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-muted-foreground h-32">
+                        <div className="flex flex-col items-center gap-2">
+                          <Users className="h-8 w-8 opacity-20" />
+                          <p>No token usage data available</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Model Usage Table */}
+        <Card className="border-border/50 overflow-hidden">
+          <CardHeader className="bg-muted/30 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
+              <CardTitle className="text-xl">Token Usage by Model</CardTitle>
+            </div>
+            <CardDescription className="text-base">Aggregated token consumption and costs per AI model</CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="font-semibold text-foreground">Model</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Input Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Output Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground">Total Cost</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {modelUsages.map((usage) => (
+                    <TableRow key={usage.model} className="hover:bg-muted/50 transition-colors">
+                      <TableCell className="font-semibold text-foreground">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-primary/60" />
+                          <span className="font-mono">{usage.model}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-muted-foreground">
+                        {usage.input_tokens.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right font-mono text-muted-foreground">
+                        {usage.output_tokens.toLocaleString()}
+                      </TableCell>
+                      <TableCell className="text-right font-mono font-bold text-foreground text-lg">
+                        ${usage.total_cost.toFixed(4)}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {modelUsages.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center text-muted-foreground h-32">
+                        <div className="flex flex-col items-center gap-2">
+                          <Badge variant="secondary" className="h-8 w-8 rounded-full p-0 opacity-20">
+                            <span className="text-xs">AI</span>
+                          </Badge>
+                          <p>No model usage data available</p>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       </div>
-
-      {/* User Token Usage Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Token Usage by User</CardTitle>
-          <CardDescription>Detailed breakdown of token consumption per user and model</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Model</TableHead>
-                <TableHead className="text-right">Input Tokens</TableHead>
-                <TableHead className="text-right">Output Tokens</TableHead>
-                <TableHead className="text-right">Cost</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {userUsages.flatMap((usage) => 
-                usage.model_usages.map((modelUsage, idx) => (
-                  <TableRow key={`${usage.user_id}-${modelUsage.model}`}>
-                    {idx === 0 && (
-                      <>
-                        <TableCell className="font-medium" rowSpan={usage.model_usages.length}>
-                          {usage.display_name}
-                        </TableCell>
-                        <TableCell rowSpan={usage.model_usages.length}>
-                          {usage.email}
-                        </TableCell>
-                      </>
-                    )}
-                    <TableCell>
-                      <Badge variant="secondary" className="text-xs">
-                        {modelUsage.model}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">{modelUsage.input_tokens.toLocaleString()}</TableCell>
-                    <TableCell className="text-right">{modelUsage.output_tokens.toLocaleString()}</TableCell>
-                    <TableCell className="text-right font-mono">${modelUsage.cost.toFixed(4)}</TableCell>
-                  </TableRow>
-                ))
-              )}
-              {userUsages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No token usage data available
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      {/* Model Usage Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Token Usage by Model</CardTitle>
-          <CardDescription>Breakdown of token consumption per AI model</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Model</TableHead>
-                <TableHead className="text-right">Input Tokens</TableHead>
-                <TableHead className="text-right">Output Tokens</TableHead>
-                <TableHead className="text-right">Total Cost</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {modelUsages.map((usage) => (
-                <TableRow key={usage.model}>
-                  <TableCell className="font-medium">{usage.model}</TableCell>
-                  <TableCell className="text-right">{usage.input_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right">{usage.output_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
-                </TableRow>
-              ))}
-              {modelUsages.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-center text-muted-foreground">
-                    No model usage data available
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
     </div>
   );
 }
