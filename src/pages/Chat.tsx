@@ -557,13 +557,11 @@ export default function Chat() {
     setHiddenMessageIds(prev => {
       const newSet = new Set(prev);
       newSet.add(messageId);
-      console.log('[REGENERATE] Hiding message:', messageId, 'Hidden messages:', Array.from(newSet));
       return newSet;
     });
 
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
-    console.log('[REGENERATE] Set regeneratingMessageId to:', messageId);
 
     // Set timeout to restore old message if no response in 60 seconds
     regenerateTimeoutRef.current = setTimeout(() => {
@@ -2648,16 +2646,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         
                             {/* Show think animation when regenerating or hidden */}
                             {(regeneratingMessageId === message.id || hiddenMessageIds.has(message.id)) && (
-                              <>
-                                {console.log('[ANIMATION] Showing regenerate animation for message:', message.id, 'regeneratingId:', regeneratingMessageId, 'isHidden:', hiddenMessageIds.has(message.id))}
-                                <div className="flex items-center justify-center py-6">
-                                  <div className="flex items-center space-x-2">
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                                    <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-                                  </div>
-                                </div>
-                              </>
+                              <div className="flex items-center space-x-2 py-8">
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                                <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+                              </div>
                             )}
                         
                             {/* Show message content if not hidden */}
