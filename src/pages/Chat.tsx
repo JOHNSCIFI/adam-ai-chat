@@ -270,8 +270,15 @@ export default function Chat() {
       };
       window.addEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
 
-      // Set up real-time subscription for new messages  
-      const subscription = supabase.channel(`messages-${chatId}`)
+      // Set up real-time subscription for new messages with proper channel configuration
+      const channel = supabase.channel(`messages-${chatId}`, {
+        config: {
+          broadcast: { self: true },
+          presence: { key: chatId }
+        }
+      });
+
+      channel
         .on('postgres_changes', {
           event: 'INSERT',
           schema: 'public',
@@ -296,51 +303,69 @@ export default function Chat() {
             fileAttachments: newMessage.file_attachments
           });
           
-          // If this is a new assistant message, clear ALL loading states
+          // If this is a new assistant message, clear ALL loading states immediately
           if (newMessage.role === 'assistant') {
             console.log('[REALTIME-INSERT] New assistant message received, clearing all loading states');
             
-            // Clear loading animation immediately
-            setLoading(false);
-            setIsGeneratingResponse(false);
-            
-            // If we're regenerating, also clear regeneration-specific states
-            if (regeneratingMessageId) {
-              console.log('[REALTIME-INSERT] Clearing regeneration states');
+            // Use setTimeout with 0 to ensure state updates are batched and processed immediately
+            setTimeout(() => {
+              setLoading(false);
+              setIsGeneratingResponse(false);
               
-              // Clear the timeout
-              if (regenerateTimeoutRef.current) {
-                clearTimeout(regenerateTimeoutRef.current);
-                regenerateTimeoutRef.current = null;
+              // If we're regenerating, also clear regeneration-specific states
+              if (regeneratingMessageId) {
+                console.log('[REALTIME-INSERT] Clearing regeneration states');
+                
+                // Clear the timeout
+                if (regenerateTimeoutRef.current) {
+                  clearTimeout(regenerateTimeoutRef.current);
+                  regenerateTimeoutRef.current = null;
+                }
+                
+                // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
+                setRegeneratingMessageId(null);
+                isRegeneratingRef.current = false;
+                setHiddenMessageIds(prev => {
+                  const newSet = new Set(prev);
+                  newSet.delete(regeneratingMessageId);
+                  return newSet;
+                });
+                oldMessageBackupRef.current = null;
               }
-              
-              // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
-              setRegeneratingMessageId(null);
-              isRegeneratingRef.current = false; // Release lock
-              setHiddenMessageIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(regeneratingMessageId);
-                return newSet;
-              });
-              oldMessageBackupRef.current = null;
-            }
+            }, 0);
           }
           
+          // Add message to state immediately
           setMessages(prev => {
-            // Check if message already exists (by real ID or temp ID) to prevent duplicates
+            // Check if message already exists to prevent duplicates
             const existsById = prev.find(msg => msg.id === newMessage.id);
-            const existsByContent = prev.find(msg => msg.content === newMessage.content && msg.role === newMessage.role && Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000 // Within 5 seconds
-            );
-            if (existsById || existsByContent) {
-              console.log('[REALTIME-INSERT] Message duplicate, skipping');
+            if (existsById) {
+              console.log('[REALTIME-INSERT] Message duplicate by ID, skipping');
               return prev;
             }
+            
+            const existsByContent = prev.find(msg => 
+              msg.content === newMessage.content && 
+              msg.role === newMessage.role && 
+              Math.abs(new Date(msg.created_at).getTime() - new Date(newMessage.created_at).getTime()) < 5000
+            );
+            
+            if (existsByContent) {
+              console.log('[REALTIME-INSERT] Message duplicate by content, skipping');
+              return prev;
+            }
+            
             // CRITICAL: Filter out any messages not belonging to current chat before adding new message
             const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
-            console.log('[REALTIME-INSERT] Adding message to state');
-            return [...filteredPrev, newMessage];
+            console.log('[REALTIME-INSERT] Adding message to state, total messages will be:', filteredPrev.length + 1);
+            
+            const newMessages = [...filteredPrev, newMessage];
+            
+            // Force scroll after state update
+            setTimeout(() => scrollToBottom(), 50);
+            
+            return newMessages;
           });
-          scrollToBottom();
         })
         .on('postgres_changes', {
           event: 'UPDATE',
@@ -348,30 +373,46 @@ export default function Chat() {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`
         }, payload => {
+          console.log('[REALTIME-UPDATE] Message updated:', payload.new);
           const updatedMessage = payload.new as Message;
 
           // CRITICAL: Double-check message belongs to current chat
           if (updatedMessage.chat_id !== chatId) {
+            console.log('[REALTIME-UPDATE] Message rejected - wrong chat_id');
             return;
           }
 
-          setMessages(prev => prev.map(msg => 
-            msg.id === updatedMessage.id 
-              ? { 
-                  ...msg, 
-                  content: updatedMessage.content,
-                  file_attachments: updatedMessage.file_attachments as any || []
-                }
-              : msg
-          ));
-          scrollToBottom();
+          setMessages(prev => {
+            const updated = prev.map(msg => 
+              msg.id === updatedMessage.id 
+                ? { 
+                    ...msg, 
+                    content: updatedMessage.content,
+                    file_attachments: updatedMessage.file_attachments as any || []
+                  }
+                : msg
+            );
+            setTimeout(() => scrollToBottom(), 50);
+            return updated;
+          });
         })
-        .subscribe();
+        .subscribe(status => {
+          console.log('[REALTIME-SUBSCRIPTION] Status:', status);
+          if (status === 'SUBSCRIBED') {
+            console.log('[REALTIME-SUBSCRIPTION] Successfully subscribed to messages for chat:', chatId);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error('[REALTIME-SUBSCRIPTION] Channel error for chat:', chatId);
+          } else if (status === 'TIMED_OUT') {
+            console.error('[REALTIME-SUBSCRIPTION] Subscription timed out for chat:', chatId);
+          }
+        });
 
-      // SINGLE cleanup function that handles both event listener AND subscription
+      // SINGLE cleanup function that handles both event listener AND channel
       return () => {
+        console.log('[REALTIME-CLEANUP] Unsubscribing from chat:', chatId);
         window.removeEventListener('image-generation-chat', handleImageGenerationChat as EventListener);
-        subscription.unsubscribe();
+        channel.unsubscribe();
+        supabase.removeChannel(channel);
       };
     }
   }, [chatId, user]);
