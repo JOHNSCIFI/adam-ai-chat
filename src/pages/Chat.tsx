@@ -370,9 +370,11 @@ export default function Chat() {
             console.log('[REALTIME-INSERT] Filtered messages:', filteredPrev.length);
             console.log('[REALTIME-INSERT] Adding message to state');
             
-            // Create new array with new message
-            const newMessages = [...filteredPrev, newMessage];
-            console.log('[REALTIME-INSERT] New total messages:', newMessages.length);
+            // Create new array with new message and sort by created_at to ensure proper ordering
+            const newMessages = [...filteredPrev, newMessage].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+            console.log('[REALTIME-INSERT] New total messages (sorted):', newMessages.length);
             
             // Force immediate scroll
             requestAnimationFrame(() => {
@@ -1642,58 +1644,12 @@ export default function Chat() {
         });
       }
 
-      // If files were analyzed, show AI analysis response instead of regular AI
+      // If files were analyzed, the webhook-handler will save the AI response
+      // Just wait for realtime subscription to pick it up - this ensures proper ordering
       if (aiAnalysisResponse && files.length > 0) {
-        // Create assistant message with analysis results from webhook
-        const analysisMessage: Message = {
-          id: `temp-ai-${Date.now()}`,
-          chat_id: chatId!,
-          content: aiAnalysisResponse.trim(),
-          role: 'assistant',
-          created_at: new Date().toISOString(),
-          file_attachments: []
-        };
-
-        // Add to UI
-        setMessages(prev => [...prev, analysisMessage]);
+        console.log('[FILE-UPLOAD] Webhook processed file, waiting for realtime to deliver AI response');
+        // Don't create temporary message - webhook-handler will save it and realtime will pick it up
         scrollToBottom();
-
-        // Start embedding generation for AI response
-        const aiEmbeddingPromise = generateEmbeddingAsync(aiAnalysisResponse);
-
-        // Save to database
-        const {
-          data: aiMessage,
-          error: aiError
-        } = await supabase.from('messages').insert({
-          chat_id: chatId,
-          content: aiAnalysisResponse.trim(),
-          role: 'assistant',
-          embedding: null
-        }).select().single();
-        if (aiError) {
-          // Check for authentication errors
-          if (aiError.message?.includes('JWT') || aiError.message?.includes('unauthorized')) {
-            setShowAuthModal(true);
-            return;
-          }
-          console.error('Error saving AI analysis message:', aiError);
-        }
-        if (aiMessage) {
-          setMessages(prev => prev.map(msg => msg.id === analysisMessage.id ? {
-            ...msg,
-            id: aiMessage.id
-          } : msg));
-
-          // Update with embedding when ready
-          aiEmbeddingPromise.then(embedding => {
-            if (embedding.length > 0) {
-              supabase.from('messages').update({
-                embedding: embedding as any
-              }).eq('id', aiMessage.id);
-            }
-          });
-        }
       } else if (userMessage && files.length === 0) {
         // Don't call AI here - let the auto-trigger handle it to avoid duplicates
         console.log('User message without files - will be handled by auto-trigger');
