@@ -296,26 +296,34 @@ export default function Chat() {
             fileAttachments: newMessage.file_attachments
           });
           
-          // If this is a new assistant message and we're regenerating, clear regeneration states
-          if (newMessage.role === 'assistant' && regeneratingMessageId) {
-            console.log('[REALTIME-INSERT] New assistant message during regeneration, clearing regeneration states');
+          // If this is a new assistant message, clear ALL loading states
+          if (newMessage.role === 'assistant') {
+            console.log('[REALTIME-INSERT] New assistant message received, clearing all loading states');
             
-            // Clear the timeout
-            if (regenerateTimeoutRef.current) {
-              clearTimeout(regenerateTimeoutRef.current);
-              regenerateTimeoutRef.current = null;
-            }
-            
-            // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
-            setRegeneratingMessageId(null);
+            // Clear loading animation immediately
+            setLoading(false);
             setIsGeneratingResponse(false);
-            isRegeneratingRef.current = false; // Release lock
-            setHiddenMessageIds(prev => {
-              const newSet = new Set(prev);
-              newSet.delete(regeneratingMessageId);
-              return newSet;
-            });
-            oldMessageBackupRef.current = null;
+            
+            // If we're regenerating, also clear regeneration-specific states
+            if (regeneratingMessageId) {
+              console.log('[REALTIME-INSERT] Clearing regeneration states');
+              
+              // Clear the timeout
+              if (regenerateTimeoutRef.current) {
+                clearTimeout(regenerateTimeoutRef.current);
+                regenerateTimeoutRef.current = null;
+              }
+              
+              // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
+              setRegeneratingMessageId(null);
+              isRegeneratingRef.current = false; // Release lock
+              setHiddenMessageIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(regeneratingMessageId);
+                return newSet;
+              });
+              oldMessageBackupRef.current = null;
+            }
           }
           
           setMessages(prev => {
