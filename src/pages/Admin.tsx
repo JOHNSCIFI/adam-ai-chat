@@ -36,6 +36,7 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-5': { input: 1.25, output: 10.00 },
   'gpt-5-mini': { input: 1.25, output: 10.00 },
   'gpt-5-nano': { input: 1.25, output: 10.00 },
+  'google/gemini-2.5-flash': { input: 0.30, output: 2.50 },
 };
 
 const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
