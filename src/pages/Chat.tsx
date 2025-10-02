@@ -335,8 +335,10 @@ export default function Chat() {
             }, 0);
           }
           
-          // Add message to state immediately
+          // Add message to state immediately with forced re-render
           setMessages(prev => {
+            console.log('[REALTIME-INSERT] Current messages count:', prev.length);
+            
             // Check if message already exists to prevent duplicates
             const existsById = prev.find(msg => msg.id === newMessage.id);
             if (existsById) {
@@ -357,13 +359,19 @@ export default function Chat() {
             
             // CRITICAL: Filter out any messages not belonging to current chat before adding new message
             const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
-            console.log('[REALTIME-INSERT] Adding message to state, total messages will be:', filteredPrev.length + 1);
+            console.log('[REALTIME-INSERT] Filtered messages:', filteredPrev.length);
+            console.log('[REALTIME-INSERT] Adding message to state');
             
+            // Create new array with new message
             const newMessages = [...filteredPrev, newMessage];
+            console.log('[REALTIME-INSERT] New total messages:', newMessages.length);
             
-            // Force scroll after state update
-            setTimeout(() => scrollToBottom(), 50);
+            // Force immediate scroll
+            requestAnimationFrame(() => {
+              scrollToBottom();
+            });
             
+            // Return new array to trigger re-render
             return newMessages;
           });
         })
@@ -2602,7 +2610,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   How can I help, {userProfile?.display_name || user?.email?.split('@')[0] || 'there'}?
                 </h3>
               </div>
-            </div> : <div className="space-y-6">
+             </div> : <div className="space-y-6" key={`messages-${messages.length}-${messages[messages.length - 1]?.id || 'empty'}`}>
               {messages.map(message => {
                 console.log('[CHAT-RENDER] Rendering message:', {
                   id: message.id,
