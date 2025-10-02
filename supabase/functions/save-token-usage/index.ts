@@ -55,21 +55,21 @@ serve(async (req) => {
     }
 
     const userId = body.userId || body.user_id;
-    const chatId = body.chatId || body.chat_id || null;
-    const messageId = body.messageId || body.message_id || null;
     const model = body.model;
     const totalTokens = body.totalTokens || body.total_tokens;
     const promptTokens = body.promptTokens || body.prompt_tokens || 0;
     const completionTokens = body.completionTokens || body.completion_tokens || 0;
+    const chatId = body.chatId || body.chat_id || null;
+    const messageId = body.messageId || body.message_id || null;
 
     console.log('[SAVE-TOKEN-USAGE] Extracted values:', {
       userId,
-      chatId,
-      messageId,
       model,
       totalTokens,
       promptTokens,
-      completionTokens
+      completionTokens,
+      chatId,
+      messageId
     });
 
     if (!userId || !model || !totalTokens) {
