@@ -296,9 +296,9 @@ export default function Chat() {
             fileAttachments: newMessage.file_attachments
           });
           
-          // If this is a new assistant message and we're regenerating, delete the old message
+          // If this is a new assistant message and we're regenerating, clear regeneration states
           if (newMessage.role === 'assistant' && regeneratingMessageId) {
-            console.log('[REALTIME-INSERT] New assistant message during regeneration, deleting old message:', regeneratingMessageId);
+            console.log('[REALTIME-INSERT] New assistant message during regeneration, clearing regeneration states');
             
             // Clear the timeout
             if (regenerateTimeoutRef.current) {
@@ -306,32 +306,16 @@ export default function Chat() {
               regenerateTimeoutRef.current = null;
             }
             
-            // Delete old message from database
-            supabase
-              .from('messages')
-              .delete()
-              .eq('id', regeneratingMessageId)
-              .then(({ error }) => {
-                if (error) {
-                  console.error('[REALTIME-INSERT] Error deleting old message:', error);
-                } else {
-                  console.log('[REALTIME-INSERT] Successfully deleted old message from database');
-                }
-              });
-            
-            // Remove old message from local state
-            setMessages(prev => prev.filter(msg => msg.id !== regeneratingMessageId));
-            
-              // Clear regeneration states
-              setRegeneratingMessageId(null);
-              setIsGeneratingResponse(false);
-              isRegeneratingRef.current = false; // Release lock
-              setHiddenMessageIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(regeneratingMessageId);
-                return newSet;
-              });
-              oldMessageBackupRef.current = null;
+            // Clear regeneration states (old message was already deleted immediately when regenerate was clicked)
+            setRegeneratingMessageId(null);
+            setIsGeneratingResponse(false);
+            isRegeneratingRef.current = false; // Release lock
+            setHiddenMessageIds(prev => {
+              const newSet = new Set(prev);
+              newSet.delete(regeneratingMessageId);
+              return newSet;
+            });
+            oldMessageBackupRef.current = null;
           }
           
           setMessages(prev => {
@@ -546,41 +530,72 @@ export default function Chat() {
     console.log('[REGENERATE] User message:', userMessage || '(empty)');
     console.log('[REGENERATE] Attachments count:', userMessageAttachments.length);
 
-    // Backup the old message
-    oldMessageBackupRef.current = {
-      messageId: messageId,
-      content: assistantMessage.content,
-      fileAttachments: assistantMessage.file_attachments || []
-    };
-
-    // Hide the old message (it will show loading animation)
-    setHiddenMessageIds(prev => {
-      const newSet = new Set(prev);
-      newSet.add(messageId);
-      return newSet;
-    });
+    // IMMEDIATELY delete the old message from database
+    console.log('[REGENERATE] Deleting old message from database immediately:', messageId);
+    
+    // Delete from Supabase
+    const { error: deleteError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', messageId);
+    
+    if (deleteError) {
+      console.error('[REGENERATE] Error deleting old message:', deleteError);
+      toast.error('Failed to delete old message');
+      isRegeneratingRef.current = false;
+      return;
+    }
+    
+    console.log('[REGENERATE] Successfully deleted old message from database');
+    
+    // Delete old image from storage if it exists
+    if (assistantMessage.file_attachments && assistantMessage.file_attachments.length > 0) {
+      for (const attachment of assistantMessage.file_attachments) {
+        if (attachment.url && attachment.type.startsWith('image/')) {
+          try {
+            const urlObj = new URL(attachment.url);
+            const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)/);
+            
+            if (pathMatch) {
+              const bucketName = pathMatch[1];
+              const filePath = pathMatch[2];
+              
+              console.log('[REGENERATE] Deleting old image from storage:', { bucketName, filePath });
+              
+              const { error: deleteStorageError } = await supabase.storage
+                .from(bucketName)
+                .remove([filePath]);
+                
+              if (deleteStorageError) {
+                console.error('[REGENERATE] Error deleting old image from storage:', deleteStorageError);
+              } else {
+                console.log('[REGENERATE] Successfully deleted old image from storage');
+              }
+            }
+          } catch (error) {
+            console.error('[REGENERATE] Error parsing image URL:', error);
+          }
+        }
+      }
+    }
+    
+    // Remove from local state immediately
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
 
     setIsGeneratingResponse(true);
     setRegeneratingMessageId(messageId);
 
-    // Set timeout to restore old message if no response in 60 seconds
+    // Set timeout to handle if no response in 60 seconds
     regenerateTimeoutRef.current = setTimeout(() => {
-      console.log('[REGENERATE] Timeout - no response in 60 seconds, restoring old message');
+      console.log('[REGENERATE] Timeout - no response in 60 seconds');
       
-      // Restore the old message visibility
-      setHiddenMessageIds(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(messageId);
-        return newSet;
-      });
-      
-      // Clear regeneration states
+      // Clear regeneration states (old message is already deleted, can't restore it)
       setRegeneratingMessageId(null);
       setIsGeneratingResponse(false);
       isRegeneratingRef.current = false;
       oldMessageBackupRef.current = null;
       
-      toast.error('Response timeout. Please try again.');
+      toast.error('Response timeout. Please try regenerating again.');
     }, 60000); // 60 seconds
 
     try {
@@ -755,38 +770,6 @@ export default function Chat() {
         }
         
         console.log('[REGENERATE] Webhook-handler saved new message:', handlerData);
-        
-        // Delete old image from storage if it exists
-        if (assistantMessage.file_attachments && assistantMessage.file_attachments.length > 0) {
-          for (const attachment of assistantMessage.file_attachments) {
-            if (attachment.url && attachment.type.startsWith('image/')) {
-              try {
-                const urlObj = new URL(attachment.url);
-                const pathMatch = urlObj.pathname.match(/\/storage\/v1\/object\/public\/([^\/]+)\/(.+)/);
-                
-                if (pathMatch) {
-                  const bucketName = pathMatch[1];
-                  const filePath = pathMatch[2];
-                  
-                  console.log('[REGENERATE] Deleting old generated image:', { bucketName, filePath });
-                  
-                  const { error: deleteStorageError } = await supabase.storage
-                    .from(bucketName)
-                    .remove([filePath]);
-                    
-                  if (deleteStorageError) {
-                    console.error('[REGENERATE] Error deleting old image from storage:', deleteStorageError);
-                  } else {
-                    console.log('[REGENERATE] Successfully deleted old image from storage');
-                  }
-                }
-              } catch (error) {
-                console.error('[REGENERATE] Error parsing image URL:', error);
-              }
-            }
-          }
-        }
-        
         console.log('[REGENERATE] Image generation: waiting for realtime subscription to add new message...');
         scrollToBottom();
         return;
@@ -800,22 +783,15 @@ export default function Chat() {
         regenerateTimeoutRef.current = null;
       }
       
-      // Restore the old message on error
-      if (oldMessageBackupRef.current && oldMessageBackupRef.current.messageId === messageId) {
-        console.log('[REGENERATE] Error occurred, restoring old message');
-        setHiddenMessageIds(prev => {
-          const newSet = new Set(prev);
-          newSet.delete(messageId);
-          return newSet;
-        });
-      }
+      // Clear regeneration states (old message is already deleted from database)
+      console.log('[REGENERATE] Error occurred, clearing regeneration states');
       
       setIsGeneratingResponse(false);
       setRegeneratingMessageId(null);
       isRegeneratingRef.current = false; // Release lock
       oldMessageBackupRef.current = null;
       
-      toast.error('Failed to regenerate response. Please try again.');
+      toast.error('Failed to regenerate response. The old message has been deleted.');
     }
   };
 
