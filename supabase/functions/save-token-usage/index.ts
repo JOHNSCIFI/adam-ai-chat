@@ -7,29 +7,7 @@ const corsHeaders = {
 };
 
 // Token pricing per 1M tokens (in USD)
-const TOKEN_PRICING: Record<string, { prompt: number; completion: number }> = {
-  'gpt-4o-mini': { prompt: 0.15, completion: 0.60 },
-  'gpt-4o': { prompt: 2.50, completion: 10.00 },
-  'gpt-5': { prompt: 10.00, completion: 30.00 },
-  'gpt-5-mini': { prompt: 1.00, completion: 4.00 },
-  'gpt-5-nano': { prompt: 0.20, completion: 0.80 },
-  'gpt-4.1': { prompt: 3.00, completion: 12.00 },
-  'gpt-4.1-mini': { prompt: 0.40, completion: 1.60 },
-  'o3': { prompt: 20.00, completion: 80.00 },
-  'o4-mini': { prompt: 2.00, completion: 8.00 },
-  'claude-3-opus': { prompt: 15.00, completion: 75.00 },
-  'claude-3-sonnet': { prompt: 3.00, completion: 15.00 },
-  'claude-3-haiku': { prompt: 0.25, completion: 1.25 },
-  'gemini-pro': { prompt: 0.50, completion: 1.50 },
-  'gemini-flash': { prompt: 0.10, completion: 0.30 },
-};
-
-function calculateCost(model: string, promptTokens: number = 0, completionTokens: number = 0): number {
-  const pricing = TOKEN_PRICING[model] || TOKEN_PRICING['gpt-4o-mini'];
-  const promptCost = (promptTokens / 1_000_000) * pricing.prompt;
-  const completionCost = (completionTokens / 1_000_000) * pricing.completion;
-  return promptCost + completionCost;
-}
+// Removed token pricing and cost calculation - no longer needed
 
 serve(async (req) => {
   console.log('[SAVE-TOKEN-USAGE] New request received');
@@ -57,19 +35,11 @@ serve(async (req) => {
     const userId = body.userId || body.user_id;
     const model = body.model;
     const totalTokens = body.totalTokens || body.total_tokens;
-    const promptTokens = body.promptTokens || body.prompt_tokens || 0;
-    const completionTokens = body.completionTokens || body.completion_tokens || 0;
-    const chatId = body.chatId || body.chat_id || null;
-    const messageId = body.messageId || body.message_id || null;
 
     console.log('[SAVE-TOKEN-USAGE] Extracted values:', {
       userId,
       model,
-      totalTokens,
-      promptTokens,
-      completionTokens,
-      chatId,
-      messageId
+      totalTokens
     });
 
     if (!userId || !model || !totalTokens) {
@@ -80,22 +50,13 @@ serve(async (req) => {
       );
     }
 
-    // Calculate cost in USD
-    const costUsd = calculateCost(model, promptTokens || 0, completionTokens || 0);
-    console.log('[SAVE-TOKEN-USAGE] Calculated cost:', costUsd);
-
     // Save to database
     const { data, error } = await supabaseClient
       .from('token_usage')
       .insert({
         user_id: userId,
-        chat_id: chatId,
-        message_id: messageId,
         model: model,
-        total_tokens: totalTokens,
-        prompt_tokens: promptTokens,
-        completion_tokens: completionTokens,
-        cost_usd: costUsd
+        total_tokens: totalTokens
       })
       .select()
       .single();

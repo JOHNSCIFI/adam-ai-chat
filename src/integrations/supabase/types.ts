@@ -265,57 +265,27 @@ export type Database = {
       }
       token_usage: {
         Row: {
-          chat_id: string | null
-          completion_tokens: number | null
-          cost_usd: number | null
           created_at: string
           id: string
-          message_id: string | null
           model: string
-          prompt_tokens: number | null
           total_tokens: number
           user_id: string
         }
         Insert: {
-          chat_id?: string | null
-          completion_tokens?: number | null
-          cost_usd?: number | null
           created_at?: string
           id?: string
-          message_id?: string | null
           model: string
-          prompt_tokens?: number | null
           total_tokens: number
           user_id: string
         }
         Update: {
-          chat_id?: string | null
-          completion_tokens?: number | null
-          cost_usd?: number | null
           created_at?: string
           id?: string
-          message_id?: string | null
           model?: string
-          prompt_tokens?: number | null
           total_tokens?: number
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "token_usage_chat_id_fkey"
-            columns: ["chat_id"]
-            isOneToOne: false
-            referencedRelation: "chats"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "token_usage_message_id_fkey"
-            columns: ["message_id"]
-            isOneToOne: false
-            referencedRelation: "messages"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_roles: {
         Row: {

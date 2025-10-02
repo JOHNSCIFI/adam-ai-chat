@@ -5,7 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, DollarSign, Users, MessageSquare } from 'lucide-react';
+import { Loader2, Users, MessageSquare } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface UserTokenUsage {
@@ -13,7 +13,6 @@ interface UserTokenUsage {
   email: string;
   display_name: string;
   total_tokens: number;
-  total_cost: number;
   message_count: number;
   models_used: string[];
 }
@@ -21,7 +20,6 @@ interface UserTokenUsage {
 interface TokenUsageByModel {
   model: string;
   total_tokens: number;
-  total_cost: number;
   usage_count: number;
 }
 
@@ -32,7 +30,6 @@ export default function Admin() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userUsages, setUserUsages] = useState<UserTokenUsage[]>([]);
   const [modelUsages, setModelUsages] = useState<TokenUsageByModel[]>([]);
-  const [totalCost, setTotalCost] = useState(0);
   const [totalTokens, setTotalTokens] = useState(0);
 
   useEffect(() => {
@@ -97,7 +94,6 @@ export default function Admin() {
       // Aggregate by user
       const userMap = new Map<string, UserTokenUsage>();
       const modelMap = new Map<string, TokenUsageByModel>();
-      let totalCostSum = 0;
       let totalTokensSum = 0;
 
       tokenData?.forEach((usage: any) => {
@@ -111,7 +107,6 @@ export default function Admin() {
             email: profile?.email || 'Unknown',
             display_name: profile?.display_name || 'Unknown User',
             total_tokens: 0,
-            total_cost: 0,
             message_count: 0,
             models_used: []
           });
@@ -119,7 +114,6 @@ export default function Admin() {
 
         const userUsage = userMap.get(userId)!;
         userUsage.total_tokens += usage.total_tokens || 0;
-        userUsage.total_cost += parseFloat(usage.cost_usd || 0);
         userUsage.message_count += 1;
         if (!userUsage.models_used.includes(usage.model)) {
           userUsage.models_used.push(usage.model);
@@ -131,24 +125,20 @@ export default function Admin() {
           modelMap.set(model, {
             model,
             total_tokens: 0,
-            total_cost: 0,
             usage_count: 0
           });
         }
 
         const modelUsage = modelMap.get(model)!;
         modelUsage.total_tokens += usage.total_tokens || 0;
-        modelUsage.total_cost += parseFloat(usage.cost_usd || 0);
         modelUsage.usage_count += 1;
 
         // Overall totals
-        totalCostSum += parseFloat(usage.cost_usd || 0);
         totalTokensSum += usage.total_tokens || 0;
       });
 
-      setUserUsages(Array.from(userMap.values()).sort((a, b) => b.total_cost - a.total_cost));
-      setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_cost - a.total_cost));
-      setTotalCost(totalCostSum);
+      setUserUsages(Array.from(userMap.values()).sort((a, b) => b.total_tokens - a.total_tokens));
+      setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_tokens - a.total_tokens));
       setTotalTokens(totalTokensSum);
     } catch (error) {
       console.error('Error fetching token usage:', error);
@@ -173,25 +163,14 @@ export default function Admin() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-          <p className="text-muted-foreground">Monitor token usage and costs across all users</p>
-        </div>
+      <div>
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <p className="text-muted-foreground">Monitor token usage across all users</p>
+      </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Cost</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${totalCost.toFixed(4)}</div>
-            <p className="text-xs text-muted-foreground">Across all users</p>
-          </CardContent>
-        </Card>
-
+      <div className="grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Tokens</CardTitle>
@@ -219,7 +198,7 @@ export default function Admin() {
       <Card>
         <CardHeader>
           <CardTitle>Token Usage by User</CardTitle>
-          <CardDescription>Detailed breakdown of token consumption and costs per user</CardDescription>
+          <CardDescription>Detailed breakdown of token consumption per user</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -229,7 +208,6 @@ export default function Admin() {
                 <TableHead>Email</TableHead>
                 <TableHead className="text-right">Messages</TableHead>
                 <TableHead className="text-right">Total Tokens</TableHead>
-                <TableHead className="text-right">Cost (USD)</TableHead>
                 <TableHead>Models Used</TableHead>
               </TableRow>
             </TableHeader>
@@ -240,7 +218,6 @@ export default function Admin() {
                   <TableCell>{usage.email}</TableCell>
                   <TableCell className="text-right">{usage.message_count}</TableCell>
                   <TableCell className="text-right">{usage.total_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
                   <TableCell>
                     <div className="flex flex-wrap gap-1">
                       {usage.models_used.map((model) => (
@@ -254,7 +231,7 @@ export default function Admin() {
               ))}
               {userUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
+                  <TableCell colSpan={5} className="text-center text-muted-foreground">
                     No token usage data available
                   </TableCell>
                 </TableRow>
@@ -268,7 +245,7 @@ export default function Admin() {
       <Card>
         <CardHeader>
           <CardTitle>Token Usage by Model</CardTitle>
-          <CardDescription>Breakdown of token consumption and costs per AI model</CardDescription>
+          <CardDescription>Breakdown of token consumption per AI model</CardDescription>
         </CardHeader>
         <CardContent>
           <Table>
@@ -277,8 +254,7 @@ export default function Admin() {
                 <TableHead>Model</TableHead>
                 <TableHead className="text-right">Usage Count</TableHead>
                 <TableHead className="text-right">Total Tokens</TableHead>
-                <TableHead className="text-right">Cost (USD)</TableHead>
-                <TableHead className="text-right">Avg Cost/Use</TableHead>
+                <TableHead className="text-right">Avg Tokens/Use</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -287,15 +263,14 @@ export default function Admin() {
                   <TableCell className="font-medium">{usage.model}</TableCell>
                   <TableCell className="text-right">{usage.usage_count}</TableCell>
                   <TableCell className="text-right">{usage.total_tokens.toLocaleString()}</TableCell>
-                  <TableCell className="text-right font-mono">${usage.total_cost.toFixed(4)}</TableCell>
                   <TableCell className="text-right font-mono">
-                    ${(usage.total_cost / usage.usage_count).toFixed(4)}
+                    {Math.round(usage.total_tokens / usage.usage_count).toLocaleString()}
                   </TableCell>
                 </TableRow>
               ))}
               {modelUsages.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
+                  <TableCell colSpan={4} className="text-center text-muted-foreground">
                     No model usage data available
                   </TableCell>
                 </TableRow>
