@@ -214,53 +214,53 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto p-6 space-y-8 animate-fade-in">
+    <div className="min-h-full w-full bg-gradient-to-br from-background via-background to-muted/20">
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in">
         {/* Header Section */}
-        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-8 border border-primary/20">
+        <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-6 md:p-8 border border-primary/20">
           <div className="relative z-10">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Users className="h-6 w-6 text-primary" />
+            <div className="flex items-center gap-2 sm:gap-3 mb-2">
+              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
               </div>
-              <h1 className="text-4xl font-bold tracking-tight">Admin Dashboard</h1>
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Admin Dashboard</h1>
             </div>
-            <p className="text-muted-foreground text-lg">Monitor AI model usage and token consumption across your platform</p>
+            <p className="text-muted-foreground text-sm sm:text-base md:text-lg">Monitor AI model usage and token consumption</p>
           </div>
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -mr-32 -mt-32" />
+          <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-primary/5 rounded-full blur-3xl -mr-16 sm:-mr-24 md:-mr-32 -mt-16 sm:-mt-24 md:-mt-32" />
         </div>
 
         {/* Stats Card */}
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
           <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Users</CardTitle>
-              <Users className="h-5 w-5 text-primary" />
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Active Users</CardTitle>
+              <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{userUsages.length}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{userUsages.length}</div>
               <p className="text-xs text-muted-foreground mt-1">With token usage</p>
             </CardContent>
           </Card>
           
           <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Models</CardTitle>
-              <Badge variant="secondary" className="h-5 px-2">{modelUsages.length}</Badge>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Models</CardTitle>
+              <Badge variant="secondary" className="h-4 px-2 text-xs sm:h-5">{modelUsages.length}</Badge>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">{modelUsages.length}</div>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">{modelUsages.length}</div>
               <p className="text-xs text-muted-foreground mt-1">AI models in use</p>
             </CardContent>
           </Card>
           
-          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
-              <span className="text-primary text-lg font-bold">$</span>
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg sm:col-span-2 lg:col-span-1">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Cost</CardTitle>
+              <span className="text-primary text-base sm:text-lg font-bold">$</span>
             </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-foreground">
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">
                 ${modelUsages.reduce((sum, m) => sum + m.total_cost, 0).toFixed(2)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Across all models</p>
@@ -270,24 +270,24 @@ export default function Admin() {
 
         {/* User Token Usage Table */}
         <Card className="border-border/50 overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/50">
+          <CardHeader className="bg-muted/30 border-b border-border/50 p-3 sm:p-4 md:p-6">
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-              <CardTitle className="text-xl">Token Usage by User</CardTitle>
+              <CardTitle className="text-base sm:text-lg md:text-xl">Token Usage by User</CardTitle>
             </div>
-            <CardDescription className="text-base">Detailed breakdown of token consumption per user and model</CardDescription>
+            <CardDescription className="text-xs sm:text-sm md:text-base">Detailed breakdown of token consumption</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[800px]">
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="font-semibold text-foreground">User</TableHead>
-                    <TableHead className="font-semibold text-foreground">Email</TableHead>
-                    <TableHead className="font-semibold text-foreground">Model</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Input Tokens</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Output Tokens</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Cost</TableHead>
+                    <TableHead className="font-semibold text-foreground text-xs sm:text-sm">User</TableHead>
+                    <TableHead className="font-semibold text-foreground text-xs sm:text-sm">Email</TableHead>
+                    <TableHead className="font-semibold text-foreground text-xs sm:text-sm">Model</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Input Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Output Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Cost</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -296,39 +296,39 @@ export default function Admin() {
                       <TableRow key={`${usage.user_id}-${modelUsage.model}`} className="hover:bg-muted/50 transition-colors">
                         {idx === 0 && (
                           <>
-                            <TableCell className="font-semibold text-foreground" rowSpan={usage.model_usages.length}>
-                              <div className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full bg-primary/60" />
-                                {usage.display_name}
+                            <TableCell className="font-semibold text-foreground text-xs sm:text-sm" rowSpan={usage.model_usages.length}>
+                              <div className="flex items-center gap-1.5 sm:gap-2">
+                                <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
+                                <span className="truncate max-w-[100px] sm:max-w-none">{usage.display_name}</span>
                               </div>
                             </TableCell>
-                            <TableCell className="text-muted-foreground" rowSpan={usage.model_usages.length}>
-                              {usage.email}
+                            <TableCell className="text-muted-foreground text-xs sm:text-sm" rowSpan={usage.model_usages.length}>
+                              <span className="truncate block max-w-[120px] sm:max-w-[200px]">{usage.email}</span>
                             </TableCell>
                           </>
                         )}
                         <TableCell>
-                          <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs font-mono bg-primary/10 text-primary border-primary/20 whitespace-nowrap">
                             {formatModelName(modelUsage.model)}
                           </Badge>
                         </TableCell>
                         {isImageGenerationModel(modelUsage.model) ? (
                           <>
-                            <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                            <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                            <TableCell className="text-right font-mono font-semibold text-foreground">
+                            <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
+                            <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
+                            <TableCell className="text-right font-mono font-semibold text-foreground text-xs sm:text-sm">
                               ${(modelUsage.output_tokens / 100).toFixed(2)}
                             </TableCell>
                           </>
                         ) : (
                           <>
-                            <TableCell className="text-right font-mono text-muted-foreground">
+                            <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
                               {modelUsage.input_tokens.toLocaleString()}
                             </TableCell>
-                            <TableCell className="text-right font-mono text-muted-foreground">
+                            <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
                               {modelUsage.output_tokens.toLocaleString()}
                             </TableCell>
-                            <TableCell className="text-right font-mono font-semibold text-foreground">
+                            <TableCell className="text-right font-mono font-semibold text-foreground text-xs sm:text-sm">
                               ${modelUsage.cost.toFixed(4)}
                             </TableCell>
                           </>
@@ -354,50 +354,50 @@ export default function Admin() {
 
         {/* Model Usage Table */}
         <Card className="border-border/50 overflow-hidden">
-          <CardHeader className="bg-muted/30 border-b border-border/50">
+          <CardHeader className="bg-muted/30 border-b border-border/50 p-3 sm:p-4 md:p-6">
             <div className="flex items-center gap-2">
               <div className="h-1 w-1 rounded-full bg-primary animate-pulse" />
-              <CardTitle className="text-xl">Token Usage by Model</CardTitle>
+              <CardTitle className="text-base sm:text-lg md:text-xl">Token Usage by Model</CardTitle>
             </div>
-            <CardDescription className="text-base">Aggregated token consumption and costs per AI model</CardDescription>
+            <CardDescription className="text-xs sm:text-sm md:text-base">Aggregated token consumption per AI model</CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <Table>
+              <Table className="min-w-[600px]">
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="font-semibold text-foreground">Model</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Input Tokens</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Output Tokens</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground">Total Cost</TableHead>
+                    <TableHead className="font-semibold text-foreground text-xs sm:text-sm">Model</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Input Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Output Tokens</TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Total Cost</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {modelUsages.map((usage) => (
                     <TableRow key={usage.model} className="hover:bg-muted/50 transition-colors">
-                      <TableCell className="font-semibold text-foreground">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-primary/60" />
-                          <span className="font-mono">{formatModelName(usage.model)}</span>
+                      <TableCell className="font-semibold text-foreground text-xs sm:text-sm">
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                          <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
+                          <span className="font-mono text-xs sm:text-sm">{formatModelName(usage.model)}</span>
                         </div>
                       </TableCell>
                       {isImageGenerationModel(usage.model) ? (
                         <>
-                          <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                          <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                          <TableCell className="text-right font-mono font-bold text-foreground text-lg">
+                          <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
+                          <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
+                          <TableCell className="text-right font-mono font-bold text-foreground text-sm sm:text-base md:text-lg">
                             ${(usage.output_tokens / 100).toFixed(2)}
                           </TableCell>
                         </>
                       ) : (
                         <>
-                          <TableCell className="text-right font-mono text-muted-foreground">
+                          <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
                             {usage.input_tokens.toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-right font-mono text-muted-foreground">
+                          <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
                             {usage.output_tokens.toLocaleString()}
                           </TableCell>
-                          <TableCell className="text-right font-mono font-bold text-foreground text-lg">
+                          <TableCell className="text-right font-mono font-bold text-foreground text-sm sm:text-base md:text-lg">
                             ${usage.total_cost.toFixed(4)}
                           </TableCell>
                         </>
