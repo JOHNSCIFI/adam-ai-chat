@@ -33,7 +33,8 @@ interface TokenUsageByModel {
 // For image generation models, output tokens are stored as (price * 100)
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.15, output: 0.60 },
-  'gpt-4o': { input: 5.00, output: 15.00 },
+  'gpt-4o': { input: 2.50, output: 10.00 },
+  'gpt-4o-latest': { input: 2.50, output: 10.00 },
   'gpt-5': { input: 1.25, output: 10.00 },
   'gpt-5-mini': { input: 1.25, output: 10.00 },
   'gpt-5-nano': { input: 1.25, output: 10.00 },
