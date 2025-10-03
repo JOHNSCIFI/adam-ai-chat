@@ -43,7 +43,7 @@ const Header = () => {
               to="/contact" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
             >
-              Support
+              Contact Us
             </Link>
           </nav>
 
@@ -128,7 +128,7 @@ const Header = () => {
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Support
+                    Contact Us
                   </Link>
                 </nav>
               </SheetContent>
