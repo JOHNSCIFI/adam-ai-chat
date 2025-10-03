@@ -62,7 +62,7 @@ const Pricing = () => {
       text: "Chat with PDFs (full access)",
       included: true
     }, {
-      text: "Image generation (~500 / month)",
+      text: "Image generation (500 / month)",
       included: true
     }, {
       text: "Priority support",
@@ -88,7 +88,7 @@ const Pricing = () => {
       text: "Premium 24/7 support",
       included: true
     }, {
-      text: "Image generation (~2,000 / month)",
+      text: "Image generation (2,000 / month)",
       included: true
     }, {
       text: "Team collaboration features",
