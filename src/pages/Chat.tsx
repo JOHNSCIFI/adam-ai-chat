@@ -1349,9 +1349,6 @@ export default function Chat() {
           }
           
           console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
-        } else {
-          console.error('[IMAGE-GEN] No image_base64 in webhook response');
-          toast.error('Failed to receive generated image');
         }
         
       } catch (error: any) {
