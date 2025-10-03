@@ -57,9 +57,10 @@ const isImageGenerationModel = (model: string): boolean => {
 const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = MODEL_PRICING[model] || { input: 0, output: 0 };
   
-  // For image generation models, output tokens represent number of images
+  // For image generation models, output tokens are stored as (price * 100)
+  // So we divide by 100 to get the actual dollar cost
   if (isImageGenerationModel(model)) {
-    return outputTokens * pricing.output;
+    return outputTokens / 100;
   }
   
   return (inputTokens / 1_000_000 * pricing.input) + (outputTokens / 1_000_000 * pricing.output);
@@ -313,7 +314,7 @@ export default function Admin() {
                           <>
                             <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
                             <TableCell className="text-right font-mono text-muted-foreground">
-                              {modelUsage.output_tokens.toLocaleString()} images
+                              {(modelUsage.output_tokens / 100).toFixed(2)} images
                             </TableCell>
                             <TableCell className="text-right font-mono font-semibold text-foreground">
                               ${modelUsage.cost.toFixed(2)}
@@ -384,7 +385,7 @@ export default function Admin() {
                         <>
                           <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
                           <TableCell className="text-right font-mono text-muted-foreground">
-                            {usage.output_tokens.toLocaleString()} images
+                            {(usage.output_tokens / 100).toFixed(2)} images
                           </TableCell>
                           <TableCell className="text-right font-mono font-bold text-foreground text-lg">
                             ${usage.total_cost.toFixed(2)}
