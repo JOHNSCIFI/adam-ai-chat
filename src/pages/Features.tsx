@@ -11,6 +11,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 const Features = () => {
   const navigate = useNavigate();
   const {
@@ -174,6 +175,15 @@ const Features = () => {
                     </div>
                     <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">Gemini</h3>
                     <p className="text-[10px] md:text-xs text-muted-foreground">Multimodal tasks</p>
+                  </div>
+                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 lg:p-8 hover:border-slate-500/30 transition-all duration-300 animate-fade-in" style={{
+                animationDelay: '0.5s'
+              }}>
+                    <div className="w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-gradient-to-br from-slate-500/10 to-gray-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-2 md:mb-3 lg:mb-4">
+                      <img src={grokLogo} alt="Grok" className="w-6 h-6 md:w-8 md:h-8 lg:w-10 lg:h-10 object-contain" />
+                    </div>
+                    <h3 className="font-bold text-xs md:text-sm mb-1 md:mb-2">Grok</h3>
+                    <p className="text-[10px] md:text-xs text-muted-foreground">Real-time knowledge</p>
                   </div>
                 </div>
               </div>
