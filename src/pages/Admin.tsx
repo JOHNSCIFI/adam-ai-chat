@@ -30,7 +30,7 @@ interface TokenUsageByModel {
 }
 
 // Token pricing per 1M tokens (in USD)
-// For image generation models, output represents number of images at $0.040/image
+// For image generation models, output tokens are stored as (price * 100)
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.15, output: 0.60 },
   'gpt-4o': { input: 5.00, output: 15.00 },
@@ -42,16 +42,17 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'google/gemini-flash': { input: 0.30, output: 2.50 },
   'gemini-flash': { input: 0.30, output: 2.50 },
   'google/gemini-2.0-flash-exp': { input: 0.30, output: 2.50 },
-  'dall-e-3': { input: 0, output: 0.040 }, // $0.040 per image
+  'generate-image': { input: 0, output: 0 }, // Image generation model (stored as price * 100)
+  'dall-e-3': { input: 0, output: 0 }, // Image generation model (stored as price * 100)
 };
 
 const formatModelName = (model: string): string => {
-  if (model === 'dall-e-3') return 'DALL-E-3';
+  if (model === 'generate-image' || model === 'dall-e-3') return 'DALL-E-3';
   return model;
 };
 
 const isImageGenerationModel = (model: string): boolean => {
-  return model === 'dall-e-3';
+  return model === 'generate-image' || model === 'dall-e-3';
 };
 
 const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
