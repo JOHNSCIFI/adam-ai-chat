@@ -1012,7 +1012,7 @@ export default function Chat() {
           return newMap;
         });
 
-        // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
+      // ALWAYS save to database with the ORIGINAL chat ID (not current chatId)
         const {
           data: insertedAiMessage,
           error: saveError
@@ -1022,6 +1022,12 @@ export default function Chat() {
           role: 'assistant',
           file_attachments: fileAttachments as any
         }).select().single();
+        
+        // Update chat's updated_at timestamp to move it to top of sidebar
+        await supabase
+          .from('chats')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', originalChatId);
         
         if (saveError) {
           // Check for authentication errors
@@ -1542,6 +1548,13 @@ export default function Chat() {
         file_attachments: tempFileAttachments as any,
         embedding: null // Will be updated by background process
       }).select().single();
+      
+      // Update chat's updated_at timestamp to move it to top of sidebar
+      await supabase
+        .from('chats')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', chatId);
+      
       if (userError) {
         // Check for authentication errors
         if (userError.message?.includes('JWT') || userError.message?.includes('unauthorized')) {
