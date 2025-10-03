@@ -11,6 +11,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 const Models = () => {
   const navigate = useNavigate();
   const {
@@ -109,6 +110,9 @@ const Models = () => {
                 <div className={`w-8 h-8 ${actualTheme === 'dark' ? 'bg-background' : 'bg-gray-800'} border border-border rounded-lg flex items-center justify-center p-1 shadow-sm`}>
                   <img src={deepseekLogo} alt="DeepSeek" className="w-6 h-6" />
                 </div>
+                <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
+                  <img src={grokLogo} alt="Grok" className="w-6 h-6" />
+                </div>
               </div>
               
               <h2 className="text-4xl font-bold mb-6">
@@ -174,7 +178,7 @@ const Models = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-green-500/5 to-emerald-500/5 border border-green-500/10 hover:border-green-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
@@ -222,6 +226,19 @@ const Models = () => {
                 </div>
                 <h3 className="text-xl font-bold mb-3">DeepSeek</h3>
                 <p className="text-muted-foreground">Specialized in coding and technical analysis</p>
+              </div>
+            </div>
+            
+            <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-slate-500/5 to-gray-500/5 border border-slate-500/10 hover:border-slate-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in" style={{
+            animationDelay: '0.4s'
+          }}>
+              <div className="absolute inset-0 bg-gradient-to-br from-slate-500/0 to-gray-500/0 group-hover:from-slate-500/5 group-hover:to-gray-500/5 rounded-2xl transition-all duration-500"></div>
+              <div className="relative z-10 text-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
+                  <img src={grokLogo} alt="Grok" className="w-full h-full object-contain" />
+                </div>
+                <h3 className="text-xl font-bold mb-3">Grok</h3>
+                <p className="text-muted-foreground">Real-time knowledge and conversational AI</p>
               </div>
             </div>
           </div>
