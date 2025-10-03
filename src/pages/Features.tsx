@@ -125,69 +125,70 @@ const Features = () => {
           </div>
 
           {/* Switch Models Feature */}
-          {activeFeature === 'models' && <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-              <div className="order-2 lg:order-1 animate-fade-in">
-                <h2 className="text-4xl font-bold mb-6">Switch Models</h2>
-                <p className="text-xl text-muted-foreground mb-8 leading-relaxed">
-                  Seamlessly explore top-tier language models including GPT-4o, Claude, DeepSeek, and Gemini. Select the right model for everything from content creation to complex problem-solving.
+          {activeFeature === 'models' && <div className="animate-fade-in">
+              {/* Header Section */}
+              <div className="text-center max-w-3xl mx-auto mb-16">
+                <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">
+                  Switch Between AI Models
+                </h2>
+                <p className="text-lg md:text-xl text-muted-foreground leading-relaxed">
+                  Seamlessly explore top-tier language models including GPT-4o, Claude, DeepSeek, Gemini, and Grok. Select the right model for everything from content creation to complex problem-solving.
                 </p>
-                <Button className="group bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90" onClick={() => navigate('/chat')}>
-                  Explore now <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </Button>
               </div>
-              
-              <div className="order-1 lg:order-2">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
-                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-green-500/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in" style={{
-                animationDelay: '0.1s'
-              }}>
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 mx-auto">
-                      <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-                    </div>
-                    <h3 className="font-bold text-sm md:text-base mb-1 md:mb-2 text-center">ChatGPT</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">Advanced reasoning</p>
+
+              {/* Model Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
+                {/* ChatGPT Card */}
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-green-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-12 h-12 object-contain" />
                   </div>
-                  
-                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-orange-500/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in" style={{
-                animationDelay: '0.2s'
-              }}>
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 mx-auto">
-                      <img src={claudeLogo} alt="Claude" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-                    </div>
-                    <h3 className="font-bold text-sm md:text-base mb-1 md:mb-2 text-center">Claude</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">Creative writing</p>
-                  </div>
-                  
-                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-blue-500/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in" style={{
-                animationDelay: '0.3s'
-              }}>
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 mx-auto">
-                      <img src={geminiLogo} alt="Gemini" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-                    </div>
-                    <h3 className="font-bold text-sm md:text-base mb-1 md:mb-2 text-center">Gemini</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">Multimodal tasks</p>
-                  </div>
-                  
-                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-purple-500/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in" style={{
-                animationDelay: '0.4s'
-              }}>
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 mx-auto">
-                      <img src={deepseekLogo} alt="DeepSeek" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-                    </div>
-                    <h3 className="font-bold text-sm md:text-base mb-1 md:mb-2 text-center">DeepSeek</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">Coding specialist</p>
-                  </div>
-                  
-                  <div className="bg-card border border-border rounded-xl md:rounded-2xl p-4 md:p-6 hover:border-slate-500/30 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 animate-fade-in sm:col-span-2 sm:max-w-[calc(50%-0.5rem)] sm:mx-auto lg:col-span-1 lg:max-w-none xl:col-span-1" style={{
-                animationDelay: '0.5s'
-              }}>
-                    <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-slate-500/10 to-gray-500/10 rounded-xl md:rounded-2xl flex items-center justify-center mb-3 md:mb-4 mx-auto">
-                      <img src={grokLogo} alt="Grok" className="w-8 h-8 md:w-10 md:h-10 object-contain" />
-                    </div>
-                    <h3 className="font-bold text-sm md:text-base mb-1 md:mb-2 text-center">Grok</h3>
-                    <p className="text-xs md:text-sm text-muted-foreground text-center">Real-time knowledge</p>
-                  </div>
+                  <h3 className="font-bold text-xl mb-3 text-center">ChatGPT</h3>
+                  <p className="text-sm text-muted-foreground text-center leading-relaxed">Advanced reasoning and problem-solving</p>
                 </div>
+                
+                {/* Claude Card */}
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-orange-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <img src={claudeLogo} alt="Claude" className="w-12 h-12 object-contain" />
+                  </div>
+                  <h3 className="font-bold text-xl mb-3 text-center">Claude</h3>
+                  <p className="text-sm text-muted-foreground text-center leading-relaxed">Creative writing and analysis</p>
+                </div>
+                
+                {/* Gemini Card */}
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-blue-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <img src={geminiLogo} alt="Gemini" className="w-12 h-12 object-contain" />
+                  </div>
+                  <h3 className="font-bold text-xl mb-3 text-center">Gemini</h3>
+                  <p className="text-sm text-muted-foreground text-center leading-relaxed">Multimodal understanding</p>
+                </div>
+                
+                {/* DeepSeek Card */}
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-purple-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <img src={deepseekLogo} alt="DeepSeek" className="w-12 h-12 object-contain" />
+                  </div>
+                  <h3 className="font-bold text-xl mb-3 text-center">DeepSeek</h3>
+                  <p className="text-sm text-muted-foreground text-center leading-relaxed">Coding and technical tasks</p>
+                </div>
+                
+                {/* Grok Card */}
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-slate-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-slate-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                  <div className="w-20 h-20 bg-gradient-to-br from-slate-500/20 to-gray-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
+                    <img src={grokLogo} alt="Grok" className="w-12 h-12 object-contain" />
+                  </div>
+                  <h3 className="font-bold text-xl mb-3 text-center">Grok</h3>
+                  <p className="text-sm text-muted-foreground text-center leading-relaxed">Real-time knowledge access</p>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <div className="text-center">
+                <Button size="lg" className="group bg-gradient-to-r from-primary via-purple-600 to-pink-600 hover:from-primary/90 hover:via-purple-600/90 hover:to-pink-600/90 text-white border-0 shadow-lg hover:shadow-xl px-8 py-6 text-lg" onClick={() => navigate('/chat')}>
+                  Explore All Models <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                </Button>
               </div>
             </div>}
 
