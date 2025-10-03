@@ -77,20 +77,18 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI<br />GPT-4 / GPT-5</h3>
                 <p className="text-sm text-muted-foreground mb-4">Advanced reasoning, problem-solving, and coding power.</p>
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-full mt-auto"
-                onClick={() => {
-                  if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'model_select', {
-                      model: 'gpt-4o'
-                    });
-                  }
-                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
-                }}
-                aria-label="Switch to GPT-4o and start a new chat"
-              >
+              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'model_select', {
+                  model: 'gpt-4o'
+                });
+              }
+              navigate('/', {
+                state: {
+                  selectedModel: 'gpt-4o'
+                }
+              });
+            }} aria-label="Switch to GPT-4o and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -104,20 +102,18 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Anthropic<br />Claude</h3>
                 <p className="text-sm text-muted-foreground mb-4">Ideal for writing, analysis, and creative tasks.</p>
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-full mt-auto"
-                onClick={() => {
-                  if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'model_select', {
-                      model: 'claude-sonnet-4'
-                    });
-                  }
-                  navigate('/', { state: { selectedModel: 'claude-sonnet-4' } });
-                }}
-                aria-label="Switch to Claude and start a new chat"
-              >
+              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'model_select', {
+                  model: 'claude-sonnet-4'
+                });
+              }
+              navigate('/', {
+                state: {
+                  selectedModel: 'claude-sonnet-4'
+                }
+              });
+            }} aria-label="Switch to Claude and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -131,20 +127,18 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Google<br />Gemini</h3>
                 <p className="text-sm text-muted-foreground mb-4">Multimodal AI for text, vision, and analysis.</p>
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-full mt-auto"
-                onClick={() => {
-                  if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'model_select', {
-                      model: 'gpt-4o'
-                    });
-                  }
-                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
-                }}
-                aria-label="Switch to GPT-4o and start a new chat"
-              >
+              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'model_select', {
+                  model: 'gpt-4o'
+                });
+              }
+              navigate('/', {
+                state: {
+                  selectedModel: 'gpt-4o'
+                }
+              });
+            }} aria-label="Switch to GPT-4o and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -158,20 +152,18 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">DeepSeek</h3>
                 <p className="text-sm text-muted-foreground mb-4">Specialized in technical tasks and data-heavy coding.</p>
               </div>
-              <Button 
-                variant="secondary" 
-                size="sm" 
-                className="w-full mt-auto"
-                onClick={() => {
-                  if (typeof window !== 'undefined' && (window as any).gtag) {
-                    (window as any).gtag('event', 'model_select', {
-                      model: 'gpt-4o'
-                    });
-                  }
-                  navigate('/', { state: { selectedModel: 'gpt-4o' } });
-                }}
-                aria-label="Switch to GPT-4o and start a new chat"
-              >
+              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'model_select', {
+                  model: 'gpt-4o'
+                });
+              }
+              navigate('/', {
+                state: {
+                  selectedModel: 'gpt-4o'
+                }
+              });
+            }} aria-label="Switch to GPT-4o and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -364,7 +356,7 @@ const Home = () => {
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground text-sm">Image generation (~500 / month)</span>
+                  <span className="text-foreground text-sm">Image generation (500 / month)</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -410,7 +402,7 @@ const Home = () => {
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                     <Check className="h-3 w-3 text-primary-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-foreground text-sm">Image generation (~2,000 / month)</span>
+                  <span className="text-foreground text-sm">Image generation (2,000 / month)</span>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
