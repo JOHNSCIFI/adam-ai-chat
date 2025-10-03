@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Menu, ChevronDown, Sun, Moon } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 const Header = () => {
@@ -26,48 +25,26 @@ const Header = () => {
               to="/models" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
             >
-              Models
+              AI Tools
             </Link>
             <Link 
               to="/features" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
             >
-              Features
+              What You Can Do
             </Link>
             <Link 
               to="/pricing" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
             >
-              Pricing
+              Plans
             </Link>
             <Link 
               to="/contact" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1"
             >
-              Contact Us
+              Support
             </Link>
-            
-            {/* Terms Dropdown */}
-            <DropdownMenu>
-              <DropdownMenuTrigger className="flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm px-2 py-1">
-                Terms
-                <ChevronDown className="ml-1 h-4 w-4" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem asChild>
-                  <Link to="/terms">Terms of Use</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/privacy">Privacy Policy</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/refund-policy">Refund Policy</Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/cookie-policy">Cookie Policy</Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
           </nav>
 
           {/* Theme Toggle & CTA Button */}
@@ -96,7 +73,7 @@ const Header = () => {
                 document.head.appendChild(link);
               }}
             >
-              Try now
+              Start Now
             </Button>
 
             {/* Mobile menu */}
@@ -130,63 +107,29 @@ const Header = () => {
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Models
+                    AI Tools
                   </Link>
                   <Link 
                     to="/features" 
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Features
+                    What You Can Do
                   </Link>
                   <Link 
                     to="/pricing" 
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Pricing
+                    Plans
                   </Link>
                   <Link 
                     to="/contact" 
                     className="text-lg font-medium hover:text-primary transition-colors"
                     onClick={() => setIsOpen(false)}
                   >
-                    Contact Us
+                    Support
                   </Link>
-                  
-                  <div className="border-t border-border pt-4">
-                    <p className="text-sm font-medium text-muted-foreground mb-3">Terms & Policies</p>
-                    <div className="flex flex-col space-y-3 pl-4">
-                      <Link 
-                        to="/terms" 
-                        className="text-base hover:text-primary transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Terms of Use
-                      </Link>
-                      <Link 
-                        to="/privacy" 
-                        className="text-base hover:text-primary transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Privacy Policy
-                      </Link>
-                      <Link 
-                        to="/refund-policy" 
-                        className="text-base hover:text-primary transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Refund Policy
-                      </Link>
-                      <Link 
-                        to="/cookie-policy" 
-                        className="text-base hover:text-primary transition-colors"
-                        onClick={() => setIsOpen(false)}
-                      >
-                        Cookie Policy
-                      </Link>
-                    </div>
-                  </div>
                 </nav>
               </SheetContent>
             </Sheet>
