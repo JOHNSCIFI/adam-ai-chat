@@ -101,19 +101,29 @@ export default function Admin() {
     try {
       setLoading(true);
 
-      // Fetch all token usage data with user profiles
+      // Fetch all token usage data
       const { data: tokenData, error: tokenError } = await supabase
         .from('token_usage')
-        .select(`
-          *,
-          profiles:user_id (
-            email,
-            display_name
-          )
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       if (tokenError) throw tokenError;
+
+      // Get unique user IDs
+      const userIds = [...new Set(tokenData?.map(usage => usage.user_id) || [])];
+
+      // Fetch all profiles for these users
+      const { data: profilesData, error: profilesError } = await supabase
+        .from('profiles')
+        .select('user_id, email, display_name')
+        .in('user_id', userIds);
+
+      if (profilesError) throw profilesError;
+
+      // Create a map of user_id to profile
+      const profilesMap = new Map(
+        profilesData?.map(profile => [profile.user_id, profile]) || []
+      );
 
       // Aggregate by user and model
       const userMap = new Map<string, UserTokenUsage>();
@@ -121,7 +131,7 @@ export default function Admin() {
 
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
-        const profile = usage.profiles;
+        const profile = profilesMap.get(userId);
         const inputTokens = usage.input_tokens || 0;
         const outputTokens = usage.output_tokens || 0;
         const model = usage.model;
