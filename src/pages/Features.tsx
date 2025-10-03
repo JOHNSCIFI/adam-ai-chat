@@ -141,7 +141,11 @@ const Features = () => {
                 {/* ChatGPT Card */}
                 <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-green-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-12 h-12 object-contain" />
+                    <img 
+                      src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
+                      alt="ChatGPT" 
+                      className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`}
+                    />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">ChatGPT</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Advanced reasoning and problem-solving</p>
@@ -168,7 +172,12 @@ const Features = () => {
                 {/* DeepSeek Card */}
                 <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-purple-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.4s' }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img src={deepseekLogo} alt="DeepSeek" className="w-12 h-12 object-contain" />
+                    <img 
+                      src={deepseekLogo} 
+                      alt="DeepSeek" 
+                      className="w-12 h-12 object-contain"
+                      style={actualTheme === 'light' ? { filter: 'brightness(0) saturate(100%) invert(28%) sepia(98%) saturate(2478%) hue-rotate(220deg) brightness(95%) contrast(101%)' } : {}}
+                    />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">DeepSeek</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Coding and technical tasks</p>
@@ -177,7 +186,11 @@ const Features = () => {
                 {/* Grok Card */}
                 <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-slate-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-slate-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.5s' }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-slate-500/20 to-gray-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img src={grokLogo} alt="Grok" className="w-12 h-12 object-contain" />
+                    <img 
+                      src={grokLogo} 
+                      alt="Grok" 
+                      className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`}
+                    />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">Grok</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Real-time knowledge access</p>
