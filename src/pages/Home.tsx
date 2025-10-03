@@ -12,6 +12,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 const Home = () => {
   const navigate = useNavigate();
   const {
@@ -67,7 +68,7 @@ const Home = () => {
             </p>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
             {/* OpenAI GPT-4/5 */}
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
@@ -164,6 +165,31 @@ const Home = () => {
                 }
               });
             }} aria-label="Switch to GPT-4o and start a new chat">
+                Try with this model
+              </Button>
+            </div>
+            
+            {/* Grok */}
+            <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+              <div className="text-center flex-1">
+                <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
+                  <img src={grokLogo} alt="Grok logo" className="w-12 h-12 object-contain" />
+                </div>
+                <h3 className="text-lg font-semibold mb-2 text-foreground">Grok</h3>
+                <p className="text-sm text-muted-foreground mb-4">Real-time knowledge and conversational AI.</p>
+              </div>
+              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              if (typeof window !== 'undefined' && (window as any).gtag) {
+                (window as any).gtag('event', 'model_select', {
+                  model: 'grok-2-1212'
+                });
+              }
+              navigate('/', {
+                state: {
+                  selectedModel: 'grok-2-1212'
+                }
+              });
+            }} aria-label="Switch to Grok and start a new chat">
                 Try with this model
               </Button>
             </div>
