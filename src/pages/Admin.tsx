@@ -30,6 +30,7 @@ interface TokenUsageByModel {
 }
 
 // Token pricing per 1M tokens (in USD)
+// For image generation models, output represents number of images at $0.040/image
 const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'gpt-4o-mini': { input: 0.15, output: 0.60 },
   'gpt-4o': { input: 5.00, output: 15.00 },
@@ -41,10 +42,26 @@ const MODEL_PRICING: Record<string, { input: number; output: number }> = {
   'google/gemini-flash': { input: 0.30, output: 2.50 },
   'gemini-flash': { input: 0.30, output: 2.50 },
   'google/gemini-2.0-flash-exp': { input: 0.30, output: 2.50 },
+  'dall-e-3': { input: 0, output: 0.040 }, // $0.040 per image
+};
+
+const formatModelName = (model: string): string => {
+  if (model === 'dall-e-3') return 'DALL-E-3';
+  return model;
+};
+
+const isImageGenerationModel = (model: string): boolean => {
+  return model === 'dall-e-3';
 };
 
 const calculateCost = (model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = MODEL_PRICING[model] || { input: 0, output: 0 };
+  
+  // For image generation models, output tokens represent number of images
+  if (isImageGenerationModel(model)) {
+    return outputTokens * pricing.output;
+  }
+  
   return (inputTokens / 1_000_000 * pricing.input) + (outputTokens / 1_000_000 * pricing.output);
 };
 
@@ -289,18 +306,32 @@ export default function Admin() {
                         )}
                         <TableCell>
                           <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
-                            {modelUsage.model}
+                            {formatModelName(modelUsage.model)}
                           </Badge>
                         </TableCell>
-                        <TableCell className="text-right font-mono text-muted-foreground">
-                          {modelUsage.input_tokens.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right font-mono text-muted-foreground">
-                          {modelUsage.output_tokens.toLocaleString()}
-                        </TableCell>
-                        <TableCell className="text-right font-mono font-semibold text-foreground">
-                          ${modelUsage.cost.toFixed(4)}
-                        </TableCell>
+                        {isImageGenerationModel(modelUsage.model) ? (
+                          <>
+                            <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
+                            <TableCell className="text-right font-mono text-muted-foreground">
+                              {modelUsage.output_tokens.toLocaleString()} images
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-semibold text-foreground">
+                              ${modelUsage.cost.toFixed(2)}
+                            </TableCell>
+                          </>
+                        ) : (
+                          <>
+                            <TableCell className="text-right font-mono text-muted-foreground">
+                              {modelUsage.input_tokens.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right font-mono text-muted-foreground">
+                              {modelUsage.output_tokens.toLocaleString()}
+                            </TableCell>
+                            <TableCell className="text-right font-mono font-semibold text-foreground">
+                              ${modelUsage.cost.toFixed(4)}
+                            </TableCell>
+                          </>
+                        )}
                       </TableRow>
                     ))
                   )}
@@ -346,18 +377,32 @@ export default function Admin() {
                       <TableCell className="font-semibold text-foreground">
                         <div className="flex items-center gap-2">
                           <div className="h-2 w-2 rounded-full bg-primary/60" />
-                          <span className="font-mono">{usage.model}</span>
+                          <span className="font-mono">{formatModelName(usage.model)}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right font-mono text-muted-foreground">
-                        {usage.input_tokens.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right font-mono text-muted-foreground">
-                        {usage.output_tokens.toLocaleString()}
-                      </TableCell>
-                      <TableCell className="text-right font-mono font-bold text-foreground text-lg">
-                        ${usage.total_cost.toFixed(4)}
-                      </TableCell>
+                      {isImageGenerationModel(usage.model) ? (
+                        <>
+                          <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
+                          <TableCell className="text-right font-mono text-muted-foreground">
+                            {usage.output_tokens.toLocaleString()} images
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-bold text-foreground text-lg">
+                            ${usage.total_cost.toFixed(2)}
+                          </TableCell>
+                        </>
+                      ) : (
+                        <>
+                          <TableCell className="text-right font-mono text-muted-foreground">
+                            {usage.input_tokens.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono text-muted-foreground">
+                            {usage.output_tokens.toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-right font-mono font-bold text-foreground text-lg">
+                            ${usage.total_cost.toFixed(4)}
+                          </TableCell>
+                        </>
+                      )}
                     </TableRow>
                   ))}
                   {modelUsages.length === 0 && (
