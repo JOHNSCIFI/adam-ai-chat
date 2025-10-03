@@ -111,7 +111,7 @@ const Models = () => {
                   <img src={deepseekLogo} alt="DeepSeek" className="w-6 h-6" />
                 </div>
                 <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
-                  <img src={grokLogo} alt="Grok" className="w-6 h-6" />
+                  <img src={grokLogo} alt="Grok" className={`w-6 h-6 ${actualTheme === 'light' ? 'brightness-0' : ''}`} />
                 </div>
               </div>
               
@@ -235,7 +235,7 @@ const Models = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-slate-500/0 to-gray-500/0 group-hover:from-slate-500/5 group-hover:to-gray-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
-                  <img src={grokLogo} alt="Grok" className="w-full h-full object-contain" />
+                  <img src={grokLogo} alt="Grok" className={`w-full h-full object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`} />
                 </div>
                 <h3 className="text-xl font-bold mb-3">Grok</h3>
                 <p className="text-muted-foreground">Real-time knowledge and conversational AI</p>
