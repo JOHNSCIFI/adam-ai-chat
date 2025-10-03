@@ -131,15 +131,15 @@ const Home = () => {
               <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
-                  model: 'gpt-4o'
+                  model: 'gemini-2.5-flash'
                 });
               }
               navigate('/', {
                 state: {
-                  selectedModel: 'gpt-4o'
+                  selectedModel: 'gemini-2.5-flash'
                 }
               });
-            }} aria-label="Switch to GPT-4o and start a new chat">
+            }} aria-label="Switch to Gemini and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -156,15 +156,15 @@ const Home = () => {
               <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
-                  model: 'gpt-4o'
+                  model: 'deepseekv3'
                 });
               }
               navigate('/', {
                 state: {
-                  selectedModel: 'gpt-4o'
+                  selectedModel: 'deepseekv3'
                 }
               });
-            }} aria-label="Switch to GPT-4o and start a new chat">
+            }} aria-label="Switch to DeepSeek and start a new chat">
                 Try with this model
               </Button>
             </div>
@@ -181,15 +181,15 @@ const Home = () => {
               <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
-                  model: 'grok-2-1212'
+                  model: 'gpt-4o'
                 });
               }
               navigate('/', {
                 state: {
-                  selectedModel: 'grok-2-1212'
+                  selectedModel: 'gpt-4o'
                 }
               });
-            }} aria-label="Switch to Grok and start a new chat">
+            }} aria-label="Switch to GPT-4o and start a new chat">
                 Try with this model
               </Button>
             </div>
