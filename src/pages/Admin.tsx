@@ -313,11 +313,9 @@ export default function Admin() {
                         {isImageGenerationModel(modelUsage.model) ? (
                           <>
                             <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                            <TableCell className="text-right font-mono text-muted-foreground">
-                              {(modelUsage.output_tokens / 100).toFixed(2)} images
-                            </TableCell>
+                            <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
                             <TableCell className="text-right font-mono font-semibold text-foreground">
-                              ${modelUsage.cost.toFixed(2)}
+                              ${(modelUsage.output_tokens / 100).toFixed(2)}
                             </TableCell>
                           </>
                         ) : (
@@ -384,11 +382,9 @@ export default function Admin() {
                       {isImageGenerationModel(usage.model) ? (
                         <>
                           <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
-                          <TableCell className="text-right font-mono text-muted-foreground">
-                            {(usage.output_tokens / 100).toFixed(2)} images
-                          </TableCell>
+                          <TableCell className="text-right font-mono text-muted-foreground">-</TableCell>
                           <TableCell className="text-right font-mono font-bold text-foreground text-lg">
-                            ${usage.total_cost.toFixed(2)}
+                            ${(usage.output_tokens / 100).toFixed(2)}
                           </TableCell>
                         </>
                       ) : (
