@@ -742,8 +742,8 @@ export default function ProjectPage() {
               {(() => {
                 const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
                 return <>
-                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: project.color }}>
-                    <IconComponent className="w-4 h-4 text-white" />
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center">
+                    <IconComponent className="w-4 h-4" style={{ color: project.color }} />
                   </div>
                   <h1 className="text-lg font-semibold text-foreground truncate max-w-[150px]">{project.title}</h1>
                 </>;
