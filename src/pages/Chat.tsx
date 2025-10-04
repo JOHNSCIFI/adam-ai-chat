@@ -57,7 +57,7 @@ const models = [{
   name: 'Gemini 2.5 Flash',
   shortLabel: 'Gemini 2.5',
   description: "Fast Google AI model",
-  type: 'free'
+  type: 'pro'
 }, {
   id: 'deepseekv3',
   name: 'DeepSeek V3.2',
@@ -107,7 +107,8 @@ const availableModels = [{
   name: 'Gemini 2.5 Flash',
   shortLabel: 'Gemini 2.5',
   description: 'Fast Google AI model with multimodal capabilities.',
-  icon: 'gemini'
+  icon: 'gemini',
+  type: 'pro'
 }, {
   id: 'deepseekv3',
   name: 'DeepSeek V3.2',
@@ -3163,26 +3164,26 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </SelectValue>
                       </SelectTrigger>
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
-                          {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
-                               <div className="flex items-center w-full">
-                                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                                    {model.id.includes('gpt') || model.id === 'generate-image' ? (
-                                      <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                    ) : model.id.includes('claude') ? (
-                                       <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                     ) : model.id.includes('gemini') ? (
-                                       <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
-                                     ) : (
-                                       <Bot className="h-3.5 w-3.5 flex-shrink-0" />
-                                     )}
-                                   <div className="min-w-0 flex-1">
-                                     <div className="font-medium text-sm truncate">{model.name}</div>
-                                     <div className="text-xs text-muted-foreground truncate">{model.description}</div>
-                                   </div>
-                                 </div>
-                                 {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0 ml-auto">Pro</span>}
-                               </div>
-                            </SelectItem>)}
+                           {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
+                                <div className="flex items-center w-full gap-2">
+                                  {model.type === 'pro' && <span className="text-xs bg-blue-500 text-white px-1.5 py-0.5 rounded flex-shrink-0">Pro</span>}
+                                   <div className="flex items-center gap-2 min-w-0 flex-1">
+                                     {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                                       <img src={chatgptLogoSrc} alt="OpenAI" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                     ) : model.id.includes('claude') ? (
+                                        <img src={claudeLogo} alt="Claude" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                      ) : model.id.includes('gemini') ? (
+                                        <img src={geminiLogo} alt="Gemini" className="w-3.5 h-3.5 object-contain flex-shrink-0" />
+                                      ) : (
+                                        <Bot className="h-3.5 w-3.5 flex-shrink-0" />
+                                      )}
+                                    <div className="min-w-0 flex-1">
+                                      <div className="font-medium text-sm truncate">{model.name}</div>
+                                      <div className="text-xs text-muted-foreground truncate">{model.description}</div>
+                                    </div>
+                                  </div>
+                                </div>
+                             </SelectItem>)}
                        </SelectContent>
                     </Select>
                     

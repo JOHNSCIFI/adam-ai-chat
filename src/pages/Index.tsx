@@ -53,7 +53,7 @@ const models = [{
   name: 'Gemini 2.5 Flash',
   shortLabel: 'Gemini 2.5',
   description: "Fast Google AI model",
-  type: 'free'
+  type: 'pro'
 }, {
   id: 'deepseekv3',
   name: 'DeepSeek V3.2',
@@ -132,7 +132,8 @@ const availableModels = [{
   name: 'Gemini 2.5 Flash',
   shortLabel: 'Gemini 2.5',
   description: 'Fast Google AI model with multimodal capabilities.',
-  icon: 'gemini'
+  icon: 'gemini',
+  type: 'pro'
 }, {
   id: 'deepseekv3',
   name: 'DeepSeek V3.2',
@@ -950,7 +951,10 @@ export default function Index() {
                       {models.map(model => {
                       const modelData = availableModels.find(m => m.id === model.id);
                       return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
-                            <div className="flex items-center w-full">
+                            <div className="flex items-center w-full gap-3">
+                              {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
+                                  Pro
+                                </span>}
                               <div className="flex items-center gap-3 flex-1 min-w-0">
                                 <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
                                   <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
@@ -960,9 +964,6 @@ export default function Index() {
                                   <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
                                 </div>
                               </div>
-                              {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0 ml-auto">
-                                  Pro
-                                </span>}
                             </div>
                           </SelectItem>;
                     })}
