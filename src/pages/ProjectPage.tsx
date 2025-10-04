@@ -250,6 +250,7 @@ export default function ProjectPage() {
   const [tempTranscript, setTempTranscript] = useState('');
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [hasSelectedModel, setHasSelectedModel] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -877,7 +878,7 @@ export default function ProjectPage() {
             
             {/* Mobile Project Info / Model Selector - Absolutely centered */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              {!isModelDropdownOpen ? (
+              {!hasSelectedModel && !isModelDropdownOpen ? (
                 // Show project icon and name by default
                 <button 
                   onClick={() => setIsModelDropdownOpen(true)}
@@ -891,9 +892,10 @@ export default function ProjectPage() {
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               ) : (
-                // Show model selector when activated
+                // Show model selector when activated or after selection
                 <Select value={selectedModel} onValueChange={(value) => {
                   setSelectedModel(value);
+                  setHasSelectedModel(true);
                   setIsModelDropdownOpen(false);
                 }} open={isModelDropdownOpen} onOpenChange={setIsModelDropdownOpen}>
                   <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
