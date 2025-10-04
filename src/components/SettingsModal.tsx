@@ -692,7 +692,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </Card>
 
               {/* Delete All Chats */}
-              <Card>
+              <Card className="border-destructive/50">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between">
                     <div>
