@@ -897,7 +897,7 @@ export default function ProjectPage() {
                 >
                   {/* Edit Project Option */}
                   <DropdownMenuItem 
-                    className="rounded-xl px-3 py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    className="rounded-xl px-2 py-2 md:px-3 md:py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer"
                     onClick={() => setIsEditingProject(true)}
                   >
                     <div className="flex items-center w-full gap-3">
@@ -924,7 +924,7 @@ export default function ProjectPage() {
                     return (
                       <DropdownMenuItem 
                         key={model.id}
-                        className={`rounded-xl px-3 py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer ${isSelected ? 'bg-accent/40' : ''}`}
+                        className={`rounded-xl px-2 py-2 md:px-3 md:py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer ${isSelected ? 'bg-accent/40' : ''}`}
                         onClick={() => {
                           setSelectedModel(model.id);
                           setHasSelectedModel(true);
