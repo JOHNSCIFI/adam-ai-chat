@@ -349,23 +349,23 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     switch (activeTab) {
       case 'general':
         return (
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">General</h2>
-              <p className="text-muted-foreground">Customize your experience and preferences</p>
+          <div className="space-y-6 md:space-y-8">
+            <div className="space-y-1.5 md:space-y-2">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">General</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Customize your experience and preferences</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Theme Setting */}
-              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="font-semibold text-foreground">Theme</p>
-                      <p className="text-sm text-muted-foreground">Choose your preferred appearance</p>
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="space-y-0.5 md:space-y-1">
+                      <p className="font-semibold text-foreground text-sm md:text-base">Theme</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">Choose your preferred appearance</p>
                     </div>
                     <Select value={theme} onValueChange={handleSetTheme}>
-                      <SelectTrigger className="w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
+                      <SelectTrigger className="w-full sm:w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-background/95 border border-border/50 shadow-xl z-50 backdrop-blur-md">
@@ -393,15 +393,15 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </Card>
 
               {/* Accent Color Setting */}
-              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-1">
-                      <p className="font-semibold text-foreground">Accent color</p>
-                      <p className="text-sm text-muted-foreground">Personalize your interface colors</p>
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="space-y-0.5 md:space-y-1">
+                      <p className="font-semibold text-foreground text-sm md:text-base">Accent color</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">Personalize your interface colors</p>
                     </div>
                     <Select value={accentColor} onValueChange={handleSetAccentColor}>
-                      <SelectTrigger className="w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
+                      <SelectTrigger className="w-full sm:w-36 bg-background/80 border border-border/50 shadow-sm backdrop-blur-sm">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-background/95 border border-border/50 shadow-xl z-50 backdrop-blur-md">
@@ -810,7 +810,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
           {/* Mobile Content */}
           <div className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-background/98">
-            <div className="p-6">
+            <div className="p-4 pb-8">
               {renderContent()}
             </div>
           </div>
