@@ -889,7 +889,8 @@ export default function ProjectPage() {
                         <IconComponent className="w-4 h-4 text-white" />
                       </div>;
                   })()}
-                  <h1 className="text-base font-semibold text-foreground truncate max-w-[150px]">{project.title}</h1>
+                  <h1 className="text-base font-semibold text-foreground truncate max-w-[120px]">{project.title}</h1>
+                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
                 </button>
               ) : (
                 // Show model selector when activated
