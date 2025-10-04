@@ -344,22 +344,25 @@ export default function Admin() {
         {/* User Details Modal */}
         <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
           <DialogContent className="max-w-[95vw] sm:max-w-2xl md:max-w-4xl max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
+            <DialogHeader className="space-y-3">
               <DialogTitle className="text-lg sm:text-xl md:text-2xl flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-primary" />
                 {selectedUser?.display_name}
               </DialogTitle>
-              <DialogDescription className="text-xs sm:text-sm">
-                {selectedUser?.email}
-              </DialogDescription>
+              <div className="space-y-1">
+                <p className="text-xs text-muted-foreground">Email</p>
+                <p className="text-sm sm:text-base font-medium text-foreground break-all">
+                  {selectedUser?.email}
+                </p>
+              </div>
             </DialogHeader>
             
             {selectedUser && (
               <div className="space-y-4 mt-4">
-                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-2">
                   <Card className="border-border/50">
                     <CardHeader className="pb-2 p-3 sm:p-4">
-                      <CardTitle className="text-xs sm:text-sm text-muted-foreground">Total Models</CardTitle>
+                      <CardTitle className="text-xs sm:text-sm text-muted-foreground">Models Used</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0">
                       <div className="text-xl sm:text-2xl font-bold">{selectedUser.model_usages.length}</div>
@@ -377,41 +380,76 @@ export default function Admin() {
                   </Card>
                 </div>
 
-                <div className="overflow-x-auto">
+                {/* Mobile Card Layout */}
+                <div className="space-y-3 md:hidden">
+                  <h3 className="text-sm font-semibold text-foreground">Model Breakdown</h3>
+                  {selectedUser.model_usages.map((modelUsage, idx) => (
+                    <Card key={idx} className="border-border/50 bg-muted/20">
+                      <CardContent className="p-3 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
+                            {formatModelName(modelUsage.model)}
+                          </Badge>
+                          <span className="text-base font-bold text-primary">
+                            {isImageGenerationModel(modelUsage.model) 
+                              ? `$${(modelUsage.output_tokens / 100).toFixed(2)}`
+                              : `$${modelUsage.cost.toFixed(4)}`
+                            }
+                          </span>
+                        </div>
+                        {!isImageGenerationModel(modelUsage.model) && (
+                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border/50">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Input</p>
+                              <p className="text-sm font-mono font-medium">{modelUsage.input_tokens.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Output</p>
+                              <p className="text-sm font-mono font-medium">{modelUsage.output_tokens.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Desktop Table Layout */}
+                <div className="hidden md:block overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
-                        <TableHead className="text-xs sm:text-sm">Model</TableHead>
-                        <TableHead className="text-right text-xs sm:text-sm">Input Tokens</TableHead>
-                        <TableHead className="text-right text-xs sm:text-sm">Output Tokens</TableHead>
-                        <TableHead className="text-right text-xs sm:text-sm">Cost</TableHead>
+                        <TableHead className="text-sm">Model</TableHead>
+                        <TableHead className="text-right text-sm">Input Tokens</TableHead>
+                        <TableHead className="text-right text-sm">Output Tokens</TableHead>
+                        <TableHead className="text-right text-sm">Cost</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {selectedUser.model_usages.map((modelUsage, idx) => (
                         <TableRow key={idx} className="hover:bg-muted/50">
                           <TableCell>
-                            <Badge variant="secondary" className="text-[10px] sm:text-xs font-mono bg-primary/10 text-primary border-primary/20 whitespace-nowrap">
+                            <Badge variant="secondary" className="text-xs font-mono bg-primary/10 text-primary border-primary/20">
                               {formatModelName(modelUsage.model)}
                             </Badge>
                           </TableCell>
                           {isImageGenerationModel(modelUsage.model) ? (
                             <>
-                              <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
-                              <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">-</TableCell>
-                              <TableCell className="text-right font-mono font-semibold text-xs sm:text-sm">
+                              <TableCell className="text-right font-mono text-muted-foreground text-sm">-</TableCell>
+                              <TableCell className="text-right font-mono text-muted-foreground text-sm">-</TableCell>
+                              <TableCell className="text-right font-mono font-semibold text-sm">
                                 ${(modelUsage.output_tokens / 100).toFixed(2)}
                               </TableCell>
                             </>
                           ) : (
                             <>
-                              <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
+                              <TableCell className="text-right font-mono text-muted-foreground text-sm">
                                 {modelUsage.input_tokens.toLocaleString()}
                               </TableCell>
-                              <TableCell className="text-right font-mono text-muted-foreground text-xs sm:text-sm">
+                              <TableCell className="text-right font-mono text-muted-foreground text-sm">
                                 {modelUsage.output_tokens.toLocaleString()}
                               </TableCell>
-                              <TableCell className="text-right font-mono font-semibold text-xs sm:text-sm">
+                              <TableCell className="text-right font-mono font-semibold text-sm">
                                 ${modelUsage.cost.toFixed(4)}
                               </TableCell>
                             </>
