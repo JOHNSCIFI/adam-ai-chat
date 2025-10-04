@@ -959,8 +959,42 @@ export default function Chat() {
         hasContent: !!aiResponse?.content, 
         hasText: !!aiResponse?.text,
         hasImageUrl: !!aiResponse?.image_url,
-        hasImageBase64: !!aiResponse?.image_base64
+        hasImageBase64: !!aiResponse?.image_base64,
+        success: aiResponse?.success,
+        messageId: aiResponse?.message_id
       });
+      
+      // If webhook returns success but no content, it means the message was saved by webhook-handler
+      // Wait a bit for Realtime to trigger, then fetch messages as fallback
+      if (aiResponse?.success && !aiResponse?.response && !aiResponse?.content && !aiResponse?.text) {
+        console.log('[AI-RESPONSE] Webhook saved message to DB, waiting for Realtime or fetching manually...');
+        
+        // Wait 1 second for Realtime to trigger
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Fetch latest messages to ensure we have the response
+        console.log('[AI-RESPONSE] Fetching latest messages as fallback...');
+        const { data: latestMessages, error: fetchError } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('chat_id', originalChatId)
+          .order('created_at', { ascending: true });
+        
+        if (fetchError) {
+          console.error('[AI-RESPONSE] Error fetching latest messages:', fetchError);
+        } else if (latestMessages) {
+          console.log('[AI-RESPONSE] Fetched', latestMessages.length, 'messages, updating state');
+          // Map to ensure proper type conversion
+          const typedMessages = latestMessages.map(msg => ({
+            ...msg,
+            file_attachments: (msg.file_attachments as any) || []
+          })) as Message[];
+          setMessages(typedMessages);
+          scrollToBottom();
+        }
+        
+        return;
+      }
       
       // Handle image_base64 by uploading to storage first
       if (aiResponse?.image_base64) {
