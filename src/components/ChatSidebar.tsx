@@ -12,6 +12,7 @@ import { ProjectModal } from '@/components/ProjectModal';
 import { AddToProjectModal } from '@/components/AddToProjectModal';
 import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
+import { useIsMobile } from '@/hooks/use-mobile';
 interface Chat {
   id: string;
   title: string;
@@ -309,8 +310,10 @@ export default function ChatSidebar({
 
   // Get chats that are not in any project
   const unorganizedChats = chats.filter(chat => !chat.project_id);
+  const isMobile = useIsMobile();
+  
   return <>
-      <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible="icon">
+      <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
           <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
             <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
