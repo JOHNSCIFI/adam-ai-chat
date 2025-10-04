@@ -3,11 +3,11 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { useSidebar } from '@/components/ui/sidebar';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2 } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon as ImageIcon } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -109,45 +109,35 @@ export default function ProjectPage() {
   const [editingChatId, setEditingChatId] = useState<string | null>(null);
   const [editingChatTitle, setEditingChatTitle] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [recordingDuration, setRecordingDuration] = useState(0);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [isImageMode, setIsImageMode] = useState(false);
   const [isStylesOpen, setIsStylesOpen] = useState(false);
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
+  const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
+  const [tempTranscript, setTempTranscript] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const recognitionRef = useRef<any>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const animationFrameRef = useRef<number | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const { isMobile } = useSidebar();
 
-  // Calculate proper centering based on sidebar state
-  const getContainerStyle = () => {
-    const sidebarWidth = collapsed ? 56 : 280;
-    const availableWidth = `calc(100vw - ${sidebarWidth}px)`;
-    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
-    return {
-      paddingLeft: `${sidebarWidth}px`
+  // Timer for recording duration
+  useEffect(() => {
+    let interval: NodeJS.Timeout;
+    if (isRecording) {
+      setRecordingDuration(0);
+      interval = setInterval(() => {
+        setRecordingDuration(prev => prev + 1);
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
     };
-  };
-  const getCenterStyle = () => {
-    const sidebarWidth = collapsed ? 56 : 280;
-    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
-    return {
-      position: 'fixed' as const,
-      left: centerOffset,
-      transform: 'translateX(-50%)',
-      top: '100px',
-      zIndex: 10
-    };
-  };
-  const getChatListStyle = () => {
-    const sidebarWidth = collapsed ? 56 : 280;
-    const centerOffset = `calc(${sidebarWidth}px + (100vw - ${sidebarWidth}px) / 2)`;
-    return {
-      position: 'absolute' as const,
-      left: centerOffset,
-      transform: 'translateX(-50%)',
-      top: '200px',
-      width: '100%',
-      maxWidth: '32rem'
-    };
-  };
+  }, [isRecording]);
   useEffect(() => {
     if (projectId && user) {
       fetchProject();
@@ -589,127 +579,240 @@ export default function ProjectPage() {
   };
   const startRecording = async () => {
     try {
-      console.log('🎤 Starting speech recognition...');
-      if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-        toast.error('Speech recognition not supported in this browser');
-        return;
-      }
+      // Get microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      mediaStreamRef.current = stream;
+      
+      // Set up audio context and analyzer
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      audioContextRef.current = audioContext;
+      
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      analyserRef.current = analyser;
+      
+      const source = audioContext.createMediaStreamSource(stream);
+      source.connect(analyser);
+      
+      // Start speech recognition
       const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-      const recognition = new SpeechRecognition();
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      recognition.onstart = () => {
-        console.log('🎤 Speech recognition started successfully');
-        setIsRecording(true);
-      };
-      recognition.onresult = event => {
-        const transcript = Array.from(event.results).map(result => result[0]).map(result => result.transcript).join('');
-        if (event.results[0].isFinal) {
-          console.log('📝 Final transcript:', transcript);
-          setInput(prev => prev + (prev ? ' ' : '') + transcript);
-          setIsRecording(false);
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        
+        recognition.onresult = (event: any) => {
+          let transcript = '';
+          for (let i = 0; i < event.results.length; i++) {
+            transcript += event.results[i][0].transcript;
+          }
+          setTempTranscript(transcript);
+        };
+        
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error:', event.error);
+          if (event.error === 'no-speech' || event.error === 'audio-capture') {
+            return;
+          }
+        };
+        
+        recognition.onend = () => {
+          if (recognitionRef.current) {
+            setIsRecording(false);
+          }
+        };
+        
+        recognitionRef.current = recognition;
+        recognition.start();
+      }
+      
+      setIsRecording(true);
+      
+      // Animate waveform based on audio levels
+      const updateWaveform = () => {
+        if (!analyserRef.current) return;
+        
+        const bufferLength = analyserRef.current.frequencyBinCount;
+        const dataArray = new Uint8Array(bufferLength);
+        analyserRef.current.getByteFrequencyData(dataArray);
+        
+        // Map audio data to 100 bars
+        const bars = 100;
+        const step = Math.floor(bufferLength / bars);
+        const newLevels = [];
+        
+        for (let i = 0; i < bars; i++) {
+          const index = i * step;
+          const value = dataArray[index] || 0;
+          // Normalize to 0-1 range and apply smoothing
+          newLevels.push(value / 255);
         }
+        
+        setAudioLevels(newLevels);
+        animationFrameRef.current = requestAnimationFrame(updateWaveform);
       };
-      recognition.onerror = event => {
-        console.error('❌ Speech recognition error:', event.error);
-        setIsRecording(false);
-        toast.error('Speech recognition failed');
-      };
-      recognition.onend = () => {
-        setIsRecording(false);
-        setMediaRecorder(null);
-      };
-      setMediaRecorder(recognition as any);
-      recognition.start();
+      
+      updateWaveform();
+      
     } catch (error) {
-      console.error('❌ Failed to start speech recognition:', error);
-      setIsRecording(false);
-      toast.error('Failed to start speech recognition');
+      console.error('Error accessing microphone:', error);
+      toast.error('Unable to access microphone');
     }
   };
+  
   const stopRecording = () => {
-    if (mediaRecorder) {
-      console.log('🔴 Calling stop on recognition instance');
-      (mediaRecorder as any).stop();
-      setMediaRecorder(null);
-      setIsRecording(false);
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
     }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
+    setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Now set the message from temporary transcript
+    setInput(tempTranscript);
+    setTempTranscript('');
+    
+    // Focus textarea after stopping to show the text
+    setTimeout(() => {
+      textareaRef.current?.focus();
+    }, 150);
+  };
+  
+  const cancelRecording = () => {
+    // Stop speech recognition
+    recognitionRef.current?.stop();
+    recognitionRef.current = null;
+    
+    // Stop audio analysis
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Clean up audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close();
+      audioContextRef.current = null;
+    }
+    
+    // Stop media stream
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    
+    analyserRef.current = null;
+    setIsRecording(false);
+    setAudioLevels(Array(100).fill(0));
+    
+    // Discard the transcript without saving
+    setTempTranscript('');
   };
   if (!project) {
     return <div>Loading...</div>;
   }
+
   return <div className="flex h-screen bg-background overflow-hidden w-full">
       <div className="flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden">
-          <div className="min-h-screen flex flex-col justify-center px-4 py-4" style={getContainerStyle()}>
-            <div className="flex justify-center w-full">
-              <div className="w-full max-w-2xl">
-                {/* Header */}
-                <div className="flex flex-col items-center justify-center mb-8 text-center" style={getCenterStyle()}>
-                  <div className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap" onClick={() => setIsEditingProject(true)}>
-                    {(() => {
-                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                    return <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{
-                      backgroundColor: project.color
-                    }}>
-                          <IconComponent className="w-6 h-6 text-white" />
-                        </div>;
-                  })()}
-                    <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
+        {/* Mobile Header with Sidebar Trigger */}
+        {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+            <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
+            
+            {/* Project Title - Centered */}
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center gap-2">
+              {(() => {
+                const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                return <>
+                  <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ backgroundColor: project.color }}>
+                    <IconComponent className="w-4 h-4 text-white" />
                   </div>
+                  <h1 className="text-lg font-semibold text-foreground truncate max-w-[150px]">{project.title}</h1>
+                </>;
+              })()}
+            </div>
+          </div>}
+        
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isMobile ? 'pt-[60px] pb-[180px]' : 'pb-[180px]'}`}>
+          <div className="min-h-full flex flex-col justify-center px-3 sm:px-4 py-4 max-w-4xl mx-auto">
+            {/* Desktop Header */}
+            {!isMobile && <div className="flex flex-col items-center justify-center mb-8 text-center">
+                <div className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap" onClick={() => setIsEditingProject(true)}>
+                  {(() => {
+                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                    return <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: project.color }}>
+                        <IconComponent className="w-6 h-6 text-white" />
+                      </div>;
+                  })()}
+                  <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
                 </div>
+              </div>}
 
-                {/* Chat List */}
-                {chats.length > 0 && <div className="space-y-3 mb-8" style={getChatListStyle()}>
-                    {chats.map(chat => <div key={chat.id} className="flex items-center justify-between p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group">
-                      <div className="flex-1 cursor-pointer" onClick={() => {
+            {/* Chat List */}
+            {chats.length > 0 && <div className="space-y-3 mb-8 w-full">
+                {chats.map(chat => <div key={chat.id} className="flex items-center justify-between p-3 sm:p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group">
+                  <div className="flex-1 cursor-pointer min-w-0" onClick={() => {
                     const targetPath = chat.tool_id ? `/${chat.tool_id}/${chat.id}` : `/chat/${chat.id}`;
                     navigate(targetPath);
                   }}>
-                        <div className="flex flex-col gap-1">
-                          {editingChatId === chat.id ? <input value={editingChatTitle} onChange={e => setEditingChatTitle(e.target.value)} onBlur={() => saveRename(chat.id)} onKeyDown={e => {
+                    <div className="flex flex-col gap-1">
+                      {editingChatId === chat.id ? <input value={editingChatTitle} onChange={e => setEditingChatTitle(e.target.value)} onBlur={() => saveRename(chat.id)} onKeyDown={e => {
                         if (e.key === 'Enter') saveRename(chat.id);
                         if (e.key === 'Escape') {
                           setEditingChatId(null);
                           setEditingChatTitle('');
                         }
                       }} className="font-medium text-foreground bg-transparent border border-border rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-ring" autoFocus onFocus={e => {
-                        // Position cursor at the end
                         const length = e.target.value.length;
                         e.target.setSelectionRange(length, length);
-                      }} /> : <h4 className="font-medium text-foreground text-sm pr-4">{chat.title}</h4>}
-                        </div>
-                      </div>
-                      
-                      {/* Chat Actions */}
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={e => {
+                      }} /> : <h4 className="font-medium text-foreground text-sm pr-4 truncate">{chat.title}</h4>}
+                    </div>
+                  </div>
+                  
+                  {/* Chat Actions */}
+                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={e => {
                       e.stopPropagation();
                       startRenameChat(chat);
                     }}>
-                          <MoreHorizontal className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={e => {
+                      <MoreHorizontal className="h-3 w-3" />
+                    </Button>
+                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={e => {
                       e.stopPropagation();
                       deleteChat(chat.id);
                     }}>
-                          <Trash2 className="h-3 w-3" />
-                        </Button>
-                      </div>
-                    </div>)}
-                </div>}
-              </div>
-            </div>
+                      <Trash2 className="h-3 w-3" />
+                    </Button>
+                  </div>
+                </div>)}
+            </div>}
           </div>
         </div>
 
-        {/* Input area - fixed at bottom like ChatGPT */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background overflow-hidden">
-          <div className="flex justify-center px-4 py-4 w-full" style={getContainerStyle()}>
-            <div className="w-full max-w-2xl">
+        {/* Input area - fixed at bottom, responsive */}
+        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
+          <div className="flex justify-center px-3 sm:px-4 py-3 sm:py-4 w-full max-w-4xl mx-auto">
+            <div className="w-full">
               {/* File attachments preview */}
-              {selectedFiles.length > 0 && <div className="mb-4 flex flex-wrap gap-2">
+              {selectedFiles.length > 0 && <div className="mb-3 flex flex-wrap gap-2">
                   {selectedFiles.map((file, index) => <div key={index} className="flex items-center gap-2 bg-muted rounded-lg px-3 py-2 text-sm">
                       {getFileIcon(file.type)}
                       <span className="truncate max-w-32">{file.name}</span>
@@ -740,10 +843,10 @@ export default function ProjectPage() {
                         </svg>
                       </Button>
                     </PopoverTrigger>
-                    <PopoverContent className="w-80 p-4 bg-background border shadow-lg" align="start">
-                      <div className="grid grid-cols-3 gap-3">
+                    <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg" align="start">
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
                         {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center">
-                            <div className={`w-12 h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                            <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
                               <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
                                 {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
                               </span>
@@ -755,45 +858,158 @@ export default function ProjectPage() {
                   </Popover>
                 </div>}
               
-              <div className="relative">
-                <div className={`flex-1 flex items-center border rounded-3xl px-4 py-3 ${actualTheme === 'light' ? 'bg-white border-gray-200' : 'bg-[hsl(var(--input))] border-border'}`}>
-                  {/* Attachment button */}
-                  <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                    <PopoverTrigger asChild>
-                      <Button type="button" variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 mr-2">
-                        <Paperclip className="h-4 w-4 text-muted-foreground" />
-                      </Button>
-                    </PopoverTrigger>
-                     <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                         <Paperclip className="h-4 w-4" />
-                         Add photos & files
-                       </Button>
-                       <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                         <ImageIcon2 className="h-4 w-4" />
-                         Generate an image
-                       </Button>
-                     </PopoverContent>
-                  </Popover>
-                  
-                 <Textarea ref={textareaRef} value={input} onChange={handleInputChange} onKeyDown={handleKeyDown} placeholder={isImageMode ? "Describe an image" : "ask me anything..."} className="flex-1 min-h-[24px] max-h-[200px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 text-foreground placeholder:text-muted-foreground break-words text-left" style={{
-                  wordWrap: 'break-word',
-                  overflowWrap: 'break-word'
-                }} disabled={loading} rows={1} />
-                  
-                 <div className="flex items-center gap-1 ml-2 pb-1">
-                   {/* Dictation button */}
-                   <Button type="button" variant="ghost" size="sm" className={`h-8 w-8 p-0 hover:bg-muted/20 rounded-full flex-shrink-0 ${isRecording ? 'text-red-500' : 'text-muted-foreground'}`} onClick={isRecording ? stopRecording : startRecording} disabled={loading}>
-                    {isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              <div className="relative bg-background border border-border rounded-xl sm:rounded-2xl p-3 sm:p-4">
+                <Textarea 
+                  ref={textareaRef} 
+                  value={input} 
+                  onChange={handleInputChange} 
+                  onKeyDown={handleKeyDown} 
+                  placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
+                  className="w-full min-h-[48px] sm:min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+                  rows={1} 
+                  disabled={loading}
+                />
+                
+                {/* Recording UI - replaces buttons when recording */}
+                {isRecording ? (
+                  <div className="flex items-center gap-1 sm:gap-2 py-1 sm:py-3 px-0">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 sm:h-8 sm:w-8 rounded-full text-foreground hover:text-foreground hover:bg-accent flex-shrink-0 p-0"
+                      onClick={cancelRecording}
+                    >
+                      <X className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                     
-                    {/* Send button */}
+                    <div className="flex-1 flex items-center justify-center gap-1 sm:gap-3 min-w-0 overflow-hidden">
+                      {/* Waveform visualization */}
+                      <div className="flex items-center justify-center gap-[0.5px] sm:gap-[2px] h-4 sm:h-8 flex-1 max-w-[320px] sm:max-w-[600px] min-w-0">
+                        {audioLevels.map((level, i) => {
+                          const minHeight = 2;
+                          const maxHeight = isMobile ? 16 : 32;
+                          const height = minHeight + (level * (maxHeight - minHeight));
+                          
+                          return (
+                            <div
+                              key={i}
+                              className="w-[0.5px] sm:w-[2px] bg-foreground rounded-full transition-all duration-75 ease-out"
+                              style={{ height: `${height}px` }}
+                            />
+                          );
+                        })}
+                      </div>
+                      
+                      {/* Timer */}
+                      <span className="text-xs sm:text-sm font-medium tabular-nums text-foreground flex-shrink-0">
+                        {Math.floor(recordingDuration / 60)}:{(recordingDuration % 60).toString().padStart(2, '0')}
+                      </span>
+                    </div>
                     
+                    <Button
+                      size="sm"
+                      className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-foreground text-background hover:bg-foreground/90 flex-shrink-0 p-0"
+                      onClick={stopRecording}
+                    >
+                      <svg className="h-3 w-3 sm:h-4 sm:w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </Button>
                   </div>
-                </div>
+                ) : (
+                  // Input controls
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        {!isMobile && <>
+                          {/* File upload and image mode for desktop */}
+                          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
+                            <PopoverTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent">
+                                <Paperclip className="h-4 w-4" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                              <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                                <Paperclip className="h-4 w-4" />
+                                Add photos & files
+                              </Button>
+                              <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                                <ImageIcon2 className="h-4 w-4" />
+                                Generate an image
+                              </Button>
+                            </PopoverContent>
+                          </Popover>
+                        </>}
+                      </div>
+
+                      {/* Voice controls */}
+                      {!isMobile && <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          className={`h-9 w-9 rounded-full border border-border/50 ${
+                            input.trim().length > 0 || selectedFiles.length > 0
+                              ? 'bg-foreground hover:bg-foreground/90 text-background'
+                              : isRecording 
+                                ? 'bg-red-500 hover:bg-red-600 text-background' 
+                                : 'bg-foreground hover:bg-foreground/90 text-background'
+                          }`} 
+                          onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)} 
+                          disabled={loading}
+                        >
+                          {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                            <SendHorizontalIcon className="h-4 w-4" />
+                          ) : (
+                            isRecording ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </div>}
+                    </div>
+
+                    {/* Mobile controls */}
+                    {isMobile && <div className="flex justify-between items-center">
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent">
+                            <Plus className="h-3.5 w-3.5" />
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
+                          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
+                            <Paperclip className="h-4 w-4" />
+                            Add photos & files
+                          </Button>
+                          <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
+                            <ImageIcon className="h-4 w-4" />
+                            Create an image
+                          </Button>
+                        </PopoverContent>
+                      </Popover>
+                      
+                      <div className="flex items-center gap-2 bg-muted/30 rounded-full p-1">
+                        <Button 
+                          size="sm" 
+                          className={`h-7 w-7 rounded-full ${
+                            input.trim().length > 0 || selectedFiles.length > 0
+                              ? 'bg-foreground hover:bg-foreground/90 text-background'
+                              : isRecording 
+                                ? 'bg-red-500 hover:bg-red-600 text-background' 
+                                : 'bg-foreground hover:bg-foreground/90 text-background'
+                          }`} 
+                          onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)} 
+                          disabled={loading}
+                        >
+                          {input.trim().length > 0 || selectedFiles.length > 0 ? (
+                            <SendHorizontalIcon className="h-3 w-3" />
+                          ) : (
+                            isRecording ? <MicOff className="h-3 w-3" /> : <Mic className="h-3 w-3" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>}
+                  </div>
+                )}
               </div>
-              
-              
             </div>
           </div>
         </div>
@@ -804,14 +1020,19 @@ export default function ProjectPage() {
 
       {/* Edit Project Modal */}
       <ProjectEditModal project={project} isOpen={isEditingProject} onClose={() => setIsEditingProject(false)} onProjectUpdated={() => {
-      fetchProject();
-      window.dispatchEvent(new CustomEvent('force-chat-refresh'));
-    }} />
+        fetchProject();
+        window.dispatchEvent(new CustomEvent('force-chat-refresh'));
+      }} />
 
       {/* Confirmation Dialog */}
-      <ConfirmationDialog isOpen={confirmDialog.isOpen} onClose={() => setConfirmDialog(prev => ({
-      ...prev,
-      isOpen: false
-    }))} onConfirm={confirmDialog.onConfirm} title={confirmDialog.title} description={confirmDialog.description} variant="destructive" confirmText="Delete" />
+      <ConfirmationDialog 
+        isOpen={confirmDialog.isOpen} 
+        onClose={() => setConfirmDialog(prev => ({ ...prev, isOpen: false }))} 
+        onConfirm={confirmDialog.onConfirm} 
+        title={confirmDialog.title} 
+        description={confirmDialog.description} 
+        variant="destructive" 
+        confirmText="Delete" 
+      />
     </div>;
 }
