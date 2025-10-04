@@ -7,7 +7,7 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon as ImageIcon } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon as ImageIcon, Check } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -474,7 +474,11 @@ export default function ProjectPage() {
     setEditingChatTitle(chat.title);
   };
   const saveRename = async (chatId: string) => {
-    if (!editingChatTitle.trim()) return;
+    if (!editingChatTitle.trim()) {
+      setEditingChatId(null);
+      setEditingChatTitle('');
+      return;
+    }
     try {
       const {
         error
@@ -490,6 +494,7 @@ export default function ProjectPage() {
       setEditingChatTitle('');
     } catch (error: any) {
       console.error('Error renaming chat:', error);
+      toast.error('Failed to rename chat');
     }
   };
   const deleteChat = async (chatId: string) => {
@@ -791,9 +796,17 @@ export default function ProjectPage() {
                   <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0" onClick={e => {
                       e.stopPropagation();
-                      startRenameChat(chat);
+                      if (editingChatId === chat.id) {
+                        saveRename(chat.id);
+                      } else {
+                        startRenameChat(chat);
+                      }
                     }}>
-                      <Edit2 className="h-3 w-3" />
+                      {editingChatId === chat.id ? (
+                        <Check className="h-3 w-3" />
+                      ) : (
+                        <Edit2 className="h-3 w-3" />
+                      )}
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={e => {
                       e.stopPropagation();
