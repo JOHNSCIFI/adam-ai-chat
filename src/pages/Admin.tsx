@@ -286,10 +286,10 @@ export default function Admin() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
-                    <TableHead className="font-semibold text-foreground text-xs sm:text-sm">User</TableHead>
+                    <TableHead className="hidden sm:table-cell font-semibold text-foreground text-xs sm:text-sm">User</TableHead>
                     <TableHead className="font-semibold text-foreground text-xs sm:text-sm">Email</TableHead>
-                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Total Cost</TableHead>
-                    <TableHead className="w-[80px] sm:w-[100px]"></TableHead>
+                    <TableHead className="text-right font-semibold text-foreground text-xs sm:text-sm">Cost</TableHead>
+                    <TableHead className="w-[60px] sm:w-[100px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -304,16 +304,16 @@ export default function Admin() {
                           setIsModalOpen(true);
                         }}
                       >
-                        <TableCell className="font-semibold text-foreground text-xs sm:text-sm">
+                        <TableCell className="hidden sm:table-cell font-semibold text-foreground text-xs sm:text-sm">
                           <div className="flex items-center gap-1.5 sm:gap-2">
                             <div className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full bg-primary/60" />
-                            <span className="truncate max-w-[100px] sm:max-w-[150px] md:max-w-none">{usage.display_name}</span>
+                            <span className="truncate max-w-[150px] md:max-w-none">{usage.display_name}</span>
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground text-xs sm:text-sm">
-                          <span className="truncate block max-w-[120px] sm:max-w-[180px] md:max-w-none">{usage.email}</span>
+                          <span className="truncate block max-w-[140px] sm:max-w-[180px] md:max-w-none">{usage.email}</span>
                         </TableCell>
-                        <TableCell className="text-right font-mono font-bold text-foreground text-xs sm:text-sm">
+                        <TableCell className="text-right font-mono font-bold text-foreground text-xs sm:text-sm whitespace-nowrap">
                           ${totalCost.toFixed(4)}
                         </TableCell>
                         <TableCell className="text-right">
