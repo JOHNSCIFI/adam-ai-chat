@@ -821,16 +821,16 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl h-[80vh] p-0 bg-background border border-border/50 shadow-xl">
+      <DialogContent className="max-w-[95vw] md:max-w-3xl lg:max-w-4xl h-[85vh] md:h-[80vh] p-0 bg-background border border-border/50 shadow-xl">
         <div className="flex h-full">
           {/* Desktop Sidebar */}
-          <div className="w-64 bg-gradient-to-b from-muted/30 to-muted/10 border-r border-border/40 backdrop-blur-sm">
-            <div className="px-6 py-4 border-b border-border/40 bg-gradient-to-r from-background/50 to-background/30">
+          <div className="w-48 md:w-56 lg:w-64 bg-gradient-to-b from-muted/30 to-muted/10 border-r border-border/40 backdrop-blur-sm">
+            <div className="px-3 md:px-4 lg:px-6 py-3 md:py-4 border-b border-border/40 bg-gradient-to-r from-background/50 to-background/30">
               <DialogHeader className="text-left">
-                <DialogTitle className="text-xl font-semibold text-foreground">Settings</DialogTitle>
+                <DialogTitle className="text-lg md:text-xl font-semibold text-foreground">Settings</DialogTitle>
               </DialogHeader>
             </div>
-            <nav className="p-3 space-y-1">
+            <nav className="p-2 md:p-3 space-y-1">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -839,7 +839,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm text-left transition-all duration-200 group ${
+                    className={`w-full flex items-center gap-2 md:gap-3 px-3 md:px-4 py-2.5 md:py-3 rounded-xl text-sm text-left transition-all duration-200 group ${
                       activeTab === item.id
                         ? 'bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20'
                         : isDisabled
@@ -847,14 +847,14 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                         : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:translate-x-1'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg transition-colors ${
+                    <div className={`p-1.5 md:p-2 rounded-lg transition-colors ${
                       activeTab === item.id 
                         ? 'bg-primary/15' 
                         : 'bg-muted/40 group-hover:bg-accent/80'
                     }`}>
                       <Icon className="h-4 w-4" />
                     </div>
-                    <span className="font-medium">{item.label}</span>
+                    <span className="font-medium text-xs md:text-sm">{item.label}</span>
                   </button>
                 );
               })}
@@ -863,7 +863,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
           {/* Desktop Content */}
           <div className="flex-1 overflow-y-auto bg-gradient-to-b from-background to-background/98">
-            <div className="p-6">
+            <div className="p-4 md:p-5 lg:p-6">
               {renderContent()}
             </div>
           </div>
