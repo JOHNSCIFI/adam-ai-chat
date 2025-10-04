@@ -428,22 +428,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                 </CardContent>
               </Card>
 
-              {user && (
-                <Card className="border border-border/40 bg-gradient-to-r from-card/50 to-card/20 backdrop-blur-sm opacity-60">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="space-y-1">
-                        <p className="font-semibold text-foreground">Language</p>
-                        <p className="text-sm text-muted-foreground">Interface language (Coming soon)</p>
-                      </div>
-                      <div className="px-3 py-2 bg-muted/50 rounded-lg border border-border/30">
-                        <span className="text-sm font-medium text-muted-foreground">English</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-
             </div>
           </div>
         );
