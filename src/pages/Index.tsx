@@ -544,7 +544,8 @@ export default function Index() {
         error: chatError
       } = await supabase.from('chats').insert([{
         user_id: user.id,
-        title: message.slice(0, 50) || (selectedFiles.length > 0 ? `File: ${selectedFiles[0].name}` : 'New Chat')
+        title: message.slice(0, 50) || (selectedFiles.length > 0 ? `File: ${selectedFiles[0].name}` : 'New Chat'),
+        model_id: selectedModel
       }]).select().single();
       if (chatError) throw chatError;
 
@@ -593,7 +594,8 @@ export default function Index() {
         error: chatError
       } = await supabase.from('chats').insert([{
         user_id: userId,
-        title: messageToSend.slice(0, 50) || 'New Chat'
+        title: messageToSend.slice(0, 50) || 'New Chat',
+        model_id: modelToUse || selectedModel
       }]).select().single();
       if (chatError) throw chatError;
       const {
