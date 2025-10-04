@@ -232,6 +232,17 @@ export default function ProjectPage() {
     isMobile
   } = useSidebar();
   const collapsed = sidebarState === 'collapsed';
+  
+  // Detect if device is tablet or larger (768px+)
+  const [isTabletOrLarger, setIsTabletOrLarger] = useState(window.innerWidth >= 768);
+  
+  useEffect(() => {
+    const handleResize = () => {
+      setIsTabletOrLarger(window.innerWidth >= 768);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   const [project, setProject] = useState<Project | null>(null);
   const [chats, setChats] = useState<Chat[]>([]);
   const [input, setInput] = useState('');
@@ -874,8 +885,8 @@ export default function ProjectPage() {
 
   return <div className="flex h-screen bg-background overflow-hidden w-full">
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Mobile Header with Sidebar Trigger */}
-        {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+        {/* Mobile Header with Sidebar Trigger - Only for phones */}
+        {!isTabletOrLarger && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
             <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
             
             {/* Mobile Project Info / Model Selector - Absolutely centered */}
@@ -958,10 +969,10 @@ export default function ProjectPage() {
             </div>
           </div>}
         
-        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isMobile ? 'pt-[60px] pb-[180px]' : 'pb-[180px]'}`}>
+        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${!isTabletOrLarger ? 'pt-[60px] pb-[180px]' : 'pb-[180px]'}`}>
           <div className="min-h-full flex flex-col justify-center px-3 sm:px-4 py-4 max-w-4xl mx-auto">
-            {/* Desktop Header */}
-            {!isMobile && <div className="flex flex-col items-center justify-center mb-8 text-center">
+            {/* Desktop/Tablet Header */}
+            {isTabletOrLarger && <div className="flex flex-col items-center justify-center mb-8 text-center">
                 <div className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap" onClick={() => setIsEditingProject(true)}>
                   {(() => {
                     const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
@@ -1025,7 +1036,7 @@ export default function ProjectPage() {
         <div 
           className="fixed bottom-0 left-0 right-0 bg-background border-t border-border"
           style={{
-            paddingLeft: !isMobile ? (collapsed ? '56px' : '280px') : '0'
+            paddingLeft: isTabletOrLarger ? (collapsed ? '56px' : '280px') : '0'
           }}
         >
           <div className="flex justify-center px-3 sm:px-4 py-3 sm:py-4 w-full max-w-4xl mx-auto">
@@ -1140,7 +1151,7 @@ export default function ProjectPage() {
                   <div className="flex flex-col gap-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        {!isMobile && <>
+                        {isTabletOrLarger && <>
                           <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" onClick={handleFileUpload} aria-label="Upload file">
                             <Paperclip className="h-4 w-4" />
                           </Button>
@@ -1186,8 +1197,8 @@ export default function ProjectPage() {
                         </>}
                       </div>
 
-                      {/* Voice controls */}
-                      {!isMobile && <div className="flex items-center gap-2">
+                      {/* Voice controls - Desktop and Tablet */}
+                      {isTabletOrLarger && <div className="flex items-center gap-2">
                         <Select value={selectedModel} onValueChange={setSelectedModel}>
                           <SelectTrigger className="w-[200px] h-10 bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl focus-visible:ring-2 focus-visible:ring-primary text-sm shadow-sm hover:bg-accent/50 transition-all duration-200" aria-label="Select AI model">
                             <SelectValue>
@@ -1245,8 +1256,8 @@ export default function ProjectPage() {
                       </div>}
                     </div>
 
-                    {/* Mobile controls */}
-                    {isMobile && <div className="flex justify-between items-center">
+                    {/* Mobile controls - Only for phones */}
+                    {!isTabletOrLarger && <div className="flex justify-between items-center">
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button variant="ghost" size="sm" className="h-8 w-8 rounded-full border border-border/30 text-muted-foreground hover:bg-accent">
