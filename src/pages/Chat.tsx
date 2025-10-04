@@ -1122,6 +1122,20 @@ export default function Chat() {
   };
   const fetchMessages = async () => {
     if (!chatId || !user) return;
+    
+    // First, fetch the chat to get the model_id
+    const { data: chatData, error: chatError } = await supabase
+      .from('chats')
+      .select('model_id')
+      .eq('id', chatId)
+      .maybeSingle();
+    
+    // If chat has a model_id, set it as the selected model
+    if (!chatError && chatData?.model_id) {
+      setSelectedModel(chatData.model_id);
+    }
+    
+    // Then fetch messages
     const {
       data,
       error
