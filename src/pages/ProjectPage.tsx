@@ -775,11 +775,12 @@ export default function ProjectPage() {
             {chats.length > 0 && <div className="space-y-3 mb-8 w-full">
                 {chats.map(chat => <div key={chat.id} className="flex items-center justify-between p-3 sm:p-4 border-t border-b border-border hover:bg-muted/20 transition-colors group">
                   <div className="flex-1 cursor-pointer min-w-0" onClick={() => {
+                    if (editingChatId === chat.id) return; // Don't navigate when editing
                     const targetPath = chat.tool_id ? `/${chat.tool_id}/${chat.id}` : `/chat/${chat.id}`;
                     navigate(targetPath);
                   }}>
                     <div className="flex flex-col gap-1">
-                      {editingChatId === chat.id ? <input value={editingChatTitle} onChange={e => setEditingChatTitle(e.target.value)} onBlur={() => saveRename(chat.id)} onKeyDown={e => {
+                      {editingChatId === chat.id ? <input value={editingChatTitle} onChange={e => setEditingChatTitle(e.target.value)} onBlur={() => saveRename(chat.id)} onClick={e => e.stopPropagation()} onKeyDown={e => {
                         if (e.key === 'Enter') saveRename(chat.id);
                         if (e.key === 'Escape') {
                           setEditingChatId(null);
