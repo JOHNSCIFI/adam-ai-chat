@@ -875,39 +875,59 @@ export default function ProjectPage() {
         {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
             <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
             
-            {/* Mobile Model Selector - Absolutely centered */}
+            {/* Mobile Project Info / Model Selector - Absolutely centered */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              <Select value={selectedModel} onValueChange={setSelectedModel} onOpenChange={setIsModelDropdownOpen}>
-                <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
-                  <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                    <span className="text-lg font-semibold">{models.find(m => m.id === selectedModel)?.shortLabel || 'AdamGpt'}</span>
-                    {isModelDropdownOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                  </div>
-                </SelectTrigger>
-                <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                  {models.map(model => {
-                    const modelData = availableModels.find(m => m.id === model.id);
-                    return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
-                      <div className="flex items-center w-full gap-3">
-                        <div className="relative flex-shrink-0">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
-                            <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+              {!isModelDropdownOpen ? (
+                // Show project icon and name by default
+                <button 
+                  onClick={() => setIsModelDropdownOpen(true)}
+                  className="flex items-center gap-2 hover:bg-accent/50 rounded-lg transition-all duration-200 p-2"
+                >
+                  {(() => {
+                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                    return <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
+                        <IconComponent className="w-4 h-4 text-white" />
+                      </div>;
+                  })()}
+                  <h1 className="text-base font-semibold text-foreground truncate max-w-[150px]">{project.title}</h1>
+                </button>
+              ) : (
+                // Show model selector when activated
+                <Select value={selectedModel} onValueChange={(value) => {
+                  setSelectedModel(value);
+                  setIsModelDropdownOpen(false);
+                }} open={isModelDropdownOpen} onOpenChange={setIsModelDropdownOpen}>
+                  <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
+                    <div className="flex items-center justify-center gap-1 whitespace-nowrap">
+                      <span className="text-lg font-semibold">{models.find(m => m.id === selectedModel)?.shortLabel || 'AdamGpt'}</span>
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
+                    {models.map(model => {
+                      const modelData = availableModels.find(m => m.id === model.id);
+                      return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
+                        <div className="flex items-center w-full gap-3">
+                          <div className="relative flex-shrink-0">
+                            <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
+                              <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                            </div>
+                            {model.type === 'pro' && (
+                              <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
+                                PRO
+                              </span>
+                            )}
                           </div>
-                          {model.type === 'pro' && (
-                            <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
-                              PRO
-                            </span>
-                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
+                          </div>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
-                        </div>
-                      </div>
-                    </SelectItem>;
-                  })}
-                </SelectContent>
-              </Select>
+                      </SelectItem>;
+                    })}
+                  </SelectContent>
+                </Select>
+              )}
             </div>
           </div>}
         
