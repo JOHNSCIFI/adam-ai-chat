@@ -866,7 +866,12 @@ export default function Chat() {
         }
       }
       
-      console.log('[REGENERATE] Waiting for realtime subscription to add new message...');
+      console.log('[REGENERATE] Webhook completed, fetching messages immediately...');
+      
+      // Immediately fetch messages to show new response without waiting for realtime
+      setTimeout(() => {
+        fetchMessages();
+      }, 200);
       
       scrollToBottom();
       
@@ -965,15 +970,15 @@ export default function Chat() {
       });
       
       // If webhook returns success but no content, it means the message was saved by webhook-handler
-      // Wait a bit for Realtime to trigger, then fetch messages as fallback
+      // Fetch messages immediately to show response without waiting for Realtime
       if (aiResponse?.success && !aiResponse?.response && !aiResponse?.content && !aiResponse?.text) {
-        console.log('[AI-RESPONSE] Webhook saved message to DB, waiting for Realtime or fetching manually...');
+        console.log('[AI-RESPONSE] Webhook saved message to DB, fetching immediately...');
         
-        // Wait 1 second for Realtime to trigger
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        // Small delay to ensure DB write completes
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         // Fetch latest messages to ensure we have the response
-        console.log('[AI-RESPONSE] Fetching latest messages as fallback...');
+        console.log('[AI-RESPONSE] Fetching latest messages...');
         const { data: latestMessages, error: fetchError } = await supabase
           .from('messages')
           .select('*')
