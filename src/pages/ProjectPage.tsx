@@ -8,7 +8,8 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon as ImageIcon, Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Paperclip, Mic, MicOff, Edit2, Trash2, FolderOpen, Lightbulb, Target, Briefcase, Rocket, Palette, FileText, Code, Zap, Trophy, Heart, Star, Flame, Gem, Sparkles, MoreHorizontal, FileImage, FileVideo, FileAudio, File as FileIcon, X, Image as ImageIcon2, ImageIcon as ImageIcon, Check, ChevronDown, ChevronUp, Settings2 } from 'lucide-react';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
@@ -878,36 +879,57 @@ export default function ProjectPage() {
             
             {/* Mobile Project Info / Model Selector - Absolutely centered */}
             <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-              {!hasSelectedModel && !isModelDropdownOpen ? (
-                // Show project icon and name by default
-                <button 
-                  onClick={() => setIsModelDropdownOpen(true)}
-                  className="flex items-center gap-2 hover:bg-accent/50 rounded-lg transition-all duration-200 p-2"
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex items-center gap-2 hover:bg-accent/50 rounded-lg transition-all duration-200 p-2">
+                    {(() => {
+                      const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
+                      return <IconComponent className="w-6 h-6" style={{ color: project.color }} />;
+                    })()}
+                    <h1 className="text-base font-semibold text-foreground truncate max-w-[120px]">{project.title}</h1>
+                    <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent 
+                  className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]" 
+                  align="center"
+                  sideOffset={8}
                 >
-                  {(() => {
-                    const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                    return <IconComponent className="w-6 h-6" style={{ color: project.color }} />;
-                  })()}
-                  <h1 className="text-base font-semibold text-foreground truncate max-w-[120px]">{project.title}</h1>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                </button>
-              ) : (
-                // Show model selector when activated or after selection
-                <Select value={selectedModel} onValueChange={(value) => {
-                  setSelectedModel(value);
-                  setHasSelectedModel(true);
-                  setIsModelDropdownOpen(false);
-                }} open={isModelDropdownOpen} onOpenChange={setIsModelDropdownOpen}>
-                  <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
-                    <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                      <span className="text-lg font-semibold">{models.find(m => m.id === selectedModel)?.shortLabel || 'AdamGpt'}</span>
-                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  {/* Edit Project Option */}
+                  <DropdownMenuItem 
+                    className="rounded-xl px-3 py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer"
+                    onClick={() => setIsEditingProject(true)}
+                  >
+                    <div className="flex items-center w-full gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
+                        <Settings2 className="w-5 h-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-semibold text-sm text-foreground">Edit Project</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">Change name and icon</div>
+                      </div>
                     </div>
-                  </SelectTrigger>
-                  <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                    {models.map(model => {
-                      const modelData = availableModels.find(m => m.id === model.id);
-                      return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
+                  </DropdownMenuItem>
+                  
+                  <DropdownMenuSeparator className="my-2 bg-border/50" />
+                  
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Select Model
+                  </div>
+                  
+                  {/* Model Options */}
+                  {models.map(model => {
+                    const modelData = availableModels.find(m => m.id === model.id);
+                    const isSelected = selectedModel === model.id;
+                    return (
+                      <DropdownMenuItem 
+                        key={model.id}
+                        className={`rounded-xl px-3 py-3 hover:bg-accent/60 focus:bg-accent/60 transition-all duration-200 cursor-pointer ${isSelected ? 'bg-accent/40' : ''}`}
+                        onClick={() => {
+                          setSelectedModel(model.id);
+                          setHasSelectedModel(true);
+                        }}
+                      >
                         <div className="flex items-center w-full gap-3">
                           <div className="relative flex-shrink-0">
                             <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
@@ -920,15 +942,18 @@ export default function ProjectPage() {
                             )}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
+                            <div className={`font-semibold text-sm truncate ${isSelected ? 'text-primary' : 'text-foreground'}`}>
+                              {model.name}
+                            </div>
                             <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
                           </div>
+                          {isSelected && <Check className="w-4 h-4 text-primary flex-shrink-0" />}
                         </div>
-                      </SelectItem>;
-                    })}
-                  </SelectContent>
-                </Select>
-              )}
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>}
         
