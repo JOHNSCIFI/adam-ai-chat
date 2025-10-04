@@ -55,8 +55,8 @@ const models = [{
   type: 'free'
 }, {
   id: 'deepseekv3',
-  name: 'DeepSeek V3',
-  shortLabel: 'DeepSeek V3',
+  name: 'DeepSeek V3.2',
+  shortLabel: 'DeepSeek V3.2',
   description: "Advanced reasoning model",
   type: 'pro'
 }, {
@@ -128,8 +128,8 @@ const availableModels = [{
   icon: 'gemini'
 }, {
   id: 'deepseekv3',
-  name: 'DeepSeek V3',
-  shortLabel: 'DeepSeek V3',
+  name: 'DeepSeek V3.2',
+  shortLabel: 'DeepSeek V3.2',
   description: 'Advanced reasoning model with strong performance.',
   icon: 'deepseek'
 }, {
