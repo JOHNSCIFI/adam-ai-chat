@@ -375,7 +375,8 @@ export default function ProjectPage() {
       } = await supabase.from('chats').insert({
         user_id: user.id,
         title: userMessage.length > 50 ? userMessage.substring(0, 50) + '...' : userMessage || 'New Chat',
-        project_id: project.id
+        project_id: project.id,
+        model_id: selectedModel
       }).select().single();
       if (error) throw error;
 
