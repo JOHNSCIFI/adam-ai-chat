@@ -822,14 +822,13 @@ export default function ProjectPage() {
         </div>
 
         {/* Input area - fixed at bottom, responsive */}
-        <div className="fixed bottom-0 left-0 right-0 bg-background border-t border-border">
-          <div 
-            className="flex justify-center px-3 sm:px-4 py-3 sm:py-4 w-full max-w-4xl mx-auto"
-            style={{
-              marginLeft: !isMobile ? (collapsed ? '56px' : '280px') : '0',
-              width: !isMobile ? `calc(100% - ${collapsed ? '56px' : '280px'})` : '100%'
-            }}
-          >
+        <div 
+          className="fixed bottom-0 left-0 right-0 bg-background border-t border-border"
+          style={{
+            paddingLeft: !isMobile ? (collapsed ? '56px' : '280px') : '0'
+          }}
+        >
+          <div className="flex justify-center px-3 sm:px-4 py-3 sm:py-4 w-full max-w-4xl mx-auto">
             <div className="w-full">
               {/* File attachments preview */}
               {selectedFiles.length > 0 && <div className="mb-3 flex flex-wrap gap-2">
