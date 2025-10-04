@@ -24,6 +24,7 @@ import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 
 // Speech recognition will be accessed with type casting to avoid global conflicts
 import { ImageAnalysisResult, analyzeImageComprehensively } from '@/utils/imageAnalysis';
@@ -62,6 +63,12 @@ const models = [{
   name: 'DeepSeek V3.2',
   shortLabel: 'DeepSeek V3.2',
   description: "Advanced reasoning model",
+  type: 'pro'
+}, {
+  id: 'grok-4',
+  name: 'Grok 4',
+  shortLabel: 'Grok 4',
+  description: "Powerful AI from xAI",
   type: 'pro'
 }, {
   id: 'generate-image',
@@ -107,6 +114,12 @@ const availableModels = [{
   shortLabel: 'DeepSeek V3.2',
   description: 'Advanced reasoning model with strong performance.',
   icon: 'deepseek'
+}, {
+  id: 'grok-4',
+  name: 'Grok 4',
+  shortLabel: 'Grok 4',
+  description: 'Powerful AI model from xAI with advanced capabilities.',
+  icon: 'grok'
 }, {
   id: 'generate-image',
   name: 'Generate Image',
@@ -155,6 +168,8 @@ export default function Chat() {
         return geminiLogo;
       case 'deepseek':
         return deepseekLogo;
+      case 'grok':
+        return grokLogo;
       default:
         return chatgptLogoSrc;
     }
