@@ -793,7 +793,7 @@ export default function ProjectPage() {
                       e.stopPropagation();
                       startRenameChat(chat);
                     }}>
-                      <MoreHorizontal className="h-3 w-3" />
+                      <Edit2 className="h-3 w-3" />
                     </Button>
                     <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-destructive hover:text-destructive" onClick={e => {
                       e.stopPropagation();

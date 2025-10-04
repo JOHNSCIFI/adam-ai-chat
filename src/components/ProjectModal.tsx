@@ -83,11 +83,6 @@ export function ProjectModal({
 
         if (error) throw error;
 
-        toast({
-          title: "Project updated",
-          description: `"${title}" has been updated successfully.`,
-        });
-
         onProjectUpdated?.();
       } else {
         // Create new project
@@ -103,11 +98,6 @@ export function ProjectModal({
           .single();
 
         if (error) throw error;
-
-        toast({
-          title: "Project created",
-          description: `"${title}" has been created successfully.`,
-        });
 
         onProjectCreated?.();
         
