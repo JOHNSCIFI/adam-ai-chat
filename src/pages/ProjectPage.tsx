@@ -941,24 +941,48 @@ export default function ProjectPage() {
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {!isMobile && <>
-                          {/* File upload and image mode for desktop */}
-                          <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>
-                            <PopoverTrigger asChild>
-                              <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent">
-                                <Paperclip className="h-4 w-4" />
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-48 p-2 bg-background border shadow-lg" align="start">
-                              <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleFileUpload}>
-                                <Paperclip className="h-4 w-4" />
-                                Add photos & files
-                              </Button>
-                              <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
-                                <ImageIcon2 className="h-4 w-4" />
-                                Generate an image
-                              </Button>
-                            </PopoverContent>
-                          </Popover>
+                          <Button variant="ghost" size="sm" className="h-9 w-9 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary flex-shrink-0" onClick={handleFileUpload} aria-label="Upload file">
+                            <Paperclip className="h-4 w-4" />
+                          </Button>
+                          
+                          {isImageMode && !selectedStyle ? <div className="flex items-center gap-2">
+                              {/* Image mode indicator */}
+                              <div className="group flex items-center gap-1 bg-muted px-3 py-2 rounded-full text-xs">
+                                <ImageIcon2 className="h-3 w-3" />
+                                <span>Image</span>
+                                <button onClick={handleExitImageMode} className="opacity-70 group-hover:opacity-100 transition-opacity ml-1 hover:bg-muted-foreground/20 rounded-full p-0.5 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-primary" aria-label="Exit image mode">
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                              
+                              {/* Styles dropdown */}
+                              <Popover open={isStylesOpen} onOpenChange={setIsStylesOpen}>
+                                <PopoverTrigger asChild>
+                                  <Button variant="ghost" size="sm" className="h-9 px-3 text-xs gap-1 bg-muted hover:bg-muted/80 rounded-full border border-border/50 focus-visible:ring-2 focus-visible:ring-primary" aria-label="Select image style" aria-expanded={isStylesOpen} aria-haspopup="true">
+                                    <Palette className="h-3 w-3" />
+                                    <span>Styles</span>
+                                    <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                    </svg>
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-72 sm:w-80 p-3 sm:p-4 bg-background border shadow-lg z-50" align="start">
+                                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+                                    {imageStyles.map(style => <button key={style.name} onClick={() => handleStyleSelect(style)} className="flex flex-col items-center gap-2 p-2 rounded-lg hover:bg-muted transition-colors text-center focus-visible:ring-2 focus-visible:ring-primary focus-visible:bg-muted" aria-label={`Select ${style.name} style`}>
+                                        <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${getStyleBackground(style.name)}`}>
+                                          <span className={`text-xs font-medium ${style.name === 'Coloring Book' ? 'text-black' : 'text-foreground'}`}>
+                                            {style.name.split(' ').map(word => word[0]).join('').slice(0, 2)}
+                                          </span>
+                                        </div>
+                                        <span className="text-xs font-medium leading-tight">{style.name}</span>
+                                      </button>)}
+                                  </div>
+                                </PopoverContent>
+                              </Popover>
+                            </div> : <Button variant="ghost" size="sm" className="h-9 px-3 rounded-full border border-border/50 text-muted-foreground hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary text-xs" onClick={handleCreateImageClick} aria-label="Create an image">
+                              <ImageIcon className="h-4 w-4 mr-2" />
+                              <span>Generate an image</span>
+                            </Button>}
                         </>}
                       </div>
 
