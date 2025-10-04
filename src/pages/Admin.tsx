@@ -9,6 +9,7 @@ import { Loader2, Users, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface ModelUsageDetail {
   model: string;
@@ -219,20 +220,25 @@ export default function Admin() {
 
   return (
     <div className="min-h-full w-full bg-gradient-to-br from-background via-background to-muted/20">
-      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in">
-        {/* Header Section */}
-        <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-6 md:p-8 border border-primary/20">
-          <div className="relative z-10">
-            <div className="flex items-center gap-2 sm:gap-3 mb-2">
-              <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
-                <Users className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 text-primary" />
+      {/* Navbar */}
+      <nav className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-3 sm:px-4 md:px-6">
+          <div className="flex h-14 sm:h-16 items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <SidebarTrigger className="h-8 w-8 sm:h-9 sm:w-9" />
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                  <Users className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                </div>
+                <h1 className="text-lg sm:text-xl md:text-2xl font-bold tracking-tight">Admin Dashboard</h1>
               </div>
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold tracking-tight">Admin Dashboard</h1>
             </div>
-            <p className="text-muted-foreground text-sm sm:text-base md:text-lg">Monitor AI model usage and token consumption</p>
+            <p className="hidden sm:block text-xs sm:text-sm text-muted-foreground">Monitor AI usage</p>
           </div>
-          <div className="absolute top-0 right-0 w-32 h-32 sm:w-48 sm:h-48 md:w-64 md:h-64 bg-primary/5 rounded-full blur-3xl -mr-16 sm:-mr-24 md:-mr-32 -mt-16 sm:-mt-24 md:-mt-32" />
         </div>
+      </nav>
+
+      <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in">
 
         {/* Stats Card */}
         <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
