@@ -276,9 +276,11 @@ export default function Index() {
   useEffect(() => {
     if (user && !pendingMessage) {
       const storedMessage = localStorage.getItem('pendingChatMessage');
+      const storedModel = localStorage.getItem('pendingChatModel');
       if (storedMessage) {
         localStorage.removeItem('pendingChatMessage');
-        createChatWithMessage(user.id, storedMessage);
+        localStorage.removeItem('pendingChatModel');
+        createChatWithMessage(user.id, storedMessage, storedModel || 'gpt-4o-mini');
       }
     }
   }, [user]);
@@ -524,6 +526,7 @@ export default function Index() {
     if (!user) {
       setPendingMessage(message);
       localStorage.setItem('pendingChatMessage', message);
+      localStorage.setItem('pendingChatModel', selectedModel);
       setShowAuthModal(true);
       return;
     }
@@ -578,7 +581,7 @@ export default function Index() {
       setLoading(false);
     }
   };
-  const createChatWithMessage = async (userId: string, messageToSend: string) => {
+  const createChatWithMessage = async (userId: string, messageToSend: string, modelToUse?: string) => {
     if (!canSendMessage) {
       navigate('/pricing-plans');
       return;
@@ -601,7 +604,11 @@ export default function Index() {
         role: 'user'
       });
       if (messageError) throw messageError;
-      navigate(`/chat/${chatData.id}`);
+      navigate(`/chat/${chatData.id}`, {
+        state: {
+          selectedModel: modelToUse || selectedModel
+        }
+      });
     } catch (error) {
       toast.error('Failed to start chat. Please try again.');
     } finally {
