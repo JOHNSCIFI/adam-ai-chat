@@ -885,9 +885,7 @@ export default function ProjectPage() {
                 >
                   {(() => {
                     const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                    return <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: project.color }}>
-                        <IconComponent className="w-4 h-4 text-white" />
-                      </div>;
+                    return <IconComponent className="w-6 h-6" style={{ color: project.color }} />;
                   })()}
                   <h1 className="text-base font-semibold text-foreground truncate max-w-[120px]">{project.title}</h1>
                   <ChevronDown className="h-4 w-4 text-muted-foreground" />
@@ -939,9 +937,7 @@ export default function ProjectPage() {
                 <div className="flex items-center justify-center gap-3 mb-6 cursor-pointer hover:opacity-80 transition-opacity whitespace-nowrap" onClick={() => setIsEditingProject(true)}>
                   {(() => {
                     const IconComponent = iconMap[project.icon as keyof typeof iconMap] || FolderOpen;
-                    return <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: project.color }}>
-                        <IconComponent className="w-6 h-6 text-white" />
-                      </div>;
+                    return <IconComponent className="w-8 h-8" style={{ color: project.color }} />;
                   })()}
                   <h1 className="text-2xl font-semibold text-foreground">{project.title}</h1>
                 </div>
