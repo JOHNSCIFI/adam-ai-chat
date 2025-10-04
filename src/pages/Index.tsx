@@ -731,19 +731,21 @@ export default function Index() {
                 {models.map(model => {
               const modelData = availableModels.find(m => m.id === model.id);
               return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
-                      <div className="flex items-center w-full gap-2">
-                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                          <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
+                      <div className="flex items-center w-full gap-3">
+                        <div className="relative flex-shrink-0">
+                          <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
                             <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
-                            <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
-                          </div>
+                          {model.type === 'pro' && (
+                            <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
+                              PRO
+                            </span>
+                          )}
                         </div>
-                        {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
-                            Pro
-                          </span>}
+                        <div className="flex-1 min-w-0">
+                          <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
+                          <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
+                        </div>
                       </div>
                     </SelectItem>;
             })}
@@ -952,17 +954,19 @@ export default function Index() {
                       const modelData = availableModels.find(m => m.id === model.id);
                       return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
                             <div className="flex items-center w-full gap-3">
-                              {model.type === 'pro' && <span className="text-xs bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full font-medium flex-shrink-0">
-                                  Pro
-                                </span>}
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5 flex-shrink-0">
+                              <div className="relative flex-shrink-0">
+                                <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
                                   <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
                                 </div>
-                                <div className="flex-1 min-w-0">
-                                  <div className="font-semibold text-sm">{model.name}</div>
-                                  <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
-                                </div>
+                                {model.type === 'pro' && (
+                                  <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
+                                    PRO
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="font-semibold text-sm">{model.name}</div>
+                                <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
                               </div>
                             </div>
                           </SelectItem>;
