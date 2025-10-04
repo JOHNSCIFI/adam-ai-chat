@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
@@ -13,6 +14,13 @@ import { ConfirmationDialog } from '@/components/ui/confirmation-dialog';
 import ProjectEditModal from '@/components/ProjectEditModal';
 
 import { toast } from 'sonner';
+
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import claudeLogo from '@/assets/claude-logo.png';
+import geminiLogo from '@/assets/gemini-logo.png';
+import deepseekLogo from '@/assets/deepseek-logo.png';
+import grokLogo from '@/assets/grok-logo.png';
 interface Chat {
   id: string;
   title: string;
@@ -45,6 +53,107 @@ const iconMap = {
   gem: Gem,
   sparkles: Sparkles
 };
+
+const models = [{
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: "Default model (fast + low cost)",
+  type: 'free'
+}, {
+  id: 'gpt-4o',
+  name: 'GPT-4o',
+  shortLabel: 'GPT-4o',
+  description: "High Quality option",
+  type: 'pro'
+}, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: "Most advanced AI model",
+  type: 'pro'
+}, {
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
+  description: "Great for writing",
+  type: 'pro'
+}, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: "Fast Google AI model",
+  type: 'pro'
+}, {
+  id: 'deepseekv3',
+  name: 'DeepSeek V3.2',
+  shortLabel: 'DeepSeek V3.2',
+  description: "Advanced reasoning model",
+  type: 'pro'
+}, {
+  id: 'grok-4',
+  name: 'Grok 4',
+  shortLabel: 'Grok 4',
+  description: "Powerful AI from xAI",
+  type: 'pro'
+}, {
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: "Create images with DALL·E 3",
+  type: 'pro'
+}];
+
+const availableModels = [{
+  id: 'gpt-4o-mini',
+  name: 'GPT-4o mini',
+  shortLabel: 'GPT-4o mini',
+  description: 'Fast and cost-efficient model, perfect for most tasks.',
+  icon: 'openai'
+}, {
+  id: 'gpt-4o',
+  name: 'GPT-4o',
+  shortLabel: 'GPT-4o',
+  description: 'High-quality model for complex reasoning and accurate responses.',
+  icon: 'openai'
+}, {
+  id: 'gpt-5',
+  name: 'GPT-5',
+  shortLabel: 'GPT-5',
+  description: 'Most advanced OpenAI model with superior capabilities and reasoning.',
+  icon: 'openai'
+}, {
+  id: 'claude-sonnet-4',
+  name: 'Claude Sonnet 4',
+  shortLabel: 'Sonnet 4',
+  description: 'Great for writing',
+  icon: 'claude'
+}, {
+  id: 'gemini-2.5-flash',
+  name: 'Gemini 2.5 Flash',
+  shortLabel: 'Gemini 2.5',
+  description: 'Fast Google AI model with multimodal capabilities.',
+  icon: 'gemini',
+  type: 'pro'
+}, {
+  id: 'deepseekv3',
+  name: 'DeepSeek V3.2',
+  shortLabel: 'DeepSeek V3.2',
+  description: 'Advanced reasoning model with strong performance.',
+  icon: 'deepseek'
+}, {
+  id: 'grok-4',
+  name: 'Grok 4',
+  shortLabel: 'Grok 4',
+  description: 'Powerful AI model from xAI with advanced capabilities.',
+  icon: 'grok'
+}, {
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: 'Create stunning images and artwork using DALL·E 3.',
+  icon: 'openai'
+}];
 const imageStyles = [{
   name: 'Cyberpunk',
   prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.'
@@ -84,6 +193,28 @@ export default function ProjectPage() {
   const {
     actualTheme
   } = useTheme();
+  
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+
+  // Helper function to get model icon
+  const getModelIcon = (iconType: string) => {
+    switch (iconType) {
+      case 'openai':
+        return chatgptLogoSrc;
+      case 'claude':
+        return claudeLogo;
+      case 'gemini':
+        return geminiLogo;
+      case 'deepseek':
+        return deepseekLogo;
+      case 'grok':
+        return grokLogo;
+      default:
+        return chatgptLogoSrc;
+    }
+  };
+  
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -117,6 +248,7 @@ export default function ProjectPage() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
   const [audioLevels, setAudioLevels] = useState<number[]>(Array(100).fill(0));
   const [tempTranscript, setTempTranscript] = useState('');
+  const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -988,7 +1120,43 @@ export default function ProjectPage() {
 
                       {/* Voice controls */}
                       {!isMobile && <div className="flex items-center gap-2">
-                        <Button 
+                        <Select value={selectedModel} onValueChange={setSelectedModel}>
+                          <SelectTrigger className="w-[200px] h-10 bg-background/80 backdrop-blur-sm border border-border/50 rounded-xl focus-visible:ring-2 focus-visible:ring-primary text-sm shadow-sm hover:bg-accent/50 transition-all duration-200" aria-label="Select AI model">
+                            <SelectValue>
+                              <div className="flex items-center gap-2">
+                                <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
+                                  <img src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} alt={`${models.find(m => m.id === selectedModel)?.name} icon`} className="w-4 h-4 object-contain" />
+                                </div>
+                                <span className="font-medium truncate">{models.find(m => m.id === selectedModel)?.shortLabel}</span>
+                              </div>
+                            </SelectValue>
+                          </SelectTrigger>
+                          <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]">
+                            {models.map(model => {
+                              const modelData = availableModels.find(m => m.id === model.id);
+                              return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
+                                <div className="flex items-center w-full gap-3">
+                                  <div className="relative flex-shrink-0">
+                                    <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
+                                      <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                                    </div>
+                                    {model.type === 'pro' && (
+                                      <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
+                                        PRO
+                                      </span>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-semibold text-sm">{model.name}</div>
+                                    <div className="text-xs text-muted-foreground mt-0.5">{model.description}</div>
+                                  </div>
+                                </div>
+                              </SelectItem>;
+                            })}
+                          </SelectContent>
+                        </Select>
+                        
+                        <Button
                           size="sm" 
                           className={`h-9 w-9 rounded-full border border-border/50 ${
                             input.trim().length > 0 || selectedFiles.length > 0
