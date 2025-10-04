@@ -878,7 +878,7 @@ export default function ProjectPage() {
                   onChange={handleInputChange} 
                   onKeyDown={handleKeyDown} 
                   placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
-                  className="w-full min-h-[48px] sm:min-h-[24px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
+                  className="w-full min-h-[32px] max-h-[120px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm sm:text-base" 
                   rows={1} 
                   disabled={loading}
                 />
