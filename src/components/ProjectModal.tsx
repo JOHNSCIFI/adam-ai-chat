@@ -170,7 +170,7 @@ export function ProjectModal({
           <div className="space-y-3 sm:space-y-4">
             <h3 className="text-center text-sm font-medium text-muted-foreground">Choose an icon</h3>
             <div className="w-full overflow-hidden">
-              <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2 px-1 justify-start sm:justify-center">
+              <div className="flex gap-2 sm:gap-3 overflow-x-auto scrollbar-hide pb-2 px-1 justify-center">
                 {iconOptions.map((option) => {
                   const IconComponent = option.icon;
                   const isSelected = selectedIcon.name === option.name;
