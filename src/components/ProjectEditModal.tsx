@@ -104,35 +104,39 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-sm bg-background border shadow-xl">
-        <DialogHeader className="text-center pb-6">
-          <DialogTitle className="text-xl font-semibold">Edit Project</DialogTitle>
+      <DialogContent className="max-w-md bg-card border-border shadow-2xl">
+        <DialogHeader className="text-center pb-4">
+          <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            Edit Project
+          </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {/* Project Icon and Name */}
-          <div className="text-center space-y-4">
+          <div className="text-center space-y-6">
             <div 
-              className="w-16 h-16 rounded-2xl mx-auto flex items-center justify-center cursor-pointer hover:scale-105 transition-transform"
-              style={{ backgroundColor: selectedColor }}
+              className="w-20 h-20 mx-auto flex items-center justify-center cursor-pointer hover:scale-110 transition-all duration-300 rounded-2xl bg-muted/50 backdrop-blur-sm border border-border/50"
               onClick={() => setShowIconSelector(!showIconSelector)}
             >
-              <SelectedIconComponent className="w-8 h-8 text-white" />
+              <SelectedIconComponent 
+                className="w-10 h-10" 
+                style={{ color: selectedColor }}
+              />
             </div>
             
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="text-center text-lg font-medium border-0 bg-transparent focus-visible:ring-0 px-0"
+              className="text-center text-xl font-semibold border-0 bg-transparent focus-visible:ring-2 focus-visible:ring-primary/20 rounded-lg px-4 py-2"
               placeholder="Project name"
             />
           </div>
 
           {/* Icon Selector */}
           {showIconSelector && (
-            <div className="p-4 bg-muted/20 rounded-lg">
-              <h3 className="text-sm font-medium mb-3 text-center">Choose Icon</h3>
-              <div className="grid grid-cols-5 gap-2">
+            <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-border/50 backdrop-blur-sm">
+              <h3 className="text-sm font-semibold mb-4 text-center text-muted-foreground">Choose Icon</h3>
+              <div className="grid grid-cols-5 gap-3">
                 {iconOptions.map((icon) => {
                   const IconComponent = icon.component;
                   return (
@@ -140,14 +144,14 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
                       key={icon.key}
                       variant={selectedIcon === icon.key ? "default" : "ghost"}
                       size="sm"
-                      className="h-10 w-10 p-0"
+                      className="h-12 w-12 p-0 rounded-xl hover:scale-110 transition-all duration-200"
                       onClick={() => {
                         setSelectedIcon(icon.key);
                         setShowColorSelector(true);
                         setShowIconSelector(false);
                       }}
                     >
-                      <IconComponent className="w-4 h-4" />
+                      <IconComponent className="w-5 h-5" />
                     </Button>
                   );
                 })}
@@ -157,18 +161,18 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
 
           {/* Color Selector */}
           {showColorSelector && (
-            <div className="p-4 bg-muted/20 rounded-lg">
-              <h3 className="text-sm font-medium mb-3 text-center">Choose Color</h3>
-              <div className="grid grid-cols-5 gap-2">
+            <div className="p-6 bg-gradient-to-br from-muted/30 to-muted/10 rounded-xl border border-border/50 backdrop-blur-sm">
+              <h3 className="text-sm font-semibold mb-4 text-center text-muted-foreground">Choose Color</h3>
+              <div className="grid grid-cols-5 gap-3">
                 {colorOptions.map((color) => (
                   <Button
                     key={color}
                     variant="ghost"
                     size="sm"
-                    className="h-8 w-8 p-0 rounded-full border-2"
+                    className="h-10 w-10 p-0 rounded-full border-2 hover:scale-110 transition-all duration-200"
                     style={{ 
                       backgroundColor: color,
-                      borderColor: selectedColor === color ? 'hsl(var(--foreground))' : 'transparent'
+                      borderColor: selectedColor === color ? 'hsl(var(--primary))' : 'transparent'
                     }}
                     onClick={() => {
                       setSelectedColor(color);
@@ -181,18 +185,18 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex gap-3 pt-2">
             <Button 
               variant="outline" 
               onClick={onClose}
-              className="flex-1"
+              className="flex-1 h-11 font-medium"
             >
               Cancel
             </Button>
             <Button 
               onClick={handleSave}
               disabled={!title.trim() || loading}
-              className="flex-1"
+              className="flex-1 h-11 font-medium shadow-lg shadow-primary/20"
             >
               {loading ? 'Updating...' : 'Update'}
             </Button>
