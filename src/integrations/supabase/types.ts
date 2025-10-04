@@ -45,6 +45,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          model_id: string | null
           project_id: string | null
           title: string
           tool_id: string | null
@@ -55,6 +56,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          model_id?: string | null
           project_id?: string | null
           title?: string
           tool_id?: string | null
@@ -65,6 +67,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          model_id?: string | null
           project_id?: string | null
           title?: string
           tool_id?: string | null
