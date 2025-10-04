@@ -585,15 +585,10 @@ export default function Chat() {
       });
       shouldAutoSend.current = false;
       
-      // Wait longer to ensure real-time subscription is fully established
+      // Small delay to ensure real-time subscription is established
       setTimeout(() => {
-        sendMessage().then(() => {
-          // After sending, refetch messages to ensure they appear
-          setTimeout(() => {
-            fetchMessages();
-          }, 1000);
-        });
-      }, 1500);
+        sendMessage();
+      }, 300);
     }
   }, [input, selectedFiles, loading, chatId]);
 
