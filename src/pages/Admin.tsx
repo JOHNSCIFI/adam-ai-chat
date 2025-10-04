@@ -9,6 +9,7 @@ import { Loader2, Users, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 
 interface ModelUsageDetail {
   model: string;
@@ -219,6 +220,14 @@ export default function Admin() {
 
   return (
     <div className="min-h-full w-full bg-gradient-to-br from-background via-background to-muted/20">
+      {/* Mobile & Tablet Navbar */}
+      <div className="lg:hidden sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-b border-border">
+        <div className="flex items-center h-14 px-4">
+          <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg" />
+          <h2 className="ml-4 text-lg font-semibold">Admin Dashboard</h2>
+        </div>
+      </div>
+
       <div className="container mx-auto p-3 sm:p-4 md:p-6 space-y-4 sm:space-y-6 md:space-y-8 animate-fade-in">
         {/* Header Section */}
         <div className="relative overflow-hidden rounded-xl md:rounded-2xl bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-4 sm:p-6 md:p-8 border border-primary/20">
