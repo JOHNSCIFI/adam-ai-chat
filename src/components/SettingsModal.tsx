@@ -435,24 +435,24 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'profile':
         if (!user) {
           return (
-            <div className="space-y-8">
-              <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Profile</h2>
-                <p className="text-muted-foreground">Sign in to manage your account information</p>
+            <div className="space-y-6 md:space-y-8">
+              <div className="space-y-1.5 md:space-y-2">
+                <h2 className="text-xl md:text-2xl font-bold text-foreground">Profile</h2>
+                <p className="text-sm md:text-base text-muted-foreground">Sign in to manage your account information</p>
               </div>
-              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
-                <CardContent className="p-8 text-center">
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-6 md:p-8 text-center">
                   <div className="space-y-4">
-                    <div className="w-16 h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
-                      <User className="h-8 w-8 text-muted-foreground" />
+                    <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-muted/50 rounded-full flex items-center justify-center">
+                      <User className="h-7 w-7 md:h-8 md:w-8 text-muted-foreground" />
                     </div>
-                    <div className="space-y-2">
-                      <p className="font-medium text-foreground">Sign in to access profile settings</p>
-                      <p className="text-sm text-muted-foreground">Manage your account information and preferences</p>
+                    <div className="space-y-1.5 md:space-y-2">
+                      <p className="font-medium text-foreground text-sm md:text-base">Sign in to access profile settings</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">Manage your account information and preferences</p>
                     </div>
                     <Button 
                       onClick={() => window.location.href = '/'}
-                      className="mt-4"
+                      className="mt-2 md:mt-4 w-full sm:w-auto"
                     >
                       Sign In
                     </Button>
@@ -463,28 +463,28 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
           );
         }
         return (
-          <div className="space-y-8">
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-foreground">Profile</h2>
-              <p className="text-muted-foreground">Manage your account information</p>
+          <div className="space-y-6 md:space-y-8">
+            <div className="space-y-1.5 md:space-y-2">
+              <h2 className="text-xl md:text-2xl font-bold text-foreground">Profile</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Manage your account information</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Email Section */}
-              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
-                <CardContent className="p-6">
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-4 md:p-6">
                   <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="flex items-center gap-2.5 md:gap-3">
+                      <div className="p-1.5 md:p-2 bg-primary/10 rounded-lg flex-shrink-0">
                         <Mail className="h-4 w-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">Email Address</p>
-                        <p className="text-sm text-muted-foreground">Your account email</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground text-sm md:text-base">Email Address</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Your account email</p>
                       </div>
                     </div>
-                    <div className="ml-11">
-                      <p className="font-medium text-foreground bg-muted/40 px-3 py-2 rounded-lg border border-border/30 inline-block">
+                    <div className="ml-0 md:ml-11 mt-2">
+                      <p className="font-medium text-foreground bg-muted/40 px-3 py-2 rounded-lg border border-border/30 break-all text-sm md:text-base">
                         {user?.email}
                       </p>
                     </div>
@@ -493,39 +493,39 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </Card>
 
               {/* Login Methods Section */}
-              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm">
-                <CardContent className="p-6">
+              <Card className="border border-border/40 bg-gradient-to-r from-card/80 to-card/40 backdrop-blur-sm shadow-sm">
+                <CardContent className="p-4 md:p-6">
                   <div className="space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 bg-primary/10 rounded-lg">
+                    <div className="flex items-center gap-2.5 md:gap-3">
+                      <div className="p-1.5 md:p-2 bg-primary/10 rounded-lg flex-shrink-0">
                         <Shield className="h-4 w-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-semibold text-foreground">Login Methods</p>
-                        <p className="text-sm text-muted-foreground">Connected authentication providers</p>
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground text-sm md:text-base">Login Methods</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Connected authentication providers</p>
                       </div>
                     </div>
                     
-                    <div className="ml-11 space-y-3">
+                    <div className="ml-0 md:ml-11 space-y-3">
                       {/* Google Provider */}
                       {user?.app_metadata?.providers?.includes('google') && (
-                        <div className="flex items-center justify-between p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white rounded-lg shadow-sm">
-                              <svg className="h-5 w-5" viewBox="0 0 24 24">
+                        <div className="flex items-center justify-between gap-3 p-3 md:p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
+                            <div className="p-1.5 md:p-2 bg-white rounded-lg shadow-sm flex-shrink-0">
+                              <svg className="h-4 w-4 md:h-5 md:w-5" viewBox="0 0 24 24">
                                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
                                 <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
                                 <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                               </svg>
                             </div>
-                            <div>
-                              <p className="font-medium text-foreground">Google</p>
-                              <p className="text-sm text-muted-foreground">Sign in with your Google account</p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground text-sm md:text-base">Google</p>
+                              <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Sign in with your Google account</p>
                             </div>
                           </div>
-                          <div className="p-1.5 bg-green-100 rounded-full">
-                            <Check className="h-4 w-4 text-green-600" />
+                          <div className="p-1 md:p-1.5 bg-green-100 rounded-full flex-shrink-0">
+                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600" />
                           </div>
                         </div>
                       )}
@@ -534,18 +534,18 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                       {(user?.app_metadata?.providers?.includes('email') || 
                         !user?.app_metadata?.providers || 
                         user.app_metadata.providers.length === 0) && (
-                        <div className="flex items-center justify-between p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                              <Mail className="h-5 w-5 text-primary" />
+                        <div className="flex items-center justify-between gap-3 p-3 md:p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
+                            <div className="p-1.5 md:p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                              <Mail className="h-4 w-4 md:h-5 md:w-5 text-primary" />
                             </div>
-                            <div>
-                              <p className="font-medium text-foreground">Email & Password</p>
-                              <p className="text-sm text-muted-foreground">Sign in with your email address</p>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground text-sm md:text-base">Email & Password</p>
+                              <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Sign in with your email address</p>
                             </div>
                           </div>
-                          <div className="p-1.5 bg-green-100 rounded-full">
-                            <Check className="h-4 w-4 text-green-600" />
+                          <div className="p-1 md:p-1.5 bg-green-100 rounded-full flex-shrink-0">
+                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600" />
                           </div>
                         </div>
                       )}
@@ -560,36 +560,36 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'security':
         if (!user) {
           return (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-1">Security</h2>
-                <p className="text-muted-foreground">Sign in to manage your account security</p>
+            <div className="space-y-4 md:space-y-6">
+              <div className="space-y-1.5 md:space-y-2">
+                <h2 className="text-xl md:text-2xl font-semibold text-foreground">Security</h2>
+                <p className="text-sm md:text-base text-muted-foreground">Sign in to manage your account security</p>
               </div>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">You need to be signed in to access security settings.</p>
-                <Button onClick={() => window.location.href = '/'}>Sign In</Button>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-sm md:text-base text-muted-foreground mb-4">You need to be signed in to access security settings.</p>
+                <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">Sign In</Button>
               </div>
             </div>
           );
         }
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold mb-1">Security</h2>
-              <p className="text-muted-foreground">Manage your account security and sessions</p>
+          <div className="space-y-4 md:space-y-6">
+            <div className="space-y-1.5 md:space-y-2">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">Security</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Manage your account security and sessions</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Multi-Factor Authentication */}
               <div>
-                <p className="font-medium mb-3">Multi-Factor Authentication</p>
-                <div className="p-4 bg-muted/30 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Two-Factor Authentication</p>
-                      <p className="text-sm text-muted-foreground">Not available yet</p>
+                <p className="font-medium mb-2 md:mb-3 text-sm md:text-base">Multi-Factor Authentication</p>
+                <div className="p-3 md:p-4 bg-muted/30 rounded-lg border shadow-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm md:text-base">Two-Factor Authentication</p>
+                      <p className="text-xs md:text-sm text-muted-foreground">Not available yet</p>
                     </div>
-                    <Button variant="outline" disabled>
+                    <Button variant="outline" disabled size="sm" className="w-full sm:w-auto">
                       Enable
                     </Button>
                   </div>
@@ -600,42 +600,42 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
               {/* Session Management */}
               <div>
-                <p className="font-medium mb-3">Session Management</p>
+                <p className="font-medium mb-2 md:mb-3 text-sm md:text-base">Session Management</p>
                 <div className="space-y-3">
-                  <div className="p-4 bg-muted/30 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">Current Device</p>
-                        <p className="text-sm text-muted-foreground">You are currently signed in on this device</p>
+                  <div className="p-3 md:p-4 bg-muted/30 rounded-lg border shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm md:text-base">Current Device</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">You are currently signed in on this device</p>
                       </div>
-                      <Button variant="outline" onClick={handleLogoutThisDevice}>
+                      <Button variant="outline" onClick={handleLogoutThisDevice} size="sm" className="w-full sm:w-auto">
                         Sign Out
                       </Button>
                     </div>
                   </div>
                   
-                  <div className="p-4 bg-muted/30 rounded-lg border">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium">All Devices</p>
-                        <p className="text-sm text-muted-foreground">Sign out of all devices and sessions</p>
+                  <div className="p-3 md:p-4 bg-muted/30 rounded-lg border shadow-sm">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm md:text-base">All Devices</p>
+                        <p className="text-xs md:text-sm text-muted-foreground">Sign out of all devices and sessions</p>
                       </div>
                       <AlertDialog>
                         <AlertDialogTrigger asChild>
-                          <Button variant="outline">
+                          <Button variant="outline" size="sm" className="w-full sm:w-auto">
                             Sign Out Everywhere
                           </Button>
                         </AlertDialogTrigger>
-                        <AlertDialogContent>
+                        <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                           <AlertDialogHeader>
-                            <AlertDialogTitle>Sign out of all devices?</AlertDialogTitle>
-                            <AlertDialogDescription>
+                            <AlertDialogTitle className="text-base md:text-lg">Sign out of all devices?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-sm">
                               This will sign you out of all devices and sessions. You'll need to sign in again on each device.
                             </AlertDialogDescription>
                           </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleLogoutAllDevices}>
+                          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                            <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleLogoutAllDevices} className="w-full sm:w-auto">
                               Sign Out Everywhere
                             </AlertDialogAction>
                           </AlertDialogFooter>
@@ -652,38 +652,40 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       case 'data':
         if (!user) {
           return (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
-                <p className="text-muted-foreground">Sign in to manage your data and privacy</p>
+            <div className="space-y-4 md:space-y-6">
+              <div className="space-y-1.5 md:space-y-2">
+                <h2 className="text-xl md:text-2xl font-semibold text-foreground">Data Control</h2>
+                <p className="text-sm md:text-base text-muted-foreground">Sign in to manage your data and privacy</p>
               </div>
-              <div className="text-center py-8">
-                <p className="text-muted-foreground mb-4">You need to be signed in to access data control settings.</p>
-                <Button onClick={() => window.location.href = '/'}>Sign In</Button>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-sm md:text-base text-muted-foreground mb-4">You need to be signed in to access data control settings.</p>
+                <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">Sign In</Button>
               </div>
             </div>
           );
         }
         return (
-          <div className="space-y-6">
-            <div>
-              <h2 className="text-2xl font-semibold mb-1">Data Control</h2>
-              <p className="text-muted-foreground">Manage your data and account</p>
+          <div className="space-y-4 md:space-y-6">
+            <div className="space-y-1.5 md:space-y-2">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">Data Control</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Manage your data and account</p>
             </div>
             
-            <div className="space-y-6">
+            <div className="space-y-4 md:space-y-6">
               {/* Data Export */}
-              <Card>
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold mb-1">Export Data</h3>
-                      <p className="text-sm text-muted-foreground">Download all your conversations and account data</p>
+              <Card className="shadow-sm">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold mb-1 text-sm md:text-base">Export Data</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Download all your conversations and account data</p>
                     </div>
                     <Button 
                       onClick={handleExportData}
                       disabled={isExporting}
                       variant="outline"
+                      size="sm"
+                      className="w-full sm:w-auto"
                     >
                       {isExporting ? 'Exporting...' : 'Export'}
                     </Button>
@@ -692,30 +694,30 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </Card>
 
               {/* Delete All Chats */}
-              <Card className="border-destructive/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold mb-1">Delete All Data</h3>
-                      <p className="text-sm text-muted-foreground">Permanently delete all conversations, projects, and images</p>
+              <Card className="border-destructive/50 shadow-sm">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold mb-1 text-sm md:text-base">Delete All Data</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Permanently delete all conversations, projects, and images</p>
                     </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="w-full sm:w-auto">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete All
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete all data?</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle className="text-base md:text-lg">Delete all data?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm">
                             This action cannot be undone. All your conversations, projects, and images will be permanently deleted.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteAllChats} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteAllChats} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto">
                             Delete All Data
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -726,30 +728,30 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
               </Card>
 
               {/* Delete Account */}
-              <Card className="border-destructive/50">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold mb-1">Delete Account</h3>
-                      <p className="text-sm text-muted-foreground">Permanently delete your account and all associated data</p>
+              <Card className="border-destructive/50 shadow-sm">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="min-w-0">
+                      <h3 className="font-semibold mb-1 text-sm md:text-base">Delete Account</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground">Permanently delete your account and all associated data</p>
                     </div>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="w-full sm:w-auto">
                           <Trash2 className="h-4 w-4 mr-2" />
                           Delete Account
                         </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
+                      <AlertDialogContent className="max-w-[90vw] sm:max-w-md">
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                          <AlertDialogDescription>
+                          <AlertDialogTitle className="text-base md:text-lg">Delete your account?</AlertDialogTitle>
+                          <AlertDialogDescription className="text-sm">
                             This action cannot be undone. Your account and all associated data will be permanently deleted.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                        <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                          <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto">
                             Delete Account
                           </AlertDialogAction>
                         </AlertDialogFooter>
@@ -770,14 +772,14 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   if (isMobile) {
     return (
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent side="bottom" className="h-[90vh] p-0 flex flex-col bg-background">
-          <SheetHeader className="px-6 py-4 border-b border-border/40 flex-shrink-0 bg-gradient-to-r from-background to-background/95">
-            <SheetTitle className="text-xl font-semibold text-left text-foreground">Settings</SheetTitle>
+        <SheetContent side="bottom" className="h-[92vh] md:h-[88vh] p-0 flex flex-col bg-background">
+          <SheetHeader className="px-4 md:px-6 py-3 md:py-4 border-b border-border/40 flex-shrink-0 bg-gradient-to-r from-background to-background/95">
+            <SheetTitle className="text-lg md:text-xl font-semibold text-left text-foreground">Settings</SheetTitle>
           </SheetHeader>
           
           {/* Mobile Tab Navigation */}
           <div className="flex-shrink-0 border-b border-border/40 bg-gradient-to-r from-muted/30 to-muted/10 backdrop-blur-sm">
-            <nav className="flex p-3 gap-2">
+            <nav className="flex p-2 md:p-3 gap-1.5 md:gap-2 overflow-x-auto">
               {sidebarItems.map((item) => {
                 const Icon = item.icon;
                 const isDisabled = !user && (item.id === 'profile' || item.id === 'data');
@@ -786,7 +788,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     key={item.id}
                     onClick={() => setActiveTab(item.id)}
                     disabled={isDisabled}
-                    className={`flex-1 flex flex-col items-center justify-center gap-1.5 px-3 py-3 rounded-xl text-sm transition-all duration-200 ${
+                    className={`flex-1 min-w-[70px] flex flex-col items-center justify-center gap-1 md:gap-1.5 px-2 md:px-3 py-2.5 md:py-3 rounded-xl text-sm transition-all duration-200 ${
                       activeTab === item.id
                         ? 'bg-primary/10 text-primary font-semibold shadow-sm border border-primary/20'
                         : isDisabled
@@ -794,14 +796,14 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                         : 'text-muted-foreground hover:bg-accent/60 hover:text-foreground hover:scale-105'
                     }`}
                   >
-                    <div className={`p-2 rounded-lg transition-colors ${
+                    <div className={`p-1.5 md:p-2 rounded-lg transition-colors ${
                       activeTab === item.id 
                         ? 'bg-primary/15' 
                         : 'bg-muted/40'
                     }`}>
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     </div>
-                    <span className="text-xs font-medium leading-tight">{item.label}</span>
+                    <span className="text-[10px] md:text-xs font-medium leading-tight">{item.label}</span>
                   </button>
                 );
               })}
