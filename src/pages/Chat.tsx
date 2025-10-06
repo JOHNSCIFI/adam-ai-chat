@@ -1036,19 +1036,23 @@ export default function Chat() {
     if (!originalChatId) {
       return;
     }
+    
+    // CRITICAL: Skip triggerAIResponse for image generation models
+    // They have dedicated webhook handling in sendMessage to avoid duplicate calls
+    if (selectedModel === 'generate-image' || selectedModel === 'edit-image') {
+      console.log('[AI-RESPONSE] Skipping triggerAIResponse for image model:', selectedModel);
+      return;
+    }
+    
     setIsGeneratingResponse(true);
     
     console.log('[AI-RESPONSE] Starting AI response for message:', userMessageId);
     console.log('[AI-RESPONSE] Using model:', selectedModel);
     
     try {
-      // Determine webhook type based on model
-      let webhookType = 'text';
-      if (selectedModel === 'generate-image') {
-        webhookType = 'generate_image';
-      }
-      // For edit-image, use model field instead of type
-      console.log('[AI-RESPONSE] Calling webhook with type:', webhookType, 'model:', selectedModel);
+      // Send webhook for text-based models only
+      // Image generation models are handled separately
+      console.log('[AI-RESPONSE] Calling webhook with type: text, model:', selectedModel);
       
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
@@ -1056,7 +1060,7 @@ export default function Chat() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          type: webhookType,
+          type: 'text',
           message: userMessage,
           userId: user.id,
           chatId: originalChatId,
