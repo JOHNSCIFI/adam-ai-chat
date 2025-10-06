@@ -310,15 +310,29 @@ export default function Chat() {
           table: 'messages',
           filter: `chat_id=eq.${chatId}`
         }, payload => {
-          console.log('[REALTIME-INSERT] New message received:', payload.new);
+          console.log('[REALTIME-INSERT] ===== NEW MESSAGE EVENT =====');
+          console.log('[REALTIME-INSERT] Raw payload:', JSON.stringify(payload, null, 2));
           const newMessage = payload.new as Message;
+
+          console.log('[REALTIME-INSERT] Message details:', {
+            id: newMessage.id,
+            role: newMessage.role,
+            chat_id: newMessage.chat_id,
+            currentChatId: chatId,
+            content_length: newMessage.content?.length || 0,
+            content_preview: newMessage.content?.substring(0, 100),
+            hasFileAttachments: !!newMessage.file_attachments
+          });
 
           // CRITICAL: Double-check message belongs to current chat to prevent leakage
           if (newMessage.chat_id !== chatId) {
-            console.log('[REALTIME-INSERT] Message rejected - wrong chat_id:', newMessage.chat_id, 'expected:', chatId);
+            console.log('[REALTIME-INSERT] ❌ REJECTED - wrong chat_id');
+            console.log('[REALTIME-INSERT] Expected:', chatId);
+            console.log('[REALTIME-INSERT] Got:', newMessage.chat_id);
             return;
           }
           
+          console.log('[REALTIME-INSERT] ✅ Message belongs to current chat');
           console.log('[REALTIME-INSERT] Message accepted:', {
             id: newMessage.id,
             role: newMessage.role,
@@ -330,7 +344,7 @@ export default function Chat() {
           
           // If this is a new assistant message, clear ALL loading states immediately
           if (newMessage.role === 'assistant') {
-            console.log('[REALTIME-INSERT] New assistant message received, clearing all loading states');
+            console.log('[REALTIME-INSERT] 🤖 Assistant message - clearing loading states');
             
             setLoading(false);
             setIsGeneratingResponse(false);
@@ -369,12 +383,18 @@ export default function Chat() {
           
           // Add message to state immediately with forced re-render
           setMessages(prev => {
-            console.log('[REALTIME-INSERT] Current messages count:', prev.length);
+            console.log('[REALTIME-INSERT] 📝 Adding to state...');
+            console.log('[REALTIME-INSERT] Current state has', prev.length, 'messages');
+            console.log('[REALTIME-INSERT] Current messages:', prev.map(m => ({
+              id: m.id.substring(0, 10),
+              role: m.role,
+              chat_id: m.chat_id
+            })));
             
             // Check if message already exists to prevent duplicates
             const existsById = prev.find(msg => msg.id === newMessage.id);
             if (existsById) {
-              console.log('[REALTIME-INSERT] Message duplicate by ID, skipping');
+              console.log('[REALTIME-INSERT] ⚠️ Duplicate by ID - skipping');
               return prev;
             }
             
@@ -388,7 +408,7 @@ export default function Chat() {
               );
               
               if (tempMessageIndex !== -1) {
-                console.log('[REALTIME-INSERT] Replacing temp user message with real one:', prev[tempMessageIndex].id, '->', newMessage.id);
+                console.log('[REALTIME-INSERT] 🔄 Replacing temp message at index', tempMessageIndex);
                 const updated = [...prev];
                 updated[tempMessageIndex] = newMessage;
                 return updated;
@@ -402,20 +422,26 @@ export default function Chat() {
             );
             
             if (existsByContent) {
-              console.log('[REALTIME-INSERT] Message duplicate by content, skipping');
+              console.log('[REALTIME-INSERT] ⚠️ Duplicate by content - skipping');
               return prev;
             }
             
+            console.log('[REALTIME-INSERT] 🆕 Message is NEW - adding to state');
+            
             // CRITICAL: Filter out any messages not belonging to current chat before adding new message
             const filteredPrev = prev.filter(msg => !msg.chat_id || msg.chat_id === chatId);
-            console.log('[REALTIME-INSERT] Filtered messages:', filteredPrev.length);
-            console.log('[REALTIME-INSERT] Adding message to state');
+            console.log('[REALTIME-INSERT] After filtering by chat_id:', filteredPrev.length, 'messages');
             
             // Create new array with new message and sort by created_at to ensure proper ordering
             const newMessages = [...filteredPrev, newMessage].sort((a, b) => 
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             );
-            console.log('[REALTIME-INSERT] New total messages (sorted):', newMessages.length);
+            console.log('[REALTIME-INSERT] ✅ Final message count:', newMessages.length);
+            console.log('[REALTIME-INSERT] Final messages:', newMessages.map(m => ({
+              id: m.id.substring(0, 10),
+              role: m.role,
+              preview: m.content?.substring(0, 30)
+            })));
             
             // Force immediate scroll
             requestAnimationFrame(() => {
