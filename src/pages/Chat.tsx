@@ -577,20 +577,42 @@ export default function Chat() {
 
   // Auto-send when data is ready after being set from navigation
   useEffect(() => {
-    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId && messages.length >= 0) {
       console.log('[CHAT-INITIAL] Auto-sending message:', {
         hasInput: !!input,
         filesCount: selectedFiles.length,
-        chatId
+        chatId,
+        files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
       });
+      
+      // Create and display user message immediately BEFORE sending
+      const tempUserMessage: Message = {
+        id: `temp-init-${Date.now()}`,
+        chat_id: chatId,
+        content: input.trim(),
+        role: 'user',
+        created_at: new Date().toISOString(),
+        file_attachments: selectedFiles.map((file, index) => ({
+          id: `temp-file-init-${Date.now()}-${index}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file)
+        }))
+      };
+      
+      // Add message to UI immediately so user sees their image
+      setMessages(prev => [...prev, tempUserMessage]);
+      scrollToBottom();
+      
       shouldAutoSend.current = false;
       
-      // Small delay to ensure real-time subscription is established
+      // Delay to ensure message is rendered and real-time subscription is ready
       setTimeout(() => {
         sendMessage();
-      }, 300);
+      }, 500);
     }
-  }, [input, selectedFiles, loading, chatId]);
+  }, [input, selectedFiles, loading, chatId, messages]);
 
   const regenerateResponse = async (messageId: string) => {
     // Immediate synchronous check to prevent race conditions
@@ -1263,21 +1285,38 @@ export default function Chat() {
     const userMessage = input.trim();
     const files = [...selectedFiles];
     
-    // Create temporary user message immediately to show in UI (for all cases)
-    const tempUserMessage: Message = {
-      id: `temp-${Date.now()}`,
-      chat_id: chatId!,
-      content: userMessage,
-      role: 'user',
-      created_at: new Date().toISOString(),
-      file_attachments: files.map((file, index) => ({
-        id: `temp-file-${Date.now()}-${index}`,
-        name: file.name,
-        size: file.size,
-        type: file.type,
-        url: URL.createObjectURL(file)
-      }))
-    };
+    // Check if a temp message already exists (from auto-send)
+    const existingTempMessage = messages.find(msg => 
+      msg.id.startsWith('temp-init-') && msg.role === 'user'
+    );
+    
+    let tempUserMessage: Message;
+    
+    if (existingTempMessage) {
+      // Use existing temp message instead of creating a new one
+      console.log('[SEND] Using existing temp message:', existingTempMessage.id);
+      tempUserMessage = existingTempMessage;
+    } else {
+      // Create temporary user message immediately to show in UI (for all cases)
+      tempUserMessage = {
+        id: `temp-${Date.now()}`,
+        chat_id: chatId!,
+        content: userMessage,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        file_attachments: files.map((file, index) => ({
+          id: `temp-file-${Date.now()}-${index}`,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: URL.createObjectURL(file)
+        }))
+      };
+      
+      // Add to UI only if we created a new temp message
+      setMessages(prev => [...prev, tempUserMessage]);
+      scrollToBottom();
+    }
     
     // Clear input and files immediately
     setInput('');
@@ -1299,9 +1338,11 @@ export default function Chat() {
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
       
-      // Add to UI immediately so user sees their message
-      setMessages(prev => [...prev, tempUserMessage]);
-      scrollToBottom();
+      // Add to UI only if we created a new temp message (not using existing)
+      if (!existingTempMessage) {
+        setMessages(prev => [...prev, tempUserMessage]);
+        scrollToBottom();
+      }
       
       try {
         // First, ensure the chat exists
@@ -1435,9 +1476,11 @@ export default function Chat() {
     }
     processedUserMessages.current.get(chatId)!.add(tempUserMessage.id);
     
-    // CRITICAL: Add user message to UI immediately BEFORE processing files
-    setMessages(prev => [...prev, tempUserMessage]);
-    scrollToBottom();
+    // CRITICAL: Add user message to UI immediately BEFORE processing files (only if new temp message)
+    if (!existingTempMessage) {
+      setMessages(prev => [...prev, tempUserMessage]);
+      scrollToBottom();
+    }
     
     try {
       let aiAnalysisResponse = '';
