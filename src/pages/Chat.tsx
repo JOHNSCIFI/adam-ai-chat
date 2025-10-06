@@ -1030,14 +1030,17 @@ export default function Chat() {
     console.log('[AI-RESPONSE] Using model:', selectedModel);
     
     try {
-      console.log('[AI-RESPONSE] Calling webhook...');
+      // Determine webhook type based on model
+      const webhookType = selectedModel === 'generate-image' ? 'generate_image' : 'text';
+      console.log('[AI-RESPONSE] Calling webhook with type:', webhookType);
+      
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          type: 'text',
+          type: webhookType,
           message: userMessage,
           userId: user.id,
           chatId: originalChatId,
