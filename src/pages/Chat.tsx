@@ -370,6 +370,23 @@ export default function Chat() {
               return prev;
             }
             
+            // For user messages, check if there's a temp message to replace
+            if (newMessage.role === 'user') {
+              const tempMessageIndex = prev.findIndex(msg => 
+                msg.id.startsWith('temp-') && 
+                msg.role === 'user' &&
+                msg.content === newMessage.content &&
+                msg.chat_id === newMessage.chat_id
+              );
+              
+              if (tempMessageIndex !== -1) {
+                console.log('[REALTIME-INSERT] Replacing temp user message with real one:', prev[tempMessageIndex].id, '->', newMessage.id);
+                const updated = [...prev];
+                updated[tempMessageIndex] = newMessage;
+                return updated;
+              }
+            }
+            
             const existsByContent = prev.find(msg => 
               msg.content === newMessage.content && 
               msg.role === newMessage.role && 
@@ -545,6 +562,7 @@ export default function Chat() {
   // Handle initial files and message from navigation (from home page)
   const hasProcessedInitialData = useRef(false);
   const shouldAutoSend = useRef(false);
+  const autoSendTempId = useRef<string | null>(null); // Track temp message ID from auto-send
   
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
@@ -585,9 +603,13 @@ export default function Chat() {
         files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
       });
       
+      // Create temp ID and store it
+      const tempId = `temp-init-${Date.now()}`;
+      autoSendTempId.current = tempId;
+      
       // Create and display user message immediately BEFORE sending
       const tempUserMessage: Message = {
-        id: `temp-init-${Date.now()}`,
+        id: tempId,
         chat_id: chatId,
         content: input.trim(),
         role: 'user',
@@ -1285,19 +1307,41 @@ export default function Chat() {
     const userMessage = input.trim();
     const files = [...selectedFiles];
     
-    // Check if a temp message already exists (from auto-send)
-    const existingTempMessage = messages.find(msg => 
-      msg.id.startsWith('temp-init-') && msg.role === 'user'
-    );
-    
+    // Check if we're using the auto-send temp message
     let tempUserMessage: Message;
     
-    if (existingTempMessage) {
-      // Use existing temp message instead of creating a new one
-      console.log('[SEND] Using existing temp message:', existingTempMessage.id);
-      tempUserMessage = existingTempMessage;
+    if (autoSendTempId.current) {
+      // Use the temp message created by auto-send
+      const existingTempMessage = messages.find(msg => msg.id === autoSendTempId.current);
+      
+      if (existingTempMessage) {
+        console.log('[SEND] Using auto-send temp message:', autoSendTempId.current);
+        tempUserMessage = existingTempMessage;
+      } else {
+        console.log('[SEND] Auto-send temp message not found, creating new one');
+        tempUserMessage = {
+          id: `temp-${Date.now()}`,
+          chat_id: chatId!,
+          content: userMessage,
+          role: 'user',
+          created_at: new Date().toISOString(),
+          file_attachments: files.map((file, index) => ({
+            id: `temp-file-${Date.now()}-${index}`,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: URL.createObjectURL(file)
+          }))
+        };
+        setMessages(prev => [...prev, tempUserMessage]);
+        scrollToBottom();
+      }
+      
+      // Clear the auto-send ref
+      autoSendTempId.current = null;
     } else {
-      // Create temporary user message immediately to show in UI (for all cases)
+      // Normal send - create new temp message
+      console.log('[SEND] Creating new temp message for manual send');
       tempUserMessage = {
         id: `temp-${Date.now()}`,
         chat_id: chatId!,
@@ -1312,8 +1356,6 @@ export default function Chat() {
           url: URL.createObjectURL(file)
         }))
       };
-      
-      // Add to UI only if we created a new temp message
       setMessages(prev => [...prev, tempUserMessage]);
       scrollToBottom();
     }
@@ -1337,12 +1379,6 @@ export default function Chat() {
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
-      
-      // Add to UI only if we created a new temp message (not using existing)
-      if (!existingTempMessage) {
-        setMessages(prev => [...prev, tempUserMessage]);
-        scrollToBottom();
-      }
       
       try {
         // First, ensure the chat exists
@@ -1403,12 +1439,7 @@ export default function Chat() {
           console.log('[IMAGE-GEN] Marked message as processed:', insertedMessage.id);
         }
         
-        // Update with real ID
-        if (insertedMessage) {
-          setMessages(prev => prev.map(msg => 
-            msg.id === tempUserMessage.id ? { ...msg, id: insertedMessage.id } : msg
-          ));
-        }
+        // Realtime subscription will handle updating temp message to real message
         
         // Send to N8n webhook for image generation
         console.log('[IMAGE-GEN] Calling N8n webhook with prompt:', userMessage);
@@ -1475,12 +1506,6 @@ export default function Chat() {
       processedUserMessages.current.set(chatId, new Set());
     }
     processedUserMessages.current.get(chatId)!.add(tempUserMessage.id);
-    
-    // CRITICAL: Add user message to UI immediately BEFORE processing files (only if new temp message)
-    if (!existingTempMessage) {
-      setMessages(prev => [...prev, tempUserMessage]);
-      scrollToBottom();
-    }
     
     try {
       let aiAnalysisResponse = '';
@@ -1675,14 +1700,11 @@ export default function Chat() {
       
       console.log('[FILE-MESSAGE] User message saved, ID:', insertedMessage?.id);
 
-      // Update the message with the real ID from database
+      // The realtime subscription will automatically replace the temp message with the real one
+      // So we don't need to update locally - let realtime handle it to avoid race conditions
+      
+      // Update with embedding when ready (background)
       if (insertedMessage) {
-        setMessages(prev => prev.map(msg => msg.id === tempUserMessage.id ? {
-          ...msg,
-          id: insertedMessage.id // Update with real ID
-        } : msg));
-
-        // Update with embedding when ready (background)
         userEmbeddingPromise.then(embedding => {
           if (embedding.length > 0) {
             supabase.from('messages').update({
