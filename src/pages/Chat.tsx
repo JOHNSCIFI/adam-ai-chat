@@ -3044,17 +3044,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>}
             </div>}
             
-            {/* Show animation when waiting for AI response */}
-            {(isGeneratingResponse || loading) && (
-              <div className="flex justify-start ml-3 mb-4">
-                <div className="flex items-center space-x-2 py-8 px-3.5">
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce"></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.15s' }}></div>
-                  <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0.3s' }}></div>
-                </div>
-              </div>
-            )}
-            
           <div ref={messagesEndRef} />
         </div>
       </div>
