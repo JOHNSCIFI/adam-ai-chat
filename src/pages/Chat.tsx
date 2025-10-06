@@ -1811,6 +1811,94 @@ export default function Chat() {
               })
             });
             console.log('[WEBHOOK] File sent successfully, waiting for AI response via realtime');
+            
+            // Fallback polling mechanism for when real-time doesn't fire
+            console.log('[WEBHOOK-POLLING] Starting polling mechanism as fallback');
+            let pollAttempts = 0;
+            const maxPollAttempts = 20; // Poll for up to 40 seconds (20 * 2s)
+            const pollInterval = 2000; // Poll every 2 seconds
+            
+            const pollForNewMessages = async () => {
+              if (pollAttempts >= maxPollAttempts) {
+                console.log('[WEBHOOK-POLLING] Max attempts reached, stopping');
+                return;
+              }
+              
+              pollAttempts++;
+              console.log(`[WEBHOOK-POLLING] Attempt ${pollAttempts}/${maxPollAttempts}`);
+              
+              try {
+                // Fetch the latest messages to check for the assistant response
+                const { data: latestMessages, error } = await supabase
+                  .from('messages')
+                  .select('*')
+                  .eq('chat_id', chatId)
+                  .order('created_at', { ascending: false })
+                  .limit(5);
+                
+                if (error) {
+                  console.error('[WEBHOOK-POLLING] Error fetching messages:', error);
+                  setTimeout(pollForNewMessages, pollInterval);
+                  return;
+                }
+                
+                // Check if there's a new assistant message that's more recent than the user message
+                const newAssistantMessage = latestMessages?.find(
+                  msg => msg.role === 'assistant' && 
+                         msg.id !== insertedMessage.id &&
+                         new Date(msg.created_at) > new Date(insertedMessage.created_at)
+                );
+                
+                if (newAssistantMessage) {
+                  console.log('[WEBHOOK-POLLING] ✅ Found new assistant message!', newAssistantMessage.id);
+                  console.log('[WEBHOOK-POLLING] Content preview:', newAssistantMessage.content?.substring(0, 100));
+                  
+                  // Check if this message is already in state
+                  setMessages(prev => {
+                    const exists = prev.some(m => m.id === newAssistantMessage.id);
+                    if (exists) {
+                      console.log('[WEBHOOK-POLLING] Message already in state, skipping');
+                      return prev;
+                    }
+                    
+                    console.log('[WEBHOOK-POLLING] Adding message to state');
+                    const messageToAdd: Message = {
+                      id: newAssistantMessage.id,
+                      chat_id: newAssistantMessage.chat_id,
+                      content: newAssistantMessage.content,
+                      role: newAssistantMessage.role as 'assistant' | 'user',
+                      created_at: newAssistantMessage.created_at,
+                      file_attachments: (newAssistantMessage.file_attachments as any) || []
+                    };
+                    
+                    const newMessages = [...prev, messageToAdd].sort((a, b) => 
+                      new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                    );
+                    
+                    // Clear loading states
+                    setLoading(false);
+                    setIsGeneratingResponse(false);
+                    
+                    // Scroll to bottom
+                    requestAnimationFrame(() => scrollToBottom());
+                    
+                    return newMessages;
+                  });
+                  
+                  // Stop polling
+                  return;
+                }
+                
+                console.log('[WEBHOOK-POLLING] No new assistant message yet, will retry');
+                setTimeout(pollForNewMessages, pollInterval);
+              } catch (pollError) {
+                console.error('[WEBHOOK-POLLING] Error during polling:', pollError);
+                setTimeout(pollForNewMessages, pollInterval);
+              }
+            };
+            
+            // Start polling after a short delay to let webhook process
+            setTimeout(pollForNewMessages, 3000);
           } catch (error) {
             console.error('[WEBHOOK] Error sending file:', error);
           }
