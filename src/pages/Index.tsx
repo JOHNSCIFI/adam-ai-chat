@@ -1022,7 +1022,7 @@ export default function Index() {
 
             {/* Mobile Image mode controls */}
             {isMobile && !isRecording && isImageMode && (
-              <div className="flex items-center gap-2 mb-3 flex-wrap animate-fade-in">
+              <div className="flex items-center gap-2 mt-3 mb-3 flex-wrap animate-fade-in">
                 <div className="group flex items-center gap-1 bg-muted px-2 py-1 rounded-md text-xs">
                   <ImageIcon className="h-3 w-3" />
                   <span>Image</span>
