@@ -761,8 +761,6 @@ export default function Chat() {
       setIsGeneratingResponse(false);
       isRegeneratingRef.current = false;
       oldMessageBackupRef.current = null;
-      
-      toast.error('Response timeout. Please try regenerating again.');
     }, 60000); // 60 seconds
 
     try {
@@ -1013,8 +1011,6 @@ export default function Chat() {
       });
       isRegeneratingRef.current = false; // Release lock
       oldMessageBackupRef.current = null;
-      
-      toast.error('Failed to regenerate response. Please try again.');
     }
   };
 
@@ -1080,7 +1076,6 @@ export default function Chat() {
           if (pollAttempts >= maxPollAttempts) {
             console.log('[AI-RESPONSE-POLLING] Max attempts reached');
             setIsGeneratingResponse(false);
-            toast.error('Response timeout. Please try again.');
             return;
           }
           
@@ -1998,7 +1993,7 @@ export default function Chat() {
       }
 
       // Show generic error toast for other errors
-      toast.error('Failed to send message. Please try again.');
+      console.error('Failed to send message');
     } finally {
       setLoading(false);
       setIsGeneratingResponse(false);
