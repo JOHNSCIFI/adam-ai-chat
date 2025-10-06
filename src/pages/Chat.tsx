@@ -1029,7 +1029,12 @@ export default function Chat() {
       return;
     }
     setIsGeneratingResponse(true);
+    
+    console.log('[AI-RESPONSE] Starting AI response for message:', userMessageId);
+    console.log('[AI-RESPONSE] Using model:', selectedModel);
+    
     try {
+      console.log('[AI-RESPONSE] Calling webhook...');
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
         headers: {
@@ -1043,6 +1048,8 @@ export default function Chat() {
           model: selectedModel
         })
       });
+      
+      console.log('[AI-RESPONSE] Webhook response status:', webhookResponse.status);
       
       if (!webhookResponse.ok) {
         throw new Error(`Webhook request failed: ${webhookResponse.status}`);
@@ -1060,34 +1067,92 @@ export default function Chat() {
       });
       
       // If webhook returns success but no content, it means the message was saved by webhook-handler
-      // Fetch messages immediately to show response without waiting for Realtime
+      // Start polling to ensure we get the response even if realtime doesn't fire
       if (aiResponse?.success && !aiResponse?.response && !aiResponse?.content && !aiResponse?.text) {
-        console.log('[AI-RESPONSE] Webhook saved message to DB, fetching immediately...');
+        console.log('[AI-RESPONSE] Webhook saved message to DB, starting polling...');
         
-        // Small delay to ensure DB write completes
-        await new Promise(resolve => setTimeout(resolve, 200));
+        // Polling mechanism as fallback for when real-time doesn't fire
+        let pollAttempts = 0;
+        const maxPollAttempts = 20; // Poll for up to 40 seconds
+        const pollInterval = 2000; // Poll every 2 seconds
         
-        // Fetch latest messages to ensure we have the response
-        console.log('[AI-RESPONSE] Fetching latest messages...');
-        const { data: latestMessages, error: fetchError } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('chat_id', originalChatId)
-          .order('created_at', { ascending: true });
+        const pollForNewMessages = async () => {
+          if (pollAttempts >= maxPollAttempts) {
+            console.log('[AI-RESPONSE-POLLING] Max attempts reached');
+            setIsGeneratingResponse(false);
+            toast.error('Response timeout. Please try again.');
+            return;
+          }
+          
+          pollAttempts++;
+          console.log(`[AI-RESPONSE-POLLING] Attempt ${pollAttempts}/${maxPollAttempts}`);
+          
+          try {
+            const { data: latestMessages, error: fetchError } = await supabase
+              .from('messages')
+              .select('*')
+              .eq('chat_id', originalChatId)
+              .order('created_at', { ascending: false })
+              .limit(5);
+            
+            if (fetchError) {
+              console.error('[AI-RESPONSE-POLLING] Error fetching messages:', fetchError);
+              setTimeout(pollForNewMessages, pollInterval);
+              return;
+            }
+            
+            // Check if there's a new assistant message after the user message
+            const newAssistantMessage = latestMessages?.find(
+              msg => msg.role === 'assistant' && 
+                     msg.id !== userMessageId &&
+                     new Date(msg.created_at) > new Date()
+            );
+            
+            if (newAssistantMessage) {
+              console.log('[AI-RESPONSE-POLLING] ✅ Found new assistant message!', newAssistantMessage.id);
+              
+              // Check if already in state
+              setMessages(prev => {
+                const exists = prev.some(m => m.id === newAssistantMessage.id);
+                if (exists) {
+                  console.log('[AI-RESPONSE-POLLING] Message already in state');
+                  return prev;
+                }
+                
+                console.log('[AI-RESPONSE-POLLING] Adding message to state');
+                const messageToAdd: Message = {
+                  id: newAssistantMessage.id,
+                  chat_id: newAssistantMessage.chat_id,
+                  content: newAssistantMessage.content,
+                  role: newAssistantMessage.role as 'assistant' | 'user',
+                  created_at: newAssistantMessage.created_at,
+                  file_attachments: (newAssistantMessage.file_attachments as any) || []
+                };
+                
+                const newMessages = [...prev, messageToAdd].sort((a, b) => 
+                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                );
+                
+                setIsGeneratingResponse(false);
+                requestAnimationFrame(() => scrollToBottom());
+                
+                return newMessages;
+              });
+              
+              // Stop polling
+              return;
+            }
+            
+            console.log('[AI-RESPONSE-POLLING] No new assistant message yet, retrying...');
+            setTimeout(pollForNewMessages, pollInterval);
+          } catch (pollError) {
+            console.error('[AI-RESPONSE-POLLING] Error during polling:', pollError);
+            setTimeout(pollForNewMessages, pollInterval);
+          }
+        };
         
-        if (fetchError) {
-          console.error('[AI-RESPONSE] Error fetching latest messages:', fetchError);
-        } else if (latestMessages) {
-          console.log('[AI-RESPONSE] Fetched', latestMessages.length, 'messages, updating state');
-          // Map to ensure proper type conversion
-          const typedMessages = latestMessages.map(msg => ({
-            ...msg,
-            file_attachments: (msg.file_attachments as any) || []
-          })) as Message[];
-          setMessages(typedMessages);
-          scrollToBottom();
-        }
-        
+        // Start polling after a short delay
+        setTimeout(pollForNewMessages, 2000);
         return;
       }
       
