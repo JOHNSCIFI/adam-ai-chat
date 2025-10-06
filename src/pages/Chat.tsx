@@ -273,7 +273,15 @@ export default function Chat() {
       });
       setPendingImageGenerations(new Set());
       setLoading(false);
-      fetchMessages();
+      
+      // Only fetch messages if we're NOT about to auto-send
+      // Auto-send will show temp message and handle everything via realtime
+      if (!shouldAutoSend.current) {
+        console.log('[CHAT-INIT] Fetching messages normally');
+        fetchMessages();
+      } else {
+        console.log('[CHAT-INIT] Skipping fetchMessages - auto-send will handle it');
+      }
 
       // Listen for image generation chat events
       const handleImageGenerationChat = (event: CustomEvent) => {
@@ -562,7 +570,7 @@ export default function Chat() {
   // Handle initial files and message from navigation (from home page)
   const hasProcessedInitialData = useRef(false);
   const shouldAutoSend = useRef(false);
-  const autoSendTempId = useRef<string | null>(null); // Track temp message ID from auto-send
+  const autoSendTempMessage = useRef<Message | null>(null); // Store the entire temp message, not just ID
   
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
@@ -603,9 +611,8 @@ export default function Chat() {
         files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
       });
       
-      // Create temp ID and store it
+      // Create temp ID
       const tempId = `temp-init-${Date.now()}`;
-      autoSendTempId.current = tempId;
       
       // Create and display user message immediately BEFORE sending
       const tempUserMessage: Message = {
@@ -622,6 +629,10 @@ export default function Chat() {
           url: URL.createObjectURL(file)
         }))
       };
+      
+      // Store the entire message in ref so sendMessage can find it
+      autoSendTempMessage.current = tempUserMessage;
+      console.log('[CHAT-INITIAL] Stored temp message in ref:', tempId);
       
       // Add message to UI immediately so user sees their image
       setMessages(prev => [...prev, tempUserMessage]);
@@ -1310,35 +1321,13 @@ export default function Chat() {
     // Check if we're using the auto-send temp message
     let tempUserMessage: Message;
     
-    if (autoSendTempId.current) {
+    if (autoSendTempMessage.current) {
       // Use the temp message created by auto-send
-      const existingTempMessage = messages.find(msg => msg.id === autoSendTempId.current);
-      
-      if (existingTempMessage) {
-        console.log('[SEND] Using auto-send temp message:', autoSendTempId.current);
-        tempUserMessage = existingTempMessage;
-      } else {
-        console.log('[SEND] Auto-send temp message not found, creating new one');
-        tempUserMessage = {
-          id: `temp-${Date.now()}`,
-          chat_id: chatId!,
-          content: userMessage,
-          role: 'user',
-          created_at: new Date().toISOString(),
-          file_attachments: files.map((file, index) => ({
-            id: `temp-file-${Date.now()}-${index}`,
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            url: URL.createObjectURL(file)
-          }))
-        };
-        setMessages(prev => [...prev, tempUserMessage]);
-        scrollToBottom();
-      }
+      console.log('[SEND] Using auto-send temp message:', autoSendTempMessage.current.id);
+      tempUserMessage = autoSendTempMessage.current;
       
       // Clear the auto-send ref
-      autoSendTempId.current = null;
+      autoSendTempMessage.current = null;
     } else {
       // Normal send - create new temp message
       console.log('[SEND] Creating new temp message for manual send');
