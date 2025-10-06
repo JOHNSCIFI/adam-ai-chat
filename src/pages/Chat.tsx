@@ -135,7 +135,7 @@ const availableModels = [{
   icon: 'openai'
 }, {
   id: 'edit-image',
-  name: 'Edit Image',
+  name: 'Edit Image (DALL·E 3)',
   shortLabel: 'Edit Image',
   description: 'Edit and modify existing images using DALL·E 3.',
   icon: 'openai'
@@ -1046,10 +1046,9 @@ export default function Chat() {
       let webhookType = 'text';
       if (selectedModel === 'generate-image') {
         webhookType = 'generate_image';
-      } else if (selectedModel === 'edit-image') {
-        webhookType = 'edit-image';
       }
-      console.log('[AI-RESPONSE] Calling webhook with type:', webhookType);
+      // For edit-image, use model field instead of type
+      console.log('[AI-RESPONSE] Calling webhook with type:', webhookType, 'model:', selectedModel);
       
       const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
         method: 'POST',
