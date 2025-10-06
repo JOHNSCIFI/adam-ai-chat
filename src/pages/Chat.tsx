@@ -1904,7 +1904,10 @@ export default function Chat() {
             });
           }
 
-          const webhookType = file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
+          // For edit-image model, send type: text instead of analyse-image
+          const webhookType = selectedModel === 'edit-image' 
+            ? 'text' 
+            : file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
           
           try {
             console.log('[WEBHOOK] Sending file to webhook:', attachment.name);
@@ -3569,7 +3572,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                 <div className="flex items-center w-full gap-2">
                                    <div className="relative flex-shrink-0">
-                                     {model.id.includes('gpt') || model.id === 'generate-image' ? (
+                                     {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
                                        <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />
                                      ) : model.id.includes('claude') ? (
                                         <img src={claudeLogo} alt="Claude" className="w-5 h-5 object-contain" />
