@@ -572,6 +572,14 @@ export default function Chat() {
   const shouldAutoSend = useRef(false);
   const autoSendTempMessage = useRef<Message | null>(null); // Store the entire temp message, not just ID
   
+  // Check IMMEDIATELY if we should auto-send (before chat init effect runs)
+  const initialFiles = location.state?.initialFiles;
+  const initialMessage = location.state?.initialMessage;
+  if ((initialMessage || (initialFiles && initialFiles?.length > 0)) && chatId && !hasProcessedInitialData.current) {
+    shouldAutoSend.current = true;
+    console.log('[CHAT-INITIAL] Set shouldAutoSend to true BEFORE chat init');
+  }
+  
   useEffect(() => {
     const initialFiles = location.state?.initialFiles;
     const initialMessage = location.state?.initialMessage;
@@ -603,7 +611,7 @@ export default function Chat() {
 
   // Auto-send when data is ready after being set from navigation
   useEffect(() => {
-    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId && messages.length >= 0) {
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
       console.log('[CHAT-INITIAL] Auto-sending message:', {
         hasInput: !!input,
         filesCount: selectedFiles.length,
@@ -645,7 +653,7 @@ export default function Chat() {
         sendMessage();
       }, 500);
     }
-  }, [input, selectedFiles, loading, chatId, messages]);
+  }, [input, selectedFiles, loading, chatId]); // Removed 'messages' to prevent re-runs
 
   const regenerateResponse = async (messageId: string) => {
     // Immediate synchronous check to prevent race conditions
@@ -1306,7 +1314,17 @@ export default function Chat() {
   };
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    if (!input.trim() && selectedFiles.length === 0 || !chatId || loading) return;
+    
+    // Allow sending if there's text OR files
+    if ((!input.trim() && selectedFiles.length === 0) || !chatId || loading) {
+      console.log('[SEND] Validation failed:', {
+        hasInput: !!input.trim(),
+        hasFiles: selectedFiles.length > 0,
+        chatId,
+        loading
+      });
+      return;
+    }
 
     // Check if user is authenticated, show auth modal if not
     if (!user) {
@@ -1317,6 +1335,12 @@ export default function Chat() {
     
     const userMessage = input.trim();
     const files = [...selectedFiles];
+    
+    console.log('[SEND] Proceeding with send:', {
+      hasInput: !!userMessage,
+      filesCount: files.length,
+      hasAutoSendMessage: !!autoSendTempMessage.current
+    });
     
     // Check if we're using the auto-send temp message
     let tempUserMessage: Message;

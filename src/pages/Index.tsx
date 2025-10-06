@@ -522,7 +522,14 @@ export default function Index() {
   };
   const handleStartChat = async () => {
     // Allow sending if there's a message OR files
-    if ((!message.trim() && selectedFiles.length === 0) || loading) return;
+    if ((!message.trim() && selectedFiles.length === 0) || loading) {
+      console.log('[INDEX] Validation failed:', {
+        hasMessage: !!message.trim(),
+        hasFiles: selectedFiles.length > 0,
+        loading
+      });
+      return;
+    }
     if (!user) {
       setPendingMessage(message);
       localStorage.setItem('pendingChatMessage', message);
@@ -536,7 +543,14 @@ export default function Index() {
     }
     setLoading(true);
     try {
-      console.log('[INDEX] Creating new chat with message:', message.substring(0, 50));
+      const titleText = message.slice(0, 50) || (selectedFiles.length > 0 ? `File: ${selectedFiles[0].name}` : 'New Chat');
+      
+      console.log('[INDEX] Creating new chat:', {
+        hasMessage: !!message,
+        messageLength: message.length,
+        filesCount: selectedFiles.length,
+        title: titleText
+      });
       
       // Create new chat
       const {
