@@ -1904,27 +1904,35 @@ export default function Chat() {
             });
           }
 
-          // For edit-image model, send type: text instead of analyse-image
+          // For edit-image model, don't send type field
           const webhookType = selectedModel === 'edit-image' 
-            ? 'text' 
+            ? null 
             : file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
           
           try {
             console.log('[WEBHOOK] Sending file to webhook:', attachment.name);
+            
+            // Build webhook body conditionally based on model
+            const webhookBody: any = {
+              fileName: attachment.name,
+              fileSize: file.size,
+              fileType: attachment.type,
+              fileData: base64,
+              userId: user.id,
+              chatId: chatId,
+              message: userMessage,
+              model: selectedModel
+            };
+            
+            // Only add type field if not edit-image model
+            if (webhookType !== null) {
+              webhookBody.type = webhookType;
+            }
+            
             await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: webhookType,
-                fileName: attachment.name,
-                fileSize: file.size,
-                fileType: attachment.type,
-                fileData: base64,
-                userId: user.id,
-                chatId: chatId,
-                message: userMessage,
-                model: selectedModel
-              })
+              body: JSON.stringify(webhookBody)
             });
             console.log('[WEBHOOK] File sent successfully, waiting for AI response via realtime');
             
