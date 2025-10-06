@@ -1097,15 +1097,41 @@ export default function Chat() {
             }
             
             // Check if there's a new assistant message after the user message
-            // Get the user message to compare timestamps
-            const userMsg = messages.find(m => m.id === userMessageId);
-            const userMessageTime = userMsg ? new Date(userMsg.created_at).getTime() : Date.now();
+            // CRITICAL: Fetch the actual user message from the database to get its timestamp
+            // Don't rely on state or Date.now() which can cause timing issues
+            const { data: userMessageData } = await supabase
+              .from('messages')
+              .select('created_at')
+              .eq('id', userMessageId)
+              .single();
+            
+            const userMessageTime = userMessageData 
+              ? new Date(userMessageData.created_at).getTime() 
+              : new Date(latestMessages[0]?.created_at || 0).getTime() - 1000;
+            
+            console.log('[AI-RESPONSE-POLLING] Comparing timestamps:', {
+              userMessageId,
+              userMessageTime: new Date(userMessageTime).toISOString(),
+              latestMessagesCount: latestMessages?.length || 0,
+              latestMessages: latestMessages?.map(m => ({
+                id: m.id,
+                role: m.role,
+                created_at: m.created_at,
+                isAfterUser: new Date(m.created_at).getTime() > userMessageTime
+              }))
+            });
             
             const newAssistantMessage = latestMessages?.find(
               msg => msg.role === 'assistant' && 
                      msg.id !== userMessageId &&
                      new Date(msg.created_at).getTime() > userMessageTime
             );
+            
+            if (newAssistantMessage) {
+              console.log('[AI-RESPONSE-POLLING] ✅ Found matching assistant message:', newAssistantMessage.id);
+            } else {
+              console.log('[AI-RESPONSE-POLLING] ❌ No matching assistant message found');
+            }
             
             if (newAssistantMessage) {
               console.log('[AI-RESPONSE-POLLING] ✅ Found new assistant message!', newAssistantMessage.id);
