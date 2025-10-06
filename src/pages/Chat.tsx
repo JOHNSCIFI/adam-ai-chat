@@ -3517,7 +3517,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         onClick={handleCreateImageClick}
                       >
                         <ImageIcon className="h-4 w-4" />
-                        Generate image
+                        Generate an image
                       </Button>
                     </PopoverContent>
                   </Popover>
@@ -3563,7 +3563,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </Button>
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2" onClick={handleCreateImageClick}>
                           <ImageIcon className="h-4 w-4" />
-                          Generate image
+                          Generate an image
                         </Button>
                       </PopoverContent>
                     </Popover>
