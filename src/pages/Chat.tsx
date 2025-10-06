@@ -1097,10 +1097,14 @@ export default function Chat() {
             }
             
             // Check if there's a new assistant message after the user message
+            // Get the user message to compare timestamps
+            const userMsg = messages.find(m => m.id === userMessageId);
+            const userMessageTime = userMsg ? new Date(userMsg.created_at).getTime() : Date.now();
+            
             const newAssistantMessage = latestMessages?.find(
               msg => msg.role === 'assistant' && 
                      msg.id !== userMessageId &&
-                     new Date(msg.created_at) > new Date()
+                     new Date(msg.created_at).getTime() > userMessageTime
             );
             
             if (newAssistantMessage) {
