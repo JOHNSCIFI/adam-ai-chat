@@ -2059,6 +2059,13 @@ export default function Chat() {
         // Now trigger AI response
         if (insertedMessage) {
           console.log('[TEXT-MESSAGE] Triggering AI response for message:', insertedMessage.id);
+          
+          // CRITICAL: Mark as processed BEFORE triggering to prevent auto-trigger duplicate
+          if (!processedUserMessages.current.has(chatId)) {
+            processedUserMessages.current.set(chatId, new Set());
+          }
+          processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          
           await triggerAIResponse(userMessage, insertedMessage.id);
         }
       }
