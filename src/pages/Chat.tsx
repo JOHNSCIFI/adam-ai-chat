@@ -539,8 +539,8 @@ export default function Chat() {
       // Get processed messages Set for this specific chat
       const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set();
 
-      // Only trigger for user messages without file attachments (text-only)
-      if (lastMessage.role === 'user' && (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
+      // Trigger for ALL user messages (with or without file attachments)
+      if (lastMessage.role === 'user') {
         // CRITICAL: Verify message belongs to current chat
         if (lastMessage.chat_id && lastMessage.chat_id !== chatId) {
           return;
