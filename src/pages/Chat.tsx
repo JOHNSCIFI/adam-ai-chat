@@ -1910,21 +1910,28 @@ export default function Chat() {
             : file.type.startsWith('image/') ? 'analyse-image' : 'analyse-files';
           
           try {
-            console.log('[WEBHOOK] Sending file to webhook:', attachment.name);
+            const webhookPayload = {
+              type: webhookType,
+              fileName: attachment.name,
+              fileSize: file.size,
+              fileType: attachment.type,
+              fileData: base64,
+              userId: user.id,
+              chatId: chatId,
+              message: userMessage,
+              model: selectedModel
+            };
+            
+            console.log('[WEBHOOK] Sending to webhook:', {
+              type: webhookPayload.type,
+              model: webhookPayload.model,
+              fileName: webhookPayload.fileName
+            });
+            
             await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                type: webhookType,
-                fileName: attachment.name,
-                fileSize: file.size,
-                fileType: attachment.type,
-                fileData: base64,
-                userId: user.id,
-                chatId: chatId,
-                message: userMessage,
-                model: selectedModel
-              })
+              body: JSON.stringify(webhookPayload)
             });
             console.log('[WEBHOOK] File sent successfully, waiting for AI response via realtime');
             
