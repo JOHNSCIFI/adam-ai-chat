@@ -2005,8 +2005,43 @@ export default function Chat() {
         
         scrollToBottom();
       } else if (userMessage && files.length === 0) {
-        // Don't call AI here - let the auto-trigger handle it to avoid duplicates
-        console.log('User message without files - will be handled by auto-trigger');
+        // CRITICAL: Save text-only message to database immediately
+        console.log('[TEXT-MESSAGE] Saving user message to database (no files)');
+        
+        const { data: insertedMessage, error: userError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chatId,
+            content: userMessage,
+            role: 'user',
+            file_attachments: []
+          })
+          .select()
+          .single();
+        
+        // Update chat's updated_at timestamp
+        await supabase
+          .from('chats')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', chatId);
+        
+        if (userError) {
+          console.error('[TEXT-MESSAGE] Error saving message:', userError);
+          if (userError.message?.includes('JWT') || userError.message?.includes('unauthorized')) {
+            setShowAuthModal(true);
+            return;
+          }
+          throw userError;
+        }
+        
+        console.log('[TEXT-MESSAGE] User message saved, ID:', insertedMessage?.id);
+        
+        // The realtime subscription will replace the temp message with the real one
+        // Now trigger AI response
+        if (insertedMessage) {
+          console.log('[TEXT-MESSAGE] Triggering AI response for message:', insertedMessage.id);
+          await triggerAIResponse(userMessage, insertedMessage.id);
+        }
       }
 
       // Automatically update chat title based on conversation progression
