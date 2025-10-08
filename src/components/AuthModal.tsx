@@ -84,9 +84,16 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       const { error: signInError } = await signIn(email, password);
       
       if (signInError) {
-        // If sign in fails with "Invalid login credentials", user doesn't exist - sign them up
-        if (signInError.message.includes('Invalid login credentials') || 
-            signInError.message.includes('Invalid')) {
+        // Check if user exists by checking their signup method
+        if (userSignupMethod) {
+          // User exists but sign in failed - wrong password or other issue
+          toast({
+            title: "Sign in failed",
+            description: "Invalid email or password. Please try again.",
+            variant: "destructive",
+          });
+        } else {
+          // User doesn't exist - sign them up
           const { error: signUpError } = await signUp(email, password, '');
           
           if (!signUpError) {
@@ -105,13 +112,6 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               variant: "destructive",
             });
           }
-        } else {
-          // Sign in failed for other reasons
-          toast({
-            title: "Sign in failed",
-            description: signInError.message,
-            variant: "destructive",
-          });
         }
       }
       // If sign in succeeds, the useEffect will handle closing the modal and redirecting
