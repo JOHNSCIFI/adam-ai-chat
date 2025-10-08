@@ -14,7 +14,8 @@ import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
-import chatlearnLogo from '@/assets/chatlearn-logo.svg';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import chatgptLogoDark from '@/assets/chatgpt-logo.png';
 interface Chat {
   id: string;
   title: string;
@@ -313,6 +314,8 @@ export default function ChatSidebar({
   // Get chats that are not in any project
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
+  const chatgptLogo = theme === 'dark' ? chatgptLogoLight : chatgptLogoDark;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
@@ -321,7 +324,7 @@ export default function ChatSidebar({
             {collapsed ? (
               <div className="relative flex items-center justify-center w-full h-10">
                 <img 
-                  src={chatlearnLogo}
+                  src={chatgptLogo} 
                   alt="ChatGPT" 
                   className="h-8 w-8 object-contain transition-opacity duration-200 group-hover/header:opacity-0" 
                 />
@@ -332,7 +335,7 @@ export default function ChatSidebar({
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <img src={chatlearnLogo} alt="ChatLearn" className="h-7 w-7 object-contain ml-2 mt-1" />
+                  <img src={chatgptLogo} alt="ChatGPT" className="h-7 w-7 object-contain ml-2 mt-1" />
                 </div>
                 <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
                   <Menu className="h-4 w-4" />
