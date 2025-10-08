@@ -93,8 +93,12 @@ const Models = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="animate-fade-in">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-8 h-8 bg-white border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
-                  <img src={chatgptLogo} alt="OpenAI GPT-4o" className={`w-6 h-6 ${actualTheme === 'light' ? 'brightness-0' : 'brightness-0 invert'}`} />
+                <div className={`w-8 h-8 ${actualTheme === 'dark' ? 'bg-background' : 'bg-white'} border border-border rounded-lg flex items-center justify-center p-1 shadow-sm`}>
+                  <img 
+                    src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
+                    alt="OpenAI GPT-4o" 
+                    className={`w-6 h-6 ${actualTheme === 'light' ? 'brightness-0' : ''}`} 
+                  />
                 </div>
                 <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
                   <img src={geminiLogo} alt="Google Gemini" className="w-6 h-6" />
