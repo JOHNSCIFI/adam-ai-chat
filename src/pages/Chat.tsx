@@ -2263,8 +2263,6 @@ export default function Chat() {
         // The realtime subscription will replace the temp message with the real one
         // Now trigger AI response
         if (insertedMessage) {
-          console.log('[TEXT-MESSAGE] Triggering AI response for message:', insertedMessage.id);
-          
           // CRITICAL: Mark as processed BEFORE triggering to prevent auto-trigger duplicate
           if (!processedUserMessages.current.has(chatId)) {
             processedUserMessages.current.set(chatId, new Set());
@@ -2276,7 +2274,17 @@ export default function Chat() {
           const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
           sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
           
-          await triggerAIResponse(userMessage, insertedMessage.id);
+          // CRITICAL: Only trigger AI response if this is NOT an auto-send scenario
+          // Check if the temp message was already processed by AUTO-TRIGGER
+          const tempMessageId = tempUserMessage.id;
+          const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
+          
+          if (tempWasProcessed) {
+            console.log('[TEXT-MESSAGE] Skipping AI trigger - temp message', tempMessageId, 'was already processed by AUTO-TRIGGER');
+          } else {
+            console.log('[TEXT-MESSAGE] Triggering AI response for message:', insertedMessage.id);
+            await triggerAIResponse(userMessage, insertedMessage.id);
+          }
         }
       }
 
