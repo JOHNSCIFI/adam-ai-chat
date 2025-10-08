@@ -20,8 +20,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [googleLoading, setGoogleLoading] = useState(false);
   const [userSignupMethod, setUserSignupMethod] = useState<string | null>(null);
   const [checkingUser, setCheckingUser] = useState(false);
+  const [resetMode, setResetMode] = useState(false);
+  const [resetLoading, setResetLoading] = useState(false);
   
-  const { user, signIn, signUp, signInWithGoogle } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -126,6 +128,39 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     }
   };
 
+  const handlePasswordReset = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    setResetLoading(true);
+    try {
+      const { error } = await resetPassword(email);
+      if (error) {
+        toast({
+          title: "Password reset failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Check your email",
+          description: "We've sent you a password reset link.",
+          duration: 8000,
+        });
+        setResetMode(false);
+        setEmail('');
+      }
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
   const handleGoogleSignIn = async () => {
     setGoogleLoading(true);
     try {
@@ -160,15 +195,20 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         <div className="px-4 sm:px-6 pb-4 sm:pb-6">
           {/* Title Section */}
           <div className="text-center mb-6 sm:mb-8">
-            <h2 className="text-xl sm:text-2xl font-normal mb-2 sm:mb-3">Log in or sign up</h2>
+            <h2 className="text-xl sm:text-2xl font-normal mb-2 sm:mb-3">
+              {resetMode ? 'Reset your password' : 'Log in or sign up'}
+            </h2>
             <p className="text-sm text-muted-foreground leading-relaxed px-2 sm:px-0">
-              You'll get smarter responses and can upload<br className="hidden sm:block" />
-              <span className="sm:hidden"> </span>files, images, and more.
+              {resetMode 
+                ? 'Enter your email and we\'ll send you a reset link.'
+                : <>You'll get smarter responses and can upload<br className="hidden sm:block" />
+                  <span className="sm:hidden"> </span>files, images, and more.</>
+              }
             </p>
           </div>
 
-          {/* Email/Password Form */}
-          <form onSubmit={handleEmailSubmit} className="mb-4">
+          {/* Email/Password Form or Reset Form */}
+          <form onSubmit={resetMode ? handlePasswordReset : handleEmailSubmit} className="mb-4">
             <div className="mb-4 space-y-3">
               <input
                 type="email"
@@ -176,10 +216,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={showPassword}
+                disabled={showPassword && !resetMode}
                 className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors disabled:opacity-50"
               />
-              {showPassword && (
+              {showPassword && !resetMode && (
                 <input
                   type="password"
                   placeholder="Password"
@@ -191,7 +231,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   autoFocus
                 />
               )}
-              {email && userSignupMethod && !showPassword && (
+              {email && userSignupMethod && !showPassword && !resetMode && (
                 <p className="text-sm text-muted-foreground mt-2 px-1">
                   {userSignupMethod === 'google' 
                     ? 'This email is registered with Google. Please use Google sign-in.'
@@ -200,24 +240,62 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 </p>
               )}
             </div>
-            {showPassword && (
+            {showPassword && !resetMode && (
+              <div className="flex items-center justify-between mb-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowPassword(false);
+                    setPassword('');
+                  }}
+                  className="text-sm text-muted-foreground hover:text-foreground px-1"
+                >
+                  ← Back to email
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetMode(true);
+                    setShowPassword(false);
+                    setPassword('');
+                  }}
+                  className="text-sm text-primary hover:underline px-1"
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+            {resetMode && (
               <button
                 type="button"
                 onClick={() => {
-                  setShowPassword(false);
-                  setPassword('');
+                  setResetMode(false);
+                  setEmail('');
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground mb-4 px-1"
               >
-                ← Back to email
+                ← Back to login
               </button>
             )}
             <Button
               type="submit"
-              disabled={loading || !email || (userSignupMethod === 'google' && !showPassword) || (showPassword && !password)}
+              disabled={
+                resetMode 
+                  ? resetLoading || !email 
+                  : loading || !email || (userSignupMethod === 'google' && !showPassword) || (showPassword && !password)
+              }
               className="w-full h-11 sm:h-12 rounded-xl font-medium"
             >
-              {loading ? (
+              {resetMode ? (
+                resetLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Sending reset link...
+                  </>
+                ) : (
+                  'Send reset link'
+                )
+              ) : loading ? (
                 <>
                   <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                   {showPassword ? 'Signing in...' : 'Continue'}
@@ -228,23 +306,25 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </Button>
           </form>
 
-          {/* OR Divider */}
-          <div className="relative my-5 sm:my-6">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-border" />
-            </div>
-            <div className="relative flex justify-center">
-              <span className="px-4 bg-background text-muted-foreground text-sm font-medium">OR</span>
-            </div>
-          </div>
+          {/* OR Divider - only show if not in reset mode */}
+          {!resetMode && (
+            <>
+              <div className="relative my-5 sm:my-6">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="px-4 bg-background text-muted-foreground text-sm font-medium">OR</span>
+                </div>
+              </div>
 
-          {/* Google Sign In */}
-          <Button
-            onClick={handleGoogleSignIn}
-            disabled={googleLoading || loading}
-            variant="outline"
-            className="w-full h-11 sm:h-12 font-medium rounded-xl"
-          >
+              {/* Google Sign In */}
+              <Button
+                onClick={handleGoogleSignIn}
+                disabled={googleLoading || loading}
+                variant="outline"
+                className="w-full h-11 sm:h-12 font-medium rounded-xl"
+              >
             {googleLoading ? (
               <>
                 <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-3" />
@@ -262,6 +342,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               </>
             )}
           </Button>
+            </>
+          )}
 
           {/* Footer */}
           <div className="mt-5 sm:mt-6">
