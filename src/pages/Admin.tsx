@@ -59,6 +59,18 @@ const MODEL_PRICING: Record<string, {
     input: 1.25,
     output: 10.00
   },
+  'claude-sonnet-4': {
+    input: 3.00,
+    output: 15.00
+  },
+  'grok-4': {
+    input: 3.00,
+    output: 15.00
+  },
+  'deepseek-v2': {
+    input: 0.14,
+    output: 1.10
+  },
   'google/gemini-2.5-flash': {
     input: 0.30,
     output: 2.50
