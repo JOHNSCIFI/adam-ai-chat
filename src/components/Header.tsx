@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 
 const Header = () => {
   const navigate = useNavigate();
@@ -14,8 +15,9 @@ const Header = () => {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          {/* Brand Text Only */}
-          <Link to="/home" className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
+          {/* Brand Logo & Text */}
+          <Link to="/home" className="flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
+            <ChatLearnLogo className="h-8 w-8" />
             <span className="text-xl font-bold text-foreground">ChatLearn</span>
           </Link>
 
