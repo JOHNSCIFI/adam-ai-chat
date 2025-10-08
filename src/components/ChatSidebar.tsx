@@ -314,8 +314,8 @@ export default function ChatSidebar({
   // Get chats that are not in any project
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
-  const { theme } = useTheme();
-  const brandLogo = theme === 'dark' ? logoDark : logoLight;
+  const { theme, actualTheme } = useTheme();
+  const brandLogo = actualTheme === 'dark' ? logoDark : logoLight;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
