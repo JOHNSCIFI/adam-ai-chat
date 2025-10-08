@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sparkles, ChevronDown, Shield, Users, Mic, Image as ImageIcon, FileText, Bot, Globe, Zap, Target, ArrowRight, Play, Square, MicIcon } from 'lucide-react';
-import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
@@ -26,10 +25,6 @@ const Features = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-12">
           <div className="animate-fade-in sm:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4 md:mb-6">
-              <div className="relative">
-                <ChatLearnLogo className="h-6 w-6 md:h-7 md:w-7" />
-                <Sparkles className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-              </div>
               <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
             </div>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xs">

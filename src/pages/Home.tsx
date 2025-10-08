@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code, X } from 'lucide-react';
-import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import SEO from '@/components/SEO';
@@ -558,10 +557,6 @@ const Home = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
             <div className="animate-fade-in">
               <div className="flex items-center space-x-2 mb-6">
-                <div className="relative">
-                  <ChatLearnLogo className="h-7 w-7" />
-                  <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
-                </div>
                 <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
               </div>
               <p className="text-muted-foreground leading-relaxed">
