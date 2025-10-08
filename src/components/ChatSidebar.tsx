@@ -13,8 +13,9 @@ import { AddToProjectModal } from '@/components/AddToProjectModal';
 import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
-import AdamGptLogo from '@/components/AdamGptLogo';
 import { useTheme } from '@/contexts/ThemeContext';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import chatgptLogoDark from '@/assets/chatgpt-logo.png';
 interface Chat {
   id: string;
   title: string;
@@ -314,22 +315,27 @@ export default function ChatSidebar({
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
+  const chatgptLogo = theme === 'dark' ? chatgptLogoDark : chatgptLogoLight;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
           <div className={`${collapsed ? 'flex justify-center' : 'flex justify-between items-center'} mb-3 group/header`}>
             {collapsed ? (
-              <div className="relative flex items-center justify-center w-full">
-                <AdamGptLogo className="h-8 w-8" />
-                <SidebarTrigger className="absolute h-6 w-6 p-0 bg-sidebar-accent/80 backdrop-blur-sm hover:bg-sidebar-accent text-sidebar-foreground rounded-md opacity-0 group-hover/header:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+              <div className="relative flex items-center justify-center w-full h-10">
+                <img 
+                  src={chatgptLogo} 
+                  alt="ChatGPT" 
+                  className="h-8 w-8 object-contain transition-opacity duration-200 group-hover/header:opacity-0" 
+                />
+                <SidebarTrigger className="absolute h-8 w-8 p-0 bg-sidebar-accent/90 backdrop-blur-sm hover:bg-sidebar-accent text-sidebar-foreground rounded-lg opacity-0 group-hover/header:opacity-100 transition-opacity duration-200 flex items-center justify-center">
                   <Menu className="h-4 w-4" />
                 </SidebarTrigger>
               </div>
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <AdamGptLogo className="h-8 w-8" />
+                  <img src={chatgptLogo} alt="ChatGPT" className="h-8 w-8 object-contain" />
                   <span className="font-semibold text-lg text-sidebar-foreground">AdamGPT</span>
                 </div>
                 <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
