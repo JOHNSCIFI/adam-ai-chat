@@ -1843,11 +1843,8 @@ export default function Chat() {
       return;
     }
     
-    // CRITICAL: Mark message as processed to prevent auto-trigger useEffect from firing
-    if (!processedUserMessages.current.has(chatId)) {
-      processedUserMessages.current.set(chatId, new Set());
-    }
-    processedUserMessages.current.get(chatId)!.add(tempUserMessage.id);
+    // Don't mark temp message as processed here - let AUTO-TRIGGER handle it
+    // This ensures the AI response is triggered properly
     
     try {
       let aiAnalysisResponse = '';
@@ -2274,30 +2271,40 @@ export default function Chat() {
         
         console.log('[TEXT-MESSAGE] User message saved, ID:', insertedMessage?.id);
         
-        // The realtime subscription will replace the temp message with the real one
-        // Now trigger AI response
+        // Replace temp message with real message in state immediately
         if (insertedMessage) {
-          // CRITICAL: Mark as processed BEFORE triggering to prevent auto-trigger duplicate
-          if (!processedUserMessages.current.has(chatId)) {
-            processedUserMessages.current.set(chatId, new Set());
-          }
-          processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          setMessages(prev => prev.map(msg => 
+            msg.id === tempUserMessage.id ? {
+              ...insertedMessage,
+              role: insertedMessage.role as 'user' | 'assistant',
+              file_attachments: (insertedMessage.file_attachments as unknown as FileAttachment[]) || []
+            } : msg
+          ));
           
-          // Persist to sessionStorage
-          const storageKey = `processed_messages_${chatId}`;
-          const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
-          sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+          console.log('[TEXT-MESSAGE] Replacing temp message in state:', {
+            tempId: tempUserMessage.id,
+            realId: insertedMessage.id
+          });
           
-          // CRITICAL: Only trigger AI response if this is NOT an auto-send scenario
           // Check if the temp message was already processed by AUTO-TRIGGER
           const tempMessageId = tempUserMessage.id;
           const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
           
           if (tempWasProcessed) {
-            console.log('[TEXT-MESSAGE] Skipping AI trigger - temp message', tempMessageId, 'was already processed by AUTO-TRIGGER');
+            console.log('[TEXT-MESSAGE] Temp was processed by AUTO-TRIGGER, marking real message as processed');
+            // Mark real message as processed since temp was already processed
+            if (!processedUserMessages.current.has(chatId)) {
+              processedUserMessages.current.set(chatId, new Set());
+            }
+            processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+            
+            // Persist to sessionStorage
+            const storageKey = `processed_messages_${chatId}`;
+            const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+            sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
           } else {
-            console.log('[TEXT-MESSAGE] Triggering AI response for message:', insertedMessage.id);
-            await triggerAIResponse(userMessage, insertedMessage.id);
+            console.log('[TEXT-MESSAGE] Temp was NOT processed, letting AUTO-TRIGGER handle the real message');
+            // Don't mark as processed - let AUTO-TRIGGER handle the real message
           }
         }
       }
