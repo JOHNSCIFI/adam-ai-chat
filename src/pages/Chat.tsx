@@ -602,14 +602,34 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
+    console.log('[AUTO-TRIGGER-CHECK] Effect running:', {
+      messagesCount: messages.length,
+      loading,
+      isGeneratingResponse,
+      isRegenerating: isRegeneratingRef.current,
+      chatId,
+      timestamp: Date.now()
+    });
+    
     // Also check the ref for immediate synchronous state
     if (messages.length > 0 && !loading && !isGeneratingResponse && !isRegeneratingRef.current && chatId) {
       // CRITICAL: Filter messages to only include those belonging to current chat
       const currentChatMessages = messages.filter(msg => msg.chat_id === chatId);
+      console.log('[AUTO-TRIGGER] Current chat messages:', currentChatMessages.length);
+      
       if (currentChatMessages.length === 0) {
+        console.log('[AUTO-TRIGGER] No messages for current chat, skipping');
         return;
       }
       const lastMessage = currentChatMessages[currentChatMessages.length - 1];
+      
+      console.log('[AUTO-TRIGGER] Last message:', {
+        id: lastMessage.id,
+        role: lastMessage.role,
+        hasFiles: !!(lastMessage.file_attachments && lastMessage.file_attachments.length > 0),
+        chatId: lastMessage.chat_id,
+        timestamp: Date.now()
+      });
 
       // Get processed messages Set for this specific chat (with sessionStorage persistence)
       const storageKey = `processed_messages_${chatId}`;
@@ -617,12 +637,15 @@ export default function Chat() {
       const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set(
         storedProcessed ? JSON.parse(storedProcessed) : []
       );
+      
+      console.log('[AUTO-TRIGGER] Processed messages for chat:', Array.from(chatProcessedMessages));
 
       // CRITICAL: Only trigger for text-only messages WITHOUT file attachments
       // Messages with file attachments are handled by the webhook, so we should NOT trigger here
       if (lastMessage.role === 'user' && (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         // CRITICAL: Verify message belongs to current chat
         if (lastMessage.chat_id && lastMessage.chat_id !== chatId) {
+          console.log('[AUTO-TRIGGER] Message from different chat, skipping');
           return;
         }
 
@@ -631,11 +654,15 @@ export default function Chat() {
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
         );
+        
+        console.log('[AUTO-TRIGGER] Has assistant response after?', hasAssistantResponseAfter);
+        console.log('[AUTO-TRIGGER] Already processed?', chatProcessedMessages.has(lastMessage.id));
+        console.log('[AUTO-TRIGGER] Is image gen chat?', imageGenerationChats.current.has(chatId));
 
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
-          console.log('[AUTO-TRIGGER] Processing message:', lastMessage.id, 'Model:', selectedModel);
+          console.log('[AUTO-TRIGGER] ✅ TRIGGERING AI RESPONSE for message:', lastMessage.id, 'Model:', selectedModel);
           
           // CRITICAL: Mark as processed IMMEDIATELY in both ref and sessionStorage
           if (!processedUserMessages.current.has(chatId)) {
@@ -646,11 +673,19 @@ export default function Chat() {
           // Persist to sessionStorage
           const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
           sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+          
+          console.log('[AUTO-TRIGGER] Marked as processed:', lastMessage.id);
 
           // Trigger AI response with current selected model
           triggerAIResponse(lastMessage.content, lastMessage.id);
+        } else {
+          console.log('[AUTO-TRIGGER] ❌ Skipping - conditions not met');
         }
+      } else {
+        console.log('[AUTO-TRIGGER] ❌ Skipping - not a text-only user message');
       }
+    } else {
+      console.log('[AUTO-TRIGGER] ❌ Skipping - preconditions not met');
     }
   }, [messages, loading, isGeneratingResponse, chatId, selectedModel]);
 
@@ -1549,10 +1584,27 @@ export default function Chat() {
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    console.log('[SEND-START] ===== SEND MESSAGE CALLED =====');
+    console.log('[SEND-START] Chat ID:', chatId);
+    console.log('[SEND-START] Input:', input?.substring(0, 50));
+    console.log('[SEND-START] Files count:', selectedFiles.length);
+    console.log('[SEND-START] Timestamp:', Date.now());
+    console.log('[SEND-START] Call stack:', new Error().stack?.split('\n').slice(1, 4).join('\n'));
+    
     // CRITICAL: Check if send is already in progress
     const sendLockKey = `sending_${chatId}`;
+    const lockExists = sessionStorage.getItem(sendLockKey);
+    const refLock = sendingInProgressRef.current;
+    
+    console.log('[SEND-LOCK-CHECK] Lock key:', sendLockKey);
+    console.log('[SEND-LOCK-CHECK] SessionStorage lock exists:', !!lockExists);
+    console.log('[SEND-LOCK-CHECK] Ref lock:', refLock);
+    console.log('[SEND-LOCK-CHECK] Lock timestamp:', sessionStorage.getItem(`${sendLockKey}_time`));
+    
     if (sendingInProgressRef.current || sessionStorage.getItem(sendLockKey)) {
-      console.log('[SEND] Already sending, preventing duplicate');
+      console.log('[SEND-BLOCKED] ❌ Already sending, preventing duplicate');
+      console.log('[SEND-BLOCKED] Ref lock value:', sendingInProgressRef.current);
+      console.log('[SEND-BLOCKED] Storage lock value:', sessionStorage.getItem(sendLockKey));
       return;
     }
     
@@ -1578,7 +1630,9 @@ export default function Chat() {
     sendingInProgressRef.current = true;
     sessionStorage.setItem(sendLockKey, 'true');
     sessionStorage.setItem(`${sendLockKey}_time`, Date.now().toString());
-    console.log('[SEND] Lock acquired');
+    console.log('[SEND-LOCK-ACQUIRED] ✅ Lock acquired at:', Date.now());
+    console.log('[SEND-LOCK-ACQUIRED] Ref set to:', sendingInProgressRef.current);
+    console.log('[SEND-LOCK-ACQUIRED] Storage set for key:', sendLockKey);
     
     // Clear lock after 10 seconds (safety timeout)
     setTimeout(() => {
@@ -2168,6 +2222,10 @@ export default function Chat() {
       } else if (userMessage && files.length === 0) {
         // CRITICAL: Save text-only message to database immediately
         console.log('[TEXT-MESSAGE] Saving user message to database (no files)');
+        console.log('[TEXT-MESSAGE] Chat ID:', chatId);
+        console.log('[TEXT-MESSAGE] User ID:', user.id);
+        console.log('[TEXT-MESSAGE] Message content:', userMessage?.substring(0, 50));
+        console.log('[TEXT-MESSAGE] Timestamp:', Date.now());
         
         const { data: insertedMessage, error: userError } = await supabase
           .from('messages')
@@ -2179,6 +2237,13 @@ export default function Chat() {
           })
           .select()
           .single();
+        
+        console.log('[TEXT-MESSAGE] Insert result:', {
+          success: !!insertedMessage,
+          error: !!userError,
+          messageId: insertedMessage?.id,
+          timestamp: Date.now()
+        });
         
         // Update chat's updated_at timestamp
         await supabase
@@ -2238,7 +2303,9 @@ export default function Chat() {
       sendingInProgressRef.current = false;
       sessionStorage.removeItem(sendLockKey);
       sessionStorage.removeItem(`${sendLockKey}_time`);
-      console.log('[SEND] Lock released (finally)');
+      console.log('[SEND-LOCK-RELEASED] ✅ Lock released at:', Date.now());
+      console.log('[SEND-LOCK-RELEASED] Ref set to:', sendingInProgressRef.current);
+      console.log('[SEND-LOCK-RELEASED] Storage cleared for key:', sendLockKey);
       
       setLoading(false);
       setIsGeneratingResponse(false);
@@ -2248,6 +2315,8 @@ export default function Chat() {
         return newMap;
       });
     }
+    
+    console.log('[SEND-END] ===== SEND MESSAGE COMPLETED =====');
   };
   const extractFileContent = async (file: File): Promise<string> => {
     try {
