@@ -16,7 +16,7 @@ const Header = () => {
         <div className="flex h-16 items-center justify-between">
           {/* Brand Text Only */}
           <Link to="/home" className="focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 rounded-sm">
-            <span className="text-xl font-bold text-foreground">AdamGpt</span>
+            <span className="text-xl font-bold text-foreground">ChatLearn</span>
           </Link>
 
           {/* Desktop Navigation */}

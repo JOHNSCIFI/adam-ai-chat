@@ -238,7 +238,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
       const url = URL.createObjectURL(zipBlob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `adamgpt-export-${new Date().toISOString().split('T')[0]}.zip`;
+      link.download = `chatlearn-export-${new Date().toISOString().split('T')[0]}.zip`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

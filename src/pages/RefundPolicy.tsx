@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Shield, Users } from 'lucide-react';
 import SEO from '@/components/SEO';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 
 const RefundPolicy = () => {
   const navigate = useNavigate();
@@ -13,7 +13,7 @@ const RefundPolicy = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEO 
         title="Refund Policy"
-        description="AdamGpt refund policy and terms for subscription cancellations and service satisfaction guarantees."
+        description="ChatLearn refund policy and terms for subscription cancellations and service satisfaction guarantees."
       />
       
       <div className="max-w-4xl mx-auto">
@@ -23,7 +23,7 @@ const RefundPolicy = () => {
           <div>
             <h2 className="text-2xl font-semibold text-foreground mb-4">30-Day Money-Back Guarantee</h2>
             <p>
-              We're committed to your satisfaction. If you're not completely happy with AdamGpt within the first 30 days 
+              We're committed to your satisfaction. If you're not completely happy with ChatLearn within the first 30 days 
               of your subscription, we'll provide a full refund, no questions asked.
             </p>
           </div>
@@ -60,7 +60,7 @@ const RefundPolicy = () => {
             <h2 className="text-2xl font-semibold text-foreground mb-4">Cancellation vs Refund</h2>
             <p>
               Canceling your subscription stops future billing but doesn't provide a refund for the current period. 
-              You'll continue to have access to AdamGpt until the end of your current billing cycle.
+              You'll continue to have access to ChatLearn until the end of your current billing cycle.
             </p>
           </div>
           
@@ -80,8 +80,8 @@ const RefundPolicy = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <AdamGptLogo className="h-6 w-6" />
-                <span className="text-lg font-semibold text-foreground">AdamGpt</span>
+                <ChatLearnLogo className="h-6 w-6" />
+                <span className="text-lg font-semibold text-foreground">ChatLearn</span>
               </div>
               <p className="text-muted-foreground text-sm leading-relaxed">
                 Professional AI solutions for businesses and individuals.
@@ -119,7 +119,7 @@ const RefundPolicy = () => {
           <div className="border-t border-border pt-6">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
               <p className="text-muted-foreground">
-                &copy; 2024 AdamGpt. All rights reserved.
+                &copy; 2024 ChatLearn. All rights reserved.
               </p>
               <div className="flex items-center gap-6 text-muted-foreground">
                 <div className="flex items-center gap-2">

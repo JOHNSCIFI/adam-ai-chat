@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Mail, MessageSquare, Phone, Sparkles, Shield, Users } from 'lucide-react';
 import SEO from '@/components/SEO';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 
 const Contact = () => {
   const navigate = useNavigate();
@@ -15,7 +15,7 @@ const Contact = () => {
     <div className="min-h-screen bg-background">
       <SEO 
         title="Contact Us"
-        description="Get in touch with AdamGpt support team. We're here to help with any questions about our AI platform and services."
+        description="Get in touch with ChatLearn support team. We're here to help with any questions about our AI platform and services."
       />
       
       {/* Hero Section */}
@@ -25,7 +25,7 @@ const Contact = () => {
             Get in <span className="text-primary">Touch</span>
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            We're here to help! Reach out to our team with any questions about AdamGpt.
+            We're here to help! Reach out to our team with any questions about ChatLearn.
           </p>
         </div>
       </section>
@@ -157,10 +157,10 @@ const Contact = () => {
             <div className="animate-fade-in">
               <div className="flex items-center space-x-2 mb-6">
                 <div className="relative">
-                  <AdamGptLogo className="h-7 w-7" />
+                  <ChatLearnLogo className="h-7 w-7" />
                   <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 Your gateway to the world's most advanced AI models, unified in one intelligent platform.

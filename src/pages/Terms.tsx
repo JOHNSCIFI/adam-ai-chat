@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Sparkles, Shield, Users } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 export default function Terms() {
   const navigate = useNavigate();
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -16,8 +16,8 @@ export default function Terms() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <AdamGptLogo className="h-6 w-6" />
-              <span className="text-lg font-semibold text-foreground">AdamGpt</span>
+              <ChatLearnLogo className="h-6 w-6" />
+              <span className="text-lg font-semibold text-foreground">ChatLearn</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Professional AI solutions for businesses and individuals.
@@ -55,7 +55,7 @@ export default function Terms() {
         <div className="border-t border-border pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p className="text-muted-foreground">
-              &copy; 2024 AdamGpt. All rights reserved.
+              &copy; 2024 ChatLearn. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
@@ -103,7 +103,7 @@ export default function Terms() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="leading-relaxed text-muted-foreground">
-                  By accessing and using Adam AI Chat ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
+                  By accessing and using ChatLearn ("Service"), you accept and agree to be bound by the terms and provision of this agreement. If you do not agree to abide by the above, please do not use this service.
                 </p>
               </CardContent>
             </Card>
@@ -114,7 +114,7 @@ export default function Terms() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="mb-4 text-muted-foreground">
-                  Adam AI Chat is an artificial intelligence-powered chat service that allows users to:
+                  ChatLearn is an artificial intelligence-powered chat service that allows users to:
                 </p>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="p-4 rounded-lg bg-muted/20 border border-muted">
@@ -271,7 +271,7 @@ export default function Terms() {
                   <div className="p-6 rounded-xl bg-blue-500/10 border border-blue-500/20">
                     <h3 className="text-lg font-semibold mb-3 text-blue-600 dark:text-blue-400">Our IP Rights</h3>
                     <p className="text-sm">
-                      The Service and its original content, features, and functionality are owned by Adam AI Chat and are protected by international intellectual property laws.
+                      The Service and its original content, features, and functionality are owned by ChatLearn and are protected by international intellectual property laws.
                     </p>
                   </div>
 
@@ -311,7 +311,7 @@ export default function Terms() {
                   <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20">
                     <h3 className="text-lg font-semibold mb-3 text-red-600 dark:text-red-400">Limitation of Liability</h3>
                     <p className="text-sm">
-                      To the maximum extent permitted by law, Adam AI Chat shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.
+                      To the maximum extent permitted by law, ChatLearn shall not be liable for any indirect, incidental, special, consequential, or punitive damages resulting from your use of the Service.
                     </p>
                   </div>
                 </div>
@@ -319,7 +319,7 @@ export default function Terms() {
                 <div className="p-6 rounded-xl bg-primary/10 border border-primary/20">
                   <h3 className="text-lg font-semibold mb-3 text-primary">Indemnification</h3>
                   <p>
-                    You agree to defend, indemnify, and hold harmless Adam AI Chat from any claims, damages, obligations, losses, liabilities, costs, or expenses arising from your use of the Service or violation of these Terms.
+                    You agree to defend, indemnify, and hold harmless ChatLearn from any claims, damages, obligations, losses, liabilities, costs, or expenses arising from your use of the Service or violation of these Terms.
                   </p>
                 </div>
               </CardContent>

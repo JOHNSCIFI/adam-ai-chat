@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 const Pricing = () => {
@@ -116,10 +116,10 @@ const Pricing = () => {
           <div className="animate-fade-in">
             <div className="flex items-center space-x-2 mb-6">
               <div className="relative">
-                <AdamGptLogo className="h-7 w-7" />
+                <ChatLearnLogo className="h-7 w-7" />
                 <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
               </div>
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">
               Your gateway to the world's most advanced AI models, unified in one intelligent platform.

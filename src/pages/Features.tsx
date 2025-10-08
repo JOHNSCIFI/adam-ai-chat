@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Sparkles, ChevronDown, Shield, Users, Mic, Image as ImageIcon, FileText, Bot, Globe, Zap, Target, ArrowRight, Play, Square, MicIcon } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
@@ -27,10 +27,10 @@ const Features = () => {
           <div className="animate-fade-in sm:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4 md:mb-6">
               <div className="relative">
-                <AdamGptLogo className="h-6 w-6 md:h-7 md:w-7" />
+                <ChatLearnLogo className="h-6 w-6 md:h-7 md:w-7" />
                 <Sparkles className="h-2.5 w-2.5 md:h-3 md:w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
               </div>
-              <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+              <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
             </div>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xs">
               Your gateway to the world's most advanced AI models, unified in one intelligent platform.
@@ -77,7 +77,7 @@ const Features = () => {
       }}>
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
             <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
-              &copy; 2024 AdamGpt. All rights reserved.
+              &copy; 2024 ChatLearn. All rights reserved.
             </p>
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-xs md:text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
@@ -101,7 +101,7 @@ const Features = () => {
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-purple-500/5 to-transparent"></div>
         <div className="container max-w-6xl mx-auto text-center relative z-10">
           <h1 className="text-5xl md:text-6xl font-bold mb-6 animate-fade-in">
-            Powerful Features of <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AdamGpt</span>
+            Powerful Features of <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">ChatLearn</span>
           </h1>
         </div>
       </section>

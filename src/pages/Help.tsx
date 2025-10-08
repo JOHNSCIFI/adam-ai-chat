@@ -14,7 +14,7 @@ export default function Help() {
       <div className="space-y-6">
         <div>
           <h1 className="text-2xl font-semibold">Help & Support</h1>
-          <p className="text-muted-foreground">Get help with adamGPT and find answers to common questions</p>
+          <p className="text-muted-foreground">Get help with ChatLearn and find answers to common questions</p>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
@@ -48,7 +48,7 @@ export default function Help() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-6 ml-13">
-                Review the terms and conditions for using adamGPT services
+                Review the terms and conditions for using ChatLearn services
               </p>
               <Button className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                 Read Terms
@@ -83,9 +83,9 @@ export default function Help() {
           <CardContent>
             <Accordion type="single" collapsible className="w-full">
               <AccordionItem value="item-1">
-                <AccordionTrigger>What is adamGPT?</AccordionTrigger>
+                <AccordionTrigger>What is ChatLearn?</AccordionTrigger>
                 <AccordionContent>
-                  adamGPT is an AI-powered chat assistant that helps you with various tasks, questions, and conversations. 
+                  ChatLearn is an AI-powered chat assistant that helps you with various tasks, questions, and conversations. 
                   It's designed to be helpful, harmless, and honest in all interactions.
                 </AccordionContent>
               </AccordionItem>

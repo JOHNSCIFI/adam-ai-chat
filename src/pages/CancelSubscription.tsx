@@ -9,7 +9,7 @@ const CancelSubscription = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEO 
         title="Cancel Subscription"
-        description="Cancel your AdamGpt subscription easily. Learn about cancellation process, billing cycles, and alternative options."
+        description="Cancel your ChatLearn subscription easily. Learn about cancellation process, billing cycles, and alternative options."
       />
       
       <div className="max-w-2xl mx-auto">

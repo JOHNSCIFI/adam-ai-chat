@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code, X } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import SEO from '@/components/SEO';
@@ -49,7 +49,7 @@ const Home = () => {
           </p>
           
           <div className="flex justify-center">
-            <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using AdamGpt now">
+            <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using ChatLearn now">
               Start Now
             </Button>
           </div>
@@ -464,7 +464,7 @@ const Home = () => {
                 Questions
               </h2>
               <p className="text-muted-foreground text-lg">
-                Everything you need to know about AdamGpt
+                Everything you need to know about ChatLearn
               </p>
             </div>
             
@@ -559,10 +559,10 @@ const Home = () => {
             <div className="animate-fade-in">
               <div className="flex items-center space-x-2 mb-6">
                 <div className="relative">
-                  <AdamGptLogo className="h-7 w-7" />
+                  <ChatLearnLogo className="h-7 w-7" />
                   <Sparkles className="h-3 w-3 text-primary absolute -top-1 -right-1 animate-pulse" />
                 </div>
-                <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">AdamGpt</span>
+                <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
               </div>
               <p className="text-muted-foreground leading-relaxed">
                 Your gateway to the world's most advanced AI models, unified in one intelligent platform.

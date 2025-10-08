@@ -1,10 +1,10 @@
 import React from 'react';
 
-interface AdamGptLogoProps {
+interface ChatLearnLogoProps {
   className?: string;
 }
 
-const AdamGptLogo: React.FC<AdamGptLogoProps> = ({ className = "h-7 w-7" }) => {
+const ChatLearnLogo: React.FC<ChatLearnLogoProps> = ({ className = "h-7 w-7" }) => {
   return (
     <svg 
       xmlns="http://www.w3.org/2000/svg" 
@@ -30,4 +30,4 @@ const AdamGptLogo: React.FC<AdamGptLogoProps> = ({ className = "h-7 w-7" }) => {
   );
 };
 
-export default AdamGptLogo;
+export default ChatLearnLogo;

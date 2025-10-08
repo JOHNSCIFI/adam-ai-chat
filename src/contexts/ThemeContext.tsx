@@ -43,8 +43,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         if (userAccent) setAccentColor(userAccent);
       } else if (!user) {
         // Fallback to localStorage for non-authenticated users
-        const savedTheme = localStorage.getItem('adamgpt-theme') as Theme;
-        const savedAccent = localStorage.getItem('adamgpt-accent') as AccentColor;
+        const savedTheme = localStorage.getItem('chatlearn-theme') as Theme;
+        const savedAccent = localStorage.getItem('chatlearn-accent') as AccentColor;
         
         if (savedTheme) setTheme(savedTheme);
         if (savedAccent) setAccentColor(savedAccent);
@@ -87,8 +87,8 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
         });
       } else {
         // Fallback to localStorage for non-authenticated users
-        localStorage.setItem('adamgpt-theme', theme);
-        localStorage.setItem('adamgpt-accent', accentColor);
+        localStorage.setItem('chatlearn-theme', theme);
+        localStorage.setItem('chatlearn-accent', accentColor);
       }
     };
 

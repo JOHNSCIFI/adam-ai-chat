@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Sparkles, Shield, Users } from 'lucide-react';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 export default function Cookies() {
   const navigate = useNavigate();
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -16,8 +16,8 @@ export default function Cookies() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <AdamGptLogo className="h-6 w-6" />
-              <span className="text-lg font-semibold text-foreground">AdamGpt</span>
+              <ChatLearnLogo className="h-6 w-6" />
+              <span className="text-lg font-semibold text-foreground">ChatLearn</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Professional AI solutions for businesses and individuals.
@@ -55,7 +55,7 @@ export default function Cookies() {
         <div className="border-t border-border pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p className="text-muted-foreground">
-              &copy; 2024 AdamGpt. All rights reserved.
+              &copy; 2024 ChatLearn. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">

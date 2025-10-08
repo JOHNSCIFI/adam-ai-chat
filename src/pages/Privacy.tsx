@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { ChevronDown, Sparkles, Shield, Users } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
-import AdamGptLogo from '@/components/AdamGptLogo';
+import ChatLearnLogo from '@/components/ChatLearnLogo';
 export default function Privacy() {
   const navigate = useNavigate();
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -17,8 +17,8 @@ export default function Privacy() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
           <div>
             <div className="flex items-center space-x-2 mb-4">
-              <AdamGptLogo className="h-6 w-6" />
-              <span className="text-lg font-semibold text-foreground">AdamGpt</span>
+              <ChatLearnLogo className="h-6 w-6" />
+              <span className="text-lg font-semibold text-foreground">ChatLearn</span>
             </div>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Professional AI solutions for businesses and individuals.
@@ -56,7 +56,7 @@ export default function Privacy() {
         <div className="border-t border-border pt-6">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-sm">
             <p className="text-muted-foreground">
-              &copy; 2024 AdamGpt. All rights reserved.
+              &copy; 2024 ChatLearn. All rights reserved.
             </p>
             <div className="flex items-center gap-6 text-muted-foreground">
               <div className="flex items-center gap-2">
@@ -104,7 +104,7 @@ export default function Privacy() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="leading-relaxed text-muted-foreground">
-                  This Privacy Policy describes how Adam AI Chat ("we," "our," or "us") collects, uses, and protects your personal information when you use our AI chat service. We are committed to protecting your privacy and ensuring transparency about our data practices.
+                  This Privacy Policy describes how ChatLearn ("we," "our," or "us") collects, uses, and protects your personal information when you use our AI chat service. We are committed to protecting your privacy and ensuring transparency about our data practices.
                 </p>
               </CardContent>
             </Card>
@@ -114,7 +114,7 @@ export default function Privacy() {
                 <CardTitle className="text-xl text-foreground">Controller Information</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <p><strong>Data Controller:</strong> Adam AI Chat</p>
+                <p><strong>Data Controller:</strong> ChatLearn</p>
                 <p><strong>Contact Email:</strong> privacy@adamai.chat</p>
                 <p><strong>Data Protection Officer:</strong> dpo@adamai.chat</p>
               </CardContent>

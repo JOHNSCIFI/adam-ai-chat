@@ -741,12 +741,12 @@ export default function Index() {
       {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
           <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
           
-          {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
+          {/* Mobile Model Selector triggered by ChatLearn - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Select value={selectedModel} onValueChange={handleModelSelect} onOpenChange={setIsModelDropdownOpen}>
               <SelectTrigger className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden" aria-label="Select AI model">
                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                  <span className="text-lg font-semibold">{selectedModelData?.shortLabel || 'AdamGpt'}</span>
+                  <span className="text-lg font-semibold">{selectedModelData?.shortLabel || 'ChatLearn'}</span>
                   {isModelDropdownOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
                 </div>
               </SelectTrigger>

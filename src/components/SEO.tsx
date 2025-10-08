@@ -8,7 +8,7 @@ interface SEOProps {
 }
 
 const SEO: React.FC<SEOProps> = ({ title, description, canonical, noindex = false }) => {
-  const fullTitle = `${title} | AdamGpt`;
+  const fullTitle = `${title} | ChatLearn`;
 
   useEffect(() => {
     // Update title

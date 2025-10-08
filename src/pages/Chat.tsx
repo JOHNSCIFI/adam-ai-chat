@@ -3131,7 +3131,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
             <MessageSquare className="text-2xl text-primary-foreground h-8 w-8" />
           </div>
-          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to adamGPT</h2>
+          <h2 className="text-2xl font-bold mb-4 text-foreground">Welcome to ChatLearn</h2>
           <p className="text-muted-foreground mb-8 text-base">Your intelligent AI assistant ready to help with any questions or tasks</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
             <div className="bg-card border border-border rounded-xl p-6 text-center hover:bg-accent/5 transition-colors">
@@ -3163,7 +3163,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             aria-label="Open sidebar menu"
           />
           
-          {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
+          {/* Mobile Model Selector triggered by ChatLearn - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             <Select value={selectedModel} onValueChange={handleModelChange} onOpenChange={setIsModelDropdownOpen}>
               <SelectTrigger 
@@ -3171,7 +3171,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 aria-label="Select AI model"
               >
                 <div className="flex items-center justify-center gap-1 whitespace-nowrap">
-                  <span className="text-lg font-semibold">{selectedModelData?.shortLabel || 'AdamGpt'}</span>
+                  <span className="text-lg font-semibold">{selectedModelData?.shortLabel || 'ChatLearn'}</span>
                   {isModelDropdownOpen ? (
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />
                   ) : (

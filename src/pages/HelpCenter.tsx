@@ -12,14 +12,14 @@ const HelpCenter = () => {
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <SEO 
         title="Help Center"
-        description="Find answers to frequently asked questions about AdamGpt, tutorials, and comprehensive guides for using our AI platform."
+        description="Find answers to frequently asked questions about ChatLearn, tutorials, and comprehensive guides for using our AI platform."
       />
       
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-foreground mb-4">Help Center</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Find answers to your questions and learn how to make the most of AdamGpt
+            Find answers to your questions and learn how to make the most of ChatLearn
           </p>
           
           {/* Search */}
