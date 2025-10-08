@@ -260,6 +260,10 @@ export default function Chat() {
   // Track processed messages per chat to prevent cross-chat bleeding
   const processedUserMessages = useRef<Map<string, Set<string>>>(new Map());
   const imageGenerationChats = useRef<Set<string>>(new Set());
+  // Track if user manually selected a model (don't override from DB)
+  const userSelectedModelRef = useRef<string | null>(null);
+  // Track if a send is in progress to prevent duplicates
+  const sendingInProgressRef = useRef(false);
   const selectedModelData = models.find(m => m.id === selectedModel);
   useEffect(() => {
     if (chatId && user) {
@@ -270,6 +274,11 @@ export default function Chat() {
 
       // CRITICAL: Clear messages state immediately when switching chats to prevent cross-chat bleeding
       setMessages([]);
+      
+      // CRITICAL: Clear user model selection when switching chats
+      // This allows each chat to load its own model from DB
+      userSelectedModelRef.current = null;
+      console.log('[CHAT-SWITCH] Cleared user model selection for new chat');
 
       // Reset all loading states when switching chats - CRITICAL for chat isolation
       setIsGeneratingResponse(false);
@@ -548,6 +557,34 @@ export default function Chat() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Add visibility change detection to prevent duplicate sends when switching tabs
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.hidden) {
+        console.log('[TAB-VISIBILITY] Tab hidden - user switched away');
+      } else {
+        console.log('[TAB-VISIBILITY] Tab visible - user returned');
+        // Clear any stale locks when returning to tab
+        const sendLockKey = `sending_${chatId}`;
+        const lockTime = sessionStorage.getItem(`${sendLockKey}_time`);
+        if (lockTime) {
+          const elapsed = Date.now() - parseInt(lockTime);
+          if (elapsed > 15000) { // Clear if older than 15 seconds
+            console.log('[TAB-VISIBILITY] Clearing stale send lock');
+            sessionStorage.removeItem(sendLockKey);
+            sessionStorage.removeItem(`${sendLockKey}_time`);
+            sendingInProgressRef.current = false;
+          }
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [chatId]);
 
   // Timer for recording duration
   useEffect(() => {
@@ -1368,9 +1405,13 @@ export default function Chat() {
       .eq('id', chatId)
       .maybeSingle();
     
-    // If chat has a model_id, set it as the selected model
-    if (!chatError && chatData?.model_id) {
+    // CRITICAL: Only set model from DB if user hasn't manually selected one
+    // This prevents the dropdown from resetting when switching tabs
+    if (!chatError && chatData?.model_id && !userSelectedModelRef.current) {
+      console.log('[FETCH-MESSAGES] Setting model from DB:', chatData.model_id);
       setSelectedModel(chatData.model_id);
+    } else if (userSelectedModelRef.current) {
+      console.log('[FETCH-MESSAGES] Preserving user-selected model:', userSelectedModelRef.current);
     }
     
     // Then fetch messages
@@ -1482,8 +1523,38 @@ export default function Chat() {
         return 'bg-gradient-to-br from-primary/20 to-primary/40';
     }
   };
+  
+  // Handle model selection - track user's manual selection to prevent DB override
+  const handleModelChange = (modelId: string) => {
+    console.log('[MODEL-CHANGE] User manually selected model:', modelId);
+    setSelectedModel(modelId);
+    userSelectedModelRef.current = modelId;
+    
+    // Update the chat's model in the database
+    if (chatId) {
+      supabase
+        .from('chats')
+        .update({ model_id: modelId })
+        .eq('id', chatId)
+        .then(({ error }) => {
+          if (error) {
+            console.error('[MODEL-CHANGE] Error updating chat model:', error);
+          } else {
+            console.log('[MODEL-CHANGE] Chat model updated in DB');
+          }
+        });
+    }
+  };
+  
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    // CRITICAL: Check if send is already in progress
+    const sendLockKey = `sending_${chatId}`;
+    if (sendingInProgressRef.current || sessionStorage.getItem(sendLockKey)) {
+      console.log('[SEND] Already sending, preventing duplicate');
+      return;
+    }
     
     // Allow sending if there's text OR files
     if ((!input.trim() && selectedFiles.length === 0) || !chatId || loading) {
@@ -1502,6 +1573,20 @@ export default function Chat() {
       setShowAuthModal(true);
       return;
     }
+    
+    // CRITICAL: Set lock to prevent duplicate sends
+    sendingInProgressRef.current = true;
+    sessionStorage.setItem(sendLockKey, 'true');
+    sessionStorage.setItem(`${sendLockKey}_time`, Date.now().toString());
+    console.log('[SEND] Lock acquired');
+    
+    // Clear lock after 10 seconds (safety timeout)
+    setTimeout(() => {
+      sendingInProgressRef.current = false;
+      sessionStorage.removeItem(sendLockKey);
+      sessionStorage.removeItem(`${sendLockKey}_time`);
+      console.log('[SEND] Lock released (timeout)');
+    }, 10000);
     
     const userMessage = input.trim();
     const files = [...selectedFiles];
@@ -2144,10 +2229,17 @@ export default function Chat() {
         setShowAuthModal(true);
         return;
       }
-
+      
       // Show generic error toast for other errors
       console.error('Failed to send message');
     } finally {
+      // CRITICAL: Always release the send lock
+      const sendLockKey = `sending_${chatId}`;
+      sendingInProgressRef.current = false;
+      sessionStorage.removeItem(sendLockKey);
+      sessionStorage.removeItem(`${sendLockKey}_time`);
+      console.log('[SEND] Lock released (finally)');
+      
       setLoading(false);
       setIsGeneratingResponse(false);
       setCurrentImagePrompts(prev => {
@@ -2998,7 +3090,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           
           {/* Mobile Model Selector triggered by AdamGpt - Absolutely centered */}
           <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <Select value={selectedModel} onValueChange={setSelectedModel} onOpenChange={setIsModelDropdownOpen}>
+            <Select value={selectedModel} onValueChange={handleModelChange} onOpenChange={setIsModelDropdownOpen}>
               <SelectTrigger 
                 className="bg-transparent border-0 hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-primary rounded-lg transition-all duration-200 h-auto p-2 [&>svg]:hidden"
                 aria-label="Select AI model"
@@ -3617,7 +3709,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </div>
                   
                   <div className="flex items-center gap-2">
-                    <Select value={selectedModel} onValueChange={setSelectedModel}>
+                    <Select value={selectedModel} onValueChange={handleModelChange}>
                       <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
                         <SelectValue>
                           <span className="text-sm font-medium">{selectedModelData?.shortLabel}</span>
