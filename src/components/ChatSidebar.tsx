@@ -13,6 +13,8 @@ import { AddToProjectModal } from '@/components/AddToProjectModal';
 import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
+import AdamGptLogo from '@/components/AdamGptLogo';
+import { useTheme } from '@/contexts/ThemeContext';
 interface Chat {
   id: string;
   title: string;
@@ -311,15 +313,30 @@ export default function ChatSidebar({
   // Get chats that are not in any project
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
+  const { theme } = useTheme();
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
         <SidebarHeader className="pt-5 px-2 pb-4 relative">
-          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-end'} mb-3`}>
-            <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg group flex items-center justify-center">
-              <Bot className="h-5 w-5 group-hover:hidden" />
-              <Menu className="h-4 w-4 hidden group-hover:block" />
-            </SidebarTrigger>
+          <div className={`${collapsed ? 'flex justify-center' : 'flex justify-between items-center'} mb-3 group/header`}>
+            {collapsed ? (
+              <div className="relative flex items-center justify-center w-full">
+                <AdamGptLogo className="h-8 w-8" />
+                <SidebarTrigger className="absolute h-6 w-6 p-0 bg-sidebar-accent/80 backdrop-blur-sm hover:bg-sidebar-accent text-sidebar-foreground rounded-md opacity-0 group-hover/header:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                  <Menu className="h-4 w-4" />
+                </SidebarTrigger>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <AdamGptLogo className="h-8 w-8" />
+                  <span className="font-semibold text-lg text-sidebar-foreground">AdamGPT</span>
+                </div>
+                <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
+                  <Menu className="h-4 w-4" />
+                </SidebarTrigger>
+              </>
+            )}
           </div>
 
           {collapsed ? <div className="flex flex-col gap-2 items-center">
