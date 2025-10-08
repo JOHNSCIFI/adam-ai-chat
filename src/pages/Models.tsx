@@ -98,7 +98,7 @@ const Models = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
             <div className="animate-fade-in">
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
+                <div className={`w-8 h-8 ${actualTheme === 'dark' ? 'bg-white' : 'bg-background'} border border-border rounded-lg flex items-center justify-center p-1 shadow-sm`}>
                   <img src={chatgptLogoLight} alt="OpenAI GPT-4o" className="w-6 h-6" />
                 </div>
                 <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
@@ -182,7 +182,7 @@ const Models = () => {
             <div className="group relative p-8 rounded-2xl bg-gradient-to-br from-green-500/5 to-emerald-500/5 border border-green-500/10 hover:border-green-500/30 transition-all duration-500 hover:scale-105 hover:shadow-xl animate-fade-in">
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2 bg-background">
+                <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2 ${actualTheme === 'dark' ? 'bg-white' : 'bg-background'}`}>
                   <img src={chatgptLogoLight} alt="OpenAI ChatGPT" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">OpenAI GPT-4o</h3>
