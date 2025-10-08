@@ -315,7 +315,7 @@ export default function ChatSidebar({
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
-  const chatlearnLogo = theme === 'dark' ? chatlearnLogoLight : chatlearnLogoDark;
+  const chatlearnLogo = theme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
