@@ -1199,121 +1199,10 @@ export default function Chat() {
       });
       
       // If webhook returns success but no content, it means the message was saved by webhook-handler
-      // Start polling to ensure we get the response even if realtime doesn't fire
+      // Realtime subscription will handle delivering the assistant message
       if (aiResponse?.success && !aiResponse?.response && !aiResponse?.content && !aiResponse?.text) {
-        console.log('[AI-RESPONSE] Webhook saved message to DB, starting polling...');
-        
-        // Polling mechanism as fallback for when real-time doesn't fire
-        let pollAttempts = 0;
-        const maxPollAttempts = 20; // Poll for up to 40 seconds
-        const pollInterval = 2000; // Poll every 2 seconds
-        
-        const pollForNewMessages = async () => {
-          if (pollAttempts >= maxPollAttempts) {
-            console.log('[AI-RESPONSE-POLLING] Max attempts reached');
-            setIsGeneratingResponse(false);
-            return;
-          }
-          
-          pollAttempts++;
-          console.log(`[AI-RESPONSE-POLLING] Attempt ${pollAttempts}/${maxPollAttempts}`);
-          
-          try {
-            const { data: latestMessages, error: fetchError } = await supabase
-              .from('messages')
-              .select('*')
-              .eq('chat_id', originalChatId)
-              .order('created_at', { ascending: false })
-              .limit(5);
-            
-            if (fetchError) {
-              console.error('[AI-RESPONSE-POLLING] Error fetching messages:', fetchError);
-              setTimeout(pollForNewMessages, pollInterval);
-              return;
-            }
-            
-            // Check if there's a new assistant message after the user message
-            // CRITICAL: Fetch the actual user message from the database to get its timestamp
-            // Don't rely on state or Date.now() which can cause timing issues
-            const { data: userMessageData } = await supabase
-              .from('messages')
-              .select('created_at')
-              .eq('id', userMessageId)
-              .single();
-            
-            const userMessageTime = userMessageData 
-              ? new Date(userMessageData.created_at).getTime() 
-              : new Date(latestMessages[0]?.created_at || 0).getTime() - 1000;
-            
-            console.log('[AI-RESPONSE-POLLING] Comparing timestamps:', {
-              userMessageId,
-              userMessageTime: new Date(userMessageTime).toISOString(),
-              latestMessagesCount: latestMessages?.length || 0,
-              latestMessages: latestMessages?.map(m => ({
-                id: m.id,
-                role: m.role,
-                created_at: m.created_at,
-                isAfterUser: new Date(m.created_at).getTime() > userMessageTime
-              }))
-            });
-            
-            const newAssistantMessage = latestMessages?.find(
-              msg => msg.role === 'assistant' && 
-                     msg.id !== userMessageId &&
-                     new Date(msg.created_at).getTime() > userMessageTime
-            );
-            
-            if (newAssistantMessage) {
-              console.log('[AI-RESPONSE-POLLING] ✅ Found matching assistant message:', newAssistantMessage.id);
-            } else {
-              console.log('[AI-RESPONSE-POLLING] ❌ No matching assistant message found');
-            }
-            
-            if (newAssistantMessage) {
-              console.log('[AI-RESPONSE-POLLING] ✅ Found new assistant message!', newAssistantMessage.id);
-              
-              // Check if already in state
-              setMessages(prev => {
-                const exists = prev.some(m => m.id === newAssistantMessage.id);
-                if (exists) {
-                  console.log('[AI-RESPONSE-POLLING] Message already in state');
-                  return prev;
-                }
-                
-                console.log('[AI-RESPONSE-POLLING] Adding message to state');
-                const messageToAdd: Message = {
-                  id: newAssistantMessage.id,
-                  chat_id: newAssistantMessage.chat_id,
-                  content: newAssistantMessage.content,
-                  role: newAssistantMessage.role as 'assistant' | 'user',
-                  created_at: newAssistantMessage.created_at,
-                  file_attachments: (newAssistantMessage.file_attachments as any) || []
-                };
-                
-                const newMessages = [...prev, messageToAdd].sort((a, b) => 
-                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-                );
-                
-                setIsGeneratingResponse(false);
-                requestAnimationFrame(() => scrollToBottom());
-                
-                return newMessages;
-              });
-              
-              // Stop polling
-              return;
-            }
-            
-            console.log('[AI-RESPONSE-POLLING] No new assistant message yet, retrying...');
-            setTimeout(pollForNewMessages, pollInterval);
-          } catch (pollError) {
-            console.error('[AI-RESPONSE-POLLING] Error during polling:', pollError);
-            setTimeout(pollForNewMessages, pollInterval);
-          }
-        };
-        
-        // Start polling after a short delay
-        setTimeout(pollForNewMessages, 2000);
+        console.log('[AI-RESPONSE] Webhook saved message to DB, realtime will deliver response');
+        // Just return - realtime subscription is already active and will deliver the message
         return;
       }
       
@@ -2274,7 +2163,30 @@ export default function Chat() {
         
         console.log('[TEXT-MESSAGE] User message saved, ID:', insertedMessage?.id);
         
-        // The realtime subscription will replace the temp message with the real one
+        // CRITICAL: Immediately replace temp message with real message in state
+        // This ensures the UI updates instantly without waiting for realtime
+        if (insertedMessage && tempUserMessage.id.startsWith('temp-')) {
+          console.log('[TEXT-MESSAGE] Replacing temp message in state:', {
+            tempId: tempUserMessage.id,
+            realId: insertedMessage.id
+          });
+          
+          setMessages(prev => {
+            const filtered = prev.filter(m => m.id !== tempUserMessage.id);
+            const realMessage: Message = {
+              id: insertedMessage.id,
+              chat_id: insertedMessage.chat_id,
+              content: insertedMessage.content,
+              role: insertedMessage.role as 'user' | 'assistant',
+              created_at: insertedMessage.created_at,
+              file_attachments: (insertedMessage.file_attachments as unknown as FileAttachment[]) || []
+            };
+            return [...filtered, realMessage].sort((a, b) => 
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            );
+          });
+        }
+        
         // Now trigger AI response
         if (insertedMessage) {
           // CRITICAL: Mark as processed BEFORE triggering to prevent auto-trigger duplicate
@@ -2283,6 +2195,12 @@ export default function Chat() {
           }
           processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
           
+          // Also mark the temp message as processed
+          const tempMessageId = tempUserMessage.id;
+          if (tempMessageId.startsWith('temp-')) {
+            processedUserMessages.current.get(chatId)!.add(tempMessageId);
+          }
+          
           // Persist to sessionStorage
           const storageKey = `processed_messages_${chatId}`;
           const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
@@ -2290,7 +2208,6 @@ export default function Chat() {
           
           // CRITICAL: Only trigger AI response if this is NOT an auto-send scenario
           // Check if the temp message was already processed by AUTO-TRIGGER
-          const tempMessageId = tempUserMessage.id;
           const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
           
           if (tempWasProcessed) {
