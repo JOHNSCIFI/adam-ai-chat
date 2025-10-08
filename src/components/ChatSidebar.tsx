@@ -505,16 +505,35 @@ export default function ChatSidebar({
                        <LogOut className="mr-2 h-4 w-4" />
                        Sign Out
                      </DropdownMenuItem>
-                   </DropdownMenuContent>
-                </DropdownMenu> : 
-                <Button 
-                  onClick={() => setShowAuthModal(true)}
-                  className={`w-full ${collapsed ? 'px-2' : 'justify-start'} bg-foreground text-background hover:bg-foreground/90`}
-                >
-                  <User className={`h-4 w-4 ${collapsed ? '' : 'mr-2'}`} />
-                  {!collapsed && 'Log in'}
-                </Button>
-              }
+                  </DropdownMenuContent>
+                </DropdownMenu> : <>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div className={`flex items-center gap-3 px-3 py-2 hover:bg-sidebar-accent rounded-lg transition-colors cursor-pointer w-full ${collapsed ? 'justify-center' : ''}`}>
+                        <Avatar className="h-6 w-6">
+                          <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        {!collapsed && <div className="flex-1 min-w-0">
+                            <p className="text-sm text-sidebar-foreground font-medium truncate">Guest</p>
+                            <p className="text-xs text-sidebar-foreground/60 truncate">Guest user</p>
+                          </div>}
+                      </div>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-56">
+                      <DropdownMenuItem onClick={() => setShowSettings(true)}>
+                        <Settings className="mr-2 h-4 w-4" />
+                        Settings
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => navigate('/home')}>
+                        <HelpCircle className="mr-2 h-4 w-4" />
+                        Help
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  
+                </>}
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarFooter>
