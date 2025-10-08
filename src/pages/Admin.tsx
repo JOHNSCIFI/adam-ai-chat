@@ -34,6 +34,8 @@ interface TokenUsageByModel {
 const MODEL_PRICING: Record<string, {
   input: number;
   output: number;
+  inputTier2?: number; // For models with tiered pricing (e.g., Claude >200k tokens)
+  tier2Threshold?: number; // Token threshold for tier 2 pricing
 }> = {
   'gpt-4o-mini': {
     input: 0.15,
@@ -52,32 +54,58 @@ const MODEL_PRICING: Record<string, {
     output: 10.00
   },
   'gpt-5-mini': {
-    input: 1.25,
-    output: 10.00
+    input: 0.25,
+    output: 2.00
   },
   'gpt-5-nano': {
-    input: 1.25,
-    output: 10.00
+    input: 0.05,
+    output: 0.40
   },
   'claude-sonnet-4': {
     input: 3.00,
-    output: 15.00
+    output: 15.00,
+    inputTier2: 6.00, // >200k tokens rate
+    tier2Threshold: 200000
   },
   'grok-4': {
     input: 3.00,
     output: 15.00
   },
-  'deepseek-v2': {
-    input: 0.14,
+  'deepseek-chat': {
+    input: 0.07,
     output: 1.10
+  },
+  'deepseek-reasoner': {
+    input: 0.14,
+    output: 2.19
+  },
+  'deepseek-v2': { // Alias for deepseek-chat
+    input: 0.07,
+    output: 1.10
+  },
+  'google/gemini-2.5-pro': {
+    input: 1.25,
+    output: 5.00
   },
   'google/gemini-2.5-flash': {
     input: 0.30,
     output: 2.50
   },
+  'google/gemini-2.5-flash-lite': {
+    input: 0.15,
+    output: 1.00
+  },
+  'gemini-2.5-pro': {
+    input: 1.25,
+    output: 5.00
+  },
   'gemini-2.5-flash': {
     input: 0.30,
     output: 2.50
+  },
+  'gemini-2.5-flash-lite': {
+    input: 0.15,
+    output: 1.00
   },
   'google/gemini-flash': {
     input: 0.30,
@@ -119,7 +147,20 @@ const calculateCost = (model: string, inputTokens: number, outputTokens: number)
   if (isImageGenerationModel(model)) {
     return outputTokens / 100;
   }
-  return inputTokens / 1_000_000 * pricing.input + outputTokens / 1_000_000 * pricing.output;
+
+  // Handle tiered pricing (e.g., Claude Sonnet 4 with >200k tokens)
+  let inputCost = 0;
+  if (pricing.tier2Threshold && pricing.inputTier2 && inputTokens > pricing.tier2Threshold) {
+    // Tokens up to threshold use tier 1 rate, tokens above use tier 2 rate
+    const tier1Tokens = pricing.tier2Threshold;
+    const tier2Tokens = inputTokens - pricing.tier2Threshold;
+    inputCost = (tier1Tokens / 1_000_000 * pricing.input) + (tier2Tokens / 1_000_000 * pricing.inputTier2);
+  } else {
+    inputCost = inputTokens / 1_000_000 * pricing.input;
+  }
+
+  const outputCost = outputTokens / 1_000_000 * pricing.output;
+  return inputCost + outputCost;
 };
 export default function Admin() {
   const {
