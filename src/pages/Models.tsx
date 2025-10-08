@@ -95,7 +95,7 @@ const Models = () => {
               <div className="flex items-center gap-4 mb-8">
                 <div className={`w-8 h-8 ${actualTheme === 'dark' ? 'bg-background' : 'bg-white'} border border-border rounded-lg flex items-center justify-center p-1 shadow-sm`}>
                   <img 
-                    src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
+                    src={actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight} 
                     alt="OpenAI GPT-4o" 
                     className={`w-6 h-6 ${actualTheme === 'light' ? 'brightness-0' : ''}`} 
                   />
