@@ -1839,9 +1839,11 @@ export default function Chat() {
       let aiAnalysisResponse = '';
       const tempFileAttachments: FileAttachment[] = [];
 
-      // Process files first to get URLs
+      // Branch 1: Handle messages with files
       if (files.length > 0) {
-        console.log('Sending files to webhook for analysis...');
+        console.log('[FILE-PATH] Processing message with files, count:', files.length);
+        
+        // Process files first to get URLs
         for (const file of files) {
           // Check file size limits
           const maxSize = getMaxFileSize(file.type);
@@ -1985,67 +1987,62 @@ export default function Chat() {
           }
 
         }
-      }
 
-      // Update the temporary message with actual uploaded URLs
-      setMessages(prev => prev.map(msg => 
-        msg.id === tempUserMessage.id 
-          ? { ...msg, file_attachments: tempFileAttachments }
-          : msg
-      ));
+        // Update the temporary message with actual uploaded URLs
+        setMessages(prev => prev.map(msg => 
+          msg.id === tempUserMessage.id 
+            ? { ...msg, file_attachments: tempFileAttachments }
+            : msg
+        ));
 
-      // Start embedding generation in background (for user message content)
-      const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
+        // Start embedding generation in background (for user message content)
+        const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
 
-      // CRITICAL: Save user message to database FIRST before calling webhook
-      // This ensures proper ordering - user message arrives before AI response
-      console.log('[FILE-MESSAGE] Saving user message to database with file attachments');
-      const {
-        data: insertedMessage,
-        error: userError
-      } = await supabase.from('messages').insert({
-        chat_id: chatId,
-        content: userMessage,
-        role: 'user',
-        file_attachments: tempFileAttachments as any,
-        embedding: null // Will be updated by background process
-      }).select().single();
-      
-      // Update chat's updated_at timestamp to move it to top of sidebar
-      await supabase
-        .from('chats')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', chatId);
-      
-      if (userError) {
-        // Check for authentication errors
-        if (userError.message?.includes('JWT') || userError.message?.includes('unauthorized')) {
-          setShowAuthModal(true);
-          return;
-        }
-        throw userError;
-      }
-      
-      console.log('[FILE-MESSAGE] User message saved, ID:', insertedMessage?.id);
-
-      // The realtime subscription will automatically replace the temp message with the real one
-      // So we don't need to update locally - let realtime handle it to avoid race conditions
-      
-      // Update with embedding when ready (background)
-      if (insertedMessage) {
-        userEmbeddingPromise.then(embedding => {
-          if (embedding.length > 0) {
-            supabase.from('messages').update({
-              embedding: embedding as any
-            }).eq('id', insertedMessage.id);
+        // CRITICAL: Save user message to database FIRST before calling webhook
+        // This ensures proper ordering - user message arrives before AI response
+        console.log('[FILE-MESSAGE] Saving user message to database with file attachments');
+        const {
+          data: insertedMessage,
+          error: userError
+        } = await supabase.from('messages').insert({
+          chat_id: chatId,
+          content: userMessage,
+          role: 'user',
+          file_attachments: tempFileAttachments as any,
+          embedding: null // Will be updated by background process
+        }).select().single();
+        
+        // Update chat's updated_at timestamp to move it to top of sidebar
+        await supabase
+          .from('chats')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', chatId);
+        
+        if (userError) {
+          // Check for authentication errors
+          if (userError.message?.includes('JWT') || userError.message?.includes('unauthorized')) {
+            setShowAuthModal(true);
+            return;
           }
-        });
-      }
+          throw userError;
+        }
+        
+        console.log('[FILE-MESSAGE] User message saved, ID:', insertedMessage?.id);
 
-      // NOW call webhook for file analysis AFTER user message is saved to database
-      // This ensures user message appears before AI response
-      if (files.length > 0 && insertedMessage) {
-        console.log('[WEBHOOK] User message saved, now calling webhook for analysis');
+        // Update with embedding when ready (background)
+        if (insertedMessage) {
+          userEmbeddingPromise.then(embedding => {
+            if (embedding.length > 0) {
+              supabase.from('messages').update({
+                embedding: embedding as any
+              }).eq('id', insertedMessage.id);
+            }
+          });
+        }
+
+        // NOW call webhook for file analysis AFTER user message is saved to database
+        if (insertedMessage) {
+          console.log('[WEBHOOK] User message saved, now calling webhook for analysis');
         
         for (const file of files) {
           const attachment = tempFileAttachments.find(a => a.name === file.name || a.name.includes(file.name.replace(/\.[^/.]+$/, '')));
@@ -2204,7 +2201,7 @@ export default function Chat() {
         }
 
         // Mark as processed to prevent auto-trigger
-        if (chatId) {
+        if (chatId && insertedMessage) {
           if (!processedUserMessages.current.has(chatId)) {
             processedUserMessages.current.set(chatId, new Set());
           }
@@ -2216,6 +2213,7 @@ export default function Chat() {
           sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
           
           console.log(`[FILE-MESSAGE] Marked message ${insertedMessage.id} as processed`);
+        }
         }
         
         scrollToBottom();
