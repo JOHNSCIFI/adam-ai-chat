@@ -315,7 +315,7 @@ export default function ChatSidebar({
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
-  const chatgptLogo = theme === 'dark' ? chatgptLogoDark : chatgptLogoLight;
+  const chatgptLogo = theme === 'dark' ? chatgptLogoLight : chatgptLogoDark;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
@@ -336,7 +336,6 @@ export default function ChatSidebar({
               <>
                 <div className="flex items-center gap-2">
                   <img src={chatgptLogo} alt="ChatGPT" className="h-8 w-8 object-contain" />
-                  <span className="font-semibold text-lg text-sidebar-foreground">AdamGPT</span>
                 </div>
                 <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
                   <Menu className="h-4 w-4" />
