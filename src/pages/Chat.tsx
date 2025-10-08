@@ -187,6 +187,20 @@ export default function Chat() {
         return chatgptLogoSrc;
     }
   };
+
+  // Helper function to get icon filter style for light mode
+  const getIconFilterStyle = (iconType: string) => {
+    if (actualTheme !== 'light') return {};
+    
+    switch (iconType) {
+      case 'deepseek':
+        return { filter: 'brightness(0) saturate(100%) invert(38%) sepia(98%) saturate(2618%) hue-rotate(221deg) brightness(98%) contrast(101%)' };
+      case 'grok':
+        return { filter: 'brightness(0)' };
+      default:
+        return {};
+    }
+  };
   
   const collapsed = sidebarState === 'collapsed';
 
@@ -3191,7 +3205,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       <div className="flex items-center w-full gap-3">
                         <div className="relative flex-shrink-0">
                           <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
-                            <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                            <img 
+                              src={getModelIcon(modelData?.icon || 'openai')} 
+                              alt={`${model.name} icon`} 
+                              className="w-5 h-5 object-contain"
+                              style={getIconFilterStyle(modelData?.icon || 'openai')}
+                            />
                           </div>
                           {model.type === 'pro' && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
@@ -3794,15 +3813,29 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                 <div className="flex items-center w-full gap-2">
                                    <div className="relative flex-shrink-0">
-                                     {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
-                                       <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />
-                                     ) : model.id.includes('claude') ? (
-                                        <img src={claudeLogo} alt="Claude" className="w-5 h-5 object-contain" />
-                                      ) : model.id.includes('gemini') ? (
-                                        <img src={geminiLogo} alt="Gemini" className="w-5 h-5 object-contain" />
-                                      ) : (
-                                        <Bot className="h-5 w-5" />
-                                      )}
+                                      {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
+                                        <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />
+                                      ) : model.id.includes('claude') ? (
+                                         <img src={claudeLogo} alt="Claude" className="w-5 h-5 object-contain" />
+                                       ) : model.id.includes('gemini') ? (
+                                         <img src={geminiLogo} alt="Gemini" className="w-5 h-5 object-contain" />
+                                       ) : model.id.includes('deepseek') ? (
+                                         <img 
+                                           src={deepseekLogo} 
+                                           alt="DeepSeek" 
+                                           className="w-5 h-5 object-contain"
+                                           style={actualTheme === 'light' ? { filter: 'brightness(0) saturate(100%) invert(38%) sepia(98%) saturate(2618%) hue-rotate(221deg) brightness(98%) contrast(101%)' } : {}}
+                                         />
+                                       ) : model.id.includes('grok') ? (
+                                         <img 
+                                           src={grokLogo} 
+                                           alt="Grok" 
+                                           className="w-5 h-5 object-contain"
+                                           style={actualTheme === 'light' ? { filter: 'brightness(0)' } : {}}
+                                         />
+                                       ) : (
+                                         <Bot className="h-5 w-5" />
+                                       )}
                                       {model.type === 'pro' && (
                                         <span className="absolute -top-1 -right-1 text-[7px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-0.5 py-0.5 rounded-full font-bold shadow-sm">
                                           PRO

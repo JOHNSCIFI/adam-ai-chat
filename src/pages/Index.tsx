@@ -202,6 +202,20 @@ export default function Index() {
         return chatgptLogoSrc;
     }
   };
+
+  // Helper function to get icon filter style for light mode
+  const getIconFilterStyle = (iconType: string) => {
+    if (actualTheme !== 'light') return {};
+    
+    switch (iconType) {
+      case 'deepseek':
+        return { filter: 'brightness(0) saturate(100%) invert(38%) sepia(98%) saturate(2618%) hue-rotate(221deg) brightness(98%) contrast(101%)' };
+      case 'grok':
+        return { filter: 'brightness(0)' };
+      default:
+        return {};
+    }
+  };
   const {
     canSendMessage,
     isAtLimit,
@@ -757,7 +771,12 @@ export default function Index() {
                       <div className="flex items-center w-full gap-3">
                         <div className="relative flex-shrink-0">
                           <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
-                            <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                            <img 
+                              src={getModelIcon(modelData?.icon || 'openai')} 
+                              alt={`${model.name} icon`} 
+                              className="w-5 h-5 object-contain"
+                              style={getIconFilterStyle(modelData?.icon || 'openai')}
+                            />
                           </div>
                           {model.type === 'pro' && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
@@ -985,7 +1004,12 @@ export default function Index() {
                       <SelectValue>
                         <div className="flex items-center gap-2">
                           <div className="w-6 h-6 bg-gradient-to-br from-primary/10 to-primary/20 rounded-lg flex items-center justify-center">
-                            <img src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} alt={`${selectedModelData?.name} icon`} className="w-4 h-4 object-contain" />
+                            <img 
+                              src={getModelIcon(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')} 
+                              alt={`${selectedModelData?.name} icon`} 
+                              className="w-4 h-4 object-contain"
+                              style={getIconFilterStyle(availableModels.find(m => m.id === selectedModel)?.icon || 'openai')}
+                            />
                           </div>
                           <span className="font-medium truncate">{selectedModelData?.shortLabel}</span>
                         </div>
@@ -998,7 +1022,12 @@ export default function Index() {
                             <div className="flex items-center w-full gap-3">
                               <div className="relative flex-shrink-0">
                                 <div className="w-8 h-8 bg-gradient-to-br from-primary/10 to-primary/20 backdrop-blur-sm rounded-xl flex items-center justify-center p-1.5">
-                                  <img src={getModelIcon(modelData?.icon || 'openai')} alt={`${model.name} icon`} className="w-5 h-5 object-contain" />
+                                  <img 
+                                    src={getModelIcon(modelData?.icon || 'openai')} 
+                                    alt={`${model.name} icon`} 
+                                    className="w-5 h-5 object-contain"
+                                    style={getIconFilterStyle(modelData?.icon || 'openai')}
+                                  />
                                 </div>
                                 {model.type === 'pro' && (
                                   <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
