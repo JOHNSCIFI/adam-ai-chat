@@ -6,8 +6,8 @@ import { Sparkles, ChevronDown, Shield, Users, ChevronLeft, ChevronRight, ArrowR
 import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
-import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
@@ -99,7 +99,7 @@ const Models = () => {
             <div className="animate-fade-in">
               <div className="flex items-center gap-4 mb-8">
                 <div className="w-8 h-8 bg-white border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
-                  <img src={actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight} alt="OpenAI GPT-4o" className={`w-6 h-6 ${actualTheme === 'light' ? 'brightness-0' : 'brightness-0 invert'}`} />
+                  <img src={actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight} alt="OpenAI GPT-4o" className="w-6 h-6" />
                 </div>
                 <div className="w-8 h-8 bg-background border border-border rounded-lg flex items-center justify-center p-1 shadow-sm">
                   <img src={geminiLogo} alt="Google Gemini" className="w-6 h-6" />
@@ -183,7 +183,7 @@ const Models = () => {
               <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-emerald-500/0 group-hover:from-green-500/5 group-hover:to-emerald-500/5 rounded-2xl transition-all duration-500"></div>
               <div className="relative z-10 text-center">
                 <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 p-2">
-                  <img src={actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight} alt="OpenAI ChatGPT" className={`w-full h-full object-contain ${actualTheme === 'light' ? 'brightness-0' : 'brightness-0 invert'}`} />
+                  <img src={actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight} alt="OpenAI ChatGPT" className="w-full h-full object-contain" />
                 </div>
                 <h3 className="text-xl font-bold mb-3">OpenAI GPT-4o</h3>
                 <p className="text-muted-foreground">Most advanced reasoning and problem-solving capabilities</p>
