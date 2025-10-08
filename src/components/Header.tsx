@@ -4,11 +4,15 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import AuthModal from './AuthModal';
 
 const Header = () => {
   const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -62,19 +66,37 @@ const Header = () => {
                 <Sun className="h-4 w-4 transition-transform" />
               )}
             </Button>
-            <Button 
-              onClick={() => navigate('/')} 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
-              onMouseEnter={() => {
-                // Prefetch / route
-                const link = document.createElement('link');
-                link.rel = 'prefetch';
-                link.href = '/';
-                document.head.appendChild(link);
-              }}
-            >
-              Start Now
-            </Button>
+            
+            {!user ? (
+              <>
+                <Button 
+                  onClick={() => setShowAuthModal(true)} 
+                  className="hidden md:inline-flex bg-foreground text-background hover:bg-foreground/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                >
+                  Log in
+                </Button>
+                <Button 
+                  onClick={() => setShowAuthModal(true)} 
+                  variant="outline"
+                  className="hidden md:inline-flex focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                >
+                  Sign up for free
+                </Button>
+              </>
+            ) : (
+              <Button 
+                onClick={() => navigate('/')} 
+                className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+                onMouseEnter={() => {
+                  const link = document.createElement('link');
+                  link.rel = 'prefetch';
+                  link.href = '/';
+                  document.head.appendChild(link);
+                }}
+              >
+                Start Now
+              </Button>
+            )}
 
             {/* Mobile menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
@@ -136,6 +158,12 @@ const Header = () => {
           </div>
         </div>
       </div>
+      
+      <AuthModal 
+        isOpen={showAuthModal} 
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => setShowAuthModal(false)}
+      />
     </header>
   );
 };
