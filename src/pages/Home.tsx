@@ -147,7 +147,12 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img src={deepseekLogo} alt="DeepSeek logo" className="w-12 h-12 object-contain" />
+                  <img 
+                    src={deepseekLogo} 
+                    alt="DeepSeek logo" 
+                    className="w-12 h-12 object-contain"
+                    style={actualTheme === 'light' ? { filter: 'brightness(0) saturate(100%) invert(38%) sepia(98%) saturate(2618%) hue-rotate(221deg) brightness(98%) contrast(101%)' } : {}}
+                  />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">DeepSeek</h3>
                 <p className="text-sm text-muted-foreground mb-4">Specialized in technical tasks and data-heavy coding.</p>
@@ -172,7 +177,12 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img src={grokLogo} alt="Grok logo" className="w-12 h-12 object-contain" />
+                  <img 
+                    src={grokLogo} 
+                    alt="Grok logo" 
+                    className="w-12 h-12 object-contain"
+                    style={actualTheme === 'light' ? { filter: 'brightness(0)' } : {}}
+                  />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Grok</h3>
                 <p className="text-sm text-muted-foreground mb-4">Real-time knowledge and conversational AI.</p>
