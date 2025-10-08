@@ -57,19 +57,15 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         // Display the One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
           if (notification.isNotDisplayed()) {
-            console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason());
-            // Automatically trigger regular OAuth as fallback
-            signInWithGoogle();
+            console.log('Google One Tap not displayed:', notification.getNotDisplayedReason());
           } else if (notification.isSkippedMoment()) {
-            console.warn('Google One Tap skipped:', notification.getSkippedReason());
+            console.log('Google One Tap skipped:', notification.getSkippedReason());
           }
         });
 
         isInitialized.current = true;
       } catch (error) {
         console.error('Error initializing Google One Tap:', error);
-        // Fallback to regular Google OAuth
-        signInWithGoogle();
       }
     };
 
@@ -84,16 +80,12 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
 
         if (error) {
           console.error('Google One Tap sign in error:', error.message);
-          // Fallback to regular Google OAuth
-          await signInWithGoogle();
         } else {
           console.log('Successfully signed in with Google One Tap');
           onSuccess?.();
         }
       } catch (error) {
         console.error('Error processing Google One Tap response:', error);
-        // Fallback to regular Google OAuth
-        await signInWithGoogle();
       }
     };
 
