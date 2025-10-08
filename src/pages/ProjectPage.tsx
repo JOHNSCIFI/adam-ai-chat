@@ -86,7 +86,7 @@ const models = [{
   description: "Fast Google AI model",
   type: 'pro'
 }, {
-  id: 'deepseekv3',
+  id: 'deepseek-v2',
   name: 'DeepSeek V2',
   shortLabel: 'DeepSeek V2',
   description: "Advanced reasoning model",
@@ -137,7 +137,7 @@ const availableModels = [{
   icon: 'gemini',
   type: 'pro'
 }, {
-  id: 'deepseekv3',
+  id: 'deepseek-v2',
   name: 'DeepSeek V2',
   shortLabel: 'DeepSeek V2',
   description: 'Advanced reasoning model with strong performance.',
