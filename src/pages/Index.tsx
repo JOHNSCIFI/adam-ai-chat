@@ -56,8 +56,8 @@ const models = [{
   type: 'pro'
 }, {
   id: 'deepseekv3',
-  name: 'DeepSeek V3.2',
-  shortLabel: 'DeepSeek V3.2',
+  name: 'DeepSeek V2',
+  shortLabel: 'DeepSeek V2',
   description: "Advanced reasoning model",
   type: 'pro'
 }, {
@@ -136,8 +136,8 @@ const availableModels = [{
   type: 'pro'
 }, {
   id: 'deepseekv3',
-  name: 'DeepSeek V3.2',
-  shortLabel: 'DeepSeek V3.2',
+  name: 'DeepSeek V2',
+  shortLabel: 'DeepSeek V2',
   description: 'Advanced reasoning model with strong performance.',
   icon: 'deepseek'
 }, {
