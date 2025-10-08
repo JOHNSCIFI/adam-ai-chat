@@ -574,8 +574,12 @@ export default function Chat() {
       }
       const lastMessage = currentChatMessages[currentChatMessages.length - 1];
 
-      // Get processed messages Set for this specific chat
-      const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set();
+      // Get processed messages Set for this specific chat (with sessionStorage persistence)
+      const storageKey = `processed_messages_${chatId}`;
+      const storedProcessed = sessionStorage.getItem(storageKey);
+      const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set(
+        storedProcessed ? JSON.parse(storedProcessed) : []
+      );
 
       // CRITICAL: Only trigger for text-only messages WITHOUT file attachments
       // Messages with file attachments are handled by the webhook, so we should NOT trigger here
@@ -586,18 +590,25 @@ export default function Chat() {
         }
 
         // Check if there's already an assistant response after this user message
-        const hasAssistantResponseAfter = currentChatMessages.some(msg => msg.role === 'assistant' && new Date(msg.created_at) > new Date(lastMessage.created_at));
+        const hasAssistantResponseAfter = currentChatMessages.some(msg => 
+          msg.role === 'assistant' && 
+          new Date(msg.created_at) > new Date(lastMessage.created_at)
+        );
 
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
           console.log('[AUTO-TRIGGER] Processing message:', lastMessage.id, 'Model:', selectedModel);
           
-          // CRITICAL: Mark as processed IMMEDIATELY to prevent duplicate triggers
+          // CRITICAL: Mark as processed IMMEDIATELY in both ref and sessionStorage
           if (!processedUserMessages.current.has(chatId)) {
             processedUserMessages.current.set(chatId, new Set());
           }
           processedUserMessages.current.get(chatId)!.add(lastMessage.id);
+          
+          // Persist to sessionStorage
+          const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+          sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
 
           // Trigger AI response with current selected model
           triggerAIResponse(lastMessage.content, lastMessage.id);
@@ -1037,10 +1048,26 @@ export default function Chat() {
       return;
     }
     
+    // CRITICAL: Check if this message is already being processed using sessionStorage
+    const triggerKey = `triggering_${originalChatId}_${userMessageId}`;
+    if (sessionStorage.getItem(triggerKey)) {
+      console.log('[AI-RESPONSE] Message already being processed, skipping duplicate:', userMessageId);
+      return;
+    }
+    
+    // Mark as being processed
+    sessionStorage.setItem(triggerKey, 'true');
+    
+    // Clear the lock after 60 seconds (timeout)
+    setTimeout(() => {
+      sessionStorage.removeItem(triggerKey);
+    }, 60000);
+    
     // CRITICAL: Skip triggerAIResponse for image generation models
     // They have dedicated webhook handling in sendMessage to avoid duplicate calls
     if (selectedModel === 'generate-image' || selectedModel === 'edit-image') {
       console.log('[AI-RESPONSE] Skipping triggerAIResponse for image model:', selectedModel);
+      sessionStorage.removeItem(triggerKey);
       return;
     }
     
@@ -1320,6 +1347,9 @@ export default function Chat() {
         scrollToBottom();
       }
     } finally {
+      // Clear the trigger lock
+      const triggerKey = `triggering_${originalChatId}_${userMessageId}`;
+      sessionStorage.removeItem(triggerKey);
       setIsGeneratingResponse(false);
     }
   };
@@ -1589,6 +1619,12 @@ export default function Chat() {
             processedUserMessages.current.set(chatId, new Set());
           }
           processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          
+          // Persist to sessionStorage
+          const storageKey = `processed_messages_${chatId}`;
+          const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+          sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+          
           console.log('[IMAGE-GEN] Marked message as processed:', insertedMessage.id);
         }
         
@@ -2034,6 +2070,12 @@ export default function Chat() {
             processedUserMessages.current.set(chatId, new Set());
           }
           processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          
+          // Persist to sessionStorage
+          const storageKey = `processed_messages_${chatId}`;
+          const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+          sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+          
           console.log(`[FILE-MESSAGE] Marked message ${insertedMessage.id} as processed`);
         }
         
@@ -2080,6 +2122,11 @@ export default function Chat() {
             processedUserMessages.current.set(chatId, new Set());
           }
           processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+          
+          // Persist to sessionStorage
+          const storageKey = `processed_messages_${chatId}`;
+          const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+          sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
           
           await triggerAIResponse(userMessage, insertedMessage.id);
         }
