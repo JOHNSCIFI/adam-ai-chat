@@ -7,8 +7,8 @@ import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import SEO from '@/components/SEO';
-import chatgptLogo from '@/assets/chatgpt-logo.png';
-import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
+import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
@@ -19,8 +19,8 @@ const Home = () => {
     actualTheme
   } = useTheme();
 
-  // Choose the appropriate ChatGPT logo based on theme
-  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  // Choose the appropriate ChatLearn logo based on theme
+  const chatlearnLogoSrc = actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
   const handleTryNowClick = () => {
     // Analytics event
     if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -73,7 +73,7 @@ const Home = () => {
             <div className="group p-6 rounded-lg bg-card border border-border hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="text-center flex-1">
                 <div className="w-16 h-16 bg-muted rounded-lg flex items-center justify-center mx-auto mb-4 p-2">
-                  <img src={chatgptLogoSrc} alt="OpenAI ChatGPT logo" className="w-12 h-12 object-contain" />
+                  <img src={chatlearnLogoSrc} alt="OpenAI ChatGPT logo" className="w-12 h-12 object-contain" />
                 </div>
                 <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI<br />GPT-4 / GPT-5</h3>
                 <p className="text-sm text-muted-foreground mb-4">Advanced reasoning, problem-solving, and coding power.</p>

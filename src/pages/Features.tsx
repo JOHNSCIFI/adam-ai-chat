@@ -6,8 +6,8 @@ import { Sparkles, ChevronDown, Shield, Users, Mic, Image as ImageIcon, FileText
 import ChatLearnLogo from '@/components/ChatLearnLogo';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import chatgptLogo from '@/assets/chatgpt-logo.png';
-import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
+import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
@@ -142,8 +142,8 @@ const Features = () => {
                 <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-green-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
                     <img 
-                      src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                      alt="ChatGPT" 
+                      src={actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight} 
+                      alt="ChatLearn"
                       className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`}
                     />
                   </div>
@@ -291,7 +291,7 @@ const Features = () => {
                 
                 <div className="space-y-4 mb-8">
                   <div className="flex items-center gap-4 p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 rounded-xl border border-green-500/20">
-                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className="w-8 h-8" />
+                    <img src={actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight} alt="ChatLearn" className="w-8 h-8" />
                     <div>
                       <span className="font-semibold text-green-700 dark:text-green-300">GPT Image 1</span>
                       <p className="text-sm text-muted-foreground">Generate & edit images</p>

@@ -16,8 +16,8 @@ import ProjectEditModal from '@/components/ProjectEditModal';
 
 import { toast } from 'sonner';
 
-import chatgptLogo from '@/assets/chatgpt-logo.png';
-import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
+import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
+import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
@@ -195,14 +195,14 @@ export default function ProjectPage() {
     actualTheme
   } = useTheme();
   
-  // Choose the appropriate ChatGPT logo based on theme
-  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
+  // Choose the appropriate ChatLearn logo based on theme
+  const chatlearnLogoSrc = actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
 
   // Helper function to get model icon
   const getModelIcon = (iconType: string) => {
     switch (iconType) {
       case 'openai':
-        return chatgptLogoSrc;
+        return chatlearnLogoSrc;
       case 'claude':
         return claudeLogo;
       case 'gemini':
@@ -212,7 +212,7 @@ export default function ProjectPage() {
       case 'grok':
         return grokLogo;
       default:
-        return chatgptLogoSrc;
+        return chatlearnLogoSrc;
     }
   };
   

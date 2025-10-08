@@ -14,8 +14,8 @@ import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
-import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
-import chatgptLogoDark from '@/assets/chatgpt-logo.png';
+import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
+import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
 interface Chat {
   id: string;
   title: string;
@@ -315,7 +315,7 @@ export default function ChatSidebar({
   const unorganizedChats = chats.filter(chat => !chat.project_id);
   const isMobile = useIsMobile();
   const { theme } = useTheme();
-  const chatgptLogo = theme === 'dark' ? chatgptLogoLight : chatgptLogoDark;
+  const chatlearnLogo = theme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
   
   return <>
       <Sidebar className="border-r border-sidebar-border bg-sidebar" collapsible={isMobile ? "offcanvas" : "icon"}>
@@ -324,8 +324,8 @@ export default function ChatSidebar({
             {collapsed ? (
               <div className="relative flex items-center justify-center w-full h-10">
                 <img 
-                  src={chatgptLogo} 
-                  alt="ChatGPT" 
+                  src={chatlearnLogo} 
+                  alt="ChatLearn" 
                   className="h-8 w-8 object-contain transition-opacity duration-200 group-hover/header:opacity-0" 
                 />
                 <SidebarTrigger className="absolute h-8 w-8 p-0 bg-sidebar-accent/90 backdrop-blur-sm hover:bg-sidebar-accent text-sidebar-foreground rounded-lg opacity-0 group-hover/header:opacity-100 transition-opacity duration-200 flex items-center justify-center">
@@ -335,7 +335,8 @@ export default function ChatSidebar({
             ) : (
               <>
                 <div className="flex items-center gap-2">
-                  <img src={chatgptLogo} alt="ChatGPT" className="h-7 w-7 object-contain ml-2 mt-1" />
+                  <img src={chatlearnLogo} alt="ChatLearn" className="h-7 w-7 object-contain ml-2 mt-1" />
+                  <span className="text-lg font-semibold text-sidebar-foreground">ChatLearn</span>
                 </div>
                 <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
                   <Menu className="h-4 w-4" />
