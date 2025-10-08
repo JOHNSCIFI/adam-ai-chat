@@ -616,34 +616,15 @@ export default function Chat() {
 
   // Auto-trigger AI response for user messages that don't have responses
   useEffect(() => {
-    console.log('[AUTO-TRIGGER-CHECK] Effect running:', {
-      messagesCount: messages.length,
-      loading,
-      isGeneratingResponse,
-      isRegenerating: isRegeneratingRef.current,
-      chatId,
-      timestamp: Date.now()
-    });
-    
     // Also check the ref for immediate synchronous state
     if (messages.length > 0 && !loading && !isGeneratingResponse && !isRegeneratingRef.current && chatId) {
       // CRITICAL: Filter messages to only include those belonging to current chat
       const currentChatMessages = messages.filter(msg => msg.chat_id === chatId);
-      console.log('[AUTO-TRIGGER] Current chat messages:', currentChatMessages.length);
       
       if (currentChatMessages.length === 0) {
-        console.log('[AUTO-TRIGGER] No messages for current chat, skipping');
         return;
       }
       const lastMessage = currentChatMessages[currentChatMessages.length - 1];
-      
-      console.log('[AUTO-TRIGGER] Last message:', {
-        id: lastMessage.id,
-        role: lastMessage.role,
-        hasFiles: !!(lastMessage.file_attachments && lastMessage.file_attachments.length > 0),
-        chatId: lastMessage.chat_id,
-        timestamp: Date.now()
-      });
 
       // Get processed messages Set for this specific chat (with sessionStorage persistence)
       const storageKey = `processed_messages_${chatId}`;
@@ -651,15 +632,12 @@ export default function Chat() {
       const chatProcessedMessages = processedUserMessages.current.get(chatId) || new Set(
         storedProcessed ? JSON.parse(storedProcessed) : []
       );
-      
-      console.log('[AUTO-TRIGGER] Processed messages for chat:', Array.from(chatProcessedMessages));
 
       // CRITICAL: Only trigger for text-only messages WITHOUT file attachments
       // Messages with file attachments are handled by the webhook, so we should NOT trigger here
       if (lastMessage.role === 'user' && (!lastMessage.file_attachments || lastMessage.file_attachments.length === 0)) {
         // CRITICAL: Verify message belongs to current chat
         if (lastMessage.chat_id && lastMessage.chat_id !== chatId) {
-          console.log('[AUTO-TRIGGER] Message from different chat, skipping');
           return;
         }
 
@@ -668,15 +646,11 @@ export default function Chat() {
           msg.role === 'assistant' && 
           new Date(msg.created_at) > new Date(lastMessage.created_at)
         );
-        
-        console.log('[AUTO-TRIGGER] Has assistant response after?', hasAssistantResponseAfter);
-        console.log('[AUTO-TRIGGER] Already processed?', chatProcessedMessages.has(lastMessage.id));
-        console.log('[AUTO-TRIGGER] Is image gen chat?', imageGenerationChats.current.has(chatId));
 
         // Only trigger if no assistant response exists, we haven't processed this message yet,
         // and this isn't from an image generation modal
         if (!hasAssistantResponseAfter && !chatProcessedMessages.has(lastMessage.id) && !imageGenerationChats.current.has(chatId)) {
-          console.log('[AUTO-TRIGGER] ✅ TRIGGERING AI RESPONSE for message:', lastMessage.id, 'Model:', selectedModel);
+          console.log('[AUTO-TRIGGER] Triggering AI response for:', lastMessage.id);
           
           // CRITICAL: Mark as processed IMMEDIATELY in both ref and sessionStorage
           if (!processedUserMessages.current.has(chatId)) {
@@ -687,19 +661,11 @@ export default function Chat() {
           // Persist to sessionStorage
           const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
           sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
-          
-          console.log('[AUTO-TRIGGER] Marked as processed:', lastMessage.id);
 
           // Trigger AI response with current selected model
           triggerAIResponse(lastMessage.content, lastMessage.id);
-        } else {
-          console.log('[AUTO-TRIGGER] ❌ Skipping - conditions not met');
         }
-      } else {
-        console.log('[AUTO-TRIGGER] ❌ Skipping - not a text-only user message');
       }
-    } else {
-      console.log('[AUTO-TRIGGER] ❌ Skipping - preconditions not met');
     }
   }, [messages, loading, isGeneratingResponse, chatId, selectedModel]);
 
@@ -3297,15 +3263,6 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </div>
              </div> : <div className="space-y-6" key={`messages-${messages.length}-${messages[messages.length - 1]?.id || 'empty'}`}>
               {messages.map(message => {
-                console.log('[CHAT-RENDER] Rendering message:', {
-                  id: message.id,
-                  role: message.role,
-                  contentPreview: message.content?.substring(0, 50),
-                  hasFileAttachments: !!message.file_attachments,
-                  fileAttachmentsLength: message.file_attachments?.length || 0,
-                  fileAttachments: message.file_attachments
-                });
-                
                 return <div key={message.id} className="group mb-4" onMouseEnter={() => setHoveredMessage(message.id)} onMouseLeave={() => setHoveredMessage(null)}>
                   <div className={`flex ${message.role === 'user' ? 'justify-end mr-3' : 'justify-start ml-3'}`}>
                     <div className={`flex flex-col ${message.role === 'user' ? 'items-end' : 'items-start'} max-w-[90%] sm:max-w-[80%] md:max-w-[70%] relative`}>
@@ -3319,25 +3276,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
            {/* File attachments - hide while regenerating */}
            {message.file_attachments && message.file_attachments.length > 0 && regeneratingMessageId !== message.id && <div className="mb-3 space-y-3">
                {message.file_attachments.map((file, index) => {
-                 console.log('[CHAT-RENDER] Rendering file attachment:', {
-                   index,
-                   fileName: file.name,
-                   fileType: file.type,
-                   fileUrl: file.url,
-                   isImage: isImageFile(file.type),
-                   hasUrl: !!file.url
-                 });
-                 
                   return <div key={index}>
-                    {isImageFile(file.type) && file.url ? <div className="space-y-2">
+                     {isImageFile(file.type) && file.url ? <div className="space-y-2">
                         <img src={file.url} alt={file.name || "Image"} className="max-w-full sm:max-w-[280px] md:max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
                            url: file.url,
                            name: file.name
                          })} onError={e => {
-                           console.error('[CHAT-RENDER] Image load error:', file.url);
                            e.currentTarget.style.display = 'none';
-                         }} onLoad={() => {
-                           console.log('[CHAT-RENDER] Image loaded successfully:', file.url);
                          }} />
                        <div className="flex gap-2">
                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadImageFromChat(file.url, file.name)}>
