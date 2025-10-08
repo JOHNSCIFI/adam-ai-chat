@@ -837,9 +837,9 @@ export default function Index() {
             </Button>
             <Button 
               onClick={() => setShowAuthModal(true)}
-              className="font-medium"
+              className="font-medium bg-black text-white hover:bg-black/90"
             >
-              Sign up for free
+              Sign up
             </Button>
           </div>
         )}
