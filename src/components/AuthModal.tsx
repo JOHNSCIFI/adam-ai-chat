@@ -80,47 +80,42 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     
     setLoading(true);
     try {
-      // FIRST: Check if user exists in profiles table
-      const { data: existingProfile } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('email', email)
-        .maybeSingle();
+      // Try to sign in first
+      const { error: signInError } = await signIn(email, password);
       
-      if (existingProfile) {
-        // User EXISTS in database - only try to sign in
-        const { error: signInError } = await signIn(email, password);
-        
-        if (signInError) {
-          // Sign in failed - wrong password
-          toast({
-            title: "Invalid credentials",
-            description: "The email or password you entered is incorrect. Please try again.",
-            variant: "destructive",
-          });
-        }
-        // If sign in succeeds, useEffect will handle closing modal
-      } else {
-        // User DOES NOT exist - try to sign up
-        const { error: signUpError } = await signUp(email, password, '');
-        
-        if (signUpError) {
-          toast({
-            title: "Sign up failed",
-            description: signUpError.message,
-            variant: "destructive",
-          });
+      if (signInError) {
+        // If sign in fails with "Invalid login credentials", user doesn't exist - sign them up
+        if (signInError.message.includes('Invalid login credentials') || 
+            signInError.message.includes('Invalid')) {
+          const { error: signUpError } = await signUp(email, password, '');
+          
+          if (!signUpError) {
+            // Sign up successful - show confirmation email notification
+            toast({
+              title: "Check your email",
+              description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
+              duration: 8000,
+            });
+            // Keep modal open so user can see the notification
+          } else {
+            // Sign up failed
+            toast({
+              title: "Sign up failed",
+              description: signUpError.message,
+              variant: "destructive",
+            });
+          }
         } else {
-          // Sign up successful
+          // Sign in failed for other reasons
           toast({
-            title: "Check your email",
-            description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
-            duration: 8000,
+            title: "Sign in failed",
+            description: signInError.message,
+            variant: "destructive",
           });
         }
       }
+      // If sign in succeeds, the useEffect will handle closing the modal and redirecting
     } catch (error) {
-      console.error('Auth error:', error);
       toast({
         title: "An error occurred",
         description: "Please try again later.",
