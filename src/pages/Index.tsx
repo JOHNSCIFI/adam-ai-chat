@@ -808,7 +808,7 @@ export default function Index() {
 
         {/* Auth buttons for unauthenticated users (desktop only) */}
         {!user && !isMobile && (
-          <div className="absolute top-4 right-4 flex items-center gap-3">
+          <div className="fixed top-4 right-6 flex items-center gap-3 z-50">
             <Button 
               variant="ghost" 
               onClick={() => setShowAuthModal(true)}
