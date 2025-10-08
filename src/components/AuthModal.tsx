@@ -80,19 +80,41 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     
     setLoading(true);
     try {
-      // Try to sign in first, if it fails, try sign up
+      // Try to sign in first
       const { error: signInError } = await signIn(email, password);
+      
       if (signInError) {
-        // If sign in fails, try sign up
-        const { error: signUpError } = await signUp(email, password, '');
-        if (signUpError && !signUpError.message.includes('User already registered')) {
+        // If sign in fails with "Invalid login credentials", user doesn't exist - sign them up
+        if (signInError.message.includes('Invalid login credentials') || 
+            signInError.message.includes('Invalid')) {
+          const { error: signUpError } = await signUp(email, password, '');
+          
+          if (!signUpError) {
+            // Sign up successful - show confirmation email notification
+            toast({
+              title: "Check your email",
+              description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
+              duration: 8000,
+            });
+            // Keep modal open so user can see the notification
+          } else {
+            // Sign up failed
+            toast({
+              title: "Sign up failed",
+              description: signUpError.message,
+              variant: "destructive",
+            });
+          }
+        } else {
+          // Sign in failed for other reasons
           toast({
-            title: "Authentication failed",
-            description: signUpError.message,
+            title: "Sign in failed",
+            description: signInError.message,
             variant: "destructive",
           });
         }
       }
+      // If sign in succeeds, the useEffect will handle closing the modal and redirecting
     } catch (error) {
       toast({
         title: "An error occurred",
