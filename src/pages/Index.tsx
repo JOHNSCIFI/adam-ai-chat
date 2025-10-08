@@ -777,7 +777,7 @@ export default function Index() {
           </div>
         </div>}
       
-      <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''}`} onDragOver={e => {
+      <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''} relative`} onDragOver={e => {
       e.preventDefault();
       e.stopPropagation();
       setIsDragOver(true);
@@ -805,6 +805,25 @@ export default function Index() {
         setSelectedFiles(prev => [...prev, ...files]);
       }
     }}>
+
+        {/* Auth buttons for unauthenticated users (desktop only) */}
+        {!user && !isMobile && (
+          <div className="absolute top-4 right-4 flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowAuthModal(true)}
+              className="font-medium"
+            >
+              Log in
+            </Button>
+            <Button 
+              onClick={() => setShowAuthModal(true)}
+              className="font-medium"
+            >
+              Sign up for free
+            </Button>
+          </div>
+        )}
 
         {/* Google One Tap for unauthenticated users */}
         <GoogleOneTab />
