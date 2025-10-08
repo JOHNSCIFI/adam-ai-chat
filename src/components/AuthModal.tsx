@@ -80,60 +80,44 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     
     setLoading(true);
     try {
-      // Always try to sign in with Supabase Auth first
-      const { error: signInError } = await signIn(email, password);
+      // FIRST: Check if user exists in profiles table
+      const { data: existingProfile } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('email', email)
+        .maybeSingle();
       
-      if (!signInError) {
-        // Sign in successful - modal will close automatically via useEffect
-        return;
-      }
-      
-      // Sign in failed - check the specific error message
-      const errorMessage = signInError.message.toLowerCase();
-      
-      if (errorMessage.includes('invalid login credentials') || 
-          errorMessage.includes('invalid') || 
-          errorMessage.includes('credentials')) {
-        // Could be either: user doesn't exist OR wrong password
-        // Try to sign up to determine which
+      if (existingProfile) {
+        // User EXISTS in database - only try to sign in
+        const { error: signInError } = await signIn(email, password);
+        
+        if (signInError) {
+          // Sign in failed - wrong password
+          toast({
+            title: "Invalid credentials",
+            description: "The email or password you entered is incorrect. Please try again.",
+            variant: "destructive",
+          });
+        }
+        // If sign in succeeds, useEffect will handle closing modal
+      } else {
+        // User DOES NOT exist - try to sign up
         const { error: signUpError } = await signUp(email, password, '');
         
         if (signUpError) {
-          // Sign up failed - check why
-          const signUpErrorMessage = signUpError.message.toLowerCase();
-          
-          if (signUpErrorMessage.includes('already') || 
-              signUpErrorMessage.includes('exists') ||
-              signUpErrorMessage.includes('registered')) {
-            // User already exists, so the original sign in failure was due to wrong password
-            toast({
-              title: "Invalid credentials",
-              description: "The email or password you entered is incorrect. Please try again.",
-              variant: "destructive",
-            });
-          } else {
-            // Some other sign up error
-            toast({
-              title: "Authentication failed",
-              description: signUpError.message,
-              variant: "destructive",
-            });
-          }
+          toast({
+            title: "Sign up failed",
+            description: signUpError.message,
+            variant: "destructive",
+          });
         } else {
-          // Sign up successful - new user created
+          // Sign up successful
           toast({
             title: "Check your email",
             description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
             duration: 8000,
           });
         }
-      } else {
-        // Some other sign in error
-        toast({
-          title: "Sign in failed",
-          description: signInError.message,
-          variant: "destructive",
-        });
       }
     } catch (error) {
       console.error('Auth error:', error);
