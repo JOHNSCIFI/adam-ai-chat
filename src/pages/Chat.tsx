@@ -19,8 +19,8 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 
 import AuthModal from '@/components/AuthModal';
-import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
-import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
 import geminiLogo from '@/assets/gemini-logo.png';
 import deepseekLogo from '@/assets/deepseek-logo.png';
@@ -167,14 +167,14 @@ export default function Chat() {
   // Remove toast hook since we're not using toasts
   const { state: sidebarState, isMobile } = useSidebar();
   
-  // Choose the appropriate ChatLearn logo based on theme
-  const chatlearnLogoSrc = actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
   
   // Helper function to get model icon
   const getModelIcon = (iconType: string) => {
     switch (iconType) {
       case 'openai':
-        return chatlearnLogoSrc;
+        return chatgptLogoSrc;
       case 'claude':
         return claudeLogo;
       case 'gemini':
@@ -184,7 +184,7 @@ export default function Chat() {
       case 'grok':
         return grokLogo;
       default:
-        return chatlearnLogoSrc;
+        return chatgptLogoSrc;
     }
   };
   
@@ -3794,8 +3794,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                            {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                 <div className="flex items-center w-full gap-2">
                                    <div className="relative flex-shrink-0">
-                                      {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
-                                        <img src={chatlearnLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />
+                                     {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
+                                       <img src={chatgptLogoSrc} alt="OpenAI" className="w-5 h-5 object-contain" />
                                      ) : model.id.includes('claude') ? (
                                         <img src={claudeLogo} alt="Claude" className="w-5 h-5 object-contain" />
                                       ) : model.id.includes('gemini') ? (

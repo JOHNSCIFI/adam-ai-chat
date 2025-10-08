@@ -15,8 +15,8 @@ import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import GoogleOneTab from '@/components/GoogleOneTab';
 import AuthModal from '@/components/AuthModal';
 import { toast } from 'sonner';
-import chatlearnLogoLight from '@/assets/chatlearn-logo-light.png';
-import chatlearnLogoDark from '@/assets/chatlearn-logo-dark.png';
+import chatgptLogo from '@/assets/chatgpt-logo.png';
+import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 
 import claudeLogo from '@/assets/claude-logo.png';
 import geminiLogo from '@/assets/gemini-logo.png';
@@ -182,14 +182,14 @@ export default function Index() {
     actualTheme
   } = useTheme();
 
-  // Choose the appropriate ChatLearn logo based on theme
-  const chatlearnLogoSrc = actualTheme === 'dark' ? chatlearnLogoDark : chatlearnLogoLight;
+  // Choose the appropriate ChatGPT logo based on theme
+  const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
 
   // Helper function to get model icon
   const getModelIcon = (iconType: string) => {
     switch (iconType) {
       case 'openai':
-        return chatlearnLogoSrc;
+        return chatgptLogoSrc;
       case 'claude':
         return claudeLogo;
       case 'gemini':
@@ -199,7 +199,7 @@ export default function Index() {
       case 'grok':
         return grokLogo;
       default:
-        return chatlearnLogoSrc;
+        return chatgptLogoSrc;
     }
   };
   const {
