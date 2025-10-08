@@ -41,48 +41,41 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
       if (isInitialized.current) return;
       
       try {
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID || "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
+        // Use hardcoded client ID - no VITE_ variables
+        const clientId = "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
         
-        if (!clientId || clientId.includes("your-google-client-id")) {
-          console.warn('Google Client ID not configured for One Tap');
-          return;
-        }
-
-        console.log('Initializing Google One Tap with Client ID:', clientId.substring(0, 20) + '...');
+        console.log('Initializing Google One Tap');
         console.log('Current origin:', window.location.origin);
 
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
-          cancel_on_tap_outside: false, // Don't cancel on outside tap
-          use_fedcm_for_prompt: true,
+          cancel_on_tap_outside: false,
         });
 
-        // Display the One Tap prompt with detailed error handling
+        // Display the One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
-          console.log('Google One Tap notification:', notification);
-          
           if (notification.isNotDisplayed()) {
-            console.warn('Google One Tap not displayed. Reason:', notification.getNotDisplayedReason());
+            console.warn('Google One Tap not displayed:', notification.getNotDisplayedReason());
+            // Automatically trigger regular OAuth as fallback
+            signInWithGoogle();
           } else if (notification.isSkippedMoment()) {
-            console.warn('Google One Tap skipped. Reason:', notification.getSkippedReason());
-          } else if (notification.isDismissedMoment()) {
-            console.log('Google One Tap dismissed by user');
-          } else {
-            console.log('Google One Tap displayed successfully');
+            console.warn('Google One Tap skipped:', notification.getSkippedReason());
           }
         });
 
         isInitialized.current = true;
       } catch (error) {
         console.error('Error initializing Google One Tap:', error);
+        // Fallback to regular Google OAuth
+        signInWithGoogle();
       }
     };
 
     const handleCredentialResponse = async (response: any) => {
       try {
-        console.log('Google One Tap credential received');
+        console.log('Google One Tap credential received, attempting sign in...');
         
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
@@ -90,7 +83,7 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         });
 
         if (error) {
-          console.error('Error signing in with Google One Tap:', error);
+          console.error('Google One Tap sign in error:', error.message);
           // Fallback to regular Google OAuth
           await signInWithGoogle();
         } else {
