@@ -291,7 +291,7 @@ const Home = () => {
           
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Free Plan */}
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+            <div className="group p-8 rounded-lg bg-white dark:bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-2 text-foreground">🆓 Free</h3>
                 <div className="text-4xl font-bold mb-2 text-foreground">€0 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
@@ -306,34 +306,34 @@ const Home = () => {
                   <span className="text-foreground text-sm">Access to GPT-4o Mini only</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <div className="w-5 h-5 bg-black/80 dark:bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-white dark:text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-muted-foreground text-sm">GPT-5, Claude, Gemini, DeepSeek, Grok</span>
+                  <span className="text-foreground text-sm">GPT-5, Claude, Gemini, DeepSeek, Grok</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <div className="w-5 h-5 bg-black/80 dark:bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-white dark:text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Voice mode</span>
+                  <span className="text-foreground text-sm">Voice mode</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <div className="w-5 h-5 bg-black/80 dark:bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-white dark:text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Advanced file uploads</span>
+                  <span className="text-foreground text-sm">Advanced file uploads</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <div className="w-5 h-5 bg-black/80 dark:bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-white dark:text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Advanced search</span>
+                  <span className="text-foreground text-sm">Advanced search</span>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-5 h-5 bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <X className="h-3 w-3 text-muted-foreground" aria-hidden="true" />
+                  <div className="w-5 h-5 bg-black/80 dark:bg-muted rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <X className="h-3 w-3 text-white dark:text-muted-foreground" aria-hidden="true" />
                   </div>
-                  <span className="text-muted-foreground text-sm">Premium features</span>
+                  <span className="text-foreground text-sm">Premium features</span>
                 </div>
               </div>
               
@@ -343,7 +343,7 @@ const Home = () => {
             </div>
             
             {/* Pro Plan - Most Popular */}
-            <div className="group relative p-8 rounded-lg bg-card border-2 border-primary hover:border-primary/70 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+            <div className="group relative p-8 rounded-lg bg-white dark:bg-card border-2 border-primary hover:border-primary/70 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
                 <Badge className="bg-primary text-primary-foreground px-3 py-1 text-sm font-medium">
                   Most Popular
@@ -407,7 +407,7 @@ const Home = () => {
             </div>
             
             {/* Ultra Pro Plan */}
-            <div className="group p-8 rounded-lg bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
+            <div className="group p-8 rounded-lg bg-white dark:bg-card border border-border hover:border-primary/50 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 flex flex-col">
               <div className="mb-6">
                 <h3 className="text-2xl font-bold mb-2 text-foreground">🚀 Ultra Pro</h3>
                 <div className="text-4xl font-bold mb-2 text-foreground">€39.99 <span className="text-lg font-normal text-muted-foreground">/ month</span></div>
