@@ -15,7 +15,7 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [mode, setMode] = useState<'initial' | 'signin' | 'signup' | 'reset'>('initial');
+  const [mode, setMode] = useState<'signin' | 'signup' | 'reset'>('signin');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
@@ -49,7 +49,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     if (!isOpen) {
       setEmail('');
       setPassword('');
-      setMode('initial');
+      setMode('signin');
       setSignupCooldown(0);
     }
   }, [isOpen]);
@@ -149,7 +149,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           description: "We've sent you a password reset link.",
           duration: 8000,
         });
-        setMode('initial');
+        setMode('signin');
         setEmail('');
         setPassword('');
       }
@@ -221,41 +221,41 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Title Section */}
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-normal mb-2 sm:mb-3">
-              {mode === 'reset' ? 'Reset your password' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Sign up' : 'Welcome to ChatLearn'}
+              {mode === 'reset' ? 'Reset your password' : 'Welcome to ChatLearn'}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed px-2 sm:px-0">
               {mode === 'reset' 
                 ? 'Enter your email and we\'ll send you a reset link.'
-                : mode === 'initial'
-                ? <>You'll get smarter responses and can upload<br className="hidden sm:block" />
+                : <>You'll get smarter responses and can upload<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>files, images, and more.</>
-                : 'Enter your credentials to continue'
               }
             </p>
           </div>
 
-          {/* Initial Mode - Show Sign In and Sign Up buttons */}
-          {mode === 'initial' && (
-            <div className="space-y-3 mb-4">
-              <Button
-                onClick={() => setMode('signin')}
-                className="w-full h-11 sm:h-12 rounded-xl font-medium"
-              >
-                Sign In
-              </Button>
-              <Button
-                onClick={() => setMode('signup')}
-                variant="outline"
-                className="w-full h-11 sm:h-12 rounded-xl font-medium"
-              >
-                Sign Up
-              </Button>
-            </div>
-          )}
+          {/* Auth Form */}
+          {mode !== 'reset' && (
+            <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="mb-4">
+              {/* Sign In / Sign Up Toggle Buttons */}
+              <div className="flex gap-2 mb-4">
+                <Button
+                  type="button"
+                  onClick={() => setMode('signin')}
+                  variant={mode === 'signin' ? 'default' : 'outline'}
+                  className="flex-1 h-11 sm:h-12 rounded-xl font-medium"
+                >
+                  Sign In
+                </Button>
+                <Button
+                  type="button"
+                  onClick={() => setMode('signup')}
+                  variant={mode === 'signup' ? 'default' : 'outline'}
+                  className="flex-1 h-11 sm:h-12 rounded-xl font-medium"
+                >
+                  Sign Up
+                </Button>
+              </div>
 
-          {/* Sign In Form */}
-          {mode === 'signin' && (
-            <form onSubmit={handleSignIn} className="mb-4">
+              {/* Email and Password Inputs */}
               <div className="mb-4 space-y-3">
                 <input
                   type="email"
@@ -267,7 +267,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 />
                 <input
                   type="password"
-                  placeholder="Password"
+                  placeholder={mode === 'signup' ? 'Password (min 6 characters)' : 'Password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -275,93 +275,40 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
                 />
               </div>
-              <div className="flex items-center justify-between mb-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMode('initial');
-                    setEmail('');
-                    setPassword('');
-                  }}
-                  className="text-sm text-muted-foreground hover:text-foreground px-1"
-                >
-                  ← Back
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setMode('reset')}
-                  className="text-sm text-primary hover:underline px-1"
-                >
-                  Forgot password?
-                </button>
-              </div>
-              <Button
-                type="submit"
-                disabled={loading || !email || !password}
-                className="w-full h-11 sm:h-12 rounded-xl font-medium"
-              >
-                {loading ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Signing in...
-                  </>
-                ) : (
-                  'Sign In'
-                )}
-              </Button>
-            </form>
-          )}
 
-          {/* Sign Up Form */}
-          {mode === 'signup' && (
-            <form onSubmit={handleSignUp} className="mb-4">
-              <div className="mb-4 space-y-3">
-                <input
-                  type="email"
-                  placeholder="Email address"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
-                />
-                <input
-                  type="password"
-                  placeholder="Password (min 6 characters)"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setMode('initial');
-                  setEmail('');
-                  setPassword('');
-                }}
-                className="text-sm text-muted-foreground hover:text-foreground mb-4 px-1"
-              >
-                ← Back
-              </button>
+              {/* Forgot Password Link - Only show in Sign In mode */}
+              {mode === 'signin' && (
+                <div className="flex justify-end mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setMode('reset')}
+                    className="text-sm text-primary hover:underline px-1"
+                  >
+                    Forgot password?
+                  </button>
+                </div>
+              )}
+
+              {/* Submit Button */}
               <Button
                 type="submit"
-                disabled={loading || !email || !password || signupCooldown > 0}
+                disabled={loading || !email || !password || (mode === 'signup' && signupCooldown > 0)}
                 className="w-full h-11 sm:h-12 rounded-xl font-medium"
               >
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                    Sending verification...
+                    {mode === 'signin' ? 'Signing in...' : 'Sending verification...'}
                   </>
-                ) : signupCooldown > 0 ? (
+                ) : mode === 'signup' && signupCooldown > 0 ? (
                   `Wait ${signupCooldown}s`
                 ) : (
-                  'Sign Up'
+                  mode === 'signin' ? 'Sign In' : 'Sign Up'
                 )}
               </Button>
-              {signupCooldown > 0 && (
+
+              {/* Cooldown Message for Sign Up */}
+              {mode === 'signup' && signupCooldown > 0 && (
                 <p className="text-xs text-muted-foreground text-center mt-2">
                   You can request a new link in {signupCooldown} seconds
                 </p>
@@ -409,8 +356,8 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             </form>
           )}
 
-          {/* OR Divider - only show on initial screen */}
-          {mode === 'initial' && (
+          {/* OR Divider - only show when not in reset mode */}
+          {mode !== 'reset' && (
             <>
               <div className="relative my-5 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
