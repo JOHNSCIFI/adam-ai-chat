@@ -1139,14 +1139,6 @@ export default function Chat() {
       sessionStorage.removeItem(triggerKey);
     }, 60000);
     
-    // CRITICAL: Skip triggerAIResponse for image generation models
-    // They have dedicated webhook handling in sendMessage to avoid duplicate calls
-    if (selectedModel === 'generate-image' || selectedModel === 'edit-image') {
-      console.log('[AI-RESPONSE] Skipping triggerAIResponse for image model:', selectedModel);
-      sessionStorage.removeItem(triggerKey);
-      return;
-    }
-    
     setIsGeneratingResponse(true);
     
     console.log('[AI-RESPONSE] Starting AI response for message:', userMessageId);
