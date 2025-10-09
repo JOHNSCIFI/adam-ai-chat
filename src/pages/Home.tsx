@@ -48,7 +48,7 @@ const Home = () => {
           </p>
           
           <div className="flex justify-center">
-            <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using ChatLearn now">
+            <Button size="lg" onClick={() => navigate('/')} className="w-full sm:w-auto text-lg px-8 py-4 h-auto bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all duration-200" aria-label="Start using ChatLearn now">
               Start Now
             </Button>
           </div>
@@ -77,7 +77,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">OpenAI<br />GPT-4 / GPT-5</h3>
                 <p className="text-sm text-muted-foreground mb-4">Advanced reasoning, problem-solving, and coding power.</p>
               </div>
-              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              <Button variant="secondary" size="sm" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
                   model: 'gpt-4o'
@@ -102,7 +102,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Anthropic<br />Claude</h3>
                 <p className="text-sm text-muted-foreground mb-4">Ideal for writing, analysis, and creative tasks.</p>
               </div>
-              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              <Button variant="secondary" size="sm" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
                   model: 'claude-sonnet-4'
@@ -127,7 +127,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Google<br />Gemini</h3>
                 <p className="text-sm text-muted-foreground mb-4">Multimodal AI for text, vision, and analysis.</p>
               </div>
-              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              <Button variant="secondary" size="sm" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
                   model: 'gemini-2.5-flash'
@@ -157,7 +157,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">DeepSeek</h3>
                 <p className="text-sm text-muted-foreground mb-4">Specialized in technical tasks and data-heavy coding.</p>
               </div>
-              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              <Button variant="secondary" size="sm" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
                   model: 'deepseekv3'
@@ -187,7 +187,7 @@ const Home = () => {
                 <h3 className="text-lg font-semibold mb-2 text-foreground">Grok</h3>
                 <p className="text-sm text-muted-foreground mb-4">Real-time knowledge and conversational AI.</p>
               </div>
-              <Button variant="secondary" size="sm" className="w-full mt-auto" onClick={() => {
+              <Button variant="secondary" size="sm" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
                   model: 'gpt-4o'
@@ -401,7 +401,7 @@ const Home = () => {
                 </div>
               </div>
               
-              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Pro plan">
+              <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Pro plan">
                 Subscribe Now
               </Button>
             </div>
@@ -453,7 +453,7 @@ const Home = () => {
                 </div>
               </div>
               
-              <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Ultra Pro plan">
+              <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Ultra Pro plan">
                 Subscribe Now
               </Button>
             </div>
