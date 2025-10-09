@@ -569,7 +569,7 @@ const Home = () => {
               <div className="flex items-center space-x-2 mb-6">
                 <span className="text-xl font-bold text-black dark:text-white">ChatLearn</span>
               </div>
-              <p className="text-muted-foreground leading-relaxed">
+              <p className="text-black dark:text-white leading-relaxed">
                 Your gateway to the world's most advanced AI models, unified in one intelligent platform.
               </p>
             </div>
@@ -577,34 +577,34 @@ const Home = () => {
             <div className="animate-fade-in" style={{
             animationDelay: '0.1s'
           }}>
-              <h3 className="font-bold mb-6 text-lg">Product</h3>
+              <h3 className="font-bold mb-6 text-lg text-black dark:text-white">Product</h3>
               <div className="space-y-3">
-                <button onClick={() => navigate('/features')} className="block text-muted-foreground hover:text-primary transition-colors">Features</button>
-                <button onClick={() => navigate('/pricing')} className="block text-muted-foreground hover:text-primary transition-colors">Pricing</button>
-                <button onClick={() => navigate('/models')} className="block text-muted-foreground hover:text-primary transition-colors">AI Models</button>
-                <a href="/image-generation" className="block text-muted-foreground hover:text-primary transition-colors">Image Generation</a>
+                <button onClick={() => navigate('/features')} className="block text-black dark:text-white hover:text-primary transition-colors">Features</button>
+                <button onClick={() => navigate('/pricing')} className="block text-black dark:text-white hover:text-primary transition-colors">Pricing</button>
+                <button onClick={() => navigate('/models')} className="block text-black dark:text-white hover:text-primary transition-colors">AI Models</button>
+                <a href="/image-generation" className="block text-black dark:text-white hover:text-primary transition-colors">Image Generation</a>
               </div>
             </div>
             
             <div className="animate-fade-in" style={{
             animationDelay: '0.2s'
           }}>
-              <h3 className="font-bold mb-6 text-lg">Company</h3>
+              <h3 className="font-bold mb-6 text-lg text-black dark:text-white">Company</h3>
               <div className="space-y-3">
-                <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">About</a>
-                <a href="/explore-tools" className="block text-muted-foreground hover:text-primary transition-colors">Explore Tools</a>
-                <a href="/help" className="block text-muted-foreground hover:text-primary transition-colors">Help Center</a>
+                <a href="/help" className="block text-black dark:text-white hover:text-primary transition-colors">About</a>
+                <a href="/explore-tools" className="block text-black dark:text-white hover:text-primary transition-colors">Explore Tools</a>
+                <a href="/help" className="block text-black dark:text-white hover:text-primary transition-colors">Help Center</a>
               </div>
             </div>
             
             <div className="animate-fade-in" style={{
             animationDelay: '0.3s'
           }}>
-              <h3 className="font-bold mb-6 text-lg">Legal</h3>
+              <h3 className="font-bold mb-6 text-lg text-black dark:text-white">Legal</h3>
               <div className="space-y-3">
-                <a href="/privacy" className="block text-muted-foreground hover:text-primary transition-colors">Privacy Policy</a>
-                <a href="/terms" className="block text-muted-foreground hover:text-primary transition-colors">Terms of Service</a>
-                <a href="/cookie-policy" className="block text-muted-foreground hover:text-primary transition-colors">Cookie Policy</a>
+                <a href="/privacy" className="block text-black dark:text-white hover:text-primary transition-colors">Privacy Policy</a>
+                <a href="/terms" className="block text-black dark:text-white hover:text-primary transition-colors">Terms of Service</a>
+                <a href="/cookie-policy" className="block text-black dark:text-white hover:text-primary transition-colors">Cookie Policy</a>
               </div>
             </div>
           </div>
