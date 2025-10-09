@@ -1825,6 +1825,50 @@ export default function Chat() {
           }
           
           console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
+          
+          // Fetch messages to get the generated image
+          console.log('[IMAGE-GEN] Fetching messages to display generated image...');
+          await fetchMessages();
+        } else {
+          // If no image data yet, poll for the message
+          console.log('[IMAGE-GEN] No image data in webhook response, starting polling...');
+          
+          // Poll for up to 60 seconds
+          const startTime = Date.now();
+          const pollInterval = setInterval(async () => {
+            const elapsed = Date.now() - startTime;
+            
+            if (elapsed > 60000) {
+              clearInterval(pollInterval);
+              console.log('[IMAGE-GEN] Polling timeout - no image received');
+              setLoading(false);
+              return;
+            }
+            
+            // Fetch latest messages
+            const { data: latestMessages } = await supabase
+              .from('messages')
+              .select('*')
+              .eq('chat_id', chatId)
+              .eq('role', 'assistant')
+              .order('created_at', { ascending: false })
+              .limit(1);
+            
+            // Check if we have a new assistant message with an image
+            if (latestMessages && latestMessages.length > 0) {
+              const latestMsg = latestMessages[0];
+              const hasImage = latestMsg.file_attachments && 
+                Array.isArray(latestMsg.file_attachments) && 
+                latestMsg.file_attachments.length > 0;
+              
+              if (hasImage) {
+                console.log('[IMAGE-GEN] Found generated image, updating UI');
+                clearInterval(pollInterval);
+                await fetchMessages();
+                setLoading(false);
+              }
+            }
+          }, 2000); // Poll every 2 seconds
         }
         
       } catch (error: any) {
