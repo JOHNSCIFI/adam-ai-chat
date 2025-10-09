@@ -1262,11 +1262,13 @@ export default function Chat() {
                   new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
                 );
                 
-                setIsGeneratingResponse(false);
-                requestAnimationFrame(() => scrollToBottom());
-                
                 return newMessages;
               });
+              
+              // Clear ALL loading states after adding message
+              setIsGeneratingResponse(false);
+              setLoading(false);
+              requestAnimationFrame(() => scrollToBottom());
               
               // Stop polling
               return;
