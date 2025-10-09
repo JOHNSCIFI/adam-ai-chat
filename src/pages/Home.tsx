@@ -160,12 +160,12 @@ const Home = () => {
               <Button variant="secondary" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90 whitespace-normal h-auto py-2" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
-                  model: 'deepseekv3'
+                  model: 'deepseek-v2'
                 });
               }
               navigate('/', {
                 state: {
-                  selectedModel: 'deepseekv3'
+                  selectedModel: 'deepseek-v2'
                 }
               });
             }} aria-label="Switch to DeepSeek and start a new chat">
