@@ -336,6 +336,7 @@ export default function ChatSidebar({
               <>
                 <div className="flex items-center gap-2">
                   <img src={brandLogo} alt="ChatLearn" className="h-7 w-7 object-contain ml-2 mt-1" />
+                  <span className="font-semibold text-lg text-sidebar-foreground">ChatLearn</span>
                 </div>
                 <SidebarTrigger className="h-8 w-8 p-0 bg-transparent hover:bg-sidebar-accent text-sidebar-foreground rounded-lg flex items-center justify-center">
                   <Menu className="h-4 w-4" />
