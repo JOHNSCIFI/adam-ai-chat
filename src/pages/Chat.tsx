@@ -3533,7 +3533,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </div>
                 </div>}
               
-              {(loading || isGeneratingResponse) && (!chatId || !currentImagePrompts.get(chatId)) && <div className="flex justify-start">
+              {(loading || isGeneratingResponse) && !regeneratingMessageId && (!chatId || !currentImagePrompts.get(chatId)) && <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted text-foreground rounded-3xl rounded-bl-lg px-5 py-3.5 shadow-sm">
                       <div className="flex items-center space-x-2">
