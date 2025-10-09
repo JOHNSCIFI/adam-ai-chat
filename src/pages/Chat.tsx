@@ -445,7 +445,29 @@ export default function Chat() {
               );
               
               if (tempMessageIndex !== -1) {
+                const tempMessage = prev[tempMessageIndex];
                 console.log('[REALTIME-INSERT] 🔄 Replacing temp message at index', tempMessageIndex);
+                console.log('[REALTIME-INSERT] Temp ID:', tempMessage.id, '-> Real ID:', newMessage.id);
+                
+                // CRITICAL: Mark real message as processed to prevent duplicate AUTO-TRIGGER
+                // Check if temp was already processed by AUTO-TRIGGER
+                if (!processedUserMessages.current.has(chatId)) {
+                  processedUserMessages.current.set(chatId, new Set());
+                }
+                
+                const wasProcessed = processedUserMessages.current.get(chatId)!.has(tempMessage.id);
+                if (wasProcessed) {
+                  console.log('[REALTIME-INSERT] Temp was processed, marking real message as processed:', newMessage.id);
+                  processedUserMessages.current.get(chatId)!.add(newMessage.id);
+                  
+                  // Persist to sessionStorage
+                  const storageKey = `processed_messages_${chatId}`;
+                  const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+                  sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+                } else {
+                  console.log('[REALTIME-INSERT] Temp was NOT processed yet');
+                }
+                
                 const updated = [...prev];
                 updated[tempMessageIndex] = newMessage;
                 return updated;
