@@ -1669,8 +1669,13 @@ export default function Chat() {
     // Clear input and files immediately
     setInput('');
     setSelectedFiles([]);
-    console.log('[SEND-LOADING] Setting loading to TRUE - waiting for AI response');
-    setLoading(true);
+    
+    // Only set loading for file messages and image generation
+    // Text-only messages rely on AUTO-TRIGGER which checks !loading
+    if (files.length > 0 || selectedModel === 'generate-image' || selectedModel === 'edit-image') {
+      console.log('[SEND-LOADING] Setting loading to TRUE - waiting for AI response');
+      setLoading(true);
+    }
     
     // Reset image mode and selected style after sending message
     if (isImageMode) {
