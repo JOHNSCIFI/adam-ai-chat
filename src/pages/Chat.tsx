@@ -1034,8 +1034,30 @@ export default function Chat() {
       console.log('[REGENERATE] Webhook completed, fetching messages immediately...');
       
       // Immediately fetch messages to show new response without waiting for realtime
-      setTimeout(() => {
-        fetchMessages();
+      setTimeout(async () => {
+        await fetchMessages();
+        
+        // Clear regeneration states after messages are fetched
+        // This handles the case where realtime INSERT doesn't fire or messages are already in DB
+        setTimeout(() => {
+          console.log('[REGENERATE] Clearing regeneration state after fetch');
+          setRegeneratingMessageId(null);
+          regeneratingMessageIdRef.current = null;
+          setIsGeneratingResponse(false);
+          isRegeneratingRef.current = false;
+          setHiddenMessageIds(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(messageId);
+            return newSet;
+          });
+          oldMessageBackupRef.current = null;
+          
+          // Clear timeout
+          if (regenerateTimeoutRef.current) {
+            clearTimeout(regenerateTimeoutRef.current);
+            regenerateTimeoutRef.current = null;
+          }
+        }, 500);
       }, 200);
       
       scrollToBottom();
