@@ -16,7 +16,6 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
   const { user, signInWithGoogle } = useAuth();
   const oneTabRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
-  const nonceRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Don't show One Tap if user is already authenticated
@@ -42,34 +41,23 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
       if (isInitialized.current) return;
       
       try {
-        // Use hardcoded client ID - no VITE_ variables
         const clientId = "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
         
-        // CRITICAL FIX: Generate our own nonce so Google embeds it in the token
-        const generateNonce = () => {
-          const array = new Uint8Array(32);
-          crypto.getRandomValues(array);
-          return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-        };
-        
-        nonceRef.current = generateNonce();
-        
-        console.log('=== GOOGLE ONE TAP V4 INIT ===');
-        console.log('Version: WITH CUSTOM NONCE');
+        console.log('=== GOOGLE ONE TAP V5 INIT (FINAL FIX) ===');
+        console.log('Version: NO NONCE - Clean ID Token Only');
         console.log('Current origin:', window.location.origin);
         console.log('Client ID:', clientId);
-        console.log('Generated nonce (first 20 chars):', nonceRef.current.substring(0, 20) + '...');
 
-        // CRITICAL: Pass our nonce to Google so it embeds it in the ID token
+        // CRITICAL: Do NOT provide nonce - let Google generate token without nonce field
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: false,
-          nonce: nonceRef.current,
+          // No nonce parameter - this prevents Google from adding nonce to token
         });
         
-        console.log('Google One Tap initialized successfully with custom nonce');
+        console.log('Google One Tap initialized (no nonce mode)');
 
         // Display the One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
@@ -88,64 +76,46 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
 
     const handleCredentialResponse = async (response: any) => {
       try {
-        console.log('=== GOOGLE ONE TAP CALLBACK V4 ===');
+        console.log('=== GOOGLE ONE TAP CALLBACK V5 (FINAL FIX) ===');
         console.log('Credential received');
-        console.log('Response keys:', Object.keys(response));
         console.log('Token length:', response.credential?.length || 0);
         
-        // Decode JWT to extract nonce
-        const decodeJWT = (token: string) => {
-          try {
-            const base64Url = token.split('.')[1];
-            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            }).join(''));
-            return JSON.parse(jsonPayload);
-          } catch (e) {
-            console.error('Failed to decode JWT:', e);
-            return null;
-          }
-        };
+        // CRITICAL: Don't decode or extract nonce - just pass the raw token
+        // Supabase will validate the Google ID token directly without nonce checking
+        console.log('Calling Supabase signInWithIdToken (NO NONCE PARAM)...');
         
-        const tokenPayload = decodeJWT(response.credential);
-        const tokenNonce = tokenPayload?.nonce;
-        const ourNonce = nonceRef.current;
-        
-        console.log('Our generated nonce (first 20):', ourNonce?.substring(0, 20) + '...');
-        console.log('Token nonce (first 20):', tokenNonce?.substring(0, 20) + '...');
-        console.log('Nonces match:', tokenNonce === ourNonce);
-        
-        if (tokenNonce !== ourNonce) {
-          console.error('❌ NONCE MISMATCH DETECTED!');
-          console.error('Expected:', ourNonce);
-          console.error('Got:', tokenNonce);
-          return;
-        }
-        
-        // CRITICAL: Use OUR generated nonce (not extracted from token)
-        const authOptions: any = {
+        const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: response.credential,
-          nonce: ourNonce, // Use the nonce we generated and gave to Google
-        };
-        
-        console.log('✅ Using our generated nonce for Supabase');
-        console.log('Calling Supabase signInWithIdToken...');
-        const { data, error } = await supabase.auth.signInWithIdToken(authOptions);
+          // CRITICAL: Do NOT include nonce parameter at all
+        });
 
         console.log('Supabase response:', { 
           hasData: !!data, 
           hasError: !!error,
-          errorMessage: error?.message 
+          errorMessage: error?.message,
+          hasUser: !!data?.user
         });
 
         if (error) {
           console.error('❌ Google One Tap sign in FAILED:', error.message);
           console.error('Full error:', error);
+          
+          // Fallback: Try regular OAuth as backup
+          console.log('⚠️ Attempting fallback to regular Google OAuth...');
+          const { error: oauthError } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+              redirectTo: window.location.origin,
+            }
+          });
+          
+          if (oauthError) {
+            console.error('❌ OAuth fallback also failed:', oauthError);
+          }
         } else {
-          console.log('✅ Successfully signed in with Google One Tap');
-          console.log('User data:', data);
+          console.log('✅ Successfully signed in with Google One Tap!');
+          console.log('User:', data?.user?.email);
           onSuccess?.();
         }
       } catch (error) {
