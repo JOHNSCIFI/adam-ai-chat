@@ -81,12 +81,41 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         console.log('Response keys:', Object.keys(response));
         console.log('Token length:', response.credential?.length || 0);
         
-        // CRITICAL: No nonce parameter - this is the fix for "nonces mismatch" error
-        console.log('Calling Supabase signInWithIdToken WITHOUT nonce...');
-        const { data, error } = await supabase.auth.signInWithIdToken({
+        // Decode JWT to extract nonce (Google auto-generates it)
+        const decodeJWT = (token: string) => {
+          try {
+            const base64Url = token.split('.')[1];
+            const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+            const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            }).join(''));
+            return JSON.parse(jsonPayload);
+          } catch (e) {
+            console.error('Failed to decode JWT:', e);
+            return null;
+          }
+        };
+        
+        const tokenPayload = decodeJWT(response.credential);
+        console.log('Token payload keys:', tokenPayload ? Object.keys(tokenPayload) : 'null');
+        console.log('Token has nonce:', !!tokenPayload?.nonce);
+        console.log('Nonce value:', tokenPayload?.nonce ? `${tokenPayload.nonce.substring(0, 20)}...` : 'none');
+        
+        // CRITICAL: Extract nonce from ID token and pass it to Supabase
+        const authOptions: any = {
           provider: 'google',
           token: response.credential,
-        });
+        };
+        
+        if (tokenPayload?.nonce) {
+          authOptions.nonce = tokenPayload.nonce;
+          console.log('✅ Passing extracted nonce to Supabase');
+        } else {
+          console.log('⚠️ No nonce found in token');
+        }
+        
+        console.log('Calling Supabase signInWithIdToken...');
+        const { data, error } = await supabase.auth.signInWithIdToken(authOptions);
 
         console.log('Supabase response:', { 
           hasData: !!data, 
