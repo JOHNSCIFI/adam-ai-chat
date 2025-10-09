@@ -1173,8 +1173,7 @@ export default function Chat() {
         
         // Polling mechanism as fallback for when real-time doesn't fire
         let pollAttempts = 0;
-        const maxPollAttempts = 20; // Poll for up to 40 seconds
-        const pollInterval = 2000; // Poll every 2 seconds
+        const maxPollAttempts = 30; // Poll for up to ~45 seconds
         
         const pollForNewMessages = async () => {
           if (pollAttempts >= maxPollAttempts) {
@@ -1196,7 +1195,8 @@ export default function Chat() {
             
             if (fetchError) {
               console.error('[AI-RESPONSE-POLLING] Error fetching messages:', fetchError);
-              setTimeout(pollForNewMessages, pollInterval);
+              const nextPollDelay = pollAttempts <= 10 ? 500 : 2000;
+              setTimeout(pollForNewMessages, nextPollDelay);
               return;
             }
             
@@ -1275,15 +1275,18 @@ export default function Chat() {
             }
             
             console.log('[AI-RESPONSE-POLLING] No new assistant message yet, retrying...');
-            setTimeout(pollForNewMessages, pollInterval);
+            // Use faster polling for first 10 attempts (500ms), then slower (2s)
+            const nextPollDelay = pollAttempts <= 10 ? 500 : 2000;
+            setTimeout(pollForNewMessages, nextPollDelay);
           } catch (pollError) {
             console.error('[AI-RESPONSE-POLLING] Error during polling:', pollError);
-            setTimeout(pollForNewMessages, pollInterval);
+            const nextPollDelay = pollAttempts <= 10 ? 500 : 2000;
+            setTimeout(pollForNewMessages, nextPollDelay);
           }
         };
         
-        // Start polling after a short delay
-        setTimeout(pollForNewMessages, 2000);
+        // Start polling immediately for faster response
+        setTimeout(pollForNewMessages, 100);
         return;
       }
       
@@ -3530,7 +3533,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   </div>
                 </div>}
               
-              {loading && (!chatId || !currentImagePrompts.get(chatId)) && <div className="flex justify-start">
+              {(loading || isGeneratingResponse) && (!chatId || !currentImagePrompts.get(chatId)) && <div className="flex justify-start">
                   <div className="flex flex-col items-start max-w-[80%]">
                     <div className="bg-muted text-foreground rounded-3xl rounded-bl-lg px-5 py-3.5 shadow-sm">
                       <div className="flex items-center space-x-2">
