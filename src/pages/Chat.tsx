@@ -1139,6 +1139,14 @@ export default function Chat() {
       sessionStorage.removeItem(triggerKey);
     }, 60000);
     
+    // CRITICAL: Skip triggerAIResponse for image generation models
+    // They have dedicated webhook handling in sendMessage to avoid duplicate calls
+    if (selectedModel === 'generate-image' || selectedModel === 'edit-image') {
+      console.log('[AI-RESPONSE] Skipping triggerAIResponse for image model:', selectedModel);
+      sessionStorage.removeItem(triggerKey);
+      return;
+    }
+    
     setIsGeneratingResponse(true);
     
     console.log('[AI-RESPONSE] Starting AI response for message:', userMessageId);
@@ -1804,72 +1812,51 @@ export default function Chat() {
         const webhookData = await webhookResponse.json();
         console.log('[IMAGE-GEN] Webhook response data:', webhookData);
         
-        // Call webhook-handler to save the image
-        if (webhookData && webhookData.image_base64) {
-          console.log('[IMAGE-GEN] Calling webhook-handler to save image...');
+        // N8n webhook returns {success, message_id, execution_id}
+        // The actual image generation happens in background via webhook-handler
+        // So we need to poll for the result
+        console.log('[IMAGE-GEN] Image generation started, polling for result...');
+        
+        // Poll for up to 60 seconds
+        let pollAttempts = 0;
+        const maxAttempts = 30; // 30 attempts * 2 seconds = 60 seconds
+        
+        const pollInterval = setInterval(async () => {
+          pollAttempts++;
+          console.log(`[IMAGE-GEN-POLL] Attempt ${pollAttempts}/${maxAttempts}`);
           
-          const { data: handlerData, error: handlerError } = await supabase.functions.invoke('webhook-handler', {
-            body: {
-              chat_id: chatId,
-              user_id: user.id,
-              image_base64: webhookData.image_base64,
-              image_name: webhookData.image_name || 'generated_image.png',
-              image_type: webhookData.image_type || 'image/png',
-              model: 'generate-image' // Pass the model to webhook-handler
-            }
-          });
-          
-          if (handlerError) {
-            console.error('[IMAGE-GEN] Webhook-handler error:', handlerError);
-            throw handlerError;
+          if (pollAttempts >= maxAttempts) {
+            clearInterval(pollInterval);
+            console.log('[IMAGE-GEN-POLL] Timeout - no image received after 60 seconds');
+            setLoading(false);
+            toast.error('Image generation is taking longer than expected. Please refresh the page.');
+            return;
           }
           
-          console.log('[IMAGE-GEN] Webhook-handler response:', handlerData);
+          // Fetch latest assistant message for this chat
+          const { data: latestMessages } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('chat_id', chatId)
+            .eq('role', 'assistant')
+            .order('created_at', { ascending: false })
+            .limit(1);
           
-          // Fetch messages to get the generated image
-          console.log('[IMAGE-GEN] Fetching messages to display generated image...');
-          await fetchMessages();
-        } else {
-          // If no image data yet, poll for the message
-          console.log('[IMAGE-GEN] No image data in webhook response, starting polling...');
-          
-          // Poll for up to 60 seconds
-          const startTime = Date.now();
-          const pollInterval = setInterval(async () => {
-            const elapsed = Date.now() - startTime;
+          // Check if we have a new assistant message with an image
+          if (latestMessages && latestMessages.length > 0) {
+            const latestMsg = latestMessages[0];
+            const hasImage = latestMsg.file_attachments && 
+              Array.isArray(latestMsg.file_attachments) && 
+              latestMsg.file_attachments.length > 0;
             
-            if (elapsed > 60000) {
+            if (hasImage) {
+              console.log('[IMAGE-GEN-POLL] ✅ Found generated image!');
               clearInterval(pollInterval);
-              console.log('[IMAGE-GEN] Polling timeout - no image received');
+              await fetchMessages();
               setLoading(false);
-              return;
             }
-            
-            // Fetch latest messages
-            const { data: latestMessages } = await supabase
-              .from('messages')
-              .select('*')
-              .eq('chat_id', chatId)
-              .eq('role', 'assistant')
-              .order('created_at', { ascending: false })
-              .limit(1);
-            
-            // Check if we have a new assistant message with an image
-            if (latestMessages && latestMessages.length > 0) {
-              const latestMsg = latestMessages[0];
-              const hasImage = latestMsg.file_attachments && 
-                Array.isArray(latestMsg.file_attachments) && 
-                latestMsg.file_attachments.length > 0;
-              
-              if (hasImage) {
-                console.log('[IMAGE-GEN] Found generated image, updating UI');
-                clearInterval(pollInterval);
-                await fetchMessages();
-                setLoading(false);
-              }
-            }
-          }, 2000); // Poll every 2 seconds
-        }
+          }
+        }, 2000); // Poll every 2 seconds
         
       } catch (error: any) {
         console.error('[IMAGE-GEN] Error:', error);
