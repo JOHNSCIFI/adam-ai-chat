@@ -70,7 +70,7 @@ const Header = () => {
             </Button>
             <Button 
               onClick={() => navigate('/')} 
-              className="bg-primary text-primary-foreground hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              className="bg-black text-white hover:bg-black/90 focus:ring-2 focus:ring-black focus:ring-offset-2"
               onMouseEnter={() => {
                 // Prefetch / route
                 const link = document.createElement('link');
