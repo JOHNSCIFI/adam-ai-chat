@@ -529,6 +529,26 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                           </div>
                         </div>
                       )}
+
+                      {/* Apple Provider */}
+                      {user?.app_metadata?.providers?.includes('apple') && (
+                        <div className="flex items-center justify-between gap-3 p-3 md:p-4 bg-background/60 rounded-xl border border-border/30 backdrop-blur-sm">
+                          <div className="flex items-center gap-2.5 md:gap-3 min-w-0">
+                            <div className="p-1.5 md:p-2 bg-black dark:bg-white rounded-lg shadow-sm flex-shrink-0">
+                              <svg className="h-4 w-4 md:h-5 md:w-5 text-white dark:text-black" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                              </svg>
+                            </div>
+                            <div className="min-w-0">
+                              <p className="font-medium text-foreground text-sm md:text-base">Apple</p>
+                              <p className="text-xs md:text-sm text-muted-foreground hidden sm:block">Sign in with your Apple account</p>
+                            </div>
+                          </div>
+                          <div className="p-1 md:p-1.5 bg-green-100 rounded-full flex-shrink-0">
+                            <Check className="h-3.5 w-3.5 md:h-4 md:w-4 text-green-600" />
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Email Provider */}
                       {(user?.app_metadata?.providers?.includes('email') || 
