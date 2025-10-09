@@ -18,12 +18,13 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const [appleLoading, setAppleLoading] = useState(false);
   const [userSignupMethod, setUserSignupMethod] = useState<string | null>(null);
   const [checkingUser, setCheckingUser] = useState(false);
   const [resetMode, setResetMode] = useState(false);
   const [resetLoading, setResetLoading] = useState(false);
   
-  const { user, signIn, signUp, signInWithGoogle, resetPassword } = useAuth();
+  const { user, signIn, signUp, signInWithGoogle, signInWithApple, resetPassword } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -183,6 +184,28 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     }
   };
 
+  const handleAppleSignIn = async () => {
+    setAppleLoading(true);
+    try {
+      const { error } = await signInWithApple();
+      if (error) {
+        toast({
+          title: "Apple sign-in failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setAppleLoading(false);
+    }
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-md mx-auto my-4 sm:my-0 px-4 sm:px-0 bg-background border border-border shadow-2xl rounded-2xl data-[state=open]:slide-in-from-bottom-2 data-[state=closed]:slide-out-to-bottom-2 sm:data-[state=open]:slide-in-from-bottom-0 sm:data-[state=closed]:slide-out-to-bottom-0 duration-300">
@@ -235,7 +258,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                 <p className="text-sm text-muted-foreground mt-2 px-1">
                   {userSignupMethod === 'google' 
                     ? 'This email is registered with Google. Please use Google sign-in.'
-                    : 'This email is registered with email/password. You can sign in with email or Google.'
+                    : userSignupMethod === 'apple'
+                    ? 'This email is registered with Apple. Please use Apple sign-in.'
+                    : 'This email is registered with email/password. You can sign in with email, Google, or Apple.'
                   }
                 </p>
               )}
@@ -321,9 +346,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               {/* Google Sign In */}
               <Button
                 onClick={handleGoogleSignIn}
-                disabled={googleLoading || loading}
+                disabled={googleLoading || appleLoading || loading}
                 variant="outline"
-                className="w-full h-11 sm:h-12 font-medium rounded-xl"
+                className="w-full h-11 sm:h-12 font-medium rounded-xl mb-3"
               >
             {googleLoading ? (
               <>
@@ -339,6 +364,28 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
                 </svg>
                 Continue with Google
+              </>
+            )}
+          </Button>
+
+              {/* Apple Sign In */}
+              <Button
+                onClick={handleAppleSignIn}
+                disabled={googleLoading || appleLoading || loading}
+                variant="outline"
+                className="w-full h-11 sm:h-12 font-medium rounded-xl"
+              >
+            {appleLoading ? (
+              <>
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-3" />
+                Continue with Apple
+              </>
+            ) : (
+              <>
+                <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+                </svg>
+                Continue with Apple
               </>
             )}
           </Button>

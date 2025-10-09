@@ -10,6 +10,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
+  signInWithApple: () => Promise<{ error: any }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: any }>;
 }
@@ -37,20 +38,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        // Handle email confirmation
-        if (event === 'SIGNED_IN' && session) {
-          setSession(session);
-          setUser(session.user);
-          
-          // Check if this is a new user and create/update profile
-          setTimeout(async () => {
-            // Determine signup method from session or user metadata
-            let signupMethod = 'email';
-            if (session.user.app_metadata?.provider === 'google' || 
-                session.user.user_metadata?.provider === 'google' ||
-                session.user.identities?.some(id => id.provider === 'google')) {
-              signupMethod = 'google';
-            }
+          // Handle email confirmation
+          if (event === 'SIGNED_IN' && session) {
+            setSession(session);
+            setUser(session.user);
+            
+            // Check if this is a new user and create/update profile
+            setTimeout(async () => {
+              // Determine signup method from session or user metadata
+              let signupMethod = 'email';
+              if (session.user.app_metadata?.provider === 'google' || 
+                  session.user.user_metadata?.provider === 'google' ||
+                  session.user.identities?.some(id => id.provider === 'google')) {
+                signupMethod = 'google';
+              } else if (session.user.app_metadata?.provider === 'apple' || 
+                  session.user.user_metadata?.provider === 'apple' ||
+                  session.user.identities?.some(id => id.provider === 'apple')) {
+                signupMethod = 'apple';
+              }
             
             // Check if profile exists
             const { data: existingProfile, error: fetchError } = await supabase
@@ -68,6 +73,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               };
               
               if (signupMethod === 'google') {
+                profileData.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
+                profileData.avatar_url = session.user.user_metadata?.avatar_url;
+              } else if (signupMethod === 'apple') {
                 profileData.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
                 profileData.avatar_url = session.user.user_metadata?.avatar_url;
               } else {
@@ -96,8 +104,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 updates.signup_method = signupMethod;
               }
               
-              // Update display name and avatar for Google users
-              if (signupMethod === 'google') {
+              // Update display name and avatar for Google and Apple users
+              if (signupMethod === 'google' || signupMethod === 'apple') {
                 if (!existingProfile.display_name || existingProfile.display_name !== session.user.user_metadata?.full_name) {
                   updates.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
                 }
@@ -206,6 +214,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const signInWithApple = async () => {
+    const redirectUrl = window.location.origin.includes('localhost')
+      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
+      : `${window.location.origin}/`;
+    
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'apple',
+      options: {
+        redirectTo: redirectUrl,
+        queryParams: {
+          signup_method: 'apple'
+        }
+      }
+    });
+    
+    return { error };
+  };
+
   const resetPassword = async (email: string) => {
     const redirectUrl = window.location.origin.includes('localhost') 
       ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
@@ -232,6 +258,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     signUp,
     signIn,
     signInWithGoogle,
+    signInWithApple,
     signOut,
     resetPassword
   };
