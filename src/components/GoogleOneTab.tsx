@@ -16,7 +16,6 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
   const { user, signInWithGoogle } = useAuth();
   const oneTabRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
-  const nonceRef = useRef<string | null>(null);
 
   useEffect(() => {
     // Don't show One Tap if user is already authenticated
@@ -45,24 +44,16 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         // Use hardcoded client ID - no VITE_ variables
         const clientId = "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
         
-        // Generate a cryptographically secure nonce
-        const generateNonce = () => {
-          const array = new Uint8Array(32);
-          crypto.getRandomValues(array);
-          return Array.from(array, byte => byte.toString(16).padStart(2, '0')).join('');
-        };
-        
-        nonceRef.current = generateNonce();
-        
-        console.log('Initializing Google One Tap with nonce');
+        console.log('Initializing Google One Tap (no nonce mode)');
         console.log('Current origin:', window.location.origin);
 
+        // Don't use nonce - let Google handle it
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: false,
-          nonce: nonceRef.current, // CRITICAL: Pass nonce to Google One Tap
+          // No nonce parameter - this prevents mismatch issues
         });
 
         // Display the One Tap prompt
@@ -82,14 +73,13 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
 
     const handleCredentialResponse = async (response: any) => {
       try {
-        console.log('Google One Tap credential received, attempting sign in...');
-        console.log('Using nonce:', nonceRef.current ? 'present' : 'missing');
+        console.log('Google One Tap credential received (v2), attempting sign in...');
         
-        // CRITICAL: Include the nonce when signing in with the ID token
+        // Don't pass nonce - Supabase will validate the ID token directly
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: response.credential,
-          nonce: nonceRef.current!, // Pass the same nonce used during initialization
+          // No nonce parameter
         });
 
         if (error) {
