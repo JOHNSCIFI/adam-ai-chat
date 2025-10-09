@@ -25,7 +25,7 @@ const Features = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8 mb-8 md:mb-12">
           <div className="animate-fade-in sm:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-2 mb-4 md:mb-6">
-              <span className="text-lg md:text-xl font-bold text-black dark:text-white">ChatLearn</span>
+              <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
             </div>
             <p className="text-sm md:text-base text-muted-foreground leading-relaxed max-w-xs">
               Your gateway to the world's most advanced AI models, unified in one intelligent platform.
