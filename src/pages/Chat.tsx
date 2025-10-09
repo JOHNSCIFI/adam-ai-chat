@@ -3190,7 +3190,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }
   };
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !loading) {
+    if (e.key === 'Enter' && !e.shiftKey && !loading && !isGeneratingResponse) {
       e.preventDefault();
       sendMessage();
     }
@@ -3801,6 +3801,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                             ? 'bg-red-500 hover:bg-red-600 focus-visible:ring-red-300 text-background' 
                             : 'bg-foreground hover:bg-foreground/90 focus-visible:ring-primary text-background'
                       }`} 
+                      disabled={loading || isGeneratingResponse}
                       onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
                       aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
                       aria-pressed={isRecording}
@@ -3895,6 +3896,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                             ? 'bg-red-500 hover:bg-red-600 text-background' 
                             : 'bg-foreground hover:bg-foreground/90 text-background'
                       }`} 
+                      disabled={loading || isGeneratingResponse}
                       onClick={input.trim().length > 0 || selectedFiles.length > 0 ? sendMessage : (isRecording ? stopRecording : startRecording)}
                       aria-label={input.trim().length > 0 || selectedFiles.length > 0 ? "Send message" : (isRecording ? "Stop recording" : "Start voice recording")}
                     >
