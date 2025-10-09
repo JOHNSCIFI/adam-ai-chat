@@ -190,15 +190,15 @@ const Home = () => {
               <Button variant="secondary" className="w-full mt-auto bg-black dark:bg-secondary text-white dark:text-secondary-foreground hover:bg-black/90 dark:hover:bg-secondary/90 whitespace-normal h-auto py-2" onClick={() => {
               if (typeof window !== 'undefined' && (window as any).gtag) {
                 (window as any).gtag('event', 'model_select', {
-                  model: 'gpt-4o'
+                  model: 'grok-4'
                 });
               }
               navigate('/', {
                 state: {
-                  selectedModel: 'gpt-4o'
+                  selectedModel: 'grok-4'
                 }
               });
-            }} aria-label="Switch to GPT-4o and start a new chat">
+            }} aria-label="Switch to Grok and start a new chat">
                 Try with this model
               </Button>
             </div>
