@@ -379,7 +379,9 @@ export default function Chat() {
           
           // If this is a new assistant message, clear ALL loading states immediately
           if (newMessage.role === 'assistant') {
-            console.log('[REALTIME-INSERT] 🤖 Assistant message - clearing loading states');
+            console.log('[REALTIME-INSERT] 🤖 Assistant message arrived - clearing loading states');
+            console.log('[REALTIME-INSERT] Message ID:', newMessage.id);
+            console.log('[REALTIME-INSERT] Loading was:', loading);
             
             setLoading(false);
             setIsGeneratingResponse(false);
@@ -1665,6 +1667,7 @@ export default function Chat() {
     // Clear input and files immediately
     setInput('');
     setSelectedFiles([]);
+    console.log('[SEND-LOADING] Setting loading to TRUE - waiting for AI response');
     setLoading(true);
     
     // Reset image mode and selected style after sending message
@@ -2149,6 +2152,7 @@ export default function Chat() {
                     );
                     
                     // Clear loading states
+                    console.log('[WEBHOOK-POLLING] Clearing loading state - message found');
                     setLoading(false);
                     setIsGeneratingResponse(false);
                     
@@ -2300,8 +2304,10 @@ export default function Chat() {
       console.log('[SEND-LOCK-RELEASED] Ref set to:', sendingInProgressRef.current);
       console.log('[SEND-LOCK-RELEASED] Storage cleared for key:', sendLockKey);
       
-      setLoading(false);
-      setIsGeneratingResponse(false);
+      // DON'T clear loading state here - let realtime subscription handle it when assistant message arrives
+      console.log('[SEND-LOCK-RELEASED] Loading state will be cleared when AI response arrives');
+      
+      // Only clear image prompts
       setCurrentImagePrompts(prev => {
         const newMap = new Map(prev);
         if (chatId) newMap.delete(chatId);
