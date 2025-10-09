@@ -44,17 +44,20 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         // Use hardcoded client ID - no VITE_ variables
         const clientId = "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
         
-        console.log('Initializing Google One Tap (no nonce mode)');
+        console.log('=== GOOGLE ONE TAP V3 INIT ===');
+        console.log('Version: NO NONCE MODE');
         console.log('Current origin:', window.location.origin);
+        console.log('Client ID:', clientId);
 
-        // Don't use nonce - let Google handle it
+        // CRITICAL: No nonce parameter - Google One Tap doesn't properly support custom nonces
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: false,
-          // No nonce parameter - this prevents mismatch issues
         });
+        
+        console.log('Google One Tap initialized successfully');
 
         // Display the One Tap prompt
         window.google.accounts.id.prompt((notification: any) => {
@@ -73,23 +76,34 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
 
     const handleCredentialResponse = async (response: any) => {
       try {
-        console.log('Google One Tap credential received (v2), attempting sign in...');
+        console.log('=== GOOGLE ONE TAP CALLBACK V3 ===');
+        console.log('Credential received');
+        console.log('Response keys:', Object.keys(response));
+        console.log('Token length:', response.credential?.length || 0);
         
-        // Don't pass nonce - Supabase will validate the ID token directly
+        // CRITICAL: No nonce parameter - this is the fix for "nonces mismatch" error
+        console.log('Calling Supabase signInWithIdToken WITHOUT nonce...');
         const { data, error } = await supabase.auth.signInWithIdToken({
           provider: 'google',
           token: response.credential,
-          // No nonce parameter
+        });
+
+        console.log('Supabase response:', { 
+          hasData: !!data, 
+          hasError: !!error,
+          errorMessage: error?.message 
         });
 
         if (error) {
-          console.error('Google One Tap sign in error:', error.message);
+          console.error('❌ Google One Tap sign in FAILED:', error.message);
+          console.error('Full error:', error);
         } else {
-          console.log('Successfully signed in with Google One Tap');
+          console.log('✅ Successfully signed in with Google One Tap');
+          console.log('User data:', data);
           onSuccess?.();
         }
       } catch (error) {
-        console.error('Error processing Google One Tap response:', error);
+        console.error('❌ Error processing Google One Tap response:', error);
       }
     };
 
