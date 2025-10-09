@@ -67,25 +67,7 @@ const Features = () => {
           </div>
         </div>
         
-        <div className="border-t border-border pt-6 md:pt-8 animate-fade-in" style={{
-        animationDelay: '0.4s'
-      }}>
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4 md:gap-6">
-            <p className="text-xs md:text-sm text-muted-foreground text-center md:text-left">
-              &copy; 2024 ChatLearn. All rights reserved.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-6 text-xs md:text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Shield className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                <span>Enterprise Security</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                <span>10,000+ Users</span>
-              </div>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </footer>;
   return <div className="min-h-screen bg-background">
@@ -134,20 +116,20 @@ const Features = () => {
               {/* Model Cards Grid */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-12">
                 {/* ChatGPT Card */}
-                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-green-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-green-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-green-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{
+              animationDelay: '0.1s'
+            }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img 
-                      src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} 
-                      alt="ChatGPT" 
-                      className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`}
-                    />
+                    <img src={actualTheme === 'dark' ? chatgptLogoLight : chatgptLogo} alt="ChatGPT" className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`} />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">ChatGPT</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Advanced reasoning and problem-solving</p>
                 </div>
                 
                 {/* Claude Card */}
-                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-orange-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.2s' }}>
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-orange-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-orange-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{
+              animationDelay: '0.2s'
+            }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
                     <img src={claudeLogo} alt="Claude" className="w-12 h-12 object-contain" />
                   </div>
@@ -156,7 +138,9 @@ const Features = () => {
                 </div>
                 
                 {/* Gemini Card */}
-                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-blue-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.3s' }}>
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-blue-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-blue-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{
+              animationDelay: '0.3s'
+            }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500/20 to-cyan-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
                     <img src={geminiLogo} alt="Gemini" className="w-12 h-12 object-contain" />
                   </div>
@@ -165,27 +149,24 @@ const Features = () => {
                 </div>
                 
                 {/* DeepSeek Card */}
-                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-purple-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.4s' }}>
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-purple-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-purple-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{
+              animationDelay: '0.4s'
+            }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img 
-                      src={deepseekLogo} 
-                      alt="DeepSeek" 
-                      className="w-12 h-12 object-contain"
-                      style={actualTheme === 'light' ? { filter: 'brightness(0) saturate(100%) invert(28%) sepia(98%) saturate(2478%) hue-rotate(220deg) brightness(95%) contrast(101%)' } : {}}
-                    />
+                    <img src={deepseekLogo} alt="DeepSeek" className="w-12 h-12 object-contain" style={actualTheme === 'light' ? {
+                  filter: 'brightness(0) saturate(100%) invert(28%) sepia(98%) saturate(2478%) hue-rotate(220deg) brightness(95%) contrast(101%)'
+                } : {}} />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">DeepSeek</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Coding and technical tasks</p>
                 </div>
                 
                 {/* Grok Card */}
-                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-slate-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-slate-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{ animationDelay: '0.5s' }}>
+                <div className="group bg-gradient-to-br from-card to-muted/20 border-2 border-border hover:border-slate-500/50 rounded-3xl p-8 hover:shadow-2xl hover:shadow-slate-500/10 hover:-translate-y-2 transition-all duration-500 animate-fade-in" style={{
+              animationDelay: '0.5s'
+            }}>
                   <div className="w-20 h-20 bg-gradient-to-br from-slate-500/20 to-gray-500/20 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300">
-                    <img 
-                      src={grokLogo} 
-                      alt="Grok" 
-                      className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`}
-                    />
+                    <img src={grokLogo} alt="Grok" className={`w-12 h-12 object-contain ${actualTheme === 'light' ? 'brightness-0' : ''}`} />
                   </div>
                   <h3 className="font-bold text-xl mb-3 text-center">Grok</h3>
                   <p className="text-sm text-muted-foreground text-center leading-relaxed">Real-time knowledge access</p>
