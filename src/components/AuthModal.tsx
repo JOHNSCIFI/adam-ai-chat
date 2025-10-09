@@ -15,14 +15,12 @@ interface AuthModalProps {
 export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [mode, setMode] = useState<'initial' | 'signin' | 'signup' | 'reset'>('initial');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [appleLoading, setAppleLoading] = useState(false);
-  const [userSignupMethod, setUserSignupMethod] = useState<string | null>(null);
-  const [checkingUser, setCheckingUser] = useState(false);
-  const [resetMode, setResetMode] = useState(false);
-  const [resetLoading, setResetLoading] = useState(false);
+  const [lastSignupAttempt, setLastSignupAttempt] = useState<number>(0);
+  const [signupCooldown, setSignupCooldown] = useState<number>(0);
   
   const { user, signIn, signUp, signInWithGoogle, signInWithApple, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -36,88 +34,91 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     }
   }, [user, isOpen, onClose, onSuccess]);
 
-  const checkUserSignupMethod = async (email: string) => {
-    if (!email) return;
-    
-    setCheckingUser(true);
-    try {
-      const { data } = await supabase
-        .from('profiles')
-        .select('signup_method')
-        .eq('email', email)
-        .single();
-      
-      if (data) {
-        setUserSignupMethod(data.signup_method);
-      } else {
-        setUserSignupMethod(null);
-      }
-    } catch (error) {
-      setUserSignupMethod(null);
-    } finally {
-      setCheckingUser(false);
-    }
-  };
-
+  // Countdown timer for signup cooldown
   useEffect(() => {
-    if (email) {
-      const timeoutId = setTimeout(() => {
-        checkUserSignupMethod(email);
-      }, 500);
-      return () => clearTimeout(timeoutId);
-    } else {
-      setUserSignupMethod(null);
+    if (signupCooldown > 0) {
+      const timer = setTimeout(() => {
+        setSignupCooldown(signupCooldown - 1);
+      }, 1000);
+      return () => clearTimeout(timer);
     }
-  }, [email]);
+  }, [signupCooldown]);
 
-  const handleEmailSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email) return;
-    
-    if (!showPassword) {
-      setShowPassword(true);
-      return;
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setEmail('');
+      setPassword('');
+      setMode('initial');
+      setSignupCooldown(0);
     }
-    
-    if (!password) return;
+  }, [isOpen]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
     
     setLoading(true);
     try {
-      // Try to sign in first
-      const { error: signInError } = await signIn(email, password);
+      const { error } = await signIn(email, password);
       
-      if (signInError) {
-        // If sign in fails with "Invalid login credentials", user doesn't exist - sign them up
-        if (signInError.message.includes('Invalid login credentials') || 
-            signInError.message.includes('Invalid')) {
-          const { error: signUpError } = await signUp(email, password, '');
-          
-          if (!signUpError) {
-            // Sign up successful - show confirmation email notification
-            toast({
-              title: "Check your email",
-              description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
-              duration: 8000,
-            });
-            // Keep modal open so user can see the notification
-          } else {
-            // Sign up failed
-            toast({
-              title: "Sign up failed",
-              description: signUpError.message,
-              variant: "destructive",
-            });
-          }
-        } else {
-          // Sign in failed for other reasons
-          toast({
-            title: "Sign in failed",
-            description: signInError.message,
-            variant: "destructive",
-          });
-        }
+      if (error) {
+        toast({
+          title: "Sign in failed",
+          description: "Email or password is incorrect",
+          variant: "destructive",
+        });
       }
       // If sign in succeeds, the useEffect will handle closing the modal and redirecting
+    } catch (error) {
+      toast({
+        title: "An error occurred",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email || !password) return;
+    
+    // Check cooldown
+    const now = Date.now();
+    const timeSinceLastAttempt = now - lastSignupAttempt;
+    
+    if (timeSinceLastAttempt < 60000) { // 60 seconds = 1 minute
+      const remainingSeconds = Math.ceil((60000 - timeSinceLastAttempt) / 1000);
+      setSignupCooldown(remainingSeconds);
+      toast({
+        title: "Please wait",
+        description: `You can request a new sign up link in ${remainingSeconds} seconds`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const { error } = await signUp(email, password, '');
+      
+      if (!error) {
+        setLastSignupAttempt(now);
+        setSignupCooldown(60);
+        toast({
+          title: "Check your email",
+          description: "We've sent you a confirmation link to complete your sign up. Please check your inbox.",
+          duration: 8000,
+        });
+      } else {
+        toast({
+          title: "Sign up failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      }
     } catch (error) {
       toast({
         title: "An error occurred",
@@ -133,7 +134,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     e.preventDefault();
     if (!email) return;
     
-    setResetLoading(true);
+    setLoading(true);
     try {
       const { error } = await resetPassword(email);
       if (error) {
@@ -148,8 +149,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           description: "We've sent you a password reset link.",
           duration: 8000,
         });
-        setResetMode(false);
+        setMode('initial');
         setEmail('');
+        setPassword('');
       }
     } catch (error) {
       toast({
@@ -158,7 +160,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
         variant: "destructive",
       });
     } finally {
-      setResetLoading(false);
+      setLoading(false);
     }
   };
 
@@ -219,30 +221,50 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           {/* Title Section */}
           <div className="text-center mb-6 sm:mb-8">
             <h2 className="text-xl sm:text-2xl font-normal mb-2 sm:mb-3">
-              {resetMode ? 'Reset your password' : 'Log in or sign up'}
+              {mode === 'reset' ? 'Reset your password' : mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Sign up' : 'Welcome to ChatLearn'}
             </h2>
             <p className="text-sm text-muted-foreground leading-relaxed px-2 sm:px-0">
-              {resetMode 
+              {mode === 'reset' 
                 ? 'Enter your email and we\'ll send you a reset link.'
-                : <>You'll get smarter responses and can upload<br className="hidden sm:block" />
+                : mode === 'initial'
+                ? <>You'll get smarter responses and can upload<br className="hidden sm:block" />
                   <span className="sm:hidden"> </span>files, images, and more.</>
+                : 'Enter your credentials to continue'
               }
             </p>
           </div>
 
-          {/* Email/Password Form or Reset Form */}
-          <form onSubmit={resetMode ? handlePasswordReset : handleEmailSubmit} className="mb-4">
-            <div className="mb-4 space-y-3">
-              <input
-                type="email"
-                placeholder="Email address"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={showPassword && !resetMode}
-                className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors disabled:opacity-50"
-              />
-              {showPassword && !resetMode && (
+          {/* Initial Mode - Show Sign In and Sign Up buttons */}
+          {mode === 'initial' && (
+            <div className="space-y-3 mb-4">
+              <Button
+                onClick={() => setMode('signin')}
+                className="w-full h-11 sm:h-12 rounded-xl font-medium"
+              >
+                Sign In
+              </Button>
+              <Button
+                onClick={() => setMode('signup')}
+                variant="outline"
+                className="w-full h-11 sm:h-12 rounded-xl font-medium"
+              >
+                Sign Up
+              </Button>
+            </div>
+          )}
+
+          {/* Sign In Form */}
+          {mode === 'signin' && (
+            <form onSubmit={handleSignIn} className="mb-4">
+              <div className="mb-4 space-y-3">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                />
                 <input
                   type="password"
                   placeholder="Password"
@@ -251,88 +273,144 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   required
                   minLength={6}
                   className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
-                  autoFocus
                 />
-              )}
-              {email && userSignupMethod && !showPassword && !resetMode && (
-                <p className="text-sm text-muted-foreground mt-2 px-1">
-                  {userSignupMethod === 'google' 
-                    ? 'This email is registered with Google. Please use Google sign-in.'
-                    : userSignupMethod === 'apple'
-                    ? 'This email is registered with Apple. Please use Apple sign-in.'
-                    : 'This email is registered with email/password. You can sign in with email, Google, or Apple.'
-                  }
-                </p>
-              )}
-            </div>
-            {showPassword && !resetMode && (
+              </div>
               <div className="flex items-center justify-between mb-4">
                 <button
                   type="button"
                   onClick={() => {
-                    setShowPassword(false);
+                    setMode('initial');
+                    setEmail('');
                     setPassword('');
                   }}
                   className="text-sm text-muted-foreground hover:text-foreground px-1"
                 >
-                  ← Back to email
+                  ← Back
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    setResetMode(true);
-                    setShowPassword(false);
-                    setPassword('');
-                  }}
+                  onClick={() => setMode('reset')}
                   className="text-sm text-primary hover:underline px-1"
                 >
                   Forgot password?
                 </button>
               </div>
-            )}
-            {resetMode && (
+              <Button
+                type="submit"
+                disabled={loading || !email || !password}
+                className="w-full h-11 sm:h-12 rounded-xl font-medium"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Signing in...
+                  </>
+                ) : (
+                  'Sign In'
+                )}
+              </Button>
+            </form>
+          )}
+
+          {/* Sign Up Form */}
+          {mode === 'signup' && (
+            <form onSubmit={handleSignUp} className="mb-4">
+              <div className="mb-4 space-y-3">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                />
+                <input
+                  type="password"
+                  placeholder="Password (min 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                />
+              </div>
               <button
                 type="button"
                 onClick={() => {
-                  setResetMode(false);
+                  setMode('initial');
+                  setEmail('');
+                  setPassword('');
+                }}
+                className="text-sm text-muted-foreground hover:text-foreground mb-4 px-1"
+              >
+                ← Back
+              </button>
+              <Button
+                type="submit"
+                disabled={loading || !email || !password || signupCooldown > 0}
+                className="w-full h-11 sm:h-12 rounded-xl font-medium"
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                    Sending verification...
+                  </>
+                ) : signupCooldown > 0 ? (
+                  `Wait ${signupCooldown}s`
+                ) : (
+                  'Sign Up'
+                )}
+              </Button>
+              {signupCooldown > 0 && (
+                <p className="text-xs text-muted-foreground text-center mt-2">
+                  You can request a new link in {signupCooldown} seconds
+                </p>
+              )}
+            </form>
+          )}
+
+          {/* Password Reset Form */}
+          {mode === 'reset' && (
+            <form onSubmit={handlePasswordReset} className="mb-4">
+              <div className="mb-4">
+                <input
+                  type="email"
+                  placeholder="Email address"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="w-full h-11 sm:h-12 px-3 sm:px-4 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setMode('signin');
                   setEmail('');
                 }}
                 className="text-sm text-muted-foreground hover:text-foreground mb-4 px-1"
               >
-                ← Back to login
+                ← Back to sign in
               </button>
-            )}
-            <Button
-              type="submit"
-              disabled={
-                resetMode 
-                  ? resetLoading || !email 
-                  : loading || !email || (userSignupMethod === 'google' && !showPassword) || (showPassword && !password)
-              }
-              className="w-full h-11 sm:h-12 rounded-xl font-medium"
-            >
-              {resetMode ? (
-                resetLoading ? (
+              <Button
+                type="submit"
+                disabled={loading || !email}
+                className="w-full h-11 sm:h-12 rounded-xl font-medium"
+              >
+                {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
                     Sending reset link...
                   </>
                 ) : (
-                  'Send reset link'
-                )
-              ) : loading ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
-                  {showPassword ? 'Signing in...' : 'Continue'}
-                </>
-              ) : (
-                showPassword ? 'Continue' : 'Continue'
-              )}
-            </Button>
-          </form>
+                  'Send Reset Link'
+                )}
+              </Button>
+            </form>
+          )}
 
-          {/* OR Divider - only show if not in reset mode */}
-          {!resetMode && (
+          {/* OR Divider - only show on initial screen */}
+          {mode === 'initial' && (
             <>
               <div className="relative my-5 sm:my-6">
                 <div className="absolute inset-0 flex items-center">
