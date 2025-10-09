@@ -55,6 +55,24 @@ serve(async (req) => {
       throw new Error('User not found or not authenticated')
     }
 
+    // First, delete all user images from storage
+    try {
+      const { error: storageError } = await supabaseAdmin.functions.invoke('delete-all-user-images', {
+        body: {
+          userId: user.id
+        }
+      });
+      
+      if (storageError) {
+        console.error('Error deleting user images from storage:', storageError);
+      } else {
+        console.log('Successfully deleted all user images from storage');
+      }
+    } catch (storageError) {
+      console.error('Error invoking delete-all-user-images:', storageError);
+      // Continue with account deletion even if storage cleanup fails
+    }
+
     // Delete user data first (profiles, chats, messages will be handled by cascading)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
