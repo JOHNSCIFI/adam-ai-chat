@@ -4,8 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import logoLight from '@/assets/chatl-logo-light.png';
-import logoDark from '@/assets/chatl-logo-dark.png';
+import logoLight from '@/assets/chatl-logo-black.png';
+import logoDark from '@/assets/chatl-logo-white.png';
 
 const Header = () => {
   const navigate = useNavigate();

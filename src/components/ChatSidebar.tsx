@@ -14,8 +14,8 @@ import SettingsModal from './SettingsModal';
 import AuthModal from './AuthModal';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useTheme } from '@/contexts/ThemeContext';
-import logoLight from '@/assets/chatl-logo-light.png';
-import logoDark from '@/assets/chatl-logo-dark.png';
+import logoLight from '@/assets/chatl-logo-black.png';
+import logoDark from '@/assets/chatl-logo-white.png';
 interface Chat {
   id: string;
   title: string;
