@@ -415,9 +415,9 @@ export default function ProjectPage() {
       if (files.length > 0) {
         // Send files directly to webhook in base64 format
         try {
-          // Use Supabase edge function instead of external webhook
-          
-          // Convert first file to base64 for analysis
+          const webhookUrl = 'https://adsgbt.app.n8n.cloud/webhook/adamGPT';
+
+          // Convert first file to base64 for webhook
           const file = files[0]; // Handle first file for now
           const base64Data = await new Promise<string>(resolve => {
             const reader = new FileReader();
@@ -429,39 +429,42 @@ export default function ProjectPage() {
             };
             reader.readAsDataURL(file);
           });
-          
-          const { data: response, error: edgeFunctionError } = await supabase.functions.invoke('chat-with-ai-optimized', {
-            body: {
+          const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
               message: userMessage,
-              chat_id: newChat.id,
-              user_id: user.id,
-              model: 'file-analysis',
-              file_analysis: base64Data // Pass file data for analysis
-            }
+              chatId: newChat.id,
+              userId: user.id,
+              projectId: project.id,
+              type: file.type.split('/')[1] || 'file',
+              fileName: file.name,
+              fileSize: file.size,
+              fileType: file.type,
+              fileData: base64Data
+            })
           });
-          
-          if (edgeFunctionError) {
-            console.error('Edge function error:', edgeFunctionError);
-            throw edgeFunctionError;
-          }
-          if (response) {
-            console.log('Edge function response:', response);
+          if (response.ok) {
+            const webhookData = await response.json();
+            console.log('Webhook response:', webhookData);
 
             // Parse webhook response using same logic as Chat component
             let responseContent = '';
-            if (Array.isArray(response) && response.length > 0) {
-              const analysisTexts = response.map(item => item.text || item.content || '').filter(text => text);
+            if (Array.isArray(webhookData) && webhookData.length > 0) {
+              const analysisTexts = webhookData.map(item => item.text || item.content || '').filter(text => text);
               if (analysisTexts.length > 0) {
                 responseContent = analysisTexts.join('\n\n');
               } else {
                 responseContent = 'File analyzed successfully';
               }
-            } else if (response.text) {
-              responseContent = response.text;
-            } else if (response.analysis || response.content) {
-              responseContent = response.analysis || response.content;
-            } else if (response.response || response.message) {
-              responseContent = response.response || response.message;
+            } else if (webhookData.text) {
+              responseContent = webhookData.text;
+            } else if (webhookData.analysis || webhookData.content) {
+              responseContent = webhookData.analysis || webhookData.content;
+            } else if (webhookData.response || webhookData.message) {
+              responseContent = webhookData.response || webhookData.message;
             } else {
               responseContent = 'File processed successfully';
             }

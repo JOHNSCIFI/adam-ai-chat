@@ -218,107 +218,45 @@ serve(async (req) => {
 
     console.log('Sending to OpenAI (optimized)');
 
-    // Map the model ID to the appropriate API and model name
-    const getModelConfig = (modelId: string) => {
+    // Map the model ID to the actual OpenAI model name
+    const getOpenAIModel = (modelId: string) => {
       switch (modelId) {
-        // OpenAI Models
         case 'gpt-4o-mini':
-          return { provider: 'openai', model: 'gpt-4o-mini' };
+          return 'gpt-4o-mini';
         case 'gpt-4o':
-          return { provider: 'openai', model: 'gpt-4o' };
+          return 'gpt-4o';
         case 'gpt-5':
-          return { provider: 'openai', model: 'gpt-4o' }; // Use gpt-4o as fallback
-        
-        // Anthropic Claude Models
-        case 'claude-sonnet-4':
-          return { provider: 'anthropic', model: 'claude-sonnet-4-5' };
-        case 'claude-sonnet-4-5':
-          return { provider: 'anthropic', model: 'claude-sonnet-4-5' };
-        case 'claude-opus-4':
-          return { provider: 'anthropic', model: 'claude-opus-4-1-20250805' };
-        
-        // Google Gemini Models  
-        case 'gemini-2.5-flash':
-          return { provider: 'openai', model: 'gpt-4o-mini' }; // Fallback for now
-        
-        // DeepSeek Models
-        case 'deepseek-v2':
-          return { provider: 'openai', model: 'gpt-4o-mini' }; // Fallback for now
-        
-        // xAI Grok Models
-        case 'grok-4':
-          return { provider: 'openai', model: 'gpt-4o-mini' }; // Fallback for now
-        
+          return 'gpt-4o'; // Use gpt-4o as gpt-5 is not available yet
+        case 'claude':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
+        case 'deepseek':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
+        case 'gemini':
+          return 'gpt-4o-mini'; // Fallback to OpenAI for now
         default:
-          return { provider: 'openai', model: 'gpt-4o-mini' };
+          return 'gpt-4o-mini';
       }
     };
 
-    const modelConfig = getModelConfig(model || 'gpt-4o-mini');
-    console.log('Using model config:', modelConfig);
+    const selectedOpenAIModel = getOpenAIModel(model || 'gpt-4o-mini');
+    console.log('Using OpenAI model:', selectedOpenAIModel);
 
-    let responseContent = '';
-    
-    // Route to appropriate AI provider
-    if (modelConfig.provider === 'anthropic') {
-      // Call Anthropic Claude API
-      const anthropicApiKey = Deno.env.get('ANTHROPIC_API_KEY');
-      if (!anthropicApiKey) {
-        console.error('ANTHROPIC_API_KEY not configured, falling back to OpenAI');
-        modelConfig.provider = 'openai';
-        modelConfig.model = 'gpt-4o-mini';
-      } else {
-        console.log('Calling Anthropic API with model:', modelConfig.model);
-        
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-          method: 'POST',
-          headers: {
-            'x-api-key': anthropicApiKey,
-            'anthropic-version': '2023-06-01',
-            'Content-Type': 'application/json',
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${openAIApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: selectedOpenAIModel,
+        messages: [
+          {
+            role: 'system',
+            content: 'You are AdamGPT, a helpful AI assistant with advanced image analysis and editing capabilities. You can:\n\n1. ANALYZE IMAGES: When users send images, they are automatically analyzed and you have access to detailed visual information.\n\n2. ANSWER IMAGE QUESTIONS: Use the provided image analysis to answer questions about images that were previously shared.\n\n3. EDIT IMAGES: When users request image editing (like "edit the image", "make it brighter", "remove background", "add text"), provide specific editing instructions.\n\n4. GENERATE IMAGES: Use the generate_image function when users ask to create new images.\n\nAlways be helpful and provide detailed responses. For image editing requests, provide clear step-by-step instructions.'
           },
-          body: JSON.stringify({
-            model: modelConfig.model,
-            max_tokens: 4096,
-            messages: conversationHistory.filter(msg => msg.role !== 'system').map(msg => ({
-              role: msg.role === 'assistant' ? 'assistant' : 'user',
-              content: msg.content
-            })),
-            system: 'You are AdamGPT, a helpful AI assistant with advanced capabilities. Always be helpful and provide detailed responses.'
-          }),
-        });
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Anthropic API error:', response.status, errorText);
-          throw new Error(`Anthropic API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-        responseContent = data.content[0].text;
-      }
-    }
-    
-    // OpenAI provider (or fallback)
-    if (modelConfig.provider === 'openai') {
-      console.log('Calling OpenAI API with model:', modelConfig.model);
-
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${openAIApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: modelConfig.model,
-          messages: [
-            {
-              role: 'system',
-              content: 'You are AdamGPT, a helpful AI assistant with advanced image analysis and editing capabilities. You can:\n\n1. ANALYZE IMAGES: When users send images, they are automatically analyzed and you have access to detailed visual information.\n\n2. ANSWER IMAGE QUESTIONS: Use the provided image analysis to answer questions about images that were previously shared.\n\n3. EDIT IMAGES: When users request image editing (like "edit the image", "make it brighter", "remove background", "add text"), provide specific editing instructions.\n\n4. GENERATE IMAGES: Use the generate_image function when users ask to create new images.\n\nAlways be helpful and provide detailed responses. For image editing requests, provide clear step-by-step instructions.'
-            },
-            ...conversationHistory
-          ],
-          functions: [
+          ...conversationHistory
+        ],
+        functions: [
           {
             name: 'generate_image',
             description: 'Generate an image based on a text description. Use this when the user asks to create, generate, make, or draw an image.',
@@ -361,24 +299,20 @@ serve(async (req) => {
         max_tokens: 1500, // Reduced for faster response
         temperature: 0.7
       }),
-      });
+    });
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('OpenAI API error:', errorText);
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('OpenAI API error:', errorText);
+      throw new Error(`OpenAI API error: ${response.status}`);
+    }
 
-      const data = await response.json();
-      const assistantMessage = data.choices[0].message;
-      
-      // Only set responseContent if not already set by Anthropic
-      if (!responseContent) {
-        responseContent = assistantMessage.content || '';
-      }
+    const data = await response.json();
+    const assistantMessage = data.choices[0].message;
+    let responseContent = assistantMessage.content || '';
 
-      // Check for image generation
-      if (assistantMessage.function_call && assistantMessage.function_call.name === 'generate_image') {
+    // Check for image generation
+    if (assistantMessage.function_call && assistantMessage.function_call.name === 'generate_image') {
       console.log('Image generation requested');
       
       try {
@@ -416,46 +350,10 @@ serve(async (req) => {
         
         responseContent = `I've generated an image for you: "${imagePrompt}"`;
 
-        // CRITICAL: Save assistant message with image to database
-        const imageAttachment = {
-          id: `generated-${Date.now()}`,
-          name: `generated_${Date.now()}.png`,
-          size: 0,
-          type: 'image/png',
-          url: permanentImageUrl || temporaryImageUrl
-        };
-
-        console.log('Saving assistant message with image to database');
-        const { data: assistantImageInsertData, error: assistantImageInsertError } = await supabase
-          .from('messages')
-          .insert({
-            chat_id: chat_id,
-            content: responseContent,
-            role: 'assistant',
-            model: 'generate-image',
-            file_attachments: [imageAttachment] as any
-          })
-          .select()
-          .single();
-
-        if (assistantImageInsertError) {
-          console.error('Error saving assistant message with image:', assistantImageInsertError);
-          throw new Error('Failed to save assistant message with image');
-        }
-
-        console.log('Assistant message with image saved successfully:', assistantImageInsertData.id);
-
-        // Update chat's updated_at timestamp
-        await supabase
-          .from('chats')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', chat_id);
-
         return new Response(JSON.stringify({
           type: 'image_generated',
           content: responseContent,
-          message_id: assistantImageInsertData.id,
-          image_url: permanentImageUrl || temporaryImageUrl,
+          image_url: permanentImageUrl || temporaryImageUrl, // Use permanent URL if available, fallback to temp
           prompt: imagePrompt
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -466,57 +364,24 @@ serve(async (req) => {
         responseContent = 'I apologize, but I encountered an error while generating the image. Please try again with a different prompt.';
       }
     }
-    } // Close OpenAI provider block
-
-    // CRITICAL: Save assistant message to database FIRST before returning
-    console.log('Saving assistant message to database');
-    const { data: assistantInsertData, error: assistantInsertError } = await supabase
-      .from('messages')
-      .insert({
-        chat_id: chat_id,
-        content: responseContent,
-        role: 'assistant',
-        model: model || 'gpt-4o-mini',
-        embedding: null // Will be updated by background process
-      })
-      .select()
-      .single();
-
-    if (assistantInsertError) {
-      console.error('Error saving assistant message:', assistantInsertError);
-      throw new Error('Failed to save assistant message');
-    }
-
-    console.log('Assistant message saved successfully:', assistantInsertData.id);
-
-    // Update chat's updated_at timestamp
-    await supabase
-      .from('chats')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', chat_id);
 
     // Start embedding generation in background (don't wait)
     const embeddingPromise = generateEmbeddingAsync(responseContent);
     
-    // Set up background task to update embedding
-    embeddingPromise.then(embedding => {
-      if (embedding.length > 0) {
-        // Update the message in database with embedding
-        supabase.from('messages').update({
-          embedding: embedding as any
-        }).eq('id', assistantInsertData.id).then(() => {
-          console.log('Embedding generated in background');
-        });
-      }
-    });
-
     // Return response immediately
     const responseData = {
       type: 'text',
       content: responseContent,
-      message_id: assistantInsertData.id,
       embedding: null // Will be updated by background process
     };
+
+    // Set up background task to update embedding
+    embeddingPromise.then(embedding => {
+      if (embedding.length > 0) {
+        // Update the response in database with embedding later
+        console.log('Embedding generated in background');
+      }
+    });
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
