@@ -24,7 +24,7 @@ const Models = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-12">
           <div className="animate-fade-in">
             <div className="flex items-center space-x-2 mb-6">
-              <span className="text-xl font-bold bg-gradient-to-r from-primary to-purple-600 bg-clip-text text-transparent">ChatLearn</span>
+              <span className="text-xl font-bold text-foreground">ChatLearn</span>
             </div>
             <p className="text-muted-foreground leading-relaxed">
               Your gateway to the world's most advanced AI models, unified in one intelligent platform.
