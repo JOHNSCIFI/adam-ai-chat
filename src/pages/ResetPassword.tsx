@@ -133,132 +133,131 @@ export default function ResetPassword() {
 
   if (!isValidSession) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4">
-        <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm bg-card/95">
-          <CardContent className="flex items-center justify-center p-8">
-            <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md mx-auto bg-background border border-border shadow-2xl rounded-2xl p-8">
+          <div className="flex items-center justify-center">
+            <div className="w-6 h-6 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (isSuccess) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4">
-        <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm bg-card/95">
-          <CardHeader className="text-center space-y-4 pb-8">
-            <div className="w-20 h-20 bg-gradient-to-br from-green-500 via-green-500/90 to-green-500/70 rounded-3xl flex items-center justify-center mx-auto mb-2 shadow-2xl ring-1 ring-green-500/20">
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md mx-auto bg-background border border-border shadow-2xl rounded-2xl p-8">
+          <div className="text-center space-y-6">
+            <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            <h2 className="text-2xl font-semibold">
               Password Updated!
-            </CardTitle>
-            <CardDescription className="text-base text-muted-foreground leading-relaxed">
+            </h2>
+            <p className="text-sm text-muted-foreground">
               Your password has been successfully updated. You will be redirected to the login page.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-muted/20 to-primary/5 p-4">
-      <Card className="w-full max-w-md shadow-2xl border-border/30 backdrop-blur-sm bg-card/95">
-        <CardHeader className="text-center space-y-4 pb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-primary via-primary/90 to-primary/70 rounded-3xl flex items-center justify-center mx-auto mb-2 shadow-2xl ring-1 ring-primary/20">
-            <Shield className="w-8 h-8 text-primary-foreground" />
-          </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <div className="w-full max-w-md mx-auto bg-background border border-border shadow-2xl rounded-2xl">
+        {/* Header */}
+        <div className="text-center pt-8 pb-4">
+          <h1 className="text-xl font-semibold mb-8">ChatLearn</h1>
+          <h2 className="text-xl sm:text-2xl font-normal mb-3">
             Set New Password
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground leading-relaxed">
+          </h2>
+          <p className="text-sm text-muted-foreground px-4">
             Enter your new password below
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6 p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-semibold text-foreground/90">
-                New Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Enter your new password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
+          </p>
+        </div>
+
+        {/* Form */}
+        <div className="px-4 sm:px-6 pb-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* New Password Input */}
+            <div className="relative">
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="New password (min 6 characters)"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full h-11 sm:h-12 px-3 sm:px-4 pr-12 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword" className="text-sm font-semibold text-foreground/90">
-                Confirm New Password
-              </Label>
-              <div className="relative">
-                <Input
-                  id="confirmPassword"
-                  type={showConfirmPassword ? "text" : "password"}
-                  placeholder="Confirm your new password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  className="h-14 px-4 pr-12 rounded-2xl border-border/40 focus:border-primary/60 focus:ring-4 focus:ring-primary/10 transition-all duration-200 bg-background/50"
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 h-10 w-10 p-0 hover:bg-accent/30 rounded-xl transition-colors"
-                >
-                  {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-muted-foreground" />
-                  ) : (
-                    <Eye className="h-5 w-5 text-muted-foreground" />
-                  )}
-                </Button>
-              </div>
+            {/* Confirm Password Input */}
+            <div className="relative">
+              <input
+                id="confirmPassword"
+                type={showConfirmPassword ? "text" : "password"}
+                placeholder="Confirm new password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+                minLength={6}
+                className="w-full h-11 sm:h-12 px-3 sm:px-4 pr-12 text-base border border-input rounded-xl bg-background text-foreground placeholder-muted-foreground focus:border-ring focus:outline-none transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {showConfirmPassword ? (
+                  <EyeOff className="h-5 w-5" />
+                ) : (
+                  <Eye className="h-5 w-5" />
+                )}
+              </button>
             </div>
-            
-            <Button 
-              type="submit" 
-              className="w-full h-14 rounded-2xl bg-gradient-to-r from-primary via-primary/95 to-primary/90 hover:from-primary/95 hover:via-primary/90 hover:to-primary/85 text-primary-foreground font-semibold shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]" 
+
+            {/* Submit Button */}
+            <Button
+              type="submit"
               disabled={loading}
+              className="w-full h-11 sm:h-12 rounded-xl font-medium"
             >
               {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Updating Password...
-                </div>
+                <>
+                  <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                  Updating password...
+                </>
               ) : (
                 'Update Password'
               )}
             </Button>
           </form>
-        </CardContent>
-      </Card>
+
+          {/* Footer */}
+          <div className="mt-6 text-center">
+            <button
+              onClick={() => navigate('/')}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              ← Back to home
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
