@@ -1009,9 +1009,35 @@ export default function Chat() {
         throw new Error(`Edge function error: ${edgeFunctionError.message}`);
       }
       
-      console.log('[REGENERATE] Webhook called successfully, now deleting old message from database');
+      console.log('[REGENERATE] Edge function response:', webhookResponse);
       
-      // NOW delete the old message from database (webhook succeeded)
+      // Verify new message was saved successfully
+      if (!webhookResponse?.message_id) {
+        console.error('[REGENERATE] No message_id in response, edge function may have failed to save');
+        throw new Error('Edge function did not return message_id');
+      }
+      
+      console.log('[REGENERATE] New message saved with ID:', webhookResponse.message_id);
+      console.log('[REGENERATE] Waiting for new message to be confirmed in DB before deleting old one...');
+      
+      // Wait longer to ensure new message is in database
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Verify new message exists in database before deleting old one
+      const { data: newMessageCheck, error: checkError } = await supabase
+        .from('messages')
+        .select('id')
+        .eq('id', webhookResponse.message_id)
+        .single();
+      
+      if (checkError || !newMessageCheck) {
+        console.error('[REGENERATE] New message not found in database yet:', checkError);
+        throw new Error('New message not confirmed in database');
+      }
+      
+      console.log('[REGENERATE] New message confirmed in DB, now deleting old message');
+      
+      // NOW delete the old message from database (new message confirmed)
       const { error: deleteError } = await supabase
         .from('messages')
         .delete()
@@ -1019,7 +1045,7 @@ export default function Chat() {
       
       if (deleteError) {
         console.error('[REGENERATE] Error deleting old message:', deleteError);
-        // Don't throw - webhook already succeeded, new message will arrive
+        // Don't throw - new message exists, old message can be cleaned up later
       } else {
         console.log('[REGENERATE] Successfully deleted old message from database');
       }
@@ -1055,9 +1081,9 @@ export default function Chat() {
         }
       }
       
-      console.log('[REGENERATE] Webhook completed, fetching messages immediately...');
+      console.log('[REGENERATE] Fetching messages to display new response...');
       
-      // Immediately fetch messages to show new response without waiting for realtime
+      // Fetch messages with a delay to ensure realtime has processed
       setTimeout(async () => {
         await fetchMessages();
         
