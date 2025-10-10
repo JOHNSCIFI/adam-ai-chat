@@ -159,10 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    // Use the actual Lovable project URL instead of localhost
-    const redirectUrl = window.location.origin.includes('localhost') 
-      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
-      : `${window.location.origin}/`;
+    // Use preview URL as primary redirect
+    const redirectUrl = 'https://preview--adam-ai-chat.lovable.app/';
+    
+    console.log('🔐 Sign up attempt with redirect URL:', redirectUrl);
     
     const { error, data } = await supabase.auth.signUp({
       email,
@@ -178,10 +178,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     });
     
+    console.log('📧 Sign up response:', { 
+      hasError: !!error, 
+      errorMessage: error?.message,
+      hasUser: !!data?.user,
+      hasSession: !!data?.session,
+      userEmail: data?.user?.email
+    });
+    
     // Handle case where user exists but hasn't verified email - resend verification
     if (data?.user && !data?.session && !error) {
-      // User exists but may not have verified email, treat as success and send new verification
+      console.log('✅ Sign up successful - verification email should be sent');
       return { error: null };
+    }
+    
+    if (error) {
+      console.error('❌ Sign up error:', error);
     }
     
     return { error };
