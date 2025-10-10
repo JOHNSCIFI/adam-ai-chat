@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Switch } from '@/components/ui/switch';
 import { X, Cookie, Settings } from 'lucide-react';
 
@@ -177,6 +177,7 @@ export default function CookieConsent() {
               <Cookie className="h-5 w-5" />
               Cookie Preferences
             </DialogTitle>
+            <DialogDescription className="sr-only">Manage your cookie preferences and privacy settings</DialogDescription>
           </DialogHeader>
           
           <div className="space-y-6">

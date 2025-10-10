@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -130,6 +130,7 @@ export function AddToProjectModal({
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader>
           <DialogTitle>Add to Project</DialogTitle>
+          <DialogDescription className="sr-only">Add this chat to an existing project or create a new one</DialogDescription>
         </DialogHeader>
         <div className="space-y-2">
           {/* New Project Option */}

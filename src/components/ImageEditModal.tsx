@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Label } from '@/components/ui/label';
@@ -156,6 +156,7 @@ export const ImageEditModal: React.FC<ImageEditModalProps> = ({
           <DialogTitle className="flex items-center gap-2">
             📝 Edit Image: {imageFile.name}
           </DialogTitle>
+          <DialogDescription className="sr-only">Edit and enhance your image with various tools and filters</DialogDescription>
         </DialogHeader>
         
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
