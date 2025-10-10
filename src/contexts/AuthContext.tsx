@@ -183,12 +183,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       errorMessage: error?.message,
       hasUser: !!data?.user,
       hasSession: !!data?.session,
-      userEmail: data?.user?.email
+      userEmail: data?.user?.email,
+      emailConfirmedAt: data?.user?.email_confirmed_at,
+      identitiesLength: data?.user?.identities?.length
     });
     
-    // Handle case where user exists but hasn't verified email - resend verification
+    // Check if user already exists and has confirmed their email
     if (data?.user && !data?.session && !error) {
-      console.log('✅ Sign up successful - verification email should be sent');
+      // If email is already confirmed OR user has no identities, they're an existing user
+      if (data.user.email_confirmed_at || (data.user.identities && data.user.identities.length === 0)) {
+        console.log('⚠️ User already exists with confirmed email');
+        return { 
+          error: { 
+            message: 'User already registered',
+            status: 400 
+          } 
+        };
+      }
+      
+      // New user who needs to verify email
+      console.log('✅ New sign up - verification email sent');
       return { error: null };
     }
     
