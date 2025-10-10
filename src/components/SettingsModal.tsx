@@ -295,7 +295,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
       // Close settings modal and redirect to home page
       onOpenChange(false);
-      window.location.href = 'http://preview--adam-ai-chat.lovable.app/';
+      window.location.href = 'https://www.chatl.ai/';
     } catch (error: any) {
       console.error('Delete all chats error:', error);
       toast({
