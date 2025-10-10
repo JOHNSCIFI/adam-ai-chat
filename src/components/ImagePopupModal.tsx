@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -120,6 +120,9 @@ export function ImagePopupModal({ isOpen, onClose, imageUrl, prompt = '' }: Imag
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-[95vw] max-h-[95vh] p-0 gap-0">
+        <DialogTitle className="sr-only">
+          {prompt || 'Image viewer'}
+        </DialogTitle>
         <style>{`
           .dialog-close-hidden + button[data-dialog-close] {
             display: none !important;
