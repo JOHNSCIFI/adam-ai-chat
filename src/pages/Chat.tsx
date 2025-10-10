@@ -769,6 +769,14 @@ export default function Chat() {
       autoSendTempMessage.current = tempUserMessage;
       console.log('[CHAT-INITIAL] Stored temp message in ref:', tempId);
       
+      // CRITICAL: Mark temp message as processed immediately to prevent AUTO-TRIGGER from processing it
+      // sendMessage will handle the AI response trigger once the real message is saved
+      if (!processedUserMessages.current.has(chatId)) {
+        processedUserMessages.current.set(chatId, new Set());
+      }
+      processedUserMessages.current.get(chatId)!.add(tempId);
+      console.log('[CHAT-INITIAL] Marked temp message as processed to prevent AUTO-TRIGGER');
+      
       // Add message to UI immediately so user sees their image
       setMessages(prev => [...prev, tempUserMessage]);
       scrollToBottom();
@@ -2366,6 +2374,11 @@ export default function Chat() {
             const storageKey = `processed_messages_${chatId}`;
             const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
             sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+            
+            // CRITICAL: Since we marked temp as processed during auto-send to prevent AUTO-TRIGGER,
+            // we need to manually trigger AI response now with the REAL database ID
+            console.log('[TEXT-MESSAGE] Triggering AI response with real message ID:', insertedMessage.id);
+            triggerAIResponse(userMessage, insertedMessage.id);
           } else {
             console.log('[TEXT-MESSAGE] Temp was NOT processed, letting AUTO-TRIGGER handle the real message');
             // Don't mark as processed - let AUTO-TRIGGER handle the real message
