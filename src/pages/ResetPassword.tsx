@@ -250,7 +250,10 @@ export default function ResetPassword() {
           {/* Footer */}
           <div className="mt-6 text-center">
             <button
-              onClick={() => navigate('/')}
+              onClick={async () => {
+                await supabase.auth.signOut();
+                navigate('/');
+              }}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               ← Back to home
