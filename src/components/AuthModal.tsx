@@ -113,11 +113,23 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           duration: 8000,
         });
       } else {
-        toast({
-          title: "Sign up failed",
-          description: error.message,
-          variant: "destructive",
-        });
+        // Check if user already exists
+        if (error.message?.toLowerCase().includes('already registered') || 
+            error.message?.toLowerCase().includes('user already registered')) {
+          toast({
+            title: "Account already exists",
+            description: "This email is already registered. Please sign in instead.",
+            variant: "destructive",
+          });
+          // Switch to sign in mode
+          setMode('signin');
+        } else {
+          toast({
+            title: "Sign up failed",
+            description: error.message,
+            variant: "destructive",
+          });
+        }
       }
     } catch (error) {
       toast({
