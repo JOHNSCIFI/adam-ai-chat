@@ -1976,14 +1976,10 @@ export default function Chat() {
               console.log('[IMAGE-UPLOAD] Public URL:', finalFileUrl);
             } catch (error) {
               console.error('[IMAGE-UPLOAD] Error converting/uploading image:', error);
-              // Fallback to original file
-              finalFileUrl = URL.createObjectURL(file);
-              pngBase64 = await new Promise<string>((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = () => resolve((reader.result as string).split(',')[1]);
-                reader.onerror = reject;
-                reader.readAsDataURL(file);
-              });
+              // Don't use blob URLs - they won't work after page refresh
+              // Leave finalFileUrl empty to skip this file
+              finalFileUrl = '';
+              toast.error(`Failed to upload image: ${file.name}`);
             }
           } else {
             // For non-image files, upload to Supabase storage
@@ -2016,19 +2012,26 @@ export default function Chat() {
               console.log('[FILE-UPLOAD] Public URL:', finalFileUrl);
             } catch (error) {
               console.error('[FILE-UPLOAD] Error uploading file:', error);
-              // Fallback to blob URL (will only work in current session)
-              finalFileUrl = URL.createObjectURL(file);
+              // Don't use blob URLs - they won't work after page refresh
+              // Leave finalFileUrl empty to skip this file
+              finalFileUrl = '';
+              toast.error(`Failed to upload file: ${file.name}`);
             }
           }
 
-          // Create file attachment with storage URL
-          tempFileAttachments.push({
-            id: `temp-file-${Date.now()}-${Math.random()}`,
-            name: finalFileName,
-            size: file.size,
-            type: finalFileType,
-            url: finalFileUrl
-          });
+      // Only add file attachment if we have a valid Supabase storage URL (not blob)
+      // This prevents blob URLs from being stored in the database
+      if (finalFileUrl && !finalFileUrl.startsWith('blob:')) {
+        tempFileAttachments.push({
+          id: `temp-file-${Date.now()}-${Math.random()}`,
+          name: finalFileName,
+          size: file.size,
+          type: finalFileType,
+          url: finalFileUrl
+        });
+      } else {
+        console.warn('[FILE-UPLOAD] Skipping file with blob URL, upload may have failed:', finalFileName);
+      }
 
           // Convert file to base64 for webhook (PNG for images)
           let base64 = pngBase64;
@@ -2047,11 +2050,24 @@ export default function Chat() {
         }
 
         // Update the temporary message with actual uploaded URLs
-        setMessages(prev => prev.map(msg => 
-          msg.id === tempUserMessage.id 
-            ? { ...msg, file_attachments: tempFileAttachments }
-            : msg
-        ));
+        // Also revoke any blob URLs that were temporarily created
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === tempUserMessage.id) {
+            // Revoke old blob URLs before replacing them
+            msg.file_attachments?.forEach(attachment => {
+              if (attachment.url?.startsWith('blob:')) {
+                try {
+                  URL.revokeObjectURL(attachment.url);
+                  console.log('[BLOB-CLEANUP] Revoked temporary blob URL');
+                } catch (e) {
+                  // Ignore errors
+                }
+              }
+            });
+            return { ...msg, file_attachments: tempFileAttachments };
+          }
+          return msg;
+        }));
 
         // Start embedding generation in background (for user message content)
         const userEmbeddingPromise = generateEmbeddingAsync(userMessage);
