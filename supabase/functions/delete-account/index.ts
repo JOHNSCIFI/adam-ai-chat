@@ -97,7 +97,8 @@ serve(async (req) => {
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
     
     if (deleteError) {
-      throw new Error(`Failed to delete user: ${deleteError.message}`)
+      console.error('Failed to delete user:', deleteError)
+      throw new Error('Account deletion failed')
     }
 
     return new Response(
@@ -108,10 +109,13 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('Error deleting account:', error)
+    const requestId = crypto.randomUUID();
     return new Response(
-      JSON.stringify({ error: errorMessage }),
+      JSON.stringify({ 
+        error: 'Unable to process request',
+        requestId 
+      }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,

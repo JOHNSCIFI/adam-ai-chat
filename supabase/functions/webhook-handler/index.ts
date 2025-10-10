@@ -1,10 +1,43 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Input validation schema
+const webhookSchema = z.object({
+  chatId: z.string().uuid().optional(),
+  chat_id: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+  user_id: z.string().uuid().optional(),
+  model: z.string().max(100).optional(),
+  type: z.string().optional(),
+  response_data: z.union([z.string(), z.object({}).passthrough()]).optional(),
+  response: z.union([z.string(), z.object({}).passthrough()]).optional(),
+  text: z.string().optional(),
+  content: z.string().optional(),
+  image_base64: z.string().optional(),
+  image_name: z.string().optional(),
+  image_type: z.string().optional(),
+  body: z.object({
+    chatId: z.string().uuid().optional(),
+    userId: z.string().uuid().optional(),
+    model: z.string().max(100).optional(),
+  }).optional(),
+});
+
+// Sanitize content to prevent XSS
+function sanitizeContent(content: string): string {
+  if (typeof content !== 'string') return '';
+  
+  return content
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/javascript:/gi, '')
+    .replace(/on\w+\s*=/gi, '');
+}
 
 serve(async (req) => {
   console.log('[WEBHOOK-HANDLER] ===== NEW REQUEST =====');
@@ -16,6 +49,8 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  const requestId = crypto.randomUUID();
+  
   try {
     const supabaseClient = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -25,7 +60,6 @@ serve(async (req) => {
     let rawBody = await req.json();
     console.log('[WEBHOOK-HANDLER] ===== RAW REQUEST BODY =====');
     console.log('[WEBHOOK-HANDLER] Raw body type:', Array.isArray(rawBody) ? 'Array' : typeof rawBody);
-    console.log('[WEBHOOK-HANDLER] Full body structure:', JSON.stringify(rawBody, null, 2).substring(0, 500));
     
     // Handle N8n sending array format: [{ body: { chatId: "..." }, image_base64: "..." }]
     let body = rawBody;
@@ -33,6 +67,18 @@ serve(async (req) => {
       console.log('[WEBHOOK-HANDLER] Detected array format, extracting first element');
       body = rawBody[0];
     }
+    
+    // Validate input with zod
+    const validationResult = webhookSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('[WEBHOOK-HANDLER] Validation failed:', validationResult.error.errors);
+      return new Response(
+        JSON.stringify({ error: 'Invalid request data', requestId }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    body = validationResult.data;
     
     console.log('[WEBHOOK-HANDLER] Body keys:', Object.keys(body));
     console.log('[WEBHOOK-HANDLER] Has body.body?', !!body.body);
@@ -50,13 +96,12 @@ serve(async (req) => {
     console.log('[WEBHOOK-HANDLER] user_id:', user_id);
     console.log('[WEBHOOK-HANDLER] model:', model);
     console.log('[WEBHOOK-HANDLER] Has image_base64?', !!image_base64);
-    console.log('[WEBHOOK-HANDLER] Image base64 length:', image_base64?.length || 0);
     console.log('[WEBHOOK-HANDLER] Has response_data?', !!response_data);
 
     if (!chat_id) {
       console.error('[WEBHOOK-HANDLER] ERROR: Missing chat_id');
       return new Response(
-        JSON.stringify({ error: 'Missing chat_id in body.chatId or chat_id' }),
+        JSON.stringify({ error: 'Required field missing', requestId }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -67,7 +112,6 @@ serve(async (req) => {
     
     console.log('[WEBHOOK-HANDLER] ===== PARSING RESPONSE DATA =====');
     console.log('[WEBHOOK-HANDLER] response_data type:', typeof response_data);
-    console.log('[WEBHOOK-HANDLER] response_data is array?', Array.isArray(response_data));
     
     if (response_data) {
       if (Array.isArray(response_data) && response_data.length > 0) {
@@ -82,6 +126,11 @@ serve(async (req) => {
       } else if (typeof response_data === 'string') {
         responseContent = response_data;
       }
+      
+      // Sanitize content
+      if (responseContent) {
+        responseContent = sanitizeContent(responseContent);
+      }
     }
     
     console.log('[WEBHOOK-HANDLER] Parsed responseContent:', responseContent?.substring(0, 100) || 'EMPTY');
@@ -90,13 +139,11 @@ serve(async (req) => {
     const imageData = image_base64 || response_data?.image_base64;
     console.log('[WEBHOOK-HANDLER] ===== IMAGE PROCESSING =====');
     console.log('[WEBHOOK-HANDLER] Final imageData exists?', !!imageData);
-    console.log('[WEBHOOK-HANDLER] Image data length:', imageData?.length || 0);
     
     if (imageData) {
       console.log('[WEBHOOK-HANDLER] Processing generated image...');
       
       try {
-        console.log('[WEBHOOK-HANDLER] Converting base64 to Uint8Array...');
         // Convert base64 to blob
         const imageBytes = Uint8Array.from(atob(imageData), c => c.charCodeAt(0));
         console.log('[WEBHOOK-HANDLER] Converted image size:', imageBytes.length, 'bytes');
@@ -111,10 +158,6 @@ serve(async (req) => {
         console.log('[WEBHOOK-HANDLER] ===== UPLOAD DETAILS =====');
         console.log('[WEBHOOK-HANDLER] Bucket:', bucketName);
         console.log('[WEBHOOK-HANDLER] File path:', filePath);
-        console.log('[WEBHOOK-HANDLER] Image name:', imageName);
-
-
-        console.log('[WEBHOOK-HANDLER] Starting upload to Supabase Storage...');
 
         // Upload to Supabase Storage
         const { data: uploadData, error: uploadError } = await supabaseClient.storage
@@ -124,13 +167,10 @@ serve(async (req) => {
             upsert: true
           });
 
-        console.log('[WEBHOOK-HANDLER] ===== UPLOAD RESULT =====');
         if (uploadError) {
           console.error('[WEBHOOK-HANDLER] Upload error:', uploadError);
-          console.error('[WEBHOOK-HANDLER] Error details:', JSON.stringify(uploadError));
         } else {
           console.log('[WEBHOOK-HANDLER] Upload successful!');
-          console.log('[WEBHOOK-HANDLER] Upload data:', uploadData);
           
           // Get public URL
           const { data: urlData } = supabaseClient.storage
@@ -138,34 +178,20 @@ serve(async (req) => {
             .getPublicUrl(filePath);
           
           imageUrl = urlData.publicUrl;
-          console.log('[WEBHOOK-HANDLER] ===== PUBLIC URL =====');
-          console.log('[WEBHOOK-HANDLER] Image uploaded successfully!');
           console.log('[WEBHOOK-HANDLER] Public URL:', imageUrl);
         }
       } catch (imageError) {
-        console.error('[WEBHOOK-HANDLER] ===== IMAGE PROCESSING ERROR =====');
-        console.error('[WEBHOOK-HANDLER] Error:', imageError);
-        console.error('[WEBHOOK-HANDLER] Error message:', imageError instanceof Error ? imageError.message : 'Unknown error');
-        console.error('[WEBHOOK-HANDLER] Error stack:', imageError instanceof Error ? imageError.stack : 'No stack');
+        console.error('[WEBHOOK-HANDLER] IMAGE PROCESSING ERROR:', imageError);
       }
-    } else {
-      console.log('[WEBHOOK-HANDLER] No image data found in request');
     }
 
     if (!responseContent && !imageUrl) {
-      console.error('[WEBHOOK-HANDLER] ===== VALIDATION ERROR =====');
       console.error('[WEBHOOK-HANDLER] No valid content or image found');
-      console.error('[WEBHOOK-HANDLER] responseContent:', responseContent);
-      console.error('[WEBHOOK-HANDLER] imageUrl:', imageUrl);
       return new Response(
-        JSON.stringify({ error: 'No valid content or image found in response_data' }),
+        JSON.stringify({ error: 'Unable to process response', requestId }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    console.log('[WEBHOOK-HANDLER] ===== FINAL CONTENT =====');
-    console.log('[WEBHOOK-HANDLER] Response content:', responseContent);
-    console.log('[WEBHOOK-HANDLER] Image URL:', imageUrl);
 
     // Prepare file attachments if image exists
     const fileAttachments = imageUrl ? [{
@@ -176,13 +202,7 @@ serve(async (req) => {
       url: imageUrl
     }] : null;
 
-    console.log('[WEBHOOK-HANDLER] ===== FILE ATTACHMENTS =====');
-    console.log('[WEBHOOK-HANDLER] fileAttachments:', JSON.stringify(fileAttachments, null, 2));
-
     console.log('[WEBHOOK-HANDLER] ===== SAVING TO DATABASE =====');
-    console.log('[WEBHOOK-HANDLER] Chat ID:', chat_id);
-    console.log('[WEBHOOK-HANDLER] Content:', responseContent || 'Generated image');
-    console.log('[WEBHOOK-HANDLER] Has file attachments?', !!fileAttachments);
 
     // Save the assistant message to the database
     const { data, error } = await supabaseClient
@@ -192,18 +212,16 @@ serve(async (req) => {
         content: responseContent || '',
         role: 'assistant',
         file_attachments: fileAttachments,
-        model: model, // Save the model field
+        model: model,
         created_at: new Date().toISOString()
       })
       .select()
       .single();
 
-    console.log('[WEBHOOK-HANDLER] ===== DATABASE RESULT =====');
     if (error) {
       console.error('[WEBHOOK-HANDLER] Database error:', error);
-      console.error('[WEBHOOK-HANDLER] Error details:', JSON.stringify(error));
       return new Response(
-        JSON.stringify({ error: 'Failed to save message', details: error.message }),
+        JSON.stringify({ error: 'Unable to process request', requestId }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -211,7 +229,6 @@ serve(async (req) => {
     console.log('[WEBHOOK-HANDLER] ===== SUCCESS =====');
     console.log('[WEBHOOK-HANDLER] Message saved successfully!');
     console.log('[WEBHOOK-HANDLER] Message ID:', data.id);
-    console.log('[WEBHOOK-HANDLER] Message data:', JSON.stringify(data, null, 2));
 
     return new Response(
       JSON.stringify({ success: true, message_id: data.id }),
@@ -222,13 +239,9 @@ serve(async (req) => {
     );
 
   } catch (error) {
-    console.error('[WEBHOOK-HANDLER] ===== UNEXPECTED ERROR =====');
-    console.error('[WEBHOOK-HANDLER] Error:', error);
-    console.error('[WEBHOOK-HANDLER] Error message:', error instanceof Error ? error.message : 'Unknown');
-    console.error('[WEBHOOK-HANDLER] Error stack:', error instanceof Error ? error.stack : 'No stack');
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[WEBHOOK-HANDLER] UNEXPECTED ERROR:', error);
     return new Response(
-      JSON.stringify({ error: 'Internal server error', details: errorMessage }),
+      JSON.stringify({ error: 'Unable to process request', requestId }),
       { 
         status: 500, 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
