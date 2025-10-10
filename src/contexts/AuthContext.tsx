@@ -194,12 +194,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       
       // New user who needs to verify email
-      console.log('✅ New sign up - verification email sent');
       return { error: null };
     }
     
     if (error) {
-      console.error('❌ Sign up error:', error);
+      // Don't log sensitive error details
+      console.error('Sign up failed');
     }
     
     return { error };

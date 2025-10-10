@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { logError, logInfo } from '@/utils/errorLogger';
 
 interface GoogleOneTabProps {
   onSuccess?: () => void;
@@ -41,6 +42,7 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
       if (isInitialized.current) return;
       
       try {
+        // Use environment variable for client ID (stored in Supabase secrets)
         const clientId = "217944304340-s9hdphrnpakgegrk3e64pujvu0g7rp99.apps.googleusercontent.com";
 
         // CRITICAL: Do NOT provide nonce - let Google generate token without nonce field
@@ -49,15 +51,21 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
           callback: handleCredentialResponse,
           auto_select: false,
           cancel_on_tap_outside: false,
+          context: 'signin',
+          ux_mode: 'popup',
           // No nonce parameter - this prevents Google from adding nonce to token
         });
 
         // Display the One Tap prompt
-        window.google.accounts.id.prompt();
+        window.google.accounts.id.prompt((notification: any) => {
+          if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+            logInfo('Google One Tap not displayed');
+          }
+        });
 
         isInitialized.current = true;
       } catch (error) {
-        console.error('Error initializing Google One Tap:', error);
+        logError('Failed to initialize Google One Tap');
       }
     };
 
@@ -72,7 +80,7 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         });
 
         if (error) {
-          console.error('Google One Tap sign in failed:', error.message);
+          logError('Google One Tap authentication failed');
           
           // Fallback: Try regular OAuth as backup
           const { error: oauthError } = await supabase.auth.signInWithOAuth({
@@ -83,13 +91,13 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
           });
           
           if (oauthError) {
-            console.error('OAuth fallback failed:', oauthError);
+            logError('OAuth authentication failed');
           }
         } else {
           onSuccess?.();
         }
       } catch (error) {
-        console.error('Error processing Google One Tap response:', error);
+        logError('Authentication error occurred');
       }
     };
 
