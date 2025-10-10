@@ -14,6 +14,7 @@ import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 
 import GoogleOneTab from '@/components/GoogleOneTab';
 import AuthModal from '@/components/AuthModal';
+import { GoProButton } from '@/components/GoProButton';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -752,7 +753,7 @@ export default function Index() {
   };
   return <div className="flex-1 flex flex-col min-h-screen">
       {/* Mobile Header with Sidebar Trigger */}
-      {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+      {isMobile && <div className="fixed top-0 left-0 right-0 flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
           <SidebarTrigger className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary" aria-label="Open sidebar menu" />
           
           {/* Mobile Model Selector triggered by ChatLearn - Absolutely centered */}
@@ -794,6 +795,13 @@ export default function Index() {
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Go Pro button for mobile authenticated users */}
+          {user && (
+            <div className="ml-auto">
+              <GoProButton />
+            </div>
+          )}
         </div>}
       
       <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''} relative`} onDragOver={e => {
@@ -841,6 +849,13 @@ export default function Index() {
             >
               Sign up
             </Button>
+          </div>
+        )}
+
+        {/* Go Pro button for authenticated users (desktop only) */}
+        {user && !isMobile && (
+          <div className="fixed top-4 right-6 z-50">
+            <GoProButton />
           </div>
         )}
 

@@ -19,6 +19,7 @@ import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
 
 import AuthModal from '@/components/AuthModal';
+import { GoProButton } from '@/components/GoProButton';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
@@ -3227,7 +3228,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     <div className="fixed inset-0 flex flex-col bg-background">
       {/* Mobile Header with Sidebar Trigger */}
       {isMobile && (
-        <div className="fixed top-0 left-0 right-0 flex items-center p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
+        <div className="fixed top-0 left-0 right-0 flex items-center justify-between p-3 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
           <SidebarTrigger 
             className="h-9 w-9 hover:bg-accent focus-visible:ring-2 focus-visible:ring-primary"
             aria-label="Open sidebar menu"
@@ -3285,6 +3286,20 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               </SelectContent>
             </Select>
           </div>
+          
+          {/* Go Pro button for mobile */}
+          {user && (
+            <div className="ml-auto">
+              <GoProButton />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Go Pro button for desktop */}
+      {user && !isMobile && (
+        <div className="fixed top-4 right-6 z-50">
+          <GoProButton />
         </div>
       )}
 
