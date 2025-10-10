@@ -79,12 +79,19 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const savePreferences = async () => {
       if (user) {
         // Save to user metadata for authenticated users
-        await supabase.auth.updateUser({
-          data: { 
-            theme, 
-            accent_color: accentColor 
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (session) {
+            await supabase.auth.updateUser({
+              data: { 
+                theme, 
+                accent_color: accentColor 
+              }
+            });
           }
-        });
+        } catch (error) {
+          console.error('Failed to save theme preferences:', error);
+        }
       } else {
         // Fallback to localStorage for non-authenticated users
         localStorage.setItem('chatlearn-theme', theme);
