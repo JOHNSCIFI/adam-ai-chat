@@ -992,19 +992,21 @@ export default function Chat() {
       
       console.log('[REGENERATE] Sending webhook payload:', JSON.stringify(payload).substring(0, 500) + '...');
 
-      // Call N8n webhook (N8n will call webhook-handler in background to create new message)
-      console.log('[REGENERATE] Calling N8n webhook (N8n will call webhook-handler)');
+      // Call Supabase edge function for regeneration
+      console.log('[REGENERATE] Calling Supabase edge function');
       
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
+      const { data: webhookResponse, error: edgeFunctionError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
+          message: payload.message,
+          chat_id: payload.chatId,
+          user_id: payload.userId,
+          model: payload.model
+        }
       });
       
-      if (!webhookResponse.ok) {
-        throw new Error(`Webhook request failed: ${webhookResponse.status}`);
+      if (edgeFunctionError) {
+        console.error('[REGENERATE] Edge function error:', edgeFunctionError);
+        throw new Error(`Edge function error: ${edgeFunctionError.message}`);
       }
       
       console.log('[REGENERATE] Webhook called successfully, now deleting old message from database');
@@ -1175,31 +1177,24 @@ export default function Chat() {
     console.log('[AI-RESPONSE] Using model:', selectedModel);
     
     try {
-      // Send webhook for text-based models only
-      // Image generation models are handled separately
-      console.log('[AI-RESPONSE] Calling webhook with type: text, model:', selectedModel);
+      // Call Supabase edge function for AI response
+      console.log('[AI-RESPONSE] Calling Supabase edge function with model:', selectedModel);
       
-      const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          type: 'text',
+      const { data: aiResponse, error: edgeFunctionError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+        body: {
           message: userMessage,
-          userId: user.id,
-          chatId: originalChatId,
+          chat_id: originalChatId,
+          user_id: user.id,
           model: selectedModel
-        })
+        }
       });
       
-      console.log('[AI-RESPONSE] Webhook response status:', webhookResponse.status);
+      console.log('[AI-RESPONSE] Edge function response:', aiResponse);
       
-      if (!webhookResponse.ok) {
-        throw new Error(`Webhook request failed: ${webhookResponse.status}`);
+      if (edgeFunctionError) {
+        console.error('[AI-RESPONSE] Edge function error:', edgeFunctionError);
+        throw new Error(`Edge function error: ${edgeFunctionError.message}`);
       }
-      
-      const aiResponse = await webhookResponse.json();
       console.log('[AI-RESPONSE] Received response from webhook:', { 
         hasResponse: !!aiResponse?.response, 
         hasContent: !!aiResponse?.content, 
@@ -1806,32 +1801,25 @@ export default function Chat() {
         
         // Realtime subscription will handle updating temp message to real message
         
-        // Send to N8n webhook for image generation
-        console.log('[IMAGE-GEN] Calling N8n webhook with prompt:', userMessage);
-        const webhookResponse = await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            type: 'generate_image',
+        // Call Supabase edge function for image generation
+        console.log('[IMAGE-GEN] Calling Supabase edge function with prompt:', userMessage);
+        const { data: webhookResponse, error: edgeFunctionError } = await supabase.functions.invoke('chat-with-ai-optimized', {
+          body: {
             message: userMessage,
-            userId: user.id,
-            chatId: chatId,
+            chat_id: chatId,
+            user_id: user.id,
             model: 'generate-image'
-          })
+          }
         });
         
-        console.log('[IMAGE-GEN] Webhook response status:', webhookResponse.status);
-        console.log('[IMAGE-GEN] Webhook response ok:', webhookResponse.ok);
+        console.log('[IMAGE-GEN] Edge function response:', webhookResponse);
         
-        if (!webhookResponse.ok) {
-          const errorText = await webhookResponse.text();
-          console.error('[IMAGE-GEN] Webhook error response:', errorText);
-          throw new Error(`Webhook request failed: ${webhookResponse.status}`);
+        if (edgeFunctionError) {
+          console.error('[IMAGE-GEN] Edge function error:', edgeFunctionError);
+          throw new Error(`Edge function error: ${edgeFunctionError.message}`);
         }
         
-        const webhookData = await webhookResponse.json();
+        const webhookData = webhookResponse;
         console.log('[IMAGE-GEN] Webhook response data:', webhookData);
         
         // N8n webhook returns {success, message_id, execution_id}
@@ -2158,10 +2146,15 @@ export default function Chat() {
               webhookBody.type = webhookType;
             }
             
-            await fetch('https://adsgbt.app.n8n.cloud/webhook/adamGPT', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(webhookBody)
+            await supabase.functions.invoke('chat-with-ai-optimized', {
+              body: {
+                message: webhookBody.message,
+                chat_id: chatId,
+                user_id: webhookBody.userId,
+                model: webhookBody.model,
+                file_analysis: webhookBody.fileAnalysis,
+                image_context: webhookBody.imageContext
+              }
             });
             console.log('[WEBHOOK] File sent successfully, waiting for AI response via realtime');
             
