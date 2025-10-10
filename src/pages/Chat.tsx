@@ -1087,7 +1087,8 @@ export default function Chat() {
       scrollToBottom();
       
       // Note: For image generation, we still need special handling
-      const aiResponse = await webhookResponse.json();
+      // webhookResponse is already parsed data from supabase.functions.invoke()
+      const aiResponse = webhookResponse;
       if (userModel === 'generate-image' && aiResponse.image_base64) {
         console.log('[REGENERATE] Image generation response received, calling webhook-handler...');
         
