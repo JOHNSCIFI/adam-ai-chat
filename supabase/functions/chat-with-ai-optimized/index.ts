@@ -350,10 +350,46 @@ serve(async (req) => {
         
         responseContent = `I've generated an image for you: "${imagePrompt}"`;
 
+        // CRITICAL: Save assistant message with image to database
+        const imageAttachment = {
+          id: `generated-${Date.now()}`,
+          name: `generated_${Date.now()}.png`,
+          size: 0,
+          type: 'image/png',
+          url: permanentImageUrl || temporaryImageUrl
+        };
+
+        console.log('Saving assistant message with image to database');
+        const { data: assistantImageInsertData, error: assistantImageInsertError } = await supabase
+          .from('messages')
+          .insert({
+            chat_id: chat_id,
+            content: responseContent,
+            role: 'assistant',
+            model: 'generate-image',
+            file_attachments: [imageAttachment] as any
+          })
+          .select()
+          .single();
+
+        if (assistantImageInsertError) {
+          console.error('Error saving assistant message with image:', assistantImageInsertError);
+          throw new Error('Failed to save assistant message with image');
+        }
+
+        console.log('Assistant message with image saved successfully:', assistantImageInsertData.id);
+
+        // Update chat's updated_at timestamp
+        await supabase
+          .from('chats')
+          .update({ updated_at: new Date().toISOString() })
+          .eq('id', chat_id);
+
         return new Response(JSON.stringify({
           type: 'image_generated',
           content: responseContent,
-          image_url: permanentImageUrl || temporaryImageUrl, // Use permanent URL if available, fallback to temp
+          message_id: assistantImageInsertData.id,
+          image_url: permanentImageUrl || temporaryImageUrl,
           prompt: imagePrompt
         }), {
           headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -365,23 +401,55 @@ serve(async (req) => {
       }
     }
 
+    // CRITICAL: Save assistant message to database FIRST before returning
+    console.log('Saving assistant message to database');
+    const { data: assistantInsertData, error: assistantInsertError } = await supabase
+      .from('messages')
+      .insert({
+        chat_id: chat_id,
+        content: responseContent,
+        role: 'assistant',
+        model: model || 'gpt-4o-mini',
+        embedding: null // Will be updated by background process
+      })
+      .select()
+      .single();
+
+    if (assistantInsertError) {
+      console.error('Error saving assistant message:', assistantInsertError);
+      throw new Error('Failed to save assistant message');
+    }
+
+    console.log('Assistant message saved successfully:', assistantInsertData.id);
+
+    // Update chat's updated_at timestamp
+    await supabase
+      .from('chats')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', chat_id);
+
     // Start embedding generation in background (don't wait)
     const embeddingPromise = generateEmbeddingAsync(responseContent);
     
+    // Set up background task to update embedding
+    embeddingPromise.then(embedding => {
+      if (embedding.length > 0) {
+        // Update the message in database with embedding
+        supabase.from('messages').update({
+          embedding: embedding as any
+        }).eq('id', assistantInsertData.id).then(() => {
+          console.log('Embedding generated in background');
+        });
+      }
+    });
+
     // Return response immediately
     const responseData = {
       type: 'text',
       content: responseContent,
+      message_id: assistantInsertData.id,
       embedding: null // Will be updated by background process
     };
-
-    // Set up background task to update embedding
-    embeddingPromise.then(embedding => {
-      if (embedding.length > 0) {
-        // Update the response in database with embedding later
-        console.log('Embedding generated in background');
-      }
-    });
 
     return new Response(JSON.stringify(responseData), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
