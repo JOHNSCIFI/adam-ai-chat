@@ -83,7 +83,7 @@ export default function ChatSidebar({
   
   // Get current plan name
   const currentPlan = subscriptionStatus?.subscribed && subscriptionStatus?.product_id
-    ? productToPlanMap[subscriptionStatus.product_id] || 'Subscribed'
+    ? productToPlanMap[subscriptionStatus.product_id] || 'Pro'
     : 'Free';
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
