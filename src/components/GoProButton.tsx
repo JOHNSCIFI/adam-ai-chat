@@ -6,10 +6,10 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export const GoProButton = () => {
   const navigate = useNavigate();
-  const { subscriptionStatus } = useAuth();
+  const { subscriptionStatus, loadingSubscription } = useAuth();
 
-  // Hide button if user has any subscription
-  if (subscriptionStatus.subscribed) {
+  // Hide button while loading or if user has any subscription
+  if (loadingSubscription || subscriptionStatus.subscribed) {
     return null;
   }
 

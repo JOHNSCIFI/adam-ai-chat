@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   loading: boolean;
+  loadingSubscription: boolean;
   userProfile: any;
   subscriptionStatus: {
     subscribed: boolean;
@@ -27,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   
   // Always start with no subscription - will be checked via Stripe API
@@ -103,14 +105,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Separate effect for subscription checks when user changes
   useEffect(() => {
-    let subscriptionCheckInterval: NodeJS.Timeout | null = null;
     let realtimeChannel: any = null;
     
     if (user) {
       // Check subscription immediately via Stripe API
       checkSubscription();
       
-      // Set up realtime listener for webhook updates
+      // Set up realtime listener for webhook updates - this is the primary update mechanism
       realtimeChannel = supabase
         .channel(`user-subscription-${user.id}`)
         .on(
@@ -161,19 +162,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         checkWithRetries();
       }
-      
-      // Periodic check via Stripe API - every 60 seconds
-      subscriptionCheckInterval = setInterval(() => {
-        if (!isCheckingSubscription) {
-          checkSubscription();
-        }
-      }, 60000);
+    } else {
+      // User signed out
+      setLoadingSubscription(false);
     }
 
     return () => {
-      if (subscriptionCheckInterval) {
-        clearInterval(subscriptionCheckInterval);
-      }
       if (realtimeChannel) {
         supabase.removeChannel(realtimeChannel);
       }
@@ -299,19 +293,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           product_id: null,
           subscription_end: null
         });
+        setLoadingSubscription(false);
       }
       return;
     }
 
     setIsCheckingSubscription(true);
+    setLoadingSubscription(true);
     try {
-      // ALWAYS check with Stripe API - it's the source of truth
+      // Check with Stripe API - source of truth
       console.log('🔍 Checking subscription via Stripe API...');
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('❌ Error checking subscription with Stripe:', error);
-        // On error, keep current state
+        // On error, assume no subscription for safety
+        setSubscriptionStatus({
+          subscribed: false,
+          product_id: null,
+          subscription_end: null
+        });
       } else if (data) {
         const newStatus = {
           subscribed: data.subscribed || false,
@@ -319,22 +320,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_end: data.subscription_end || null
         };
         
-        const hasChanged = 
-          newStatus.subscribed !== subscriptionStatus.subscribed ||
-          newStatus.product_id !== subscriptionStatus.product_id ||
-          newStatus.subscription_end !== subscriptionStatus.subscription_end;
-        
-        if (hasChanged) {
-          console.log('✅ Subscription status updated from Stripe:', newStatus);
-          setSubscriptionStatus(newStatus);
-        } else {
-          console.log('ℹ️ Subscription status unchanged');
-        }
+        console.log('✅ Subscription status updated from Stripe:', newStatus);
+        setSubscriptionStatus(newStatus);
       }
     } catch (error) {
       console.error('❌ Error checking subscription:', error);
+      setSubscriptionStatus({
+        subscribed: false,
+        product_id: null,
+        subscription_end: null
+      });
     } finally {
       setIsCheckingSubscription(false);
+      setLoadingSubscription(false);
     }
   };
 
@@ -356,6 +354,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user,
     session,
     loading,
+    loadingSubscription,
     userProfile,
     subscriptionStatus,
     checkSubscription,
