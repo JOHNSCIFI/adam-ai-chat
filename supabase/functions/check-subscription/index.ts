@@ -12,6 +12,12 @@ const logStep = (step: string, details?: any) => {
   console.log(`[CHECK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
+// Product ID to plan name mapping
+const productToPlanMap: { [key: string]: string } = {
+  'prod_RrCXJVxkfxu4Bq': 'Pro',
+  'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+};
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -19,7 +25,8 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
   );
 
   try {
@@ -46,7 +53,14 @@ serve(async (req) => {
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     
     if (customers.data.length === 0) {
-      logStep("No customer found, returning unsubscribed state");
+      logStep("No customer found, updating unsubscribed state");
+      
+      // Delete any existing subscription record
+      await supabaseClient
+        .from('user_subscriptions')
+        .delete()
+        .eq('user_id', user.id);
+      
       return new Response(JSON.stringify({ 
         subscribed: false,
         product_id: null,
@@ -68,15 +82,68 @@ serve(async (req) => {
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
+    let subscriptionId = null;
 
     if (hasActiveSub) {
       const subscription = subscriptions.data[0];
-      subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-      logStep("Active subscription found", { subscriptionId: subscription.id, endDate: subscriptionEnd });
-      productId = subscription.items.data[0].price.product;
-      logStep("Determined product ID", { productId });
+      subscriptionId = subscription.id;
+      
+      // Safely handle the date conversion
+      try {
+        if (subscription.current_period_end) {
+          subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
+          logStep("Active subscription found", { 
+            subscriptionId: subscription.id, 
+            endDate: subscriptionEnd,
+            currentPeriodEnd: subscription.current_period_end 
+          });
+        } else {
+          logStep("Warning: subscription has no current_period_end", { subscriptionId: subscription.id });
+        }
+      } catch (dateError) {
+        logStep("ERROR converting date", { 
+          error: dateError.message,
+          currentPeriodEnd: subscription.current_period_end 
+        });
+        // Continue without the date if conversion fails
+      }
+      
+      productId = subscription.items.data[0].price.product as string;
+      const planName = productToPlanMap[productId] || 'Unknown';
+      logStep("Determined product ID", { productId, planName });
+      
+      // Save/update subscription in database
+      try {
+        const { error: upsertError } = await supabaseClient
+          .from('user_subscriptions')
+          .upsert({
+            user_id: user.id,
+            stripe_customer_id: customerId,
+            stripe_subscription_id: subscriptionId,
+            product_id: productId,
+            plan_name: planName,
+            status: 'active',
+            current_period_end: subscriptionEnd
+          }, {
+            onConflict: 'user_id'
+          });
+        
+        if (upsertError) {
+          logStep("ERROR upserting subscription to DB", { error: upsertError.message });
+        } else {
+          logStep("Successfully saved subscription to DB");
+        }
+      } catch (dbError) {
+        logStep("ERROR saving to DB", { error: dbError.message });
+      }
     } else {
       logStep("No active subscription found");
+      
+      // Delete any existing subscription record
+      await supabaseClient
+        .from('user_subscriptions')
+        .delete()
+        .eq('user_id', user.id);
     }
 
     return new Response(JSON.stringify({

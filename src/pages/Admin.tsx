@@ -234,8 +234,16 @@ export default function Admin() {
       } = await supabase.from('profiles').select('user_id, email, display_name').in('user_id', userIds);
       if (profilesError) throw profilesError;
 
-      // Create a map of user_id to profile
+      // Fetch subscription data for these users
+      const {
+        data: subscriptionsData,
+        error: subscriptionsError
+      } = await supabase.from('user_subscriptions').select('*').in('user_id', userIds);
+      if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
+
+      // Create a map of user_id to profile and subscription
       const profilesMap = new Map(profilesData?.map(profile => [profile.user_id, profile]) || []);
+      const subscriptionsMap = new Map(subscriptionsData?.map(sub => [sub.user_id, sub]) || []);
 
       // Aggregate by user and model
       const userMap = new Map<string, UserTokenUsage>();
@@ -243,6 +251,7 @@ export default function Admin() {
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
         const profile = profilesMap.get(userId);
+        const subscription = subscriptionsMap.get(userId);
         const inputTokens = usage.input_tokens || 0;
         const outputTokens = usage.output_tokens || 0;
         const model = usage.model;
@@ -254,7 +263,12 @@ export default function Admin() {
             user_id: userId,
             email: profile?.email || 'Unknown',
             display_name: profile?.display_name || 'Unknown User',
-            model_usages: []
+            model_usages: [],
+            subscription_status: subscription ? {
+              subscribed: subscription.status === 'active',
+              product_id: subscription.product_id,
+              subscription_end: subscription.current_period_end
+            } : undefined
           });
         }
         const userUsage = userMap.get(userId)!;
@@ -297,32 +311,8 @@ export default function Admin() {
 
   // Fetch subscription status for a specific user
   const fetchUserSubscription = async (userId: string) => {
-    setLoadingSubscription(true);
-    try {
-      // TODO: Create an admin-specific edge function to fetch user subscriptions
-      // For now, this is a placeholder that shows "Free Plan" for all users
-      // You'll need to create an admin endpoint that:
-      // 1. Verifies the caller is an admin
-      // 2. Fetches the target user's email
-      // 3. Queries Stripe for their subscription status
-      
-      setLoadingSubscription(false);
-      
-      // Placeholder - mark all users as free plan for now
-      if (selectedUser) {
-        setSelectedUser({
-          ...selectedUser,
-          subscription_status: {
-            subscribed: false,
-            product_id: null,
-            subscription_end: null
-          }
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching subscription:', error);
-      setLoadingSubscription(false);
-    }
+    // Subscription is already loaded from database, no need to fetch again
+    setLoadingSubscription(false);
   };
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">

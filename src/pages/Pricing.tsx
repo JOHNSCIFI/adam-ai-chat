@@ -27,13 +27,20 @@ const Pricing = () => {
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     if (searchParams.get('success') === 'true' && user) {
+      console.log('[PRICING] Success param detected, checking subscription...');
       // Wait a bit for Stripe webhook to process
       setTimeout(() => {
+        console.log('[PRICING] Calling checkSubscription...');
         checkSubscription();
         toast.success('Subscription activated successfully!');
       }, 2000);
     }
   }, [location.search, user, checkSubscription]);
+
+  // Debug: Log subscription status changes
+  useEffect(() => {
+    console.log('[PRICING] Subscription status updated:', subscriptionStatus);
+  }, [subscriptionStatus]);
   const plans = [{
     name: "Free",
     emoji: "🆓",
