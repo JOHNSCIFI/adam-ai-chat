@@ -157,8 +157,8 @@ export default function PricingPlans() {
     
     try {
       const priceIds = {
-        'pro': 'price_1SH1MWL8Zm4LqDn4q9te9FxZ',
-        'ultra_pro': 'price_1SH1MjL8Zm4LqDn40swOy4Ar'
+        'pro': 'price_1SH1g3L8Zm4LqDn4WSyw1BzA',
+        'ultra_pro': 'price_1SH1gHL8Zm4LqDn4wDQIGntf'
       };
       
       const priceId = priceIds[plan];
