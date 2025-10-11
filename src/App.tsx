@@ -28,6 +28,7 @@ import HelpCenter from '@/pages/HelpCenter';
 import RefundPolicy from '@/pages/RefundPolicy';
 import CancelSubscription from '@/pages/CancelSubscription';
 import Admin from '@/pages/Admin';
+import { SubscriptionCheckingOverlay } from '@/components/SubscriptionCheckingOverlay';
 
 const queryClient = new QueryClient();
 
@@ -36,7 +37,8 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <ThemeProvider>
+      <ThemeProvider>
+            <SubscriptionCheckingOverlay />
             <Router>
                 <Routes>
                   {/* Root route - shows Chat */}

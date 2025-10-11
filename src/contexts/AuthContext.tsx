@@ -185,26 +185,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let subscriptionCheckInterval: NodeJS.Timeout | null = null;
     
     if (user) {
-      // Check for returning from Stripe (do this first, with slight delay for webhook)
+      // Check for returning from Stripe
       const urlParams = new URLSearchParams(window.location.search);
-      const isReturningFromStripe = urlParams.has('session_id') || urlParams.has('success');
+      const sessionId = urlParams.get('session_id');
+      const isReturningFromStripe = sessionId || urlParams.has('success');
       
       if (isReturningFromStripe) {
-        // Wait for webhook to process, then check once
-        setTimeout(() => {
-          checkSubscription(false);
-        }, 2000);
+        console.log('🔄 Detected return from Stripe, checking subscription...');
+        
+        // Function to check subscription with retries
+        const checkWithRetries = async (attempt = 1, maxAttempts = 4) => {
+          console.log(`🔍 Subscription check attempt ${attempt}/${maxAttempts}`);
+          
+          // Wait longer on first attempt for webhook to process
+          const delay = attempt === 1 ? 3000 : 2000;
+          await new Promise(resolve => setTimeout(resolve, delay));
+          
+          await checkSubscription(false);
+          
+          // Check if subscription was updated
+          const currentStatus = JSON.parse(localStorage.getItem('subscription_status') || '{"subscribed":false}');
+          
+          if (currentStatus.subscribed) {
+            console.log('✅ Subscription confirmed!');
+            // Clean up URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else if (attempt < maxAttempts) {
+            console.log(`⏳ Subscription not updated yet, retrying in ${delay}ms...`);
+            checkWithRetries(attempt + 1, maxAttempts);
+          } else {
+            console.log('⚠️ Max retry attempts reached');
+            // Clean up URL anyway
+            window.history.replaceState({}, document.title, window.location.pathname);
+          }
+        };
+        
+        checkWithRetries();
       } else {
         // Normal initial check
         checkSubscription(false);
       }
       
-      // Periodic check (silently in background) - every 5 minutes to avoid excessive checks
+      // Periodic check (silently in background) - every 5 minutes
       subscriptionCheckInterval = setInterval(() => {
         if (!isCheckingSubscription) {
           checkSubscription(false);
         }
-      }, 300000); // Check every 5 minutes (300 seconds)
+      }, 300000); // Check every 5 minutes
     }
 
     return () => {
