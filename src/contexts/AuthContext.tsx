@@ -116,18 +116,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   useEffect(() => {
-    
     // Handle auth callback from email verification
     const handleAuthCallback = async () => {
       const { data, error } = await supabase.auth.getSession();
-      if (!error) {
+      if (!error && data.session) {
         setSession(data.session);
-        setUser(data.session?.user ?? null);
+        setUser(data.session.user);
       }
       setLoading(false);
     };
     
-    // Set up auth state listener
+    // Set up auth state listener - ONLY ONCE on mount
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         // CRITICAL: Only synchronous state updates here to prevent auth loops
@@ -156,7 +155,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Initial session check and auth callback handling
     handleAuthCallback();
 
-    // Set up periodic subscription check (every 60 seconds)
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []); // Empty dependency array - only run once on mount
+
+  // Separate effect for subscription checks when user changes
+  useEffect(() => {
     let subscriptionCheckInterval: NodeJS.Timeout | null = null;
     
     if (user) {
@@ -176,19 +181,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       // Periodic check (silently in background) - every 5 minutes to avoid excessive checks
       subscriptionCheckInterval = setInterval(() => {
-        if (user && !isCheckingSubscription) {
+        if (!isCheckingSubscription) {
           checkSubscription(false);
         }
       }, 300000); // Check every 5 minutes (300 seconds)
     }
 
     return () => {
-      subscription.unsubscribe();
       if (subscriptionCheckInterval) {
         clearInterval(subscriptionCheckInterval);
       }
     };
-  }, [user]);
+  }, [user?.id]); // Only depend on user ID, not the entire user object
 
   // Separate effect to handle profile fetching/creation when user changes
   useEffect(() => {
