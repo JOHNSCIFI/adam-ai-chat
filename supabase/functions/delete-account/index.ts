@@ -64,12 +64,10 @@ serve(async (req) => {
       });
       
       if (storageError) {
-        console.error('Error deleting user images from storage:', storageError);
-      } else {
-        console.log('Successfully deleted all user images from storage');
+        console.error('Storage cleanup error occurred');
       }
     } catch (storageError) {
-      console.error('Error invoking delete-all-user-images:', storageError);
+      console.error('Storage cleanup failed');
       // Continue with account deletion even if storage cleanup fails
     }
 
@@ -80,7 +78,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
 
     if (tokenError) {
-      console.error('Error deleting token usage:', tokenError)
+      console.error('Token usage deletion error occurred');
     }
 
     // Delete user data (profiles, chats, messages will be handled by cascading)
@@ -90,7 +88,7 @@ serve(async (req) => {
       .eq('user_id', user.id)
 
     if (profileError) {
-      console.error('Error deleting profile:', profileError)
+      console.error('Profile deletion error occurred');
     }
 
     // Delete user's chats (messages will be cascade deleted)
@@ -100,14 +98,14 @@ serve(async (req) => {
       .eq('user_id', user.id)
 
     if (chatsError) {
-      console.error('Error deleting chats:', chatsError)
+      console.error('Chat deletion error occurred');
     }
 
     // Finally, delete the user from auth
     const { error: deleteError } = await supabaseAdmin.auth.admin.deleteUser(user.id)
     
     if (deleteError) {
-      console.error('Failed to delete user:', deleteError)
+      console.error('User deletion failed');
       throw new Error('Account deletion failed')
     }
 
@@ -119,8 +117,8 @@ serve(async (req) => {
       },
     )
   } catch (error) {
-    console.error('Error deleting account:', error)
     const requestId = crypto.randomUUID();
+    console.error('Account deletion failed', { requestId });
     return new Response(
       JSON.stringify({ 
         error: 'Unable to process request',

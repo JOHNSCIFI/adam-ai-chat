@@ -205,8 +205,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Use production domain for all redirects
     const redirectUrl = 'https://chatl.ai/';
     
-    console.log('🔐 Sign up attempt with redirect URL:', redirectUrl);
-    
     const { error, data } = await supabase.auth.signUp({
       email,
       password,

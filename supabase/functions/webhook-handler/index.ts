@@ -40,12 +40,7 @@ function sanitizeContent(content: string): string {
 }
 
 serve(async (req) => {
-  console.log('[WEBHOOK-HANDLER] ===== NEW REQUEST =====');
-  console.log('[WEBHOOK-HANDLER] Request received:', req.method);
-  console.log('[WEBHOOK-HANDLER] Request URL:', req.url);
-
   if (req.method === 'OPTIONS') {
-    console.log('[WEBHOOK-HANDLER] OPTIONS request - returning CORS headers');
     return new Response(null, { headers: corsHeaders });
   }
 
@@ -58,20 +53,17 @@ serve(async (req) => {
     );
 
     let rawBody = await req.json();
-    console.log('[WEBHOOK-HANDLER] ===== RAW REQUEST BODY =====');
-    console.log('[WEBHOOK-HANDLER] Raw body type:', Array.isArray(rawBody) ? 'Array' : typeof rawBody);
     
     // Handle N8n sending array format: [{ body: { chatId: "..." }, image_base64: "..." }]
     let body = rawBody;
     if (Array.isArray(rawBody) && rawBody.length > 0) {
-      console.log('[WEBHOOK-HANDLER] Detected array format, extracting first element');
       body = rawBody[0];
     }
     
     // Validate input with zod
     const validationResult = webhookSchema.safeParse(body);
     if (!validationResult.success) {
-      console.error('[WEBHOOK-HANDLER] Validation failed:', validationResult.error.errors);
+      console.error('Webhook validation failed', { requestId });
       return new Response(
         JSON.stringify({ error: 'Invalid request data', requestId }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -79,10 +71,6 @@ serve(async (req) => {
     }
 
     body = validationResult.data;
-    
-    console.log('[WEBHOOK-HANDLER] Body keys:', Object.keys(body));
-    console.log('[WEBHOOK-HANDLER] Has body.body?', !!body.body);
-    console.log('[WEBHOOK-HANDLER] Has body.image_base64?', !!body.image_base64);
 
     // Handle N8n structure: { body: { chatId: "..." }, image_base64: "..." }
     const chat_id = body.body?.chatId || body.chat_id || body.chatId;
@@ -90,13 +78,6 @@ serve(async (req) => {
     const image_base64 = body.image_base64;
     const response_data = body.response_data || body.response || body.text || body.content;
     const model = body.model || body.body?.model || body.type; // Extract model from request
-
-    console.log('[WEBHOOK-HANDLER] ===== EXTRACTED VALUES =====');
-    console.log('[WEBHOOK-HANDLER] chat_id:', chat_id);
-    console.log('[WEBHOOK-HANDLER] user_id:', user_id);
-    console.log('[WEBHOOK-HANDLER] model:', model);
-    console.log('[WEBHOOK-HANDLER] Has image_base64?', !!image_base64);
-    console.log('[WEBHOOK-HANDLER] Has response_data?', !!response_data);
 
     if (!chat_id) {
       console.error('[WEBHOOK-HANDLER] ERROR: Missing chat_id');
