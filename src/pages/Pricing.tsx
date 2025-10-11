@@ -8,6 +8,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import AuthModal from '@/components/AuthModal';
+import { supabase } from '@/integrations/supabase/client';
 
 const Pricing = () => {
   const navigate = useNavigate();
@@ -113,7 +114,7 @@ const Pricing = () => {
     return Math.round((plan.price - plan.yearlyPrice) / plan.price * 100);
   };
 
-  const handleSubscribe = (plan: typeof plans[0]) => {
+  const handleSubscribe = async (plan: typeof plans[0]) => {
     if (plan.price === 0) {
       navigate('/chat');
       return;
@@ -124,7 +125,40 @@ const Pricing = () => {
       return;
     }
     
-    toast.info('Subscription feature coming soon!');
+    try {
+      // Map plan to price ID
+      const priceIds = {
+        'Pro': 'price_1SH1MWL8Zm4LqDn4q9te9FxZ',
+        'Ultra Pro': 'price_1SH1MjL8Zm4LqDn40swOy4Ar'
+      };
+      
+      const priceId = priceIds[plan.name as keyof typeof priceIds];
+      
+      if (!priceId) {
+        toast.error('Invalid plan selected');
+        return;
+      }
+      
+      toast.loading('Redirecting to checkout...');
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId }
+      });
+      
+      if (error) {
+        toast.error('Failed to create checkout session');
+        console.error('Checkout error:', error);
+        return;
+      }
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Opening checkout in new tab...');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
+    }
   };
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       

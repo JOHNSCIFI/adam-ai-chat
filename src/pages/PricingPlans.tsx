@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AuthModal from '@/components/AuthModal';
+import { supabase } from '@/integrations/supabase/client';
 
 interface PlanFeature {
   name: string;
@@ -147,13 +148,40 @@ export default function PricingPlans() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const handleSubscribe = (plan: 'pro' | 'ultra_pro') => {
+  const handleSubscribe = async (plan: 'pro' | 'ultra_pro') => {
     if (!user) {
       setShowAuthModal(true);
       return;
     }
     
-    toast.info('Subscription feature coming soon!');
+    try {
+      const priceIds = {
+        'pro': 'price_1SH1MWL8Zm4LqDn4q9te9FxZ',
+        'ultra_pro': 'price_1SH1MjL8Zm4LqDn40swOy4Ar'
+      };
+      
+      const priceId = priceIds[plan];
+      
+      toast.loading('Redirecting to checkout...');
+      
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId }
+      });
+      
+      if (error) {
+        toast.error('Failed to create checkout session');
+        console.error('Checkout error:', error);
+        return;
+      }
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Opening checkout in new tab...');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
+    }
   };
 
   const getPricing = (plan: 'pro' | 'ultra_pro') => {

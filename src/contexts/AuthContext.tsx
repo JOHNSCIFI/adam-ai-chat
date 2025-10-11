@@ -7,6 +7,12 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   userProfile: any;
+  subscriptionStatus: {
+    subscribed: boolean;
+    product_id: string | null;
+    subscription_end: string | null;
+  };
+  checkSubscription: () => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ error: any }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -22,6 +28,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [subscriptionStatus, setSubscriptionStatus] = useState({
+    subscribed: false,
+    product_id: null,
+    subscription_end: null
+  });
 
   useEffect(() => {
     
@@ -117,11 +128,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 setUserProfile(existingProfile);
               }
             }
+            
+            // Check subscription status after sign in
+            setTimeout(async () => {
+              try {
+                const { data: subData } = await supabase.functions.invoke('check-subscription');
+                if (subData) {
+                  setSubscriptionStatus({
+                    subscribed: subData.subscribed || false,
+                    product_id: subData.product_id || null,
+                    subscription_end: subData.subscription_end || null
+                  });
+                }
+              } catch (error) {
+                console.error('Error checking subscription:', error);
+              }
+            }, 500);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
           setUserProfile(null);
+          setSubscriptionStatus({
+            subscribed: false,
+            product_id: null,
+            subscription_end: null
+          });
         }
         setLoading(false);
       }
@@ -256,8 +288,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
+  const checkSubscription = async () => {
+    if (!user) {
+      setSubscriptionStatus({
+        subscribed: false,
+        product_id: null,
+        subscription_end: null
+      });
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase.functions.invoke('check-subscription');
+      
+      if (error) {
+        console.error('Error checking subscription:', error);
+        return;
+      }
+      
+      if (data) {
+        setSubscriptionStatus({
+          subscribed: data.subscribed || false,
+          product_id: data.product_id || null,
+          subscription_end: data.subscription_end || null
+        });
+      }
+    } catch (error) {
+      console.error('Error checking subscription:', error);
+    }
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
+    setSubscriptionStatus({
+      subscribed: false,
+      product_id: null,
+      subscription_end: null
+    });
     // Force page refresh after sign out
     window.location.href = '/';
   };
@@ -267,6 +334,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     session,
     loading,
     userProfile,
+    subscriptionStatus,
+    checkSubscription,
     signUp,
     signIn,
     signInWithGoogle,
