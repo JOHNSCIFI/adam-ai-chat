@@ -2396,7 +2396,8 @@ export default function Chat() {
           const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
           
           if (tempWasProcessed) {
-            console.log('[TEXT-MESSAGE] Temp was processed by AUTO-TRIGGER, marking real message as processed');
+            console.log('[TEXT-MESSAGE] ✅ Temp was processed by AUTO-TRIGGER, marking real message as processed');
+            console.log('[TEXT-MESSAGE] ✅ NOT triggering AI response again - AUTO-TRIGGER already sent webhook for temp message');
             // Mark real message as processed since temp was already processed
             if (!processedUserMessages.current.has(chatId)) {
               processedUserMessages.current.set(chatId, new Set());
@@ -2408,10 +2409,8 @@ export default function Chat() {
             const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
             sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
             
-            // CRITICAL: Since we marked temp as processed during auto-send to prevent AUTO-TRIGGER,
-            // we need to manually trigger AI response now with the REAL database ID
-            console.log('[TEXT-MESSAGE] Triggering AI response with real message ID:', insertedMessage.id);
-            triggerAIResponse(userMessage, insertedMessage.id);
+            // DO NOT call triggerAIResponse here - AUTO-TRIGGER already called it for the temp message
+            // The webhook was sent with the temp message ID, which gets replaced in the backend
           } else {
             console.log('[TEXT-MESSAGE] Temp was NOT processed, letting AUTO-TRIGGER handle the real message');
             // Don't mark as processed - let AUTO-TRIGGER handle the real message
