@@ -1642,6 +1642,20 @@ export default function Chat() {
   const sendMessage = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     
+    // Check if user is trying to use a pro model without subscription
+    if (!subscriptionStatus.subscribed && selectedModel !== 'gpt-4o-mini') {
+      const selectedModelData = models.find(m => m.id === selectedModel);
+      if (selectedModelData?.type === 'pro') {
+        toast.error("This model requires a Pro or Ultra Pro subscription", {
+          action: {
+            label: "Upgrade",
+            onClick: () => window.location.href = '/pricing'
+          }
+        });
+        return;
+      }
+    }
+    
     console.log('[SEND-START] ===== SEND MESSAGE CALLED =====');
     console.log('[SEND-START] Chat ID:', chatId);
     console.log('[SEND-START] Input:', input?.substring(0, 50));
@@ -3324,10 +3338,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                {models.map(model => {
+                {models
+                  .filter(model => subscriptionStatus.subscribed || model.type === 'free')
+                  .map(model => {
                   const modelData = availableModels.find(m => m.id === model.id);
                   return (
-                     <SelectItem 
+                     <SelectItem
                       key={model.id} 
                       value={model.id} 
                       className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
@@ -3934,7 +3950,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </SelectValue>
                       </SelectTrigger>
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
-                           {models.map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
+                           {models
+                             .filter(model => subscriptionStatus.subscribed || model.type === 'free')
+                             .map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
                                 <div className="flex items-center w-full gap-2">
                                    <div className="relative flex-shrink-0">
                                       {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
