@@ -31,3 +31,7 @@ verify_jwt = false
 # Keep public for internal service calls (called by other edge functions)
 [functions.save-token-usage]
 verify_jwt = false
+
+# User-facing TTS function requires authentication
+[functions.text-to-speech-voice-mode]
+verify_jwt = true
