@@ -336,11 +336,12 @@ const Pricing = () => {
                   <Button 
                     className={`w-full h-12 text-lg font-semibold ${
                       plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''
-                    } ${productToPlanMap[subscriptionStatus.product_id || ''] === plan.name ? 'border-2 border-primary' : ''}`} 
+                    } ${subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === plan.name ? 'border-2 border-primary bg-primary/10' : ''}`} 
                     variant={plan.buttonVariant} 
                     onClick={() => handleSubscribe(plan)}
+                    disabled={subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === plan.name}
                   >
-                    {productToPlanMap[subscriptionStatus.product_id || ''] === plan.name 
+                    {subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === plan.name
                       ? '✓ Current Plan' 
                       : plan.buttonText + (plan.price > 0 ? ' →' : '')}
                   </Button>

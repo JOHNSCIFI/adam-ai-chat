@@ -179,8 +179,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
 
-    return () => subscription.unsubscribe();
-  }, []);
+    // Set up periodic subscription check (every 60 seconds)
+    let subscriptionCheckInterval: NodeJS.Timeout | null = null;
+    
+    if (user) {
+      // Initial check
+      checkSubscription();
+      
+      // Periodic check
+      subscriptionCheckInterval = setInterval(() => {
+        if (user) {
+          checkSubscription();
+        }
+      }, 60000); // Check every 60 seconds
+    }
+
+    // Check for returning from Stripe checkout/portal
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('session_id') || urlParams.get('checkout') === 'success') {
+      setTimeout(() => {
+        checkSubscription();
+      }, 2000);
+    }
+
+    return () => {
+      subscription.unsubscribe();
+      if (subscriptionCheckInterval) {
+        clearInterval(subscriptionCheckInterval);
+      }
+    };
+  }, [user]);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
     // Use production domain for all redirects

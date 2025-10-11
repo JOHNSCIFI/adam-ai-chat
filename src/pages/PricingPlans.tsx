@@ -148,6 +148,12 @@ export default function PricingPlans() {
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [showAuthModal, setShowAuthModal] = useState(false);
 
+  // Product ID to plan name mapping
+  const productToPlanMap: { [key: string]: string } = {
+    'prod_RrCXJVxkfxu4Bq': 'Pro',
+    'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+  };
+
   const handleSubscribe = async (plan: 'pro' | 'ultra_pro') => {
     if (!user) {
       setShowAuthModal(true);
@@ -332,8 +338,11 @@ export default function PricingPlans() {
             <Button 
               onClick={() => handleSubscribe('pro')}
               className="w-full mb-6 bg-primary hover:bg-primary/90"
+              disabled={subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === 'Pro'}
             >
-              Subscribe
+              {subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === 'Pro' 
+                ? '✓ Current Plan'
+                : 'Subscribe'}
             </Button>
 
             <div className="space-y-4">
@@ -393,8 +402,11 @@ export default function PricingPlans() {
             <Button 
               onClick={() => handleSubscribe('ultra_pro')}
               className="w-full mb-6 bg-primary hover:bg-primary/90"
+              disabled={subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === 'Ultra Pro'}
             >
-              Subscribe
+              {subscriptionStatus.product_id && productToPlanMap[subscriptionStatus.product_id] === 'Ultra Pro'
+                ? '✓ Current Plan'
+                : 'Subscribe'}
             </Button>
 
             <div className="space-y-4">
