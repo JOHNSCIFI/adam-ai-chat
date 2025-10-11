@@ -35,6 +35,86 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
+  // Fetch and create/update user profile - defined once and reused
+  const fetchUserProfile = async (userId: string, userSession: any) => {
+    try {
+      // Determine signup method from session or user metadata
+      let signupMethod = 'email';
+      if (userSession.user.app_metadata?.provider === 'google' || 
+          userSession.user.user_metadata?.provider === 'google' ||
+          userSession.user.identities?.some((id: any) => id.provider === 'google')) {
+        signupMethod = 'google';
+      } else if (userSession.user.app_metadata?.provider === 'apple' || 
+          userSession.user.user_metadata?.provider === 'apple' ||
+          userSession.user.identities?.some((id: any) => id.provider === 'apple')) {
+        signupMethod = 'apple';
+      }
+
+      // Check if profile exists
+      const { data: existingProfile, error: fetchError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (!existingProfile && !fetchError) {
+        // Create new profile
+        const profileData: any = {
+          user_id: userId,
+          email: userSession.user.email,
+          signup_method: signupMethod
+        };
+        
+        if (signupMethod === 'google') {
+          profileData.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
+          profileData.avatar_url = userSession.user.user_metadata?.avatar_url;
+        } else if (signupMethod === 'apple') {
+          profileData.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
+          profileData.avatar_url = userSession.user.user_metadata?.avatar_url;
+        } else {
+          profileData.display_name = userSession.user.user_metadata?.display_name || userSession.user.email?.split('@')[0];
+        }
+        
+        await supabase
+          .from('profiles')
+          .insert(profileData);
+        
+        setUserProfile(profileData);
+      } else if (existingProfile) {
+        // Update existing profile if needed
+        const updates: any = {};
+        
+        // Update signup method if not set
+        if (!existingProfile.signup_method) {
+          updates.signup_method = signupMethod;
+        }
+        
+        // Update display name and avatar for Google and Apple users
+        if (signupMethod === 'google' || signupMethod === 'apple') {
+          if (!existingProfile.display_name || existingProfile.display_name !== userSession.user.user_metadata?.full_name) {
+            updates.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
+          }
+          if (!existingProfile.avatar_url || existingProfile.avatar_url !== userSession.user.user_metadata?.avatar_url) {
+            updates.avatar_url = userSession.user.user_metadata?.avatar_url;
+          }
+        }
+        
+        if (Object.keys(updates).length > 0) {
+          await supabase
+            .from('profiles')
+            .update(updates)
+            .eq('user_id', userId);
+            
+          setUserProfile({ ...existingProfile, ...updates });
+        } else {
+          setUserProfile(existingProfile);
+        }
+      }
+    } catch (error) {
+      // Silently fail
+    }
+  };
+
   useEffect(() => {
     
     // Handle auth callback from email verification
@@ -49,92 +129,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-          // Handle email confirmation
-          if (event === 'SIGNED_IN' && session) {
-            setSession(session);
-            setUser(session.user);
-            
-            // Check if this is a new user and create/update profile
-            setTimeout(async () => {
-              // Determine signup method from session or user metadata
-              let signupMethod = 'email';
-              if (session.user.app_metadata?.provider === 'google' || 
-                  session.user.user_metadata?.provider === 'google' ||
-                  session.user.identities?.some(id => id.provider === 'google')) {
-                signupMethod = 'google';
-              } else if (session.user.app_metadata?.provider === 'apple' || 
-                  session.user.user_metadata?.provider === 'apple' ||
-                  session.user.identities?.some(id => id.provider === 'apple')) {
-                signupMethod = 'apple';
-              }
-            
-            // Check if profile exists
-            const { data: existingProfile, error: fetchError } = await supabase
-              .from('profiles')
-              .select('*')
-              .eq('user_id', session.user.id)
-              .single();
-            
-            if (!existingProfile && !fetchError) {
-              // Create new profile
-              const profileData: any = {
-                user_id: session.user.id,
-                email: session.user.email,
-                signup_method: signupMethod
-              };
-              
-              if (signupMethod === 'google') {
-                profileData.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
-                profileData.avatar_url = session.user.user_metadata?.avatar_url;
-              } else if (signupMethod === 'apple') {
-                profileData.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
-                profileData.avatar_url = session.user.user_metadata?.avatar_url;
-              } else {
-                profileData.display_name = session.user.user_metadata?.display_name || session.user.email?.split('@')[0];
-              }
-              
-              await supabase
-                .from('profiles')
-                .insert(profileData);
-              
-              setUserProfile(profileData);
-            } else if (existingProfile) {
-              // Update existing profile if needed
-              const updates: any = {};
-              
-              // Update signup method if not set
-              if (!existingProfile.signup_method) {
-                updates.signup_method = signupMethod;
-              }
-              
-              // Update display name and avatar for Google and Apple users
-              if (signupMethod === 'google' || signupMethod === 'apple') {
-                if (!existingProfile.display_name || existingProfile.display_name !== session.user.user_metadata?.full_name) {
-                  updates.display_name = session.user.user_metadata?.full_name || session.user.email?.split('@')[0];
-                }
-                if (!existingProfile.avatar_url || existingProfile.avatar_url !== session.user.user_metadata?.avatar_url) {
-                  updates.avatar_url = session.user.user_metadata?.avatar_url;
-                }
-              }
-              
-              if (Object.keys(updates).length > 0) {
-                await supabase
-                  .from('profiles')
-                  .update(updates)
-                  .eq('user_id', session.user.id);
-                  
-                setUserProfile({ ...existingProfile, ...updates });
-              } else {
-                setUserProfile(existingProfile);
-              }
-            }
-            
-            // Check subscription status after sign in (no notification)
-            setTimeout(() => {
-              checkSubscription(false);
-            }, 500);
-          }, 0);
+      (event, session) => {
+        // CRITICAL: Only synchronous state updates here to prevent auth loops
+        if (event === 'SIGNED_IN' && session) {
+          setSession(session);
+          setUser(session.user);
+          
+          // Defer subscription check to avoid auth loop
+          setTimeout(() => {
+            checkSubscription(false);
+          }, 500);
         } else if (event === 'SIGNED_OUT') {
           setSession(null);
           setUser(null);
@@ -151,23 +155,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Initial session check and auth callback handling
     handleAuthCallback();
-
-    // Fetch user profile for existing sessions
-    const fetchUserProfile = async (userId: string) => {
-      try {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
-        
-        if (!error && data) {
-          setUserProfile(data);
-        }
-      } catch (error) {
-        // Silently fail
-      }
-    };
 
     // Set up periodic subscription check (every 60 seconds)
     let subscriptionCheckInterval: NodeJS.Timeout | null = null;
@@ -202,6 +189,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, [user]);
+
+  // Separate effect to handle profile fetching/creation when user changes
+  useEffect(() => {
+    if (user && session) {
+      fetchUserProfile(user.id, session);
+    }
+  }, [user?.id]); // Only run when user ID changes
 
   const signUp = async (email: string, password: string, displayName?: string) => {
     // Use production domain for all redirects

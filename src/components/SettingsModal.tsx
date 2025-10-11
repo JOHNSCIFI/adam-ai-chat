@@ -644,7 +644,11 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold mb-1 text-sm md:text-base">Current Plan</h3>
                       <p className="text-lg md:text-xl font-bold text-primary mb-2">
-                        {subscriptionStatus.subscribed ? 'Pro Plan' : 'Free Plan'}
+                        {subscriptionStatus.subscribed 
+                          ? (subscriptionStatus.product_id === 'prod_RrCXJVxkfxu4Bq' ? 'Pro Plan' 
+                              : subscriptionStatus.product_id === 'prod_RrCXvFp6H5sSUv' ? 'Ultra Pro Plan' 
+                              : 'Pro Plan')
+                          : 'Free Plan'}
                       </p>
                       {subscriptionStatus.subscription_end && (
                         <p className="text-xs md:text-sm text-muted-foreground">
