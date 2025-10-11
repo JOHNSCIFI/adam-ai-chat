@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -141,9 +141,6 @@ export function ProjectModal({
           <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
             {isEditing ? 'Edit Project' : 'Create New Project'}
           </DialogTitle>
-          <DialogDescription className="sr-only">
-            {isEditing ? 'Edit your project details' : 'Create a new project with custom settings'}
-          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-6 sm:space-y-8 px-1 sm:px-2">

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
@@ -295,7 +295,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
 
       // Close settings modal and redirect to home page
       onOpenChange(false);
-      window.location.href = 'https://www.chatl.ai/';
+      window.location.href = 'http://preview--adam-ai-chat.lovable.app/';
     } catch (error: any) {
       console.error('Delete all chats error:', error);
       toast({
@@ -850,7 +850,6 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
             <div className="px-3 md:px-4 lg:px-6 py-3 md:py-4 border-b border-border/40 bg-gradient-to-r from-background/50 to-background/30">
               <DialogHeader className="text-left">
                 <DialogTitle className="text-lg md:text-xl font-semibold text-foreground">Settings</DialogTitle>
-                <DialogDescription className="sr-only">Manage your application settings and preferences</DialogDescription>
               </DialogHeader>
             </div>
             <nav className="p-2 md:p-3 space-y-1">

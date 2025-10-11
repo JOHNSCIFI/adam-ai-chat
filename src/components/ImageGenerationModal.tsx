@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon, Plus, Copy, Check, Download, Sparkles, X } from 'lucide-react';
@@ -233,7 +233,6 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
               </div>
               Image Generation
             </DialogTitle>
-            <DialogDescription className="sr-only">Generate AI images from text descriptions</DialogDescription>
           </DialogHeader>
           
           <div className="flex flex-col h-[70vh]">

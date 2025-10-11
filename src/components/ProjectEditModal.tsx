@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
@@ -109,7 +109,6 @@ export default function ProjectEditModal({ project, isOpen, onClose, onProjectUp
           <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             Edit Project
           </DialogTitle>
-          <DialogDescription className="sr-only">Edit your project details and settings</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-8">
