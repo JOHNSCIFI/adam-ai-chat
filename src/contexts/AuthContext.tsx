@@ -29,21 +29,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Initialize subscription status from localStorage to persist across tab switches
-  const [subscriptionStatus, setSubscriptionStatus] = useState(() => {
-    try {
-      const stored = localStorage.getItem('subscription_status');
-      if (stored) {
-        return JSON.parse(stored);
-      }
-    } catch (error) {
-      console.error('Error loading subscription status from storage:', error);
-    }
-    return {
-      subscribed: false,
-      product_id: null,
-      subscription_end: null
-    };
+  // Don't initialize from localStorage - always fetch fresh from database
+  const [subscriptionStatus, setSubscriptionStatus] = useState({
+    subscribed: false,
+    product_id: null,
+    subscription_end: null
   });
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
@@ -120,64 +110,81 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Separate effect for subscription checks when user changes
   useEffect(() => {
     let subscriptionCheckInterval: NodeJS.Timeout | null = null;
+    let realtimeChannel: any = null;
     
     if (user) {
+      // Always check immediately on mount/user change
+      checkSubscription(false);
+      
+      // Set up realtime listener for subscription changes
+      realtimeChannel = supabase
+        .channel(`user-subscription-${user.id}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'user_subscriptions',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('🔔 Subscription updated in database:', payload);
+            // Refresh subscription status from database
+            checkSubscription(false);
+          }
+        )
+        .subscribe();
+      
       // Check for returning from Stripe
       const urlParams = new URLSearchParams(window.location.search);
       const sessionId = urlParams.get('session_id');
       const isReturningFromStripe = sessionId || urlParams.has('success');
       
       if (isReturningFromStripe) {
-        console.log('🔄 Detected return from Stripe, checking subscription...');
+        console.log('🔄 Detected return from Stripe, verifying with retries...');
         
         // Function to check subscription with retries - verify with Stripe after checkout
         const checkWithRetries = async (attempt = 1, maxAttempts = 4) => {
-          console.log(`🔍 Subscription check attempt ${attempt}/${maxAttempts}`);
+          console.log(`🔍 Stripe verification attempt ${attempt}/${maxAttempts}`);
           
-          // Wait longer on first attempt for webhook to process
           const delay = attempt === 1 ? 3000 : 2000;
           await new Promise(resolve => setTimeout(resolve, delay));
           
           // Verify with Stripe to update database
           await checkSubscription(true);
           
-          // Check if subscription was updated
-          const currentStatus = JSON.parse(localStorage.getItem('subscription_status') || '{"subscribed":false}');
-          
-          if (currentStatus.subscribed) {
+          if (subscriptionStatus.subscribed) {
             console.log('✅ Subscription confirmed!');
-            // Clean up URL
             window.history.replaceState({}, document.title, window.location.pathname);
           } else if (attempt < maxAttempts) {
-            console.log(`⏳ Subscription not updated yet, retrying in ${delay}ms...`);
+            console.log(`⏳ Retrying in ${delay}ms...`);
             checkWithRetries(attempt + 1, maxAttempts);
           } else {
-            console.log('⚠️ Max retry attempts reached');
-            // Clean up URL anyway
+            console.log('⚠️ Max attempts reached');
             window.history.replaceState({}, document.title, window.location.pathname);
           }
         };
         
         checkWithRetries();
-      } else {
-        // Normal initial check
-        checkSubscription(false);
       }
       
-      // Periodic check (from database only) - every 2 minutes
+      // Periodic check from database - every 30 seconds for responsive updates
       subscriptionCheckInterval = setInterval(() => {
         if (!isCheckingSubscription) {
-          checkSubscription(false); // Just read from database, don't call Stripe
+          checkSubscription(false);
         }
-      }, 120000); // Check every 2 minutes
+      }, 30000);
     }
 
     return () => {
       if (subscriptionCheckInterval) {
         clearInterval(subscriptionCheckInterval);
       }
+      if (realtimeChannel) {
+        supabase.removeChannel(realtimeChannel);
+      }
     };
-  }, [user?.id]); // Only depend on user ID, not the entire user object
+  }, [user?.id]);
 
   // Separate effect to handle profile fetching when user changes
   useEffect(() => {

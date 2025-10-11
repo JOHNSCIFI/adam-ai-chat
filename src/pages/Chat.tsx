@@ -3338,15 +3338,29 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                {models
-                  .filter(model => subscriptionStatus.subscribed || model.type === 'free')
-                  .map(model => {
+                {models.map(model => {
                   const modelData = availableModels.find(m => m.id === model.id);
+                  const isPro = model.type === 'pro';
+                  const isDisabled = isPro && !subscriptionStatus.subscribed;
+                  
                   return (
-                     <SelectItem
+                    <SelectItem
                       key={model.id} 
                       value={model.id} 
-                      className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer"
+                      disabled={isDisabled}
+                      className={`rounded-xl px-3 py-3 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent/60 focus-visible:bg-accent/60 cursor-pointer'} transition-all duration-200`}
+                      onClick={(e) => {
+                        if (isDisabled) {
+                          e.preventDefault();
+                          toast.error('This model requires a Pro plan', {
+                            description: 'Upgrade to access premium AI models',
+                            action: {
+                              label: 'Upgrade',
+                              onClick: () => window.location.href = '/pricing'
+                            }
+                          });
+                        }
+                      }}
                     >
                       <div className="flex items-center w-full gap-3">
                         <div className="relative flex-shrink-0">
@@ -3358,14 +3372,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                               style={getIconFilterStyle(modelData?.icon || 'openai')}
                             />
                           </div>
-                          {model.type === 'pro' && (
+                          {isPro && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                               PRO
                             </span>
                           )}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <div className="font-semibold text-sm text-foreground truncate">{model.name}</div>
+                          <div className="font-semibold text-sm text-foreground truncate">
+                            {model.name}
+                            {isDisabled && <span className="ml-2 text-xs text-muted-foreground">(Pro required)</span>}
+                          </div>
                           <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
                         </div>
                       </div>
@@ -3950,9 +3967,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         </SelectValue>
                       </SelectTrigger>
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
-                           {models
-                             .filter(model => subscriptionStatus.subscribed || model.type === 'free')
-                             .map(model => <SelectItem key={model.id} value={model.id} className="px-2 py-1.5 rounded-md">
+                           {models.map(model => {
+                             const isPro = model.type === 'pro';
+                             const isDisabled = isPro && !subscriptionStatus.subscribed;
+                             
+                             return (
+                               <SelectItem 
+                                 key={model.id} 
+                                 value={model.id} 
+                                 disabled={isDisabled}
+                                 className={`px-2 py-1.5 rounded-md ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                               >
                                 <div className="flex items-center w-full gap-2">
                                    <div className="relative flex-shrink-0">
                                       {model.id.includes('gpt') || model.id === 'generate-image' || model.id === 'edit-image' ? (
@@ -3978,18 +4003,23 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                        ) : (
                                          <Bot className="h-5 w-5" />
                                        )}
-                                      {model.type === 'pro' && (
+                                      {isPro && (
                                         <span className="absolute -top-1 -right-1 text-[7px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-0.5 py-0.5 rounded-full font-bold shadow-sm">
                                           PRO
                                         </span>
                                       )}
                                    </div>
                                     <div className="min-w-0 flex-1">
-                                      <div className="font-medium text-sm truncate">{model.name}</div>
+                                      <div className="font-medium text-sm truncate">
+                                        {model.name}
+                                        {isDisabled && <span className="ml-1 text-xs text-muted-foreground">(Pro required)</span>}
+                                      </div>
                                       <div className="text-xs text-muted-foreground truncate">{model.description}</div>
                                     </div>
                                 </div>
-                             </SelectItem>)}
+                             </SelectItem>
+                             );
+                           })}
                        </SelectContent>
                     </Select>
                     
