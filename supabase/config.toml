@@ -18,41 +18,16 @@ port = 50323
 enabled = true
 port = 50324
 
-[functions.generate-image]
-verify_jwt = false
+# User-facing functions require authentication
+# By default, JWT verification is enabled. Only explicitly disable for webhooks.
 
-[functions.chat-with-ai]
-verify_jwt = false
-
-[functions.chat-with-ai-optimized]
-verify_jwt = false
-
-[functions.speech-to-text]
-verify_jwt = false
-
-[functions.text-to-speech-voice-mode]
-verify_jwt = false
-
-[functions.delete-account]
-verify_jwt = false
-
-[functions.analyze-image]
-verify_jwt = false
-
-[functions.save-image]
-verify_jwt = false
-
-[functions.delete-chat-images]
-verify_jwt = false
-
-[functions.delete-all-user-images]
-verify_jwt = false
-
+# Keep public for external webhooks with signature verification
 [functions.webhook-handler]
 verify_jwt = false
 
-[functions.save-token-usage]
+[functions.stripe-webhook]
 verify_jwt = false
 
-[functions.stripe-webhook]
+# Keep public for internal service calls (called by other edge functions)
+[functions.save-token-usage]
 verify_jwt = false
