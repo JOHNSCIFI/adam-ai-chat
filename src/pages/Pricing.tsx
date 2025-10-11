@@ -126,10 +126,10 @@ const Pricing = () => {
     }
     
     try {
-      // Map plan to price ID (TEST MODE)
+      // Map plan to price ID (TEST MODE - verified)
       const priceIds = {
-        'Pro': 'price_1SH1g3L8Zm4LqDn4WSyw1BzA',
-        'Ultra Pro': 'price_1SH1gHL8Zm4LqDn4wDQIGntf'
+        'Pro': 'price_1SH1jRL8Zm4LqDn4M49yf60W',
+        'Ultra Pro': 'price_1SH1jpL8Zm4LqDn4zN9CGBpC'
       };
       
       const priceId = priceIds[plan.name as keyof typeof priceIds];
