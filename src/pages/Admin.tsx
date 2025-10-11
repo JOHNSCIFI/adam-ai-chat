@@ -266,8 +266,8 @@ export default function Admin() {
             model_usages: [],
             subscription_status: subscription ? {
               subscribed: subscription.status === 'active',
-              product_id: subscription.product_id,
-              subscription_end: subscription.current_period_end
+              product_id: (subscription as any).product_id || null,
+              subscription_end: (subscription as any).current_period_end || null
             } : undefined
           });
         }
