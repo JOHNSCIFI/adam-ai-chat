@@ -14,7 +14,8 @@ const logStep = (step: string, details?: any) => {
 
 // Product ID to plan name mapping - must match frontend
 const productToPlanMap: { [key: string]: string } = {
-  'prod_TDSeCiQ2JEFnWB': 'pro',
+  'prod_RrCXJVxkfxu4Bq': 'Pro',
+  'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
 };
 
 serve(async (req) => {
