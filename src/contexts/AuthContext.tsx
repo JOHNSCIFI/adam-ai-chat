@@ -24,6 +24,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// SessionStorage key for caching subscription status
+const SUBSCRIPTION_CACHE_KEY = 'chatl_subscription_status';
+
+// Helper functions for sessionStorage management
+const loadCachedSubscription = () => {
+  try {
+    const cached = sessionStorage.getItem(SUBSCRIPTION_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      console.log('📦 Loaded cached subscription:', parsed);
+      return parsed;
+    }
+  } catch (error) {
+    console.error('Error loading cached subscription:', error);
+  }
+  return null;
+};
+
+const saveCachedSubscription = (status: any) => {
+  try {
+    sessionStorage.setItem(SUBSCRIPTION_CACHE_KEY, JSON.stringify(status));
+    console.log('💾 Saved subscription to cache:', status);
+  } catch (error) {
+    console.error('Error saving subscription to cache:', error);
+  }
+};
+
+const clearCachedSubscription = () => {
+  try {
+    sessionStorage.removeItem(SUBSCRIPTION_CACHE_KEY);
+    console.log('🗑️ Cleared subscription cache');
+  } catch (error) {
+    console.error('Error clearing subscription cache:', error);
+  }
+};
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -31,8 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loadingSubscription, setLoadingSubscription] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
   
-  // Always start with no subscription - will be checked via Stripe API
-  const [subscriptionStatus, setSubscriptionStatus] = useState({
+  // Try to load cached subscription status on mount
+  const cachedStatus = loadCachedSubscription();
+  const [subscriptionStatus, setSubscriptionStatus] = useState(cachedStatus || {
     subscribed: false,
     product_id: null,
     subscription_end: null
@@ -108,7 +145,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let realtimeChannel: any = null;
     
     if (user) {
-      // Check subscription immediately via Stripe API
+      // Load cached status immediately if available
+      const cached = loadCachedSubscription();
+      if (cached) {
+        setSubscriptionStatus(cached);
+        setLoadingSubscription(false);
+      }
+      
+      // Then check subscription via Stripe API (verify cache)
       checkSubscription();
       
       // Set up realtime listener for webhook updates - this is the primary update mechanism
@@ -173,6 +217,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     };
   }, [user?.id]);
+
+  // Page Visibility API: Refresh subscription when user returns to tab
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && user) {
+        console.log('👁️ Page became visible, checking subscription status...');
+        checkSubscription();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [user]);
 
   // Separate effect to handle profile fetching when user changes
   useEffect(() => {
@@ -288,11 +348,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkSubscription = async () => {
     if (!user || isCheckingSubscription) {
       if (!user) {
-        setSubscriptionStatus({
+        const resetStatus = {
           subscribed: false,
           product_id: null,
           subscription_end: null
-        });
+        };
+        setSubscriptionStatus(resetStatus);
+        clearCachedSubscription();
         setLoadingSubscription(false);
       }
       return;
@@ -307,12 +369,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (error) {
         console.error('❌ Error checking subscription with Stripe:', error);
-        // On error, assume no subscription for safety
-        setSubscriptionStatus({
-          subscribed: false,
-          product_id: null,
-          subscription_end: null
-        });
+        // On error, keep cached status if available, otherwise assume no subscription
+        const cached = loadCachedSubscription();
+        if (!cached) {
+          const resetStatus = {
+            subscribed: false,
+            product_id: null,
+            subscription_end: null
+          };
+          setSubscriptionStatus(resetStatus);
+          clearCachedSubscription();
+        }
       } else if (data) {
         const newStatus = {
           subscribed: data.subscribed || false,
@@ -322,14 +389,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         console.log('✅ Subscription status updated from Stripe:', newStatus);
         setSubscriptionStatus(newStatus);
+        
+        // Save to sessionStorage for instant load on next page load
+        saveCachedSubscription(newStatus);
       }
     } catch (error) {
       console.error('❌ Error checking subscription:', error);
-      setSubscriptionStatus({
-        subscribed: false,
-        product_id: null,
-        subscription_end: null
-      });
+      // On error, keep cached status if available
+      const cached = loadCachedSubscription();
+      if (!cached) {
+        const resetStatus = {
+          subscribed: false,
+          product_id: null,
+          subscription_end: null
+        };
+        setSubscriptionStatus(resetStatus);
+        clearCachedSubscription();
+      }
     } finally {
       setIsCheckingSubscription(false);
       setLoadingSubscription(false);
@@ -339,12 +415,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     await supabase.auth.signOut();
     
-    // Clear subscription status
-    setSubscriptionStatus({
+    // Clear subscription status and cache
+    const resetStatus = {
       subscribed: false,
       product_id: null,
       subscription_end: null
-    });
+    };
+    setSubscriptionStatus(resetStatus);
+    clearCachedSubscription();
     
     // Force page refresh after sign out
     window.location.href = '/';
