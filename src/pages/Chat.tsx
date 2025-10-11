@@ -550,17 +550,11 @@ export default function Chat() {
           console.log('[REALTIME-DELETE] Message deleted:', payload.old);
           const deletedMessage = payload.old as Message;
 
-          // CRITICAL: Double-check message belongs to current chat
-          if (deletedMessage.chat_id !== chatId) {
-            console.log('[REALTIME-DELETE] Message rejected - wrong chat_id');
-            return;
-          }
-
-          // Check if this message is being regenerated - if so, keep it visible with animation
-          // Use the ref to get the current regenerating message ID
+          // Filter already ensures correct chat_id, no need for additional check
+          // Check if this message is being regenerated - if so, it's already been handled
           const currentRegeneratingId = regeneratingMessageIdRef.current;
           if (currentRegeneratingId === deletedMessage.id) {
-            console.log('[REALTIME-DELETE] Message is being regenerated, keeping in state with animation');
+            console.log('[REALTIME-DELETE] Message is being regenerated, already removed from state');
             return;
           }
 
@@ -1016,7 +1010,14 @@ export default function Chat() {
         throw new Error(`Webhook request failed: ${webhookResponse.status}`);
       }
       
-      console.log('[REGENERATE] Webhook called successfully, now deleting old message from database');
+      console.log('[REGENERATE] Webhook called successfully, now removing old message from state and database');
+      
+      // IMMEDIATELY remove old message from state to prevent showing both old and new
+      setMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== messageId);
+        console.log('[REGENERATE] Removed old message from state, messages count:', filtered.length);
+        return filtered;
+      });
       
       // NOW delete the old message from database (webhook succeeded)
       const { error: deleteError } = await supabase
