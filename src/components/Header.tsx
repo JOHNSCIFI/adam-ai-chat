@@ -70,25 +70,19 @@ const Header = () => {
                 <Sun className="h-4 w-4 transition-transform" />
               )}
             </Button>
-            {user ? (
-              <span className="text-sm font-medium text-foreground px-3 py-2">
-                {userProfile?.display_name || user.email?.split('@')[0] || 'User'}
-              </span>
-            ) : (
-              <Button 
-                onClick={() => navigate('/')} 
-                className="bg-black text-white hover:bg-black/90 focus:ring-2 focus:ring-black focus:ring-offset-2"
-                onMouseEnter={() => {
-                  // Prefetch / route
-                  const link = document.createElement('link');
-                  link.rel = 'prefetch';
-                  link.href = '/';
-                  document.head.appendChild(link);
-                }}
-              >
-                Start Now
-              </Button>
-            )}
+            <Button 
+              onClick={() => navigate('/')} 
+              className="bg-black text-white hover:bg-black/90 focus:ring-2 focus:ring-black focus:ring-offset-2"
+              onMouseEnter={() => {
+                // Prefetch / route
+                const link = document.createElement('link');
+                link.rel = 'prefetch';
+                link.href = '/';
+                document.head.appendChild(link);
+              }}
+            >
+              Start Now
+            </Button>
 
             {/* Mobile menu */}
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
