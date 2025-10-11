@@ -71,8 +71,20 @@ export default function ChatSidebar({
   const {
     user,
     signOut,
-    userProfile
+    userProfile,
+    subscriptionStatus
   } = useAuth();
+  
+  // Product ID to plan name mapping
+  const productToPlanMap: { [key: string]: string } = {
+    'prod_RrCXJVxkfxu4Bq': 'Pro',
+    'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+  };
+  
+  // Get current plan name
+  const currentPlan = subscriptionStatus?.subscribed && subscriptionStatus?.product_id
+    ? productToPlanMap[subscriptionStatus.product_id] || 'Subscribed'
+    : 'Free';
   const [confirmDialog, setConfirmDialog] = useState<{
     isOpen: boolean;
     title: string;
@@ -506,11 +518,11 @@ export default function ChatSidebar({
                             {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || 'U'}
                           </AvatarFallback>}
                       </Avatar>
-                      {!collapsed && <div className="flex-1 min-w-0">
+                       {!collapsed && <div className="flex-1 min-w-0">
                           <p className="text-sm text-sidebar-foreground font-medium truncate">
                             {userProfile?.display_name || user?.email?.split('@')[0] || 'User'}
                           </p>
-                          <p className="text-xs text-sidebar-foreground/60 truncate">Free</p>
+                          <p className="text-xs text-sidebar-foreground/60 truncate">{currentPlan}</p>
                         </div>}
                     </div>
                   </DropdownMenuTrigger>
