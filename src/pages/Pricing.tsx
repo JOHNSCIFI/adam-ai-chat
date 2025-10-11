@@ -12,7 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
   const [isYearly, setIsYearly] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const plans = [{
@@ -160,6 +160,29 @@ const Pricing = () => {
       toast.error('An error occurred. Please try again.');
     }
   };
+
+  const handleManageSubscription = async () => {
+    try {
+      toast.loading('Opening subscription portal...');
+      
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) {
+        toast.error('Failed to open subscription portal');
+        console.error('Portal error:', error);
+        return;
+      }
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Opening Stripe portal in new tab...');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
+    }
+  };
+
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       
     </nav>;
@@ -230,11 +253,24 @@ const Pricing = () => {
             <span className="bg-gradient-to-r from-primary via-purple-600 to-pink-600 bg-clip-text text-transparent">AI Journey</span>
           </h1>
           
-          <p className="text-xl text-muted-foreground mb-16 max-w-3xl mx-auto animate-fade-in" style={{
+          <p className="text-xl text-muted-foreground mb-8 max-w-3xl mx-auto animate-fade-in" style={{
           animationDelay: '0.1s'
         }}>
             Start free and scale with powerful AI models that grow with your needs.
           </p>
+
+          {subscriptionStatus.subscribed && (
+            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+              <Button
+                onClick={handleManageSubscription}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+              >
+                <Shield className="h-4 w-4 mr-2" />
+                Manage Your Subscription
+              </Button>
+            </div>
+          )}
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{

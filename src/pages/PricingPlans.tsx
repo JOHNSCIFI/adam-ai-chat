@@ -19,7 +19,8 @@ import {
   Mic,
   Upload,
   Palette,
-  MessageSquare
+  MessageSquare,
+  Shield
 } from 'lucide-react';
 import { toast } from 'sonner';
 import AuthModal from '@/components/AuthModal';
@@ -143,7 +144,7 @@ const faqData = [
 ];
 
 export default function PricingPlans() {
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -184,6 +185,28 @@ export default function PricingPlans() {
     }
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      toast.loading('Opening subscription portal...');
+      
+      const { data, error } = await supabase.functions.invoke('customer-portal');
+      
+      if (error) {
+        toast.error('Failed to open subscription portal');
+        console.error('Portal error:', error);
+        return;
+      }
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+        toast.success('Opening Stripe portal in new tab...');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      toast.error('An error occurred. Please try again.');
+    }
+  };
+
   const getPricing = (plan: 'pro' | 'ultra_pro') => {
     const prices = {
       pro: {
@@ -213,6 +236,19 @@ export default function PricingPlans() {
         <p className="text-muted-foreground text-lg mb-8">
           Unlock the full potential of Chatbot App with advanced plans.
         </p>
+
+        {subscriptionStatus.subscribed && (
+          <div className="mb-8">
+            <Button
+              onClick={handleManageSubscription}
+              variant="outline"
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              Manage Your Subscription
+            </Button>
+          </div>
+        )}
 
         {/* Billing Period Selector */}
         <div className="inline-flex bg-muted rounded-lg p-1 mb-8">
