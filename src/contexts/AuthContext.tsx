@@ -33,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     product_id: null,
     subscription_end: null
   });
+  const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
   useEffect(() => {
     
@@ -129,20 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               }
             }
             
-            // Check subscription status after sign in
-            setTimeout(async () => {
-              try {
-                const { data: subData } = await supabase.functions.invoke('check-subscription');
-                if (subData) {
-                  setSubscriptionStatus({
-                    subscribed: subData.subscribed || false,
-                    product_id: subData.product_id || null,
-                    subscription_end: subData.subscription_end || null
-                  });
-                }
-              } catch (error) {
-                console.error('Error checking subscription:', error);
-              }
+            // Check subscription status after sign in (no notification)
+            setTimeout(() => {
+              checkSubscription(false);
             }, 500);
           }, 0);
         } else if (event === 'SIGNED_OUT') {
@@ -183,23 +173,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let subscriptionCheckInterval: NodeJS.Timeout | null = null;
     
     if (user) {
-      // Initial check
-      checkSubscription();
+      // Check for returning from Stripe (do this first, with slight delay for webhook)
+      const urlParams = new URLSearchParams(window.location.search);
+      const isReturningFromStripe = urlParams.has('session_id') || urlParams.has('success');
       
-      // Periodic check
+      if (isReturningFromStripe) {
+        // Wait for webhook to process, then check once
+        setTimeout(() => {
+          checkSubscription(false);
+        }, 2000);
+      } else {
+        // Normal initial check
+        checkSubscription(false);
+      }
+      
+      // Periodic check (silently in background)
       subscriptionCheckInterval = setInterval(() => {
-        if (user) {
-          checkSubscription();
+        if (user && !isCheckingSubscription) {
+          checkSubscription(false);
         }
       }, 60000); // Check every 60 seconds
-    }
-
-    // Check for returning from Stripe checkout/portal
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('session_id') || urlParams.get('checkout') === 'success') {
-      setTimeout(() => {
-        checkSubscription();
-      }, 2000);
     }
 
     return () => {
@@ -316,33 +309,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const checkSubscription = async () => {
-    if (!user) {
-      setSubscriptionStatus({
-        subscribed: false,
-        product_id: null,
-        subscription_end: null
-      });
+  const checkSubscription = async (showNotification = false) => {
+    if (!user || isCheckingSubscription) {
+      if (!user) {
+        setSubscriptionStatus({
+          subscribed: false,
+          product_id: null,
+          subscription_end: null
+        });
+      }
       return;
     }
 
+    setIsCheckingSubscription(true);
     try {
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
         console.error('Error checking subscription:', error);
+        setIsCheckingSubscription(false);
         return;
       }
       
       if (data) {
-        setSubscriptionStatus({
+        const newStatus = {
           subscribed: data.subscribed || false,
           product_id: data.product_id || null,
           subscription_end: data.subscription_end || null
-        });
+        };
+        
+        // Only show notification if explicitly requested and status actually changed
+        if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
+          // Notification will be handled by the calling component if needed
+        }
+        
+        setSubscriptionStatus(newStatus);
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
+    } finally {
+      setIsCheckingSubscription(false);
     }
   };
 

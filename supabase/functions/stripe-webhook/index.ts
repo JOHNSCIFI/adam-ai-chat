@@ -12,10 +12,9 @@ const logStep = (step: string, details?: any) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Product ID to plan name mapping
+// Product ID to plan name mapping - must match frontend
 const productToPlanMap: { [key: string]: string } = {
-  'prod_RrCXJVxkfxu4Bq': 'Pro',
-  'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+  'prod_TDSeCiQ2JEFnWB': 'pro',
 };
 
 serve(async (req) => {
