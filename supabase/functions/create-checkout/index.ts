@@ -49,6 +49,9 @@ serve(async (req) => {
       logStep("No existing customer, will create during checkout");
     }
 
+    // Get origin from request for dynamic redirect URLs (works in test and production)
+    const origin = req.headers.get("origin") || "https://chatl.ai";
+    
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       customer_email: customerId ? undefined : user.email,
@@ -59,8 +62,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `https://chatl.ai`,
-      cancel_url: `https://chatl.ai/pricing`,
+      success_url: `${origin}/?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${origin}/pricing`,
     });
     logStep("Checkout session created", { sessionId: session.id });
 

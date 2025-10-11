@@ -222,8 +222,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [user?.id]); // Only run when user ID changes
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    // Use production domain for all redirects
-    const redirectUrl = 'https://chatl.ai/';
+    // Use current origin for redirects (works in test and production)
+    const redirectUrl = window.location.origin + '/';
     
     const { error, data } = await supabase.auth.signUp({
       email,
@@ -284,7 +284,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = 'https://chatl.ai/';
+    const redirectUrl = window.location.origin + '/';
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -300,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithApple = async () => {
-    const redirectUrl = 'https://chatl.ai/';
+    const redirectUrl = window.location.origin + '/';
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
@@ -316,7 +316,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = 'https://chatl.ai/';
+    const redirectUrl = window.location.origin + '/';
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${redirectUrl}reset-password`
