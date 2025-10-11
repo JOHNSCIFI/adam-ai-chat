@@ -47,80 +47,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
-  // Fetch and create/update user profile - defined once and reused
-  const fetchUserProfile = async (userId: string, userSession: any) => {
+  // Fetch user profile - only read, no updates to prevent 429 errors
+  const fetchUserProfile = async (userId: string) => {
     try {
-      // Determine signup method from session or user metadata
-      let signupMethod = 'email';
-      if (userSession.user.app_metadata?.provider === 'google' || 
-          userSession.user.user_metadata?.provider === 'google' ||
-          userSession.user.identities?.some((id: any) => id.provider === 'google')) {
-        signupMethod = 'google';
-      } else if (userSession.user.app_metadata?.provider === 'apple' || 
-          userSession.user.user_metadata?.provider === 'apple' ||
-          userSession.user.identities?.some((id: any) => id.provider === 'apple')) {
-        signupMethod = 'apple';
-      }
-
-      // Check if profile exists
-      const { data: existingProfile, error: fetchError } = await supabase
+      const { data: existingProfile } = await supabase
         .from('profiles')
         .select('*')
         .eq('user_id', userId)
-        .single();
+        .maybeSingle();
       
-      if (!existingProfile && !fetchError) {
-        // Create new profile
-        const profileData: any = {
-          user_id: userId,
-          email: userSession.user.email,
-          signup_method: signupMethod
-        };
-        
-        if (signupMethod === 'google') {
-          profileData.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
-          profileData.avatar_url = userSession.user.user_metadata?.avatar_url;
-        } else if (signupMethod === 'apple') {
-          profileData.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
-          profileData.avatar_url = userSession.user.user_metadata?.avatar_url;
-        } else {
-          profileData.display_name = userSession.user.user_metadata?.display_name || userSession.user.email?.split('@')[0];
-        }
-        
-        await supabase
-          .from('profiles')
-          .insert(profileData);
-        
-        setUserProfile(profileData);
-      } else if (existingProfile) {
-        // Update existing profile if needed
-        const updates: any = {};
-        
-        // Update signup method if not set
-        if (!existingProfile.signup_method) {
-          updates.signup_method = signupMethod;
-        }
-        
-        // Update display name and avatar for Google and Apple users
-        if (signupMethod === 'google' || signupMethod === 'apple') {
-          if (!existingProfile.display_name || existingProfile.display_name !== userSession.user.user_metadata?.full_name) {
-            updates.display_name = userSession.user.user_metadata?.full_name || userSession.user.email?.split('@')[0];
-          }
-          if (!existingProfile.avatar_url || existingProfile.avatar_url !== userSession.user.user_metadata?.avatar_url) {
-            updates.avatar_url = userSession.user.user_metadata?.avatar_url;
-          }
-        }
-        
-        if (Object.keys(updates).length > 0) {
-          await supabase
-            .from('profiles')
-            .update(updates)
-            .eq('user_id', userId);
-            
-          setUserProfile({ ...existingProfile, ...updates });
-        } else {
-          setUserProfile(existingProfile);
-        }
+      if (existingProfile) {
+        setUserProfile(existingProfile);
       }
     } catch (error) {
       // Silently fail
@@ -241,10 +178,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, [user?.id]); // Only depend on user ID, not the entire user object
 
-  // Separate effect to handle profile fetching/creation when user changes
+  // Separate effect to handle profile fetching when user changes
   useEffect(() => {
-    if (user && session) {
-      fetchUserProfile(user.id, session);
+    if (user) {
+      fetchUserProfile(user.id);
     }
   }, [user?.id]); // Only run when user ID changes
 
@@ -372,10 +309,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setIsCheckingSubscription(true);
     try {
+      // First, try to get from database directly for faster response
+      const { data: dbSubscription } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .maybeSingle();
+      
+      if (dbSubscription) {
+        const dbStatus = {
+          subscribed: true,
+          product_id: dbSubscription.product_id,
+          subscription_end: dbSubscription.current_period_end
+        };
+        
+        const hasChanged = 
+          dbStatus.subscribed !== subscriptionStatus.subscribed ||
+          dbStatus.product_id !== subscriptionStatus.product_id ||
+          dbStatus.subscription_end !== subscriptionStatus.subscription_end;
+        
+        if (hasChanged) {
+          console.log('Subscription loaded from database');
+          setSubscriptionStatus(dbStatus);
+          try {
+            localStorage.setItem('subscription_status', JSON.stringify(dbStatus));
+          } catch (error) {
+            console.error('Error saving subscription status to storage:', error);
+          }
+        }
+      }
+      
+      // Then verify with Stripe (this also updates the database)
       const { data, error } = await supabase.functions.invoke('check-subscription');
       
       if (error) {
-        console.error('Error checking subscription:', error);
+        console.error('Error checking subscription from Stripe:', error);
         setIsCheckingSubscription(false);
         return;
       }
@@ -387,30 +356,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_end: data.subscription_end || null
         };
         
-        // CRITICAL: Only update state if values actually changed
-        // This prevents unnecessary re-renders in components using useAuth()
         const hasChanged = 
           newStatus.subscribed !== subscriptionStatus.subscribed ||
           newStatus.product_id !== subscriptionStatus.product_id ||
           newStatus.subscription_end !== subscriptionStatus.subscription_end;
         
         if (hasChanged) {
-          console.log('Subscription status changed, updating state');
+          console.log('Subscription status updated from Stripe verification');
           setSubscriptionStatus(newStatus);
           
-          // Persist to localStorage to maintain state across tab switches
           try {
             localStorage.setItem('subscription_status', JSON.stringify(newStatus));
           } catch (error) {
             console.error('Error saving subscription status to storage:', error);
           }
           
-          // Only show notification if explicitly requested
           if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
             // Notification will be handled by the calling component if needed
           }
-        } else {
-          console.log('Subscription status unchanged, skipping state update');
         }
       }
     } catch (error) {
