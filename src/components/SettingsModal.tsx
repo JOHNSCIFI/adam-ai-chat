@@ -21,7 +21,8 @@ import {
   Trash2,
   Mail,
   Shield,
-  Check
+  Check,
+  Crown
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -32,6 +33,7 @@ interface SettingsModalProps {
 const sidebarItems = [
   { id: 'general', label: 'General', icon: Settings },
   { id: 'profile', label: 'Profile', icon: User },
+  { id: 'subscription', label: 'Subscription', icon: Crown },
   { id: 'security', label: 'Security', icon: Shield },
   { id: 'data', label: 'Data Control', icon: CreditCard },
 ];
@@ -55,9 +57,10 @@ const accentColors = [
 export default function SettingsModal({ open, onOpenChange }: SettingsModalProps) {
   const [activeTab, setActiveTab] = React.useState('general');
   const [isExporting, setIsExporting] = React.useState(false);
+  const [isLoadingPortal, setIsLoadingPortal] = React.useState(false);
   const { theme, accentColor, setTheme, setAccentColor } = useTheme();
   const { toast } = useToast();
-  const { user, signOut, userProfile } = useAuth();
+  const { user, signOut, userProfile, subscriptionStatus, checkSubscription } = useAuth();
   const isMobile = useIsMobile();
 
   const handleSetTheme = (newTheme: typeof theme) => {
@@ -345,6 +348,37 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
     }
   };
 
+  const handleManageSubscription = async () => {
+    if (!user) return;
+    
+    setIsLoadingPortal(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No active session');
+
+      const { data, error } = await supabase.functions.invoke('customer-portal', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) throw error;
+      
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error: any) {
+      console.error('Customer portal error:', error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to open customer portal. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoadingPortal(false);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'general':
@@ -573,6 +607,110 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                   </div>
                 </CardContent>
               </Card>
+            </div>
+          </div>
+        );
+
+      case 'subscription':
+        if (!user) {
+          return (
+            <div className="space-y-4 md:space-y-6">
+              <div className="space-y-1.5 md:space-y-2">
+                <h2 className="text-xl md:text-2xl font-semibold text-foreground">Subscription</h2>
+                <p className="text-sm md:text-base text-muted-foreground">Sign in to manage your subscription</p>
+              </div>
+              <div className="text-center py-6 md:py-8">
+                <p className="text-sm md:text-base text-muted-foreground mb-4">You need to be signed in to access subscription settings.</p>
+                <Button onClick={() => window.location.href = '/'} className="w-full sm:w-auto">Sign In</Button>
+              </div>
+            </div>
+          );
+        }
+        return (
+          <div className="space-y-4 md:space-y-6">
+            <div className="space-y-1.5 md:space-y-2">
+              <h2 className="text-xl md:text-2xl font-semibold text-foreground">Subscription</h2>
+              <p className="text-sm md:text-base text-muted-foreground">Manage your subscription and billing</p>
+            </div>
+            
+            <div className="space-y-4 md:space-y-6">
+              {/* Current Plan */}
+              <Card className="shadow-sm border-primary/20">
+                <CardContent className="p-4 md:p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Crown className="h-5 w-5 text-primary" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold mb-1 text-sm md:text-base">Current Plan</h3>
+                      <p className="text-lg md:text-xl font-bold text-primary mb-2">
+                        {subscriptionStatus.subscribed ? 'Pro Plan' : 'Free Plan'}
+                      </p>
+                      {subscriptionStatus.subscription_end && (
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Renews on {new Date(subscriptionStatus.subscription_end).toLocaleDateString()}
+                        </p>
+                      )}
+                      {!subscriptionStatus.subscribed && (
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Upgrade to unlock all premium features
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Manage Subscription */}
+              {subscriptionStatus.subscribed && (
+                <Card className="shadow-sm">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold mb-1 text-sm md:text-base">Manage Subscription</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Update payment method, view invoices, or cancel subscription
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={handleManageSubscription}
+                        disabled={isLoadingPortal}
+                        variant="outline"
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        {isLoadingPortal ? 'Loading...' : 'Manage'}
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Upgrade CTA */}
+              {!subscriptionStatus.subscribed && (
+                <Card className="shadow-sm bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                      <div className="min-w-0">
+                        <h3 className="font-semibold mb-1 text-sm md:text-base">Upgrade to Pro</h3>
+                        <p className="text-xs md:text-sm text-muted-foreground">
+                          Access all premium AI models and advanced features
+                        </p>
+                      </div>
+                      <Button 
+                        onClick={() => {
+                          onOpenChange(false);
+                          window.location.href = '/pricing';
+                        }}
+                        size="sm"
+                        className="w-full sm:w-auto"
+                      >
+                        View Plans
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
           </div>
         );
