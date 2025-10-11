@@ -2801,10 +2801,36 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }
   };
   const handleFileUpload = () => {
+    // Check if user has a subscription
+    if (!subscriptionStatus.subscribed) {
+      toast.error("File uploads are only available for Pro and Ultra Pro subscribers", {
+        description: "Upgrade your plan to upload files and images",
+        action: {
+          label: "Upgrade",
+          onClick: () => window.location.href = '/pricing'
+        }
+      });
+      setIsPopoverOpen(false);
+      return;
+    }
+    
     fileInputRef.current?.click();
     setIsPopoverOpen(false);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    // Double-check subscription status (in case user bypassed the button)
+    if (!subscriptionStatus.subscribed) {
+      toast.error("File uploads are only available for Pro and Ultra Pro subscribers", {
+        description: "Upgrade your plan to upload files and images",
+        action: {
+          label: "Upgrade",
+          onClick: () => window.location.href = '/pricing'
+        }
+      });
+      event.target.value = '';
+      return;
+    }
+    
     const files = event.target.files;
     if (files && files.length > 0) {
       const newFiles = Array.from(files);
