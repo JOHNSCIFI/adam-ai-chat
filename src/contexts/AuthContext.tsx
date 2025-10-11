@@ -130,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (isReturningFromStripe) {
         console.log('🔄 Detected return from Stripe, checking subscription...');
         
-        // Function to check subscription with retries
+        // Function to check subscription with retries - verify with Stripe after checkout
         const checkWithRetries = async (attempt = 1, maxAttempts = 4) => {
           console.log(`🔍 Subscription check attempt ${attempt}/${maxAttempts}`);
           
@@ -138,7 +138,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const delay = attempt === 1 ? 3000 : 2000;
           await new Promise(resolve => setTimeout(resolve, delay));
           
-          await checkSubscription(false);
+          // Verify with Stripe to update database
+          await checkSubscription(true);
           
           // Check if subscription was updated
           const currentStatus = JSON.parse(localStorage.getItem('subscription_status') || '{"subscribed":false}');
@@ -163,12 +164,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkSubscription(false);
       }
       
-      // Periodic check (silently in background) - every 5 minutes
+      // Periodic check (from database only) - every 2 minutes
       subscriptionCheckInterval = setInterval(() => {
         if (!isCheckingSubscription) {
-          checkSubscription(false);
+          checkSubscription(false); // Just read from database, don't call Stripe
         }
-      }, 300000); // Check every 5 minutes
+      }, 120000); // Check every 2 minutes
     }
 
     return () => {
@@ -289,7 +290,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const checkSubscription = async (showNotification = false) => {
+  const checkSubscription = async (verifyWithStripe = false) => {
     if (!user || isCheckingSubscription) {
       if (!user) {
         const emptyStatus = {
@@ -309,7 +310,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setIsCheckingSubscription(true);
     try {
-      // First, try to get from database directly for faster response
+      // Get subscription status from database
       const { data: dbSubscription } = await supabase
         .from('user_subscriptions')
         .select('*')
@@ -317,62 +318,57 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .eq('status', 'active')
         .maybeSingle();
       
-      if (dbSubscription) {
-        const dbStatus = {
-          subscribed: true,
-          product_id: dbSubscription.product_id,
-          subscription_end: dbSubscription.current_period_end
-        };
-        
-        const hasChanged = 
-          dbStatus.subscribed !== subscriptionStatus.subscribed ||
-          dbStatus.product_id !== subscriptionStatus.product_id ||
-          dbStatus.subscription_end !== subscriptionStatus.subscription_end;
-        
-        if (hasChanged) {
-          console.log('Subscription loaded from database');
-          setSubscriptionStatus(dbStatus);
-          try {
-            localStorage.setItem('subscription_status', JSON.stringify(dbStatus));
-          } catch (error) {
-            console.error('Error saving subscription status to storage:', error);
-          }
+      const newStatus = dbSubscription ? {
+        subscribed: true,
+        product_id: dbSubscription.product_id,
+        subscription_end: dbSubscription.current_period_end
+      } : {
+        subscribed: false,
+        product_id: null,
+        subscription_end: null
+      };
+      
+      const hasChanged = 
+        newStatus.subscribed !== subscriptionStatus.subscribed ||
+        newStatus.product_id !== subscriptionStatus.product_id ||
+        newStatus.subscription_end !== subscriptionStatus.subscription_end;
+      
+      if (hasChanged) {
+        console.log('Subscription loaded from database');
+        setSubscriptionStatus(newStatus);
+        try {
+          localStorage.setItem('subscription_status', JSON.stringify(newStatus));
+        } catch (error) {
+          console.error('Error saving subscription status to storage:', error);
         }
       }
       
-      // Then verify with Stripe (this also updates the database)
-      const { data, error } = await supabase.functions.invoke('check-subscription');
-      
-      if (error) {
-        console.error('Error checking subscription from Stripe:', error);
-        setIsCheckingSubscription(false);
-        return;
-      }
-      
-      if (data) {
-        const newStatus = {
-          subscribed: data.subscribed || false,
-          product_id: data.product_id || null,
-          subscription_end: data.subscription_end || null
-        };
+      // Only verify with Stripe when explicitly requested (after checkout)
+      if (verifyWithStripe) {
+        const { data, error } = await supabase.functions.invoke('check-subscription');
         
-        const hasChanged = 
-          newStatus.subscribed !== subscriptionStatus.subscribed ||
-          newStatus.product_id !== subscriptionStatus.product_id ||
-          newStatus.subscription_end !== subscriptionStatus.subscription_end;
-        
-        if (hasChanged) {
-          console.log('Subscription status updated from Stripe verification');
-          setSubscriptionStatus(newStatus);
+        if (error) {
+          console.error('Error verifying with Stripe:', error);
+        } else if (data) {
+          const stripeStatus = {
+            subscribed: data.subscribed || false,
+            product_id: data.product_id || null,
+            subscription_end: data.subscription_end || null
+          };
           
-          try {
-            localStorage.setItem('subscription_status', JSON.stringify(newStatus));
-          } catch (error) {
-            console.error('Error saving subscription status to storage:', error);
-          }
+          const stripeHasChanged = 
+            stripeStatus.subscribed !== newStatus.subscribed ||
+            stripeStatus.product_id !== newStatus.product_id ||
+            stripeStatus.subscription_end !== newStatus.subscription_end;
           
-          if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
-            // Notification will be handled by the calling component if needed
+          if (stripeHasChanged) {
+            console.log('Subscription updated from Stripe verification');
+            setSubscriptionStatus(stripeStatus);
+            try {
+              localStorage.setItem('subscription_status', JSON.stringify(stripeStatus));
+            } catch (error) {
+              console.error('Error saving subscription status to storage:', error);
+            }
           }
         }
       }
