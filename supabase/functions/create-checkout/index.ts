@@ -59,8 +59,8 @@ serve(async (req) => {
         },
       ],
       mode: "subscription",
-      success_url: `${req.headers.get("origin")}/pricing?success=true`,
-      cancel_url: `${req.headers.get("origin")}/pricing?canceled=true`,
+      success_url: `https://chatl.ai/pricing?success=true`,
+      cancel_url: `https://chatl.ai/pricing?canceled=true`,
     });
     logStep("Checkout session created", { sessionId: session.id });
 

@@ -163,7 +163,7 @@ import { ImageEditModal } from '@/components/ImageEditModal';
 export default function Chat() {
   const { chatId } = useParams();
   const location = useLocation();
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, subscriptionStatus } = useAuth();
   const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
   const { state: sidebarState, isMobile } = useSidebar();
@@ -1602,6 +1602,24 @@ export default function Chat() {
   // Handle model selection - track user's manual selection to prevent DB override
   const handleModelChange = (modelId: string) => {
     console.log('[MODEL-CHANGE] User manually selected model:', modelId);
+    
+    // Check if this is a pro model
+    const selectedModelInfo = models.find(m => m.id === modelId);
+    const isProModel = selectedModelInfo?.type === 'pro';
+    
+    // If it's a pro model and user doesn't have a subscription, show upgrade prompt
+    if (isProModel && !subscriptionStatus.subscribed) {
+      toast.error('This model requires a Pro or Ultra Pro subscription', {
+        description: 'Upgrade to access all premium AI models',
+        action: {
+          label: 'Upgrade Now',
+          onClick: () => window.location.href = '/pricing'
+        },
+        duration: 5000,
+      });
+      return;
+    }
+    
     setSelectedModel(modelId);
     userSelectedModelRef.current = modelId;
     

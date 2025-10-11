@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
@@ -12,9 +12,28 @@ import { supabase } from '@/integrations/supabase/client';
 
 const Pricing = () => {
   const navigate = useNavigate();
-  const { user, subscriptionStatus } = useAuth();
+  const location = useLocation();
+  const { user, subscriptionStatus, checkSubscription } = useAuth();
   const [isYearly, setIsYearly] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+
+  // Product ID to plan name mapping
+  const productToPlanMap: { [key: string]: string } = {
+    'prod_RrCXJVxkfxu4Bq': 'Pro', // Pro plan product ID
+    'prod_RrCXvFp6H5sSUv': 'Ultra Pro', // Ultra Pro plan product ID
+  };
+
+  // Check subscription status after successful payment
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.get('success') === 'true' && user) {
+      // Wait a bit for Stripe webhook to process
+      setTimeout(() => {
+        checkSubscription();
+        toast.success('Subscription activated successfully!');
+      }, 2000);
+    }
+  }, [location.search, user, checkSubscription]);
   const plans = [{
     name: "Free",
     emoji: "🆓",
@@ -119,6 +138,13 @@ const Pricing = () => {
       navigate('/chat');
       return;
     }
+
+    // Check if this is the user's current plan
+    const currentPlan = productToPlanMap[subscriptionStatus.product_id || ''];
+    if (currentPlan === plan.name) {
+      handleManageSubscription();
+      return;
+    }
     
     if (!user) {
       setShowAuthModal(true);
@@ -152,8 +178,7 @@ const Pricing = () => {
       }
       
       if (data?.url) {
-        window.open(data.url, '_blank');
-        toast.success('Opening checkout in new tab...');
+        window.location.href = data.url;
       }
     } catch (error) {
       console.error('Error:', error);
@@ -342,8 +367,16 @@ const Pricing = () => {
                       </div>)}
                   </div>
                   
-                  <Button className={`w-full h-12 text-lg font-semibold ${plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''}`} variant={plan.buttonVariant} onClick={() => handleSubscribe(plan)}>
-                    {plan.buttonText} {plan.price > 0 && '→'}
+                  <Button 
+                    className={`w-full h-12 text-lg font-semibold ${
+                      plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''
+                    } ${productToPlanMap[subscriptionStatus.product_id || ''] === plan.name ? 'border-2 border-primary' : ''}`} 
+                    variant={plan.buttonVariant} 
+                    onClick={() => handleSubscribe(plan)}
+                  >
+                    {productToPlanMap[subscriptionStatus.product_id || ''] === plan.name 
+                      ? '✓ Current Plan' 
+                      : plan.buttonText + (plan.price > 0 ? ' →' : '')}
                   </Button>
                 </div>;
           })}

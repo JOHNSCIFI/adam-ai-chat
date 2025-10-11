@@ -21,6 +21,11 @@ interface UserTokenUsage {
   email: string;
   display_name: string;
   model_usages: ModelUsageDetail[];
+  subscription_status?: {
+    subscribed: boolean;
+    product_id: string | null;
+    subscription_end: string | null;
+  };
 }
 interface TokenUsageByModel {
   model: string;
@@ -173,6 +178,7 @@ export default function Admin() {
   const [modelUsages, setModelUsages] = useState<TokenUsageByModel[]>([]);
   const [selectedUser, setSelectedUser] = useState<UserTokenUsage | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [loadingSubscription, setLoadingSubscription] = useState(false);
   useEffect(() => {
     checkAdminAccess();
   }, [user]);
@@ -282,6 +288,42 @@ export default function Admin() {
       setLoading(false);
     }
   };
+
+  // Product ID to plan name mapping
+  const productToPlanMap: { [key: string]: string } = {
+    'prod_RrCXJVxkfxu4Bq': 'Pro',
+    'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+  };
+
+  // Fetch subscription status for a specific user
+  const fetchUserSubscription = async (userId: string) => {
+    setLoadingSubscription(true);
+    try {
+      // TODO: Create an admin-specific edge function to fetch user subscriptions
+      // For now, this is a placeholder that shows "Free Plan" for all users
+      // You'll need to create an admin endpoint that:
+      // 1. Verifies the caller is an admin
+      // 2. Fetches the target user's email
+      // 3. Queries Stripe for their subscription status
+      
+      setLoadingSubscription(false);
+      
+      // Placeholder - mark all users as free plan for now
+      if (selectedUser) {
+        setSelectedUser({
+          ...selectedUser,
+          subscription_status: {
+            subscribed: false,
+            product_id: null,
+            subscription_end: null
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching subscription:', error);
+      setLoadingSubscription(false);
+    }
+  };
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="w-8 h-8 animate-spin" />
@@ -364,9 +406,10 @@ export default function Admin() {
                 <TableBody>
                   {userUsages.map(usage => {
                   const totalCost = usage.model_usages.reduce((sum, m) => sum + m.cost, 0);
-                  return <TableRow key={usage.user_id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={() => {
+                  return <TableRow key={usage.user_id} className="hover:bg-muted/50 transition-colors cursor-pointer" onClick={async () => {
                     setSelectedUser(usage);
                     setIsModalOpen(true);
+                    await fetchUserSubscription(usage.user_id);
                   }}>
                         <TableCell className="hidden sm:table-cell font-semibold text-foreground text-xs sm:text-sm">
                           <div className="flex items-center gap-1.5 sm:gap-2">
@@ -415,6 +458,32 @@ export default function Admin() {
                 <p className="text-sm sm:text-base font-medium text-foreground break-all">
                   {selectedUser?.email}
                 </p>
+              </div>
+              
+              {/* Subscription Status */}
+              <div className="space-y-1 pt-2">
+                <p className="text-xs text-muted-foreground">Subscription Status</p>
+                {loadingSubscription ? (
+                  <div className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-muted-foreground">Loading...</span>
+                  </div>
+                ) : selectedUser?.subscription_status?.subscribed ? (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/30">
+                      {productToPlanMap[selectedUser.subscription_status.product_id || ''] || 'Subscribed'}
+                    </Badge>
+                    {selectedUser.subscription_status.subscription_end && (
+                      <span className="text-xs text-muted-foreground">
+                        Until {new Date(selectedUser.subscription_status.subscription_end).toLocaleDateString()}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                    Free Plan
+                  </Badge>
+                )}
               </div>
             </DialogHeader>
             

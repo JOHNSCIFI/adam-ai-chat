@@ -2,9 +2,16 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Crown } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const GoProButton = () => {
   const navigate = useNavigate();
+  const { subscriptionStatus } = useAuth();
+
+  // Hide button if user has any subscription
+  if (subscriptionStatus.subscribed) {
+    return null;
+  }
 
   return (
     <Button
