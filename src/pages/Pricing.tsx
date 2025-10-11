@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from 'lucide-react';
+import { Check, Sparkles, ChevronDown, Users, X, Star, Zap, Crown } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -145,13 +145,6 @@ const Pricing = () => {
       navigate('/chat');
       return;
     }
-
-    // Check if this is the user's current plan
-    const currentPlan = productToPlanMap[subscriptionStatus.product_id || ''];
-    if (currentPlan === plan.name) {
-      handleManageSubscription();
-      return;
-    }
     
     if (!user) {
       setShowAuthModal(true);
@@ -193,27 +186,6 @@ const Pricing = () => {
     }
   };
 
-  const handleManageSubscription = async () => {
-    try {
-      toast.loading('Opening subscription portal...');
-      
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      
-      if (error) {
-        toast.error('Failed to open subscription portal');
-        console.error('Portal error:', error);
-        return;
-      }
-      
-      if (data?.url) {
-        window.open(data.url, '_blank');
-        toast.success('Opening Stripe portal in new tab...');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast.error('An error occurred. Please try again.');
-    }
-  };
 
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       
@@ -290,19 +262,6 @@ const Pricing = () => {
         }}>
             Start free and scale with powerful AI models that grow with your needs.
           </p>
-
-          {subscriptionStatus.subscribed && (
-            <div className="mb-8 animate-fade-in" style={{ animationDelay: '0.15s' }}>
-              <Button
-                onClick={handleManageSubscription}
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
-              >
-                <Shield className="h-4 w-4 mr-2" />
-                Manage Your Subscription
-              </Button>
-            </div>
-          )}
 
           {/* Billing Toggle */}
           <div className="flex items-center justify-center gap-4 mb-8 animate-fade-in" style={{
