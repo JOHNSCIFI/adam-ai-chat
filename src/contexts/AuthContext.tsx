@@ -187,12 +187,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         checkSubscription(false);
       }
       
-      // Periodic check (silently in background)
+      // Periodic check (silently in background) - every 5 minutes to avoid excessive checks
       subscriptionCheckInterval = setInterval(() => {
         if (user && !isCheckingSubscription) {
           checkSubscription(false);
         }
-      }, 60000); // Check every 60 seconds
+      }, 300000); // Check every 5 minutes (300 seconds)
     }
 
     return () => {
@@ -338,12 +338,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           subscription_end: data.subscription_end || null
         };
         
-        // Only show notification if explicitly requested and status actually changed
-        if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
-          // Notification will be handled by the calling component if needed
-        }
+        // CRITICAL: Only update state if values actually changed
+        // This prevents unnecessary re-renders in components using useAuth()
+        const hasChanged = 
+          newStatus.subscribed !== subscriptionStatus.subscribed ||
+          newStatus.product_id !== subscriptionStatus.product_id ||
+          newStatus.subscription_end !== subscriptionStatus.subscription_end;
         
-        setSubscriptionStatus(newStatus);
+        if (hasChanged) {
+          console.log('Subscription status changed, updating state');
+          setSubscriptionStatus(newStatus);
+          
+          // Only show notification if explicitly requested
+          if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
+            // Notification will be handled by the calling component if needed
+          }
+        } else {
+          console.log('Subscription status unchanged, skipping state update');
+        }
       }
     } catch (error) {
       console.error('Error checking subscription:', error);
