@@ -28,10 +28,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [userProfile, setUserProfile] = useState<any>(null);
-  const [subscriptionStatus, setSubscriptionStatus] = useState({
-    subscribed: false,
-    product_id: null,
-    subscription_end: null
+  
+  // Initialize subscription status from localStorage to persist across tab switches
+  const [subscriptionStatus, setSubscriptionStatus] = useState(() => {
+    try {
+      const stored = localStorage.getItem('subscription_status');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Error loading subscription status from storage:', error);
+    }
+    return {
+      subscribed: false,
+      product_id: null,
+      subscription_end: null
+    };
   });
   const [isCheckingSubscription, setIsCheckingSubscription] = useState(false);
 
@@ -142,11 +154,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setSession(null);
           setUser(null);
           setUserProfile(null);
-          setSubscriptionStatus({
+          
+          // Clear subscription status and localStorage
+          const emptyStatus = {
             subscribed: false,
             product_id: null,
             subscription_end: null
-          });
+          };
+          setSubscriptionStatus(emptyStatus);
+          try {
+            localStorage.removeItem('subscription_status');
+          } catch (error) {
+            console.error('Error clearing subscription status from storage:', error);
+          }
         }
         setLoading(false);
       }
@@ -308,11 +328,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkSubscription = async (showNotification = false) => {
     if (!user || isCheckingSubscription) {
       if (!user) {
-        setSubscriptionStatus({
+        const emptyStatus = {
           subscribed: false,
           product_id: null,
           subscription_end: null
-        });
+        };
+        setSubscriptionStatus(emptyStatus);
+        try {
+          localStorage.removeItem('subscription_status');
+        } catch (error) {
+          console.error('Error clearing subscription status from storage:', error);
+        }
       }
       return;
     }
@@ -345,6 +371,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           console.log('Subscription status changed, updating state');
           setSubscriptionStatus(newStatus);
           
+          // Persist to localStorage to maintain state across tab switches
+          try {
+            localStorage.setItem('subscription_status', JSON.stringify(newStatus));
+          } catch (error) {
+            console.error('Error saving subscription status to storage:', error);
+          }
+          
           // Only show notification if explicitly requested
           if (showNotification && newStatus.subscribed !== subscriptionStatus.subscribed) {
             // Notification will be handled by the calling component if needed
@@ -362,11 +395,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    setSubscriptionStatus({
+    
+    // Clear subscription status and localStorage
+    const emptyStatus = {
       subscribed: false,
       product_id: null,
       subscription_end: null
-    });
+    };
+    setSubscriptionStatus(emptyStatus);
+    try {
+      localStorage.removeItem('subscription_status');
+    } catch (error) {
+      console.error('Error clearing subscription status from storage:', error);
+    }
+    
     // Force page refresh after sign out
     window.location.href = '/';
   };
