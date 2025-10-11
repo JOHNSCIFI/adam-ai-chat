@@ -22,6 +22,7 @@ import {
   MessageSquare
 } from 'lucide-react';
 import { toast } from 'sonner';
+import AuthModal from '@/components/AuthModal';
 
 interface PlanFeature {
   name: string;
@@ -144,10 +145,11 @@ export default function PricingPlans() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'quarterly' | 'yearly'>('monthly');
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const handleSubscribe = (plan: 'pro' | 'ultra_pro') => {
     if (!user) {
-      navigate('/');
+      setShowAuthModal(true);
       return;
     }
     
@@ -480,6 +482,15 @@ export default function PricingPlans() {
           </Accordion>
         </div>
       </div>
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          toast.success('Welcome! Please select your plan.');
+        }}
+      />
     </div>
   );
 }

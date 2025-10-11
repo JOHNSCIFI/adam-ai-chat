@@ -5,9 +5,15 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Check, Sparkles, ChevronDown, Shield, Users, X, Star, Zap, Crown } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
+import AuthModal from '@/components/AuthModal';
+
 const Pricing = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [isYearly, setIsYearly] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const plans = [{
     name: "Free",
     emoji: "🆓",
@@ -105,6 +111,20 @@ const Pricing = () => {
   const getSavings = (plan: typeof plans[0]) => {
     if (plan.price === 0) return 0;
     return Math.round((plan.price - plan.yearlyPrice) / plan.price * 100);
+  };
+
+  const handleSubscribe = (plan: typeof plans[0]) => {
+    if (plan.price === 0) {
+      navigate('/chat');
+      return;
+    }
+    
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    
+    toast.info('Subscription feature coming soon!');
   };
   const NavBar = () => <nav className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       
@@ -252,7 +272,7 @@ const Pricing = () => {
                       </div>)}
                   </div>
                   
-                  <Button className={`w-full h-12 text-lg font-semibold ${plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''}`} variant={plan.buttonVariant} onClick={() => navigate('/chat')}>
+                  <Button className={`w-full h-12 text-lg font-semibold ${plan.popular ? 'bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white shadow-lg' : ''}`} variant={plan.buttonVariant} onClick={() => handleSubscribe(plan)}>
                     {plan.buttonText} {plan.price > 0 && '→'}
                   </Button>
                 </div>;
@@ -291,7 +311,7 @@ const Pricing = () => {
                             Popular
                           </Badge>
                         </div>
-                        <Button size="sm" className="bg-gradient-to-r from-primary to-purple-600" onClick={() => navigate('/chat')}>
+                        <Button size="sm" className="bg-gradient-to-r from-primary to-purple-600" onClick={() => handleSubscribe(plans[1])}>
                           Subscribe
                         </Button>
                       </div>
@@ -302,7 +322,7 @@ const Pricing = () => {
                           <Crown className="h-5 w-5" />
                           <span className="font-bold text-lg">Ultra Pro</span>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => navigate('/chat')}>
+                        <Button variant="outline" size="sm" onClick={() => handleSubscribe(plans[2])}>
                           Subscribe
                         </Button>
                       </div>
@@ -409,6 +429,15 @@ const Pricing = () => {
       </section>
 
       <Footer />
+
+      <AuthModal 
+        isOpen={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false);
+          toast.success('Welcome! Please select your plan.');
+        }}
+      />
     </div>;
 };
 export default Pricing;
