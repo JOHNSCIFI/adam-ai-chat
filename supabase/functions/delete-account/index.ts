@@ -73,7 +73,17 @@ serve(async (req) => {
       // Continue with account deletion even if storage cleanup fails
     }
 
-    // Delete user data first (profiles, chats, messages will be handled by cascading)
+    // Delete token_usage records first (to avoid foreign key constraint violation)
+    const { error: tokenError } = await supabaseAdmin
+      .from('token_usage')
+      .delete()
+      .eq('user_id', user.id)
+
+    if (tokenError) {
+      console.error('Error deleting token usage:', tokenError)
+    }
+
+    // Delete user data (profiles, chats, messages will be handled by cascading)
     const { error: profileError } = await supabaseAdmin
       .from('profiles')
       .delete()

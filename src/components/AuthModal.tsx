@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 
@@ -227,6 +227,9 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
           <DialogTitle className="text-center text-xl font-semibold">
             ChatLearn
           </DialogTitle>
+          <DialogDescription className="sr-only">
+            {mode === 'reset' ? 'Reset your password' : 'Sign in or sign up to ChatLearn'}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="px-4 sm:px-6 pb-4 sm:pb-6">

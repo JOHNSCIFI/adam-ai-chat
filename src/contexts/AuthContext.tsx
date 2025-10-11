@@ -151,8 +151,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signUp = async (email: string, password: string, displayName?: string) => {
-    // Use preview URL as primary redirect
-    const redirectUrl = 'https://preview--adam-ai-chat.lovable.app/';
+    // Use production domain for all redirects
+    const redirectUrl = 'https://www.chatl.ai/';
     
     console.log('🔐 Sign up attempt with redirect URL:', redirectUrl);
     
@@ -215,9 +215,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithGoogle = async () => {
-    const redirectUrl = window.location.origin.includes('localhost')
-      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
-      : `${window.location.origin}/`;
+    const redirectUrl = 'https://www.chatl.ai/';
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -233,9 +231,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signInWithApple = async () => {
-    const redirectUrl = window.location.origin.includes('localhost')
-      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
-      : `${window.location.origin}/`;
+    const redirectUrl = 'https://www.chatl.ai/';
     
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'apple',
@@ -251,9 +247,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetPassword = async (email: string) => {
-    const redirectUrl = window.location.origin.includes('localhost') 
-      ? 'https://95b51062-fa36-4119-b593-1ae2ac8718b2.sandbox.lovable.dev/'
-      : `${window.location.origin}/`;
+    const redirectUrl = 'https://www.chatl.ai/';
     
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
       redirectTo: `${redirectUrl}reset-password`
