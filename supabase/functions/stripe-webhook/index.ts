@@ -93,9 +93,23 @@ serve(async (req) => {
         // Extract product ID and plan name
         const productId = subscription.items.data[0].price.product as string;
         const planName = productToPlanMap[productId] || 'Unknown';
+        
+        // Determine plan tier based on product
+        let planTier = 'free';
+        if (productId === 'prod_RrCXJVxkfxu4Bq') {
+          planTier = 'pro';
+        } else if (productId === 'prod_RrCXvFp6H5sSUv') {
+          planTier = 'ultra_pro';
+        } else if (productId) {
+          // Any other product ID means they have a paid subscription
+          planTier = 'pro'; // Default to pro for unmapped products
+        }
+        
         const subscriptionEnd = subscription.current_period_end 
           ? new Date(subscription.current_period_end * 1000).toISOString()
           : null;
+
+        logStep("Determined subscription tier", { productId, planName, planTier, status: subscription.status });
 
         // Upsert subscription data
         const { error: upsertError } = await supabaseClient
@@ -106,6 +120,7 @@ serve(async (req) => {
             stripe_subscription_id: subscription.id,
             product_id: productId,
             plan_name: planName,
+            plan: planTier,
             status: subscription.status,
             current_period_end: subscriptionEnd,
             updated_at: new Date().toISOString()

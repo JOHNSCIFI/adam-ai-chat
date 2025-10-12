@@ -110,7 +110,19 @@ serve(async (req) => {
       
       productId = subscription.items.data[0].price.product as string;
       const planName = productToPlanMap[productId] || 'Unknown';
-      logStep("Determined product ID", { productId, planName });
+      
+      // Determine plan tier based on product
+      let planTier = 'free';
+      if (productId === 'prod_RrCXJVxkfxu4Bq') {
+        planTier = 'pro';
+      } else if (productId === 'prod_RrCXvFp6H5sSUv') {
+        planTier = 'ultra_pro';
+      } else if (productId) {
+        // Any other product ID means they have a paid subscription
+        planTier = 'pro'; // Default to pro for unmapped products
+      }
+      
+      logStep("Determined subscription tier", { productId, planName, planTier });
       
       // Save/update subscription in database
       try {
@@ -122,6 +134,7 @@ serve(async (req) => {
             stripe_subscription_id: subscriptionId,
             product_id: productId,
             plan_name: planName,
+            plan: planTier,
             status: 'active',
             current_period_end: subscriptionEnd
           }, {
