@@ -3453,7 +3453,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                               style={getIconFilterStyle(modelData?.icon || 'openai')}
                             />
                           </div>
-                          {isPro && !subscriptionStatus.subscribed && (
+                          {isPro && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                               PRO
                             </span>
@@ -3462,8 +3462,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-sm text-foreground truncate">
                             {model.name}
-                            {isPro && !subscriptionStatus.subscribed && <span className="ml-2 text-xs text-muted-foreground">(Pro required)</span>}
-                            {isImageModel && !usageLimits.canGenerate && subscriptionStatus.subscribed && <span className="ml-2 text-xs text-muted-foreground">(Limit reached)</span>}
+                            {isDisabled && <span className="ml-2 text-xs text-muted-foreground">(Pro required)</span>}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
                         </div>
@@ -4086,21 +4085,20 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                          />
                                        ) : (
                                          <Bot className="h-5 w-5" />
-                                        )}
-                                       {isPro && !subscriptionStatus.subscribed && (
-                                         <span className="absolute -top-1 -right-1 text-[7px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-0.5 py-0.5 rounded-full font-bold shadow-sm">
-                                           PRO
-                                         </span>
                                        )}
+                                      {isPro && (
+                                        <span className="absolute -top-1 -right-1 text-[7px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-0.5 py-0.5 rounded-full font-bold shadow-sm">
+                                          PRO
+                                        </span>
+                                      )}
+                                   </div>
+                                    <div className="min-w-0 flex-1">
+                                      <div className="font-medium text-sm truncate">
+                                        {model.name}
+                                        {isDisabled && <span className="ml-1 text-xs text-muted-foreground">(Pro required)</span>}
+                                      </div>
+                                      <div className="text-xs text-muted-foreground truncate">{model.description}</div>
                                     </div>
-                                     <div className="min-w-0 flex-1">
-                                       <div className="font-medium text-sm truncate">
-                                         {model.name}
-                                         {isPro && !subscriptionStatus.subscribed && <span className="ml-1 text-xs text-muted-foreground">(Pro required)</span>}
-                                         {isImageModel && !usageLimits.canGenerate && subscriptionStatus.subscribed && <span className="ml-1 text-xs text-muted-foreground">(Limit reached)</span>}
-                                       </div>
-                                       <div className="text-xs text-muted-foreground truncate">{model.description}</div>
-                                     </div>
                                 </div>
                              </SelectItem>
                              );
