@@ -841,10 +841,16 @@ export default function Index() {
       <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''} relative`} onDragOver={e => {
       e.preventDefault();
       e.stopPropagation();
+      if (!user || !subscriptionStatus.subscribed) {
+        return;
+      }
       setIsDragOver(true);
     }} onDragEnter={e => {
       e.preventDefault();
       e.stopPropagation();
+      if (!user || !subscriptionStatus.subscribed) {
+        return;
+      }
       setIsDragOver(true);
     }} onDragLeave={e => {
       e.preventDefault();

@@ -985,11 +985,17 @@ export default function ProjectPage() {
           onDragOver={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (!subscriptionStatus.subscribed) {
+              return;
+            }
             setIsDragOver(true);
           }}
           onDragEnter={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (!subscriptionStatus.subscribed) {
+              return;
+            }
             setIsDragOver(true);
           }}
           onDragLeave={(e) => {

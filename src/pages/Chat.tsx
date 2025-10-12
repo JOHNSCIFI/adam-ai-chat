@@ -3494,11 +3494,17 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (!subscriptionStatus.subscribed) {
+            return;
+          }
           setIsDragOver(true);
         }}
         onDragEnter={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (!subscriptionStatus.subscribed) {
+            return;
+          }
           setIsDragOver(true);
         }}
         onDragLeave={(e) => {
