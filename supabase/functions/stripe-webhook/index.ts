@@ -46,7 +46,7 @@ serve(async (req) => {
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     if (webhookSecret && signature) {
       try {
-        event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+        event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
         logStep("Webhook signature verified");
       } catch (err) {
         logStep("Webhook signature verification failed", { error: err.message });
@@ -94,16 +94,21 @@ serve(async (req) => {
         const productId = subscription.items.data[0].price.product as string;
         const planName = productToPlanMap[productId] || 'Unknown';
         
-        // Determine plan tier based on product
+        // Determine plan tier based on product and subscription status
         let planTier = 'free';
-        if (productId === 'prod_TDSeCiQ2JEFnWB') {
-          planTier = 'pro';
-        } else if (productId === 'prod_TDSfAtaWP5KbhM') {
-          planTier = 'ultra_pro';
-        } else if (productId) {
-          // Any other product ID means they have a paid subscription
-          planTier = 'pro'; // Default to pro for unmapped products
+        
+        // If subscription is not active, user should be on free plan
+        if (subscription.status === 'active') {
+          if (productId === 'prod_TDSeCiQ2JEFnWB') {
+            planTier = 'pro';
+          } else if (productId === 'prod_TDSfAtaWP5KbhM') {
+            planTier = 'ultra_pro';
+          } else if (productId) {
+            // Any other product ID means they have a paid subscription
+            planTier = 'pro'; // Default to pro for unmapped products
+          }
         }
+        // If status is canceled, expired, past_due, etc., planTier stays 'free'
         
         const subscriptionEnd = subscription.current_period_end 
           ? new Date(subscription.current_period_end * 1000).toISOString()
