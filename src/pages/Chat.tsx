@@ -3462,7 +3462,8 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                         <div className="flex-1 min-w-0">
                           <div className="font-semibold text-sm text-foreground truncate">
                             {model.name}
-                            {isDisabled && <span className="ml-2 text-xs text-muted-foreground">(Pro required)</span>}
+                            {isPro && !subscriptionStatus.subscribed && <span className="ml-2 text-xs text-muted-foreground">(Pro required)</span>}
+                            {isImageModel && !usageLimits.canGenerate && subscriptionStatus.subscribed && <span className="ml-2 text-xs text-muted-foreground">(Limit reached)</span>}
                           </div>
                           <div className="text-xs text-muted-foreground mt-0.5 truncate">{model.description}</div>
                         </div>
@@ -4092,13 +4093,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                          </span>
                                        )}
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                      <div className="font-medium text-sm truncate">
-                                        {model.name}
-                                        {isDisabled && <span className="ml-1 text-xs text-muted-foreground">(Pro required)</span>}
-                                      </div>
-                                      <div className="text-xs text-muted-foreground truncate">{model.description}</div>
-                                    </div>
+                                     <div className="min-w-0 flex-1">
+                                       <div className="font-medium text-sm truncate">
+                                         {model.name}
+                                         {isPro && !subscriptionStatus.subscribed && <span className="ml-1 text-xs text-muted-foreground">(Pro required)</span>}
+                                         {isImageModel && !usageLimits.canGenerate && subscriptionStatus.subscribed && <span className="ml-1 text-xs text-muted-foreground">(Limit reached)</span>}
+                                       </div>
+                                       <div className="text-xs text-muted-foreground truncate">{model.description}</div>
+                                     </div>
                                 </div>
                              </SelectItem>
                              );
