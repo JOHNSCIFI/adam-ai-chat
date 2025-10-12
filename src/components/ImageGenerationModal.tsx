@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { ImageIcon, Plus, Copy, Check, Download, Sparkles, X } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
-import { useToast } from '@/hooks/use-toast';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
+import { toast } from 'sonner';
 
 interface GeneratedImage {
   id: string;
@@ -31,7 +32,7 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
   const [selectedImage, setSelectedImage] = useState<{url: string, prompt: string} | null>(null);
   
   const { user } = useAuth();
-  const { toast } = useToast();
+  const { usageLimits, loading: limitsLoading } = useUsageLimits();
   const navigate = useNavigate();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -90,6 +91,15 @@ export function ImageGenerationModal({ isOpen, onClose }: ImageGenerationModalPr
 
   const handleGenerate = async () => {
     if (!newPrompt.trim() || !user || isGenerating) return;
+
+    // Check usage limits before proceeding
+    if (!limitsLoading && !usageLimits.canGenerate) {
+      console.log('[IMAGE-GEN-MODAL] User has no image generation limit remaining');
+      toast.error('Image generation limit reached', {
+        description: `You've used all ${usageLimits.limit} image generations this month. Upgrade your plan for more!`
+      });
+      return;
+    }
 
     setIsGenerating(true);
     const promptText = newPrompt.trim();

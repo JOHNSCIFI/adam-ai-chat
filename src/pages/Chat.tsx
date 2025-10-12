@@ -17,6 +17,7 @@ import remarkGfm from 'remark-gfm';
 import { ImagePopupModal } from '@/components/ImagePopupModal';
 import { FileAnalyzer } from '@/components/FileAnalyzer';
 import { ImageProcessingIndicator } from '@/components/ImageProcessingIndicator';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 import AuthModal from '@/components/AuthModal';
 import { GoProButton } from '@/components/GoProButton';
@@ -153,6 +154,7 @@ export default function Chat() {
   const location = useLocation();
   const { user, userProfile, subscriptionStatus, loadingSubscription } = useAuth();
   const { actualTheme } = useTheme();
+  const { usageLimits, loading: limitsLoading } = useUsageLimits();
   // Remove toast hook since we're not using toasts
   const { state: sidebarState, isMobile } = useSidebar();
   
@@ -828,6 +830,7 @@ export default function Chat() {
     // Find the assistant message to regenerate
     const assistantMessage = messages.find(msg => msg.id === messageId && msg.role === 'assistant');
     if (!assistantMessage) {
+      isRegeneratingRef.current = false;
       return;
     }
 
@@ -850,10 +853,23 @@ export default function Chat() {
     if (assistantMessage.model) {
       userModel = assistantMessage.model;
     }
+    
+    // Check if this is image generation and verify limits
+    if (userModel === 'generate-image') {
+      if (!limitsLoading && !usageLimits.canGenerate) {
+        console.log('[REGENERATE] User has no image generation limit remaining');
+        toast.error('Image generation limit reached', {
+          description: `You've used all ${usageLimits.limit} image generations this month. Upgrade your plan for more!`
+        });
+        isRegeneratingRef.current = false;
+        return;
+      }
+    }
 
     // Allow regeneration if there's either a message or file attachments
     if (!userMessage && userMessageAttachments.length === 0) {
       console.log('[REGENERATE] No message or attachments to regenerate');
+      isRegeneratingRef.current = false;
       return;
     }
 
@@ -1810,6 +1826,16 @@ export default function Chat() {
     // Handle image generation mode via N8n webhook
     if (selectedModel === 'generate-image') {
       console.log('[IMAGE-GEN] Sending image generation request to webhook');
+      
+      // Check usage limits before proceeding
+      if (!limitsLoading && !usageLimits.canGenerate) {
+        console.log('[IMAGE-GEN] User has no image generation limit remaining');
+        toast.error('Image generation limit reached', {
+          description: `You've used all ${usageLimits.limit} image generations this month. Upgrade your plan for more!`
+        });
+        setLoading(false);
+        return;
+      }
       
       try {
         // First, ensure the chat exists
@@ -3385,7 +3411,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 {availableModelsList.map(model => {
                   const modelData = availableModels.find(m => m.id === model.id);
                   const isPro = model.type === 'pro';
-                  const isDisabled = isPro && !subscriptionStatus.subscribed;
+                  const isImageModel = model.id === 'generate-image';
+                  const isDisabled = (isPro && !subscriptionStatus.subscribed) || 
+                                    (isImageModel && !limitsLoading && !usageLimits.canGenerate);
                   
                   return (
                     <SelectItem
@@ -3394,10 +3422,19 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                       disabled={isDisabled}
                       className={`rounded-xl px-3 py-3 ${isDisabled ? 'opacity-50 cursor-not-allowed' : 'hover:bg-accent/60 focus-visible:bg-accent/60 cursor-pointer'} transition-all duration-200`}
                       onClick={(e) => {
-                        if (isDisabled) {
+                        if (isPro && !subscriptionStatus.subscribed) {
                           e.preventDefault();
                           toast.error('This model requires a Pro plan', {
                             description: 'Upgrade to access premium AI models',
+                            action: {
+                              label: 'Upgrade',
+                              onClick: () => window.location.href = '/pricing'
+                            }
+                          });
+                        } else if (isImageModel && !usageLimits.canGenerate) {
+                          e.preventDefault();
+                          toast.error('Image generation limit reached', {
+                            description: `You've used all ${usageLimits.limit} image generations this month. Upgrade your plan for more!`,
                             action: {
                               label: 'Upgrade',
                               onClick: () => window.location.href = '/pricing'
@@ -4013,7 +4050,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
                            {availableModelsList.map(model => {
                              const isPro = model.type === 'pro';
-                             const isDisabled = isPro && !subscriptionStatus.subscribed;
+                             const isImageModel = model.id === 'generate-image';
+                             const isDisabled = (isPro && !subscriptionStatus.subscribed) || 
+                                               (isImageModel && !limitsLoading && !usageLimits.canGenerate);
                              
                              return (
                                <SelectItem 
