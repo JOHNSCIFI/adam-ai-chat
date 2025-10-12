@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { Brain, Image, FileText, PenTool, Star, Users, Award, Target, Mic, Globe, Check, Shield, Clock, Sparkles, BookOpen, Code, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAuth } from '@/contexts/AuthContext';
 import SEO from '@/components/SEO';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -17,6 +18,7 @@ const Home = () => {
   const {
     actualTheme
   } = useTheme();
+  const { subscriptionStatus } = useAuth();
 
   // Choose the appropriate ChatGPT logo based on theme
   const chatgptLogoSrc = actualTheme === 'dark' ? chatgptLogo : chatgptLogoLight;
@@ -337,9 +339,19 @@ const Home = () => {
                 </div>
               </div>
               
-              <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Get started with free plan">
-                Get Started
-              </Button>
+              {!subscriptionStatus?.subscribed ? (
+                <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/')} aria-label="Get started with free plan">
+                  Get Started
+                </Button>
+              ) : subscriptionStatus.product_id === null || subscriptionStatus.product_id === 'free' ? (
+                <div className="w-full py-3 px-4 rounded-lg bg-primary/10 border-2 border-primary text-center">
+                  <span className="text-sm font-semibold text-primary">Your Current Plan</span>
+                </div>
+              ) : (
+                <Button size="lg" variant="outline" className="w-full border-2 border-muted-foreground/20 text-foreground hover:bg-muted/50 hover:border-primary focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/')} aria-label="Get started with free plan">
+                  Get Started
+                </Button>
+              )}
             </div>
             
             {/* Pro Plan - Most Popular */}
@@ -401,9 +413,19 @@ const Home = () => {
                 </div>
               </div>
               
-              <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Pro plan">
-                Subscribe Now
-              </Button>
+              {!subscriptionStatus?.subscribed ? (
+                <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/pricing')} aria-label="Subscribe to Pro plan">
+                  Subscribe Now
+                </Button>
+              ) : subscriptionStatus.product_id === 'prod_S8KF7kZKXw7gVx' ? (
+                <div className="w-full py-3 px-4 rounded-lg bg-primary/10 border-2 border-primary text-center">
+                  <span className="text-sm font-semibold text-primary">Your Current Plan</span>
+                </div>
+              ) : (
+                <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/pricing')} aria-label="Subscribe to Pro plan">
+                  Subscribe Now
+                </Button>
+              )}
             </div>
             
             {/* Ultra Pro Plan */}
@@ -453,9 +475,19 @@ const Home = () => {
                 </div>
               </div>
               
-              <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" aria-label="Subscribe to Ultra Pro plan">
-                Subscribe Now
-              </Button>
+              {!subscriptionStatus?.subscribed ? (
+                <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/pricing')} aria-label="Subscribe to Ultra Pro plan">
+                  Subscribe Now
+                </Button>
+              ) : subscriptionStatus.product_id === 'prod_S8KIXQjYiuBGNm' ? (
+                <div className="w-full py-3 px-4 rounded-lg bg-primary/10 border-2 border-primary text-center">
+                  <span className="text-sm font-semibold text-primary">Your Current Plan</span>
+                </div>
+              ) : (
+                <Button size="lg" className="w-full bg-black dark:bg-primary text-white dark:text-primary-foreground hover:bg-black/90 dark:hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2" onClick={() => navigate('/pricing')} aria-label="Subscribe to Ultra Pro plan">
+                  Subscribe Now
+                </Button>
+              )}
             </div>
           </div>
         </div>
