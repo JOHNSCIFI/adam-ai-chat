@@ -51,9 +51,11 @@ function App() {
                   {/* Chat routes */}
                   <Route path="/chat" element={<Navigate to="/" replace />} />
                   <Route path="/chat/:chatId" element={
-                    <MainLayout>
-                      <Chat />
-                    </MainLayout>
+                    <ProtectedRoute>
+                      <MainLayout>
+                        <Chat />
+                      </MainLayout>
+                    </ProtectedRoute>
                   } />
                   
                   {/* Marketing homepage */}

@@ -662,6 +662,22 @@ export default function Index() {
     textareaRef.current?.focus();
   };
   const handleModelSelect = (modelId: string) => {
+    const selectedModelInfo = models.find(m => m.id === modelId);
+    
+    // Check if user is trying to select a PRO model
+    if (selectedModelInfo?.type === 'pro') {
+      // If not authenticated, show auth modal
+      if (!user) {
+        setShowAuthModal(true);
+        return;
+      }
+      // If not subscribed, redirect to pricing
+      if (!subscriptionStatus.subscribed) {
+        navigate('/pricing');
+        return;
+      }
+    }
+    
     setSelectedModel(modelId);
   };
   const scrollModels = (direction: 'left' | 'right') => {
@@ -677,10 +693,9 @@ export default function Index() {
   };
   const selectedModelData = models.find(m => m.id === selectedModel);
   
-  // Filter models based on subscription
-  const availableModelsList = subscriptionStatus.subscribed 
-    ? models 
-    : models.filter(m => m.type === 'free');
+  // Show all models regardless of authentication/subscription
+  // We'll handle access control on click
+  const availableModelsList = models;
   const imageStyles = [{
     name: 'Cyberpunk',
     prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.'
@@ -783,7 +798,7 @@ export default function Index() {
                               style={getIconFilterStyle(modelData?.icon || 'openai')}
                             />
                           </div>
-                          {model.type === 'pro' && (
+                          {model.type === 'pro' && !subscriptionStatus.subscribed && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                               PRO
                             </span>
@@ -1048,7 +1063,7 @@ export default function Index() {
                                     style={getIconFilterStyle(modelData?.icon || 'openai')}
                                   />
                                 </div>
-                                {model.type === 'pro' && (
+                                {model.type === 'pro' && !subscriptionStatus.subscribed && (
                                   <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                                     PRO
                                   </span>
