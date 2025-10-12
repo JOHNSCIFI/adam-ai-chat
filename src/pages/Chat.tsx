@@ -1777,20 +1777,26 @@ export default function Chat() {
     } else {
       // Normal send - create new temp message
       console.log('[SEND] Creating new temp message for manual send');
+      console.log('[SEND] Files to attach:', files.map(f => ({ name: f.name, type: f.type, size: f.size })));
       tempUserMessage = {
         id: `temp-${Date.now()}`,
         chat_id: chatId!,
         content: userMessage,
         role: 'user',
         created_at: new Date().toISOString(),
-        file_attachments: files.map((file, index) => ({
-          id: `temp-file-${Date.now()}-${index}`,
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          url: URL.createObjectURL(file)
-        }))
+        file_attachments: files.map((file, index) => {
+          const blobUrl = URL.createObjectURL(file);
+          console.log('[SEND] Created blob URL for', file.name, ':', blobUrl);
+          return {
+            id: `temp-file-${Date.now()}-${index}`,
+            name: file.name,
+            size: file.size,
+            type: file.type,
+            url: blobUrl
+          };
+        })
       };
+      console.log('[SEND] Temp message:', { id: tempUserMessage.id, attachments: tempUserMessage.file_attachments?.length });
       setMessages(prev => [...prev, tempUserMessage]);
       scrollToBottom();
     }
@@ -2147,20 +2153,10 @@ export default function Chat() {
         }
 
         // Update the temporary message with actual uploaded URLs
-        // Also revoke any blob URLs that were temporarily created
+        console.log('[FILE-UPLOAD] Updating temp message with real URLs:', tempFileAttachments.map(f => ({ name: f.name, url: f.url.substring(0, 50) })));
         setMessages(prev => prev.map(msg => {
           if (msg.id === tempUserMessage.id) {
-            // Revoke old blob URLs before replacing them
-            msg.file_attachments?.forEach(attachment => {
-              if (attachment.url?.startsWith('blob:')) {
-                try {
-                  URL.revokeObjectURL(attachment.url);
-                  console.log('[BLOB-CLEANUP] Revoked temporary blob URL');
-                } catch (e) {
-                  // Ignore errors
-                }
-              }
-            });
+            console.log('[FILE-UPLOAD] Found temp message, replacing attachments');
             return { ...msg, file_attachments: tempFileAttachments };
           }
           return msg;
@@ -3572,12 +3568,21 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                {message.file_attachments.map((file, index) => {
                   return <div key={index}>
                      {isImageFile(file.type) && file.url ? <div className="space-y-2">
-                        <img src={file.url} alt={file.name || "Image"} className="max-w-full sm:max-w-[280px] md:max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" onClick={() => setSelectedImage({
-                           url: file.url,
-                           name: file.name
-                         })} onError={e => {
-                           e.currentTarget.style.display = 'none';
-                         }} />
+                        <img 
+                          src={file.url} 
+                          alt={file.name || "Image"} 
+                          className="max-w-full sm:max-w-[280px] md:max-w-[300px] max-h-[200px] object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity shadow-sm border" 
+                          onClick={() => setSelectedImage({
+                            url: file.url,
+                            name: file.name
+                          })} 
+                          onError={(e) => {
+                            console.error('[IMAGE-RENDER] Failed to load image:', file.url);
+                            // Show a placeholder instead of hiding
+                            e.currentTarget.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200"%3E%3Crect fill="%23ddd" width="300" height="200"/%3E%3Ctext x="50%25" y="50%25" dominant-baseline="middle" text-anchor="middle" fill="%23999" font-family="sans-serif"%3EImage failed to load%3C/text%3E%3C/svg%3E';
+                            e.currentTarget.classList.remove('cursor-pointer', 'hover:opacity-90');
+                          }} 
+                        />
                        <div className="flex gap-2">
                          <Button variant="ghost" size="sm" className="h-7 px-2 text-xs" onClick={() => downloadImageFromChat(file.url, file.name)}>
                            <Download className="h-3 w-3 mr-1" />
@@ -3850,6 +3855,60 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             className={`relative bg-background border border-border rounded-xl p-3 transition-all duration-200 ${
               isDragOver ? 'border-primary border-2 border-dashed bg-primary/5' : ''
             }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!subscriptionStatus.subscribed) {
+                return;
+              }
+              setIsDragOver(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!subscriptionStatus.subscribed) {
+                return;
+              }
+              setIsDragOver(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                setIsDragOver(false);
+              }
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDragOver(false);
+              
+              if (!subscriptionStatus.subscribed) {
+                toast.error("This model requires a Pro or Ultra Pro subscription");
+                return;
+              }
+              
+              const newFiles = Array.from(e.dataTransfer.files);
+              if (newFiles.length > 0) {
+                const combinedFiles = [...selectedFiles, ...newFiles];
+                
+                const totalSize = combinedFiles.reduce((sum, file) => sum + file.size, 0);
+                const maxTotalSize = 100 * 1024 * 1024;
+                
+                if (totalSize > maxTotalSize) {
+                  toast.error('Total file size cannot exceed 100MB');
+                  return;
+                }
+                
+                if (combinedFiles.length > 10) {
+                  toast.error('Maximum 10 files allowed per message');
+                  return;
+                }
+                
+                setSelectedFiles(combinedFiles);
+                console.log(`[FILES] ${newFiles.length} file(s) added via drag-drop (${combinedFiles.length} total)`);
+              }
+            }}
           >
             {/* Drag and drop overlay */}
             {isDragOver && (
@@ -3866,6 +3925,15 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
               value={input} 
               onChange={handleInputChange} 
               onKeyDown={handleKeyDown} 
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                // The parent div handles the actual drop logic
+              }}
               placeholder={isImageMode ? "Describe an image..." : "ask me anything..."} 
               className="w-full min-h-[24px] border-0 resize-none bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 outline-none px-0 py-0 mb-3 text-sm" 
               rows={1}
