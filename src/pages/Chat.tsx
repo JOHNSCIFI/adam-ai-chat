@@ -275,10 +275,8 @@ export default function Chat() {
   const sendingInProgressRef = useRef(false);
   const selectedModelData = models.find(m => m.id === selectedModel);
   
-  // Filter models based on subscription - free users only get gpt-4o-mini
-  const availableModelsList = subscriptionStatus.subscribed 
-    ? models 
-    : models.filter(m => m.type === 'free');
+  // Show all models to everyone - access control happens on selection
+  const availableModelsList = models;
   useEffect(() => {
     if (chatId && user) {
       // Initialize processed messages Set for this chat if it doesn't exist

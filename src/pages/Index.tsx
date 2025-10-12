@@ -671,9 +671,12 @@ export default function Index() {
         setShowAuthModal(true);
         return;
       }
-      // If not subscribed, redirect to pricing
+      // If not subscribed, show notification
       if (!subscriptionStatus.subscribed) {
-        navigate('/pricing');
+        toast.error('This model requires a Pro or Ultra Pro subscription', {
+          description: 'Please upgrade your plan to use this premium AI model',
+          duration: 5000,
+        });
         return;
       }
     }
