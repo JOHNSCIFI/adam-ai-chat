@@ -442,10 +442,10 @@ const Pricing = () => {
                     <td className="py-4 px-6">Image Generation</td>
                     <td className="py-4 px-6 text-center"><X className="h-5 w-5 text-muted-foreground mx-auto" /></td>
                     <td className="py-4 px-6 text-center">
-                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/30">3.6K/mo</Badge>
+                      <Badge variant="secondary" className="bg-blue-500/10 text-blue-600 border-blue-500/30">500/mo</Badge>
                     </td>
                     <td className="py-4 px-6 text-center">
-                      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/30">14K/mo</Badge>
+                      <Badge variant="secondary" className="bg-purple-500/10 text-purple-600 border-purple-500/30">2K/mo</Badge>
                     </td>
                   </tr>
                   <tr className="hover:bg-muted/30 transition-colors">
