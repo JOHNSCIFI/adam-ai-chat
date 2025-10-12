@@ -801,7 +801,7 @@ export default function Index() {
                               style={getIconFilterStyle(modelData?.icon || 'openai')}
                             />
                           </div>
-                          {model.type === 'pro' && !subscriptionStatus.subscribed && (
+                          {model.type === 'pro' && (!user || !subscriptionStatus.subscribed) && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                               PRO
                             </span>
@@ -1066,7 +1066,7 @@ export default function Index() {
                                     style={getIconFilterStyle(modelData?.icon || 'openai')}
                                   />
                                 </div>
-                                {model.type === 'pro' && !subscriptionStatus.subscribed && (
+                                {model.type === 'pro' && (!user || !subscriptionStatus.subscribed) && (
                                   <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                                     PRO
                                   </span>
