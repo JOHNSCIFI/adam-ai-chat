@@ -77,9 +77,17 @@ serve(async (req) => {
     // Validate input with zod
     const validationResult = webhookSchema.safeParse(body);
     if (!validationResult.success) {
-      console.error('Webhook validation failed', { requestId });
+      console.error('[WEBHOOK-HANDLER] Webhook validation failed', { 
+        requestId, 
+        errors: validationResult.error.errors,
+        receivedBody: body 
+      });
       return new Response(
-        JSON.stringify({ error: 'Invalid request data', requestId }),
+        JSON.stringify({ 
+          error: 'Invalid request data', 
+          requestId,
+          details: validationResult.error.errors 
+        }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
