@@ -97,6 +97,12 @@ const models = [{
   shortLabel: 'Grok 4',
   description: "Powerful AI from xAI",
   type: 'pro'
+}, {
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: "Create images with AI",
+  type: 'pro'
 }];
 
 const availableModels = [{
@@ -142,6 +148,12 @@ const availableModels = [{
   shortLabel: 'Grok 4',
   description: 'Powerful AI model from xAI with advanced capabilities.',
   icon: 'grok'
+}, {
+  id: 'generate-image',
+  name: 'Generate Image',
+  shortLabel: 'Generate Image',
+  description: 'Create stunning AI-generated images from text descriptions.',
+  icon: 'image'
 }];
 const imageStyles = [{
   name: 'Cyberpunk',
