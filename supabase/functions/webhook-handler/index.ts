@@ -9,24 +9,24 @@ const corsHeaders = {
 
 // Input validation schema
 const webhookSchema = z.object({
-  chatId: z.string().uuid().optional(),
-  chat_id: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
-  user_id: z.string().uuid().optional(),
-  model: z.string().max(100).optional(),
-  type: z.string().optional(),
-  response_data: z.union([z.string(), z.object({}).passthrough()]).optional(),
-  response: z.union([z.string(), z.object({}).passthrough()]).optional(),
-  text: z.string().optional(),
-  content: z.string().optional(),
-  image_base64: z.string().optional(),
-  image_name: z.string().optional(),
-  image_type: z.string().optional(),
+  chatId: z.string().uuid().optional().nullable(),
+  chat_id: z.string().uuid().optional().nullable(),
+  userId: z.string().uuid().optional().nullable(),
+  user_id: z.string().uuid().optional().nullable(),
+  model: z.string().max(100).optional().nullable(),
+  type: z.string().optional().nullable(),
+  response_data: z.union([z.string(), z.object({}).passthrough()]).optional().nullable(),
+  response: z.union([z.string(), z.object({}).passthrough()]).optional().nullable(),
+  text: z.string().optional().nullable(),
+  content: z.string().optional().nullable(),
+  image_base64: z.string().optional().nullable(),
+  image_name: z.string().optional().nullable(),
+  image_type: z.string().optional().nullable(),
   body: z.object({
-    chatId: z.string().uuid().optional(),
-    userId: z.string().uuid().optional(),
-    model: z.string().max(100).optional(),
-  }).optional(),
+    chatId: z.string().uuid().optional().nullable(),
+    userId: z.string().uuid().optional().nullable(),
+    model: z.string().max(100).optional().nullable(),
+  }).optional().nullable(),
 });
 
 // Sanitize content to prevent XSS
