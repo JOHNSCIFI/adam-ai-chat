@@ -229,11 +229,16 @@ export default function ChatSidebar({
     }
   };
   const handleRenameChat = async (chatId: string, newTitle: string) => {
+    if (!newTitle.trim()) {
+      setEditingChatId(null);
+      setEditingTitle('');
+      return;
+    }
     try {
       const {
         error
       } = await supabase.from('chats').update({
-        title: newTitle
+        title: newTitle.trim()
       }).eq('id', chatId);
       if (error) {
         console.error('Error renaming chat:', error);
