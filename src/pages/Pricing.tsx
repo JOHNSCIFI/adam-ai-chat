@@ -23,6 +23,11 @@ const Pricing = () => {
     'prod_TDSfAtaWP5KbhM': 'Ultra Pro', // Ultra Pro plan product ID
   };
 
+  // Scroll to top on page load
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Check subscription status after successful payment
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
