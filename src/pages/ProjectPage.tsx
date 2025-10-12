@@ -177,7 +177,8 @@ export default function ProjectPage() {
   } = useParams();
   const navigate = useNavigate();
   const {
-    user
+    user,
+    subscriptionStatus
   } = useAuth();
   const {
     actualTheme

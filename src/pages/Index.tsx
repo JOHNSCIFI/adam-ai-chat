@@ -163,7 +163,8 @@ export default function Index() {
   const {
     user,
     loading: authLoading,
-    userProfile
+    userProfile,
+    subscriptionStatus
   } = useAuth();
   const {
     actualTheme
