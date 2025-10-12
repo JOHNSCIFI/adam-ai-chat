@@ -232,6 +232,19 @@ serve(async (req) => {
       );
     }
 
+    // Increment usage counter only if an image was generated and user_id exists
+    if (imageUrl && user_id) {
+      console.log('[WEBHOOK-HANDLER] Incrementing image generation usage for user:', user_id);
+      const { data: incrementData, error: incrementError } = await supabaseClient
+        .rpc('increment_image_generation', { p_user_id: user_id });
+      
+      if (incrementError) {
+        console.error('[WEBHOOK-HANDLER] Failed to increment usage:', incrementError);
+      } else {
+        console.log('[WEBHOOK-HANDLER] Usage incremented successfully:', incrementData);
+      }
+    }
+
     console.log('[WEBHOOK-HANDLER] ===== SUCCESS =====');
     console.log('[WEBHOOK-HANDLER] Message saved successfully!');
     console.log('[WEBHOOK-HANDLER] Message ID:', data.id);

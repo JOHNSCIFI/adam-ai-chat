@@ -96,15 +96,6 @@ export default function ImageGeneration() {
     setIsGenerating(true);
 
     try {
-      // Increment usage counter
-      const incremented = await incrementUsage();
-      if (!incremented) {
-        toast.error('Unable to track usage. Please try again.');
-        setIsGenerating(false);
-        setNewPrompt(promptText);
-        return;
-      }
-
       // Create new chat with the prompt
       const { data: newChat, error } = await supabase
         .from('chats')
