@@ -325,6 +325,10 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
+      return;
+    }
     fileInputRef.current?.click();
   };
   const handleDragOver = (e: React.DragEvent) => {
@@ -343,6 +347,10 @@ export default function Index() {
     setIsDragOver(false);
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
       return;
     }
     const files = Array.from(e.dataTransfer.files);
@@ -382,6 +390,10 @@ export default function Index() {
   const startRecording = async () => {
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
       return;
     }
     
@@ -847,6 +859,10 @@ export default function Index() {
       setIsDragOver(false);
       if (!user) {
         setShowAuthModal(true);
+        return;
+      }
+      if (!subscriptionStatus.subscribed) {
+        toast.error("This model requires a Pro or Ultra Pro subscription");
         return;
       }
       const files = Array.from(e.dataTransfer.files);

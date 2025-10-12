@@ -253,9 +253,10 @@ export default function ProjectPage() {
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [hasSelectedModel, setHasSelectedModel] = useState(false);
+  const [isDragOver, setIsDragOver] = useState(false);
   
   // Filter models based on subscription
-  const availableModelsList = subscriptionStatus.subscribed 
+  const availableModelsList = subscriptionStatus.subscribed
     ? models 
     : models.filter(m => m.type === 'free');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -591,10 +592,20 @@ export default function ProjectPage() {
     return title.length > 50 ? title.substring(0, 47) + '...' : title;
   };
   const handleFileUpload = () => {
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
+      setIsPopoverOpen(false);
+      return;
+    }
     fileInputRef.current?.click();
     setIsPopoverOpen(false);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
+      event.target.value = '';
+      return;
+    }
     const files = event.target.files;
     if (files && files.length > 0) {
       setSelectedFiles(prev => [...prev, ...Array.from(files)]);
@@ -725,6 +736,11 @@ export default function ProjectPage() {
     }
   };
   const startRecording = async () => {
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
+      return;
+    }
+    
     try {
       // Get microphone access
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -964,7 +980,50 @@ export default function ProjectPage() {
             </div>
           </div>}
         
-        <div className={`flex-1 overflow-y-auto overflow-x-hidden ${isMobile ? 'pt-[60px] pb-[180px]' : 'pb-[180px]'}`}>
+        <div 
+          className={`flex-1 overflow-y-auto overflow-x-hidden ${isMobile ? 'pt-[60px] pb-[180px]' : 'pb-[180px]'}`}
+          onDragOver={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(true);
+          }}
+          onDragEnter={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(true);
+          }}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+              setIsDragOver(false);
+            }
+          }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setIsDragOver(false);
+            
+            if (!subscriptionStatus.subscribed) {
+              toast.error("This model requires a Pro or Ultra Pro subscription");
+              return;
+            }
+            
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length > 0) {
+              setSelectedFiles(prev => [...prev, ...files]);
+            }
+          }}
+        >
+          {/* Drag and drop overlay */}
+          {isDragOver && (
+            <div className="fixed inset-0 bg-primary/10 flex items-center justify-center z-50 pointer-events-none">
+              <div className="text-center">
+                <Paperclip className="h-8 w-8 text-primary mx-auto mb-2" />
+                <p className="text-base font-semibold text-primary">Drop files here</p>
+              </div>
+            </div>
+          )}
           <div className="min-h-full flex flex-col justify-center px-3 sm:px-4 py-4 max-w-4xl mx-auto">
             {/* Desktop Header */}
             {!isMobile && <div className="flex flex-col items-center justify-center mb-8 text-center">

@@ -2961,6 +2961,10 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
       setShowAuthModal(true);
       return;
     }
+    if (!subscriptionStatus.subscribed) {
+      toast.error("This model requires a Pro or Ultra Pro subscription");
+      return;
+    }
     
     try {
       // Get microphone access
@@ -3509,6 +3513,11 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           e.preventDefault();
           e.stopPropagation();
           setIsDragOver(false);
+          
+          if (!subscriptionStatus.subscribed) {
+            toast.error("This model requires a Pro or Ultra Pro subscription");
+            return;
+          }
           
           const newFiles = Array.from(e.dataTransfer.files);
           if (newFiles.length > 0) {
