@@ -242,7 +242,7 @@ export default function Admin() {
       const {
         data: subscriptionsData,
         error: subscriptionsError
-      } = await supabase.from('user_subscriptions').select('*').in('user_id', userIds);
+      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, current_period_end').in('user_id', userIds).eq('status', 'active');
       if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
 
       // Create a map of user_id to profile and subscription
@@ -276,6 +276,16 @@ export default function Admin() {
           });
         }
         const userUsage = userMap.get(userId)!;
+        
+        // Update subscription status if we haven't set it yet and subscription exists
+        if (!userUsage.subscription_status && subscription) {
+          userUsage.subscription_status = {
+            subscribed: subscription.status === 'active',
+            product_id: subscription.product_id || null,
+            subscription_end: subscription.current_period_end || null
+          };
+        }
+        
         userUsage.model_usages.push({
           model,
           input_tokens: inputTokens,
@@ -315,10 +325,20 @@ export default function Admin() {
 
   // Get subscription plan for a user
   const getUserPlan = (usage: UserTokenUsage): 'free' | 'pro' | 'ultra' => {
-    if (!usage.subscription_status?.subscribed) return 'free';
+    // Check if user has an active subscription
+    if (!usage.subscription_status?.subscribed || !usage.subscription_status?.product_id) {
+      return 'free';
+    }
+    
     const productId = usage.subscription_status.product_id;
+    
+    // Match against known product IDs
     if (productId === 'prod_TDSeCiQ2JEFnWB') return 'pro';
     if (productId === 'prod_TDSfAtaWP5KbhM') return 'ultra';
+    
+    // If product_id doesn't match known IDs but subscription is active, default to free
+    // This handles edge cases where product_id might be different
+    console.log('Unknown product_id:', productId);
     return 'free';
   };
 
@@ -594,21 +614,49 @@ export default function Admin() {
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span className="text-sm text-muted-foreground">Loading...</span>
                   </div>
-                ) : selectedUser?.subscription_status?.subscribed ? (
-                  <div className="flex items-center gap-2">
-                    <Badge variant="default" className="bg-green-500/10 text-green-600 border-green-500/30">
-                      {productToPlanMap[selectedUser.subscription_status.product_id || ''] || 'Subscribed'}
-                    </Badge>
-                    {selectedUser.subscription_status.subscription_end && (
-                      <span className="text-xs text-muted-foreground">
-                        Until {new Date(selectedUser.subscription_status.subscription_end).toLocaleDateString()}
-                      </span>
-                    )}
-                  </div>
                 ) : (
-                  <Badge variant="secondary" className="bg-muted text-muted-foreground">
-                    Free Plan
-                  </Badge>
+                  <>
+                    {selectedUser && (() => {
+                      const plan = getUserPlan(selectedUser);
+                      const isSubscribed = selectedUser.subscription_status?.subscribed;
+                      const productId = selectedUser.subscription_status?.product_id;
+                      const subscriptionEnd = selectedUser.subscription_status?.subscription_end;
+                      
+                      if (plan === 'pro') {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-blue-500/10 text-blue-600 border-blue-500/30">
+                              Pro
+                            </Badge>
+                            {subscriptionEnd && (
+                              <span className="text-xs text-muted-foreground">
+                                Until {new Date(subscriptionEnd).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      } else if (plan === 'ultra') {
+                        return (
+                          <div className="flex items-center gap-2">
+                            <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/30">
+                              Ultra Pro
+                            </Badge>
+                            {subscriptionEnd && (
+                              <span className="text-xs text-muted-foreground">
+                                Until {new Date(subscriptionEnd).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                        );
+                      } else {
+                        return (
+                          <Badge variant="secondary" className="bg-muted text-muted-foreground">
+                            Free Plan
+                          </Badge>
+                        );
+                      }
+                    })()}
+                  </>
                 )}
               </div>
             </DialogHeader>
