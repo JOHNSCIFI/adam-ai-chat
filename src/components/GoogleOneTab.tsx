@@ -14,13 +14,13 @@ declare global {
 }
 
 export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
-  const { user, signInWithGoogle } = useAuth();
+  const { user, signInWithGoogle, loading } = useAuth();
   const oneTabRef = useRef<HTMLDivElement>(null);
   const isInitialized = useRef(false);
 
   useEffect(() => {
-    // Don't show One Tap if user is already authenticated
-    if (user || isInitialized.current) return;
+    // Don't show One Tap if user is already authenticated or auth is still loading
+    if (user || loading || isInitialized.current) return;
 
     const loadGoogleScript = () => {
       if (window.google && window.google.accounts) {
@@ -114,10 +114,10 @@ export default function GoogleOneTab({ onSuccess }: GoogleOneTabProps) {
         }
       }
     };
-  }, [user, signInWithGoogle, onSuccess]);
+  }, [user, loading, signInWithGoogle, onSuccess]);
 
-  // Don't render anything if user is authenticated
-  if (user) return null;
+  // Don't render anything if user is authenticated or auth is loading
+  if (user || loading) return null;
 
   return (
     <div 
