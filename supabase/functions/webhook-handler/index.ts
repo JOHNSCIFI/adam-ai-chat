@@ -4,7 +4,7 @@ import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-api-key',
 };
 
 // Input validation schema
@@ -45,6 +45,20 @@ serve(async (req) => {
   }
 
   const requestId = crypto.randomUUID();
+  
+  // Verify API key
+  const apiKey = req.headers.get('x-api-key');
+  const expectedApiKey = Deno.env.get('WEBHOOK_API_KEY');
+  
+  if (!apiKey || !expectedApiKey || apiKey !== expectedApiKey) {
+    console.error('[WEBHOOK-HANDLER] Unauthorized: Invalid or missing API key', { requestId });
+    return new Response(
+      JSON.stringify({ error: 'Unauthorized', requestId }),
+      { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+  }
+  
+  console.log('[WEBHOOK-HANDLER] API key verified successfully');
   
   try {
     const supabaseClient = createClient(
