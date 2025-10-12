@@ -264,6 +264,17 @@ serve(async (req) => {
         // Save image permanently to Supabase storage
         const permanentImageUrl = await saveImageToStorage(temporaryImageUrl, user_id, imagePrompt);
         const finalImageUrl = permanentImageUrl || temporaryImageUrl;
+        
+        // Increment usage counter for successful image generation
+        console.log('Incrementing image generation usage for user:', user_id);
+        const { data: incrementData, error: incrementError } = await supabase
+          .rpc('increment_image_generation', { p_user_id: user_id });
+        
+        if (incrementError) {
+          console.error('Failed to increment usage:', incrementError);
+        } else {
+          console.log('Usage incremented successfully:', incrementData);
+        }
 
         responseContent = `I've generated an image for you: "${imagePrompt}"`;
 
