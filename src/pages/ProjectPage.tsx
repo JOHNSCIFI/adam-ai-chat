@@ -592,6 +592,13 @@ export default function ProjectPage() {
     return title.length > 50 ? title.substring(0, 47) + '...' : title;
   };
   const handleFileUpload = () => {
+    if (selectedModel === 'generate-image') {
+      toast.error("Cannot upload files in Generate Image mode", {
+        description: "Image generation mode doesn't support file attachments"
+      });
+      setIsPopoverOpen(false);
+      return;
+    }
     if (!subscriptionStatus.subscribed) {
       toast.error("This model requires a Pro or Ultra Pro subscription");
       setIsPopoverOpen(false);
@@ -601,6 +608,13 @@ export default function ProjectPage() {
     setIsPopoverOpen(false);
   };
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (selectedModel === 'generate-image') {
+      toast.error("Cannot upload files in Generate Image mode", {
+        description: "Image generation mode doesn't support file attachments"
+      });
+      event.target.value = '';
+      return;
+    }
     if (!subscriptionStatus.subscribed) {
       toast.error("This model requires a Pro or Ultra Pro subscription");
       event.target.value = '';
@@ -736,6 +750,12 @@ export default function ProjectPage() {
     }
   };
   const startRecording = async () => {
+    if (selectedModel === 'generate-image') {
+      toast.error("Voice input not available in Generate Image mode", {
+        description: "Please use text to describe the image you want to generate"
+      });
+      return;
+    }
     if (!subscriptionStatus.subscribed) {
       toast.error("This model requires a Pro or Ultra Pro subscription");
       return;
@@ -985,6 +1005,9 @@ export default function ProjectPage() {
           onDragOver={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (selectedModel === 'generate-image') {
+              return;
+            }
             if (!subscriptionStatus.subscribed) {
               return;
             }
@@ -993,6 +1016,9 @@ export default function ProjectPage() {
           onDragEnter={(e) => {
             e.preventDefault();
             e.stopPropagation();
+            if (selectedModel === 'generate-image') {
+              return;
+            }
             if (!subscriptionStatus.subscribed) {
               return;
             }
@@ -1009,6 +1035,13 @@ export default function ProjectPage() {
             e.preventDefault();
             e.stopPropagation();
             setIsDragOver(false);
+            
+            if (selectedModel === 'generate-image') {
+              toast.error("Cannot upload files in Generate Image mode", {
+                description: "Image generation mode doesn't support file attachments"
+              });
+              return;
+            }
             
             if (!subscriptionStatus.subscribed) {
               toast.error("This model requires a Pro or Ultra Pro subscription");

@@ -325,6 +325,12 @@ export default function Index() {
       setShowAuthModal(true);
       return;
     }
+    if (selectedModel === 'generate-image') {
+      toast.error("Cannot upload files in Generate Image mode", {
+        description: "Image generation mode doesn't support file attachments"
+      });
+      return;
+    }
     if (!subscriptionStatus.subscribed) {
       toast.error("This model requires a Pro or Ultra Pro subscription");
       return;
@@ -390,6 +396,12 @@ export default function Index() {
   const startRecording = async () => {
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+    if (selectedModel === 'generate-image') {
+      toast.error("Voice input not available in Generate Image mode", {
+        description: "Please use text to describe the image you want to generate"
+      });
       return;
     }
     if (!subscriptionStatus.subscribed) {
@@ -841,6 +853,9 @@ export default function Index() {
       <div className={`flex-1 flex flex-col items-center justify-center p-3 sm:p-6 max-w-4xl mx-auto w-full transition-all duration-200 ${isMobile ? 'pt-[72px]' : ''} relative`} onDragOver={e => {
       e.preventDefault();
       e.stopPropagation();
+      if (selectedModel === 'generate-image') {
+        return;
+      }
       if (!user || !subscriptionStatus.subscribed) {
         return;
       }
@@ -848,6 +863,9 @@ export default function Index() {
     }} onDragEnter={e => {
       e.preventDefault();
       e.stopPropagation();
+      if (selectedModel === 'generate-image') {
+        return;
+      }
       if (!user || !subscriptionStatus.subscribed) {
         return;
       }
@@ -865,6 +883,12 @@ export default function Index() {
       setIsDragOver(false);
       if (!user) {
         setShowAuthModal(true);
+        return;
+      }
+      if (selectedModel === 'generate-image') {
+        toast.error("Cannot upload files in Generate Image mode", {
+          description: "Image generation mode doesn't support file attachments"
+        });
         return;
       }
       if (!subscriptionStatus.subscribed) {

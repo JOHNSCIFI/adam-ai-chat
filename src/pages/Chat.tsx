@@ -2875,6 +2875,14 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
     }
   };
   const handleFileUpload = () => {
+    // Check if in generate-image mode
+    if (selectedModel === 'generate-image') {
+      toast.error("Cannot upload files in Generate Image mode", {
+        description: "Image generation mode doesn't support file attachments"
+      });
+      setIsPopoverOpen(false);
+      return;
+    }
     // Check if user has a subscription
     if (!subscriptionStatus.subscribed) {
       toast.error("File uploads are only available for Pro and Ultra Pro subscribers", {
@@ -2955,6 +2963,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
   const startRecording = async () => {
     if (!user) {
       setShowAuthModal(true);
+      return;
+    }
+    if (selectedModel === 'generate-image') {
+      toast.error("Voice input not available in Generate Image mode", {
+        description: "Please use text to describe the image you want to generate"
+      });
       return;
     }
     if (!subscriptionStatus.subscribed) {
@@ -3490,6 +3504,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         onDragOver={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (selectedModel === 'generate-image') {
+            return;
+          }
           if (!subscriptionStatus.subscribed) {
             return;
           }
@@ -3498,6 +3515,9 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         onDragEnter={(e) => {
           e.preventDefault();
           e.stopPropagation();
+          if (selectedModel === 'generate-image') {
+            return;
+          }
           if (!subscriptionStatus.subscribed) {
             return;
           }
@@ -3515,6 +3535,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
           e.preventDefault();
           e.stopPropagation();
           setIsDragOver(false);
+          
+          if (selectedModel === 'generate-image') {
+            toast.error("Cannot upload files in Generate Image mode", {
+              description: "Image generation mode doesn't support file attachments"
+            });
+            return;
+          }
           
           if (!subscriptionStatus.subscribed) {
             toast.error("This model requires a Pro or Ultra Pro subscription");
