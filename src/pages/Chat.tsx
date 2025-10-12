@@ -794,13 +794,9 @@ export default function Chat() {
       autoSendTempMessage.current = tempUserMessage;
       console.log('[CHAT-INITIAL] Stored temp message in ref:', tempId);
       
-      // CRITICAL: Mark temp message as processed immediately to prevent AUTO-TRIGGER from processing it
-      // sendMessage will handle the AI response trigger once the real message is saved
-      if (!processedUserMessages.current.has(chatId)) {
-        processedUserMessages.current.set(chatId, new Set());
-      }
-      processedUserMessages.current.get(chatId)!.add(tempId);
-      console.log('[CHAT-INITIAL] Marked temp message as processed to prevent AUTO-TRIGGER');
+      // CRITICAL: DO NOT mark temp message as processed
+      // Let AUTO-TRIGGER handle the real message naturally after it's saved to database
+      console.log('[CHAT-INITIAL] Temp message created, AUTO-TRIGGER will handle AI response after real message is saved');
       
       // Add message to UI immediately so user sees their image
       setMessages(prev => [...prev, tempUserMessage]);
@@ -2422,29 +2418,37 @@ export default function Chat() {
             realId: insertedMessage.id
           });
           
-          // Check if the temp message was already processed by AUTO-TRIGGER
-          const tempMessageId = tempUserMessage.id;
-          const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
+          // Check if this was from auto-send (homepage navigation)
+          const isAutoSendMessage = tempUserMessage.id.startsWith('temp-init-');
           
-          if (tempWasProcessed) {
-            console.log('[TEXT-MESSAGE] ✅ Temp was processed by AUTO-TRIGGER, marking real message as processed');
-            console.log('[TEXT-MESSAGE] ✅ NOT triggering AI response again - AUTO-TRIGGER already sent webhook for temp message');
-            // Mark real message as processed since temp was already processed
-            if (!processedUserMessages.current.has(chatId)) {
-              processedUserMessages.current.set(chatId, new Set());
-            }
-            processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
-            
-            // Persist to sessionStorage
-            const storageKey = `processed_messages_${chatId}`;
-            const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
-            sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
-            
-            // DO NOT call triggerAIResponse here - AUTO-TRIGGER already called it for the temp message
-            // The webhook was sent with the temp message ID, which gets replaced in the backend
+          if (isAutoSendMessage) {
+            console.log('[TEXT-MESSAGE] Auto-send message from homepage - AUTO-TRIGGER will handle AI response');
+            // Don't mark as processed - let AUTO-TRIGGER handle the real message naturally
           } else {
-            console.log('[TEXT-MESSAGE] Temp was NOT processed, letting AUTO-TRIGGER handle the real message');
-            // Don't mark as processed - let AUTO-TRIGGER handle the real message
+            // Check if the temp message was already processed by AUTO-TRIGGER (for regular chat messages)
+            const tempMessageId = tempUserMessage.id;
+            const tempWasProcessed = processedUserMessages.current.get(chatId)?.has(tempMessageId);
+            
+            if (tempWasProcessed) {
+              console.log('[TEXT-MESSAGE] ✅ Temp was processed by AUTO-TRIGGER, marking real message as processed');
+              console.log('[TEXT-MESSAGE] ✅ NOT triggering AI response again - AUTO-TRIGGER already sent webhook for temp message');
+              // Mark real message as processed since temp was already processed
+              if (!processedUserMessages.current.has(chatId)) {
+                processedUserMessages.current.set(chatId, new Set());
+              }
+              processedUserMessages.current.get(chatId)!.add(insertedMessage.id);
+              
+              // Persist to sessionStorage
+              const storageKey = `processed_messages_${chatId}`;
+              const processedArray = Array.from(processedUserMessages.current.get(chatId)!);
+              sessionStorage.setItem(storageKey, JSON.stringify(processedArray));
+              
+              // DO NOT call triggerAIResponse here - AUTO-TRIGGER already called it for the temp message
+              // The webhook was sent with the temp message ID, which gets replaced in the backend
+            } else {
+              console.log('[TEXT-MESSAGE] Temp was NOT processed, letting AUTO-TRIGGER handle the real message');
+              // Don't mark as processed - let AUTO-TRIGGER handle the real message
+            }
           }
         }
       }

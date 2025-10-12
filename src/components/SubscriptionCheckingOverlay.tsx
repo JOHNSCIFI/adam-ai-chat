@@ -24,7 +24,8 @@ export const SubscriptionCheckingOverlay = ({ onComplete }: SubscriptionChecking
 
       // Wait for subscription to be confirmed
       const checkInterval = setInterval(() => {
-        const status = JSON.parse(localStorage.getItem('subscription_status') || '{"subscribed":false}');
+        // CRITICAL: Use sessionStorage with correct key to match AuthContext
+        const status = JSON.parse(sessionStorage.getItem('chatl_subscription_status') || '{"subscribed":false}');
         
         if (status.subscribed) {
           clearInterval(checkInterval);

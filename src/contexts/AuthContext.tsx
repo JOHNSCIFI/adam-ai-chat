@@ -361,13 +361,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const checkSubscription = async () => {
     if (!user || isCheckingSubscription) {
       if (!user) {
-        const resetStatus = {
-          subscribed: false,
-          product_id: null,
-          subscription_end: null
-        };
-        setSubscriptionStatus(resetStatus);
-        clearCachedSubscription();
+        // Don't clear cache here - keep existing subscription status
+        // Only reset the loading state
         setLoadingSubscription(false);
       }
       return;
