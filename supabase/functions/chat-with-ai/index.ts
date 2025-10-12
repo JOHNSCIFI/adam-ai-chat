@@ -92,7 +92,7 @@ serve(async (req) => {
 
   try {
     const { message, chat_id, user_id } = await req.json();
-    console.log('Received request:', { message, chat_id, user_id });
+    console.log('[CHAT-WITH-AI] Received request:', { message, chat_id, user_id });
 
     const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
     if (!openAIApiKey) {

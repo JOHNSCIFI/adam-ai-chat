@@ -71,18 +71,6 @@ const models = [{
   shortLabel: 'Grok 4',
   description: "Powerful AI from xAI",
   type: 'pro'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: "Create images with DALL·E 3",
-  type: 'pro'
-}, {
-  id: 'edit-image',
-  name: 'Edit Image',
-  shortLabel: 'Edit Image',
-  description: "Edit images with DALL·E 3",
-  type: 'pro'
 }];
 
 const availableModels = [{
@@ -128,18 +116,6 @@ const availableModels = [{
   shortLabel: 'Grok 4',
   description: 'Powerful AI model from xAI with advanced capabilities.',
   icon: 'grok'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: 'Create stunning images and artwork using DALL·E 3.',
-  icon: 'openai'
-}, {
-  id: 'edit-image',
-  name: 'Edit Image (DALL·E 3)',
-  shortLabel: 'Edit Image',
-  description: 'Edit and modify existing images using DALL·E 3.',
-  icon: 'openai'
 }];
 
 interface Message {
@@ -259,6 +235,10 @@ export default function Chat() {
   const regeneratingMessageIdRef = useRef<string | null>(null); // Ref to track current regenerating message ID
   const [hiddenMessageIds, setHiddenMessageIds] = useState<Set<string>>(new Set());
   const [selectedModel, setSelectedModel] = useState(() => {
+    // Free users can only use gpt-4o-mini
+    if (!subscriptionStatus.subscribed) {
+      return 'gpt-4o-mini';
+    }
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
     return location.state?.selectedModel || 'gpt-4o-mini';
   });
@@ -280,6 +260,11 @@ export default function Chat() {
   // Track if a send is in progress to prevent duplicates
   const sendingInProgressRef = useRef(false);
   const selectedModelData = models.find(m => m.id === selectedModel);
+  
+  // Filter models based on subscription - free users only get gpt-4o-mini
+  const availableModelsList = subscriptionStatus.subscribed 
+    ? models 
+    : models.filter(m => m.type === 'free');
   useEffect(() => {
     if (chatId && user) {
       // Initialize processed messages Set for this chat if it doesn't exist
@@ -3373,7 +3358,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                 </div>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                {models.map(model => {
+                {availableModelsList.map(model => {
                   const modelData = availableModels.find(m => m.id === model.id);
                   const isPro = model.type === 'pro';
                   const isDisabled = isPro && !subscriptionStatus.subscribed;
@@ -3996,13 +3981,13 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                   
                   <div className="flex items-center gap-2">
                     <Select value={selectedModel} onValueChange={handleModelChange}>
-                      <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
+                       <SelectTrigger className="w-[180px] h-8 bg-background border border-border/50 rounded-full z-50">
                         <SelectValue>
                           <span className="text-sm font-medium">{selectedModelData?.shortLabel}</span>
                         </SelectValue>
                       </SelectTrigger>
                        <SelectContent className="z-[100] bg-background border shadow-lg rounded-lg p-1 w-[calc(100vw-2rem)] max-w-[280px]">
-                           {models.map(model => {
+                           {availableModelsList.map(model => {
                              const isPro = model.type === 'pro';
                              const isDisabled = isPro && !subscriptionStatus.subscribed;
                              

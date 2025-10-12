@@ -67,12 +67,6 @@ const models = [{
   shortLabel: 'Grok 4',
   description: "Powerful AI from xAI",
   type: 'pro'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: "Create images with DALL·E 3",
-  type: 'pro'
 }];
 
 const emojiCategories = {
@@ -92,7 +86,6 @@ const suggestionsByCategory = {
   'business-ideas': ['Generate business ideas', 'Brainstorm startup concepts', 'Suggest business strategies', 'Create business plans'],
   'text-summary': ['Summarize this text briefly', 'Condense into main points', 'Provide a short overview', 'Extract key takeaways'],
   'calorie-check': ['Estimate calories in this food', 'Analyze nutritional content', 'Check dietary information', 'Calculate meal calories'],
-  'generate-image': ['Create an image of...', 'Generate artwork showing...', 'Design a visual representation of...', 'Produce an illustration of...'],
   'code-review': ['Review this code for bugs', 'Optimize this function', 'Explain this algorithm', 'Suggest improvements'],
   'content-writing': ['Write a blog post about...', 'Create social media content', 'Draft an email', 'Write product descriptions'],
   'math-solving': ['Solve this equation', 'Explain this math concept', 'Calculate percentages', 'Help with statistics'],
@@ -147,12 +140,6 @@ const availableModels = [{
   shortLabel: 'Grok 4',
   description: 'Powerful AI model from xAI with advanced capabilities.',
   icon: 'grok'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: 'Create stunning images and artwork using DALL·E 3.',
-  icon: 'openai'
 }];
 
 // Suggestion buttons for quick actions
@@ -164,7 +151,6 @@ const suggestionButtons = [
   { label: 'Business Ideas', action: 'business-ideas', icon: Briefcase },
   { label: 'Text Summary', action: 'text-summary', icon: FileText },
   { label: 'Calorie Check', action: 'calorie-check', icon: Apple },
-  { label: 'Generate Image', action: 'generate-image', icon: ImageIcon },
 ];
 
 const additionalButtons: typeof suggestionButtons = [];
@@ -677,6 +663,11 @@ export default function Index() {
     }
   };
   const selectedModelData = models.find(m => m.id === selectedModel);
+  
+  // Filter models based on subscription
+  const availableModelsList = subscriptionStatus.subscribed 
+    ? models 
+    : models.filter(m => m.type === 'free');
   const imageStyles = [{
     name: 'Cyberpunk',
     prompt: 'Create an image in a cyberpunk aesthetic: vivid neon accents, futuristic textures, glowing details, and high-contrast lighting.'
@@ -766,7 +757,7 @@ export default function Index() {
                 </div>
               </SelectTrigger>
               <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[300px]" align="center">
-                {models.map(model => {
+                {availableModelsList.map(model => {
               const modelData = availableModels.find(m => m.id === model.id);
               return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
                       <div className="flex items-center w-full gap-3">
@@ -1031,7 +1022,7 @@ export default function Index() {
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]">
-                      {models.map(model => {
+                      {availableModelsList.map(model => {
                       const modelData = availableModels.find(m => m.id === model.id);
                       return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
                             <div className="flex items-center w-full gap-3">

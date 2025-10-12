@@ -97,12 +97,6 @@ const models = [{
   shortLabel: 'Grok 4',
   description: "Powerful AI from xAI",
   type: 'pro'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: "Create images with DALL·E 3",
-  type: 'pro'
 }];
 
 const availableModels = [{
@@ -148,12 +142,6 @@ const availableModels = [{
   shortLabel: 'Grok 4',
   description: 'Powerful AI model from xAI with advanced capabilities.',
   icon: 'grok'
-}, {
-  id: 'generate-image',
-  name: 'Generate Image',
-  shortLabel: 'Generate Image',
-  description: 'Create stunning images and artwork using DALL·E 3.',
-  icon: 'openai'
 }];
 const imageStyles = [{
   name: 'Cyberpunk',
@@ -252,6 +240,11 @@ export default function ProjectPage() {
   const [selectedModel, setSelectedModel] = useState('gpt-4o-mini');
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const [hasSelectedModel, setHasSelectedModel] = useState(false);
+  
+  // Filter models based on subscription
+  const availableModelsList = subscriptionStatus.subscribed 
+    ? models 
+    : models.filter(m => m.type === 'free');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
@@ -1199,8 +1192,8 @@ export default function ProjectPage() {
                               </div>
                             </SelectValue>
                           </SelectTrigger>
-                          <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]">
-                            {models.map(model => {
+                           <SelectContent className="z-[100] bg-background/95 backdrop-blur-xl border border-border/80 shadow-2xl rounded-2xl p-2 w-[calc(100vw-2rem)] max-w-[320px]">
+                            {availableModelsList.map(model => {
                               const modelData = availableModels.find(m => m.id === model.id);
                               return <SelectItem key={model.id} value={model.id} className="rounded-xl px-3 py-3 hover:bg-accent/60 focus-visible:bg-accent/60 transition-all duration-200 cursor-pointer">
                                 <div className="flex items-center w-full gap-3">

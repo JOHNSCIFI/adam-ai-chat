@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
 import { 
   Settings, 
   User, 
@@ -22,7 +23,8 @@ import {
   Mail,
   Shield,
   Check,
-  Crown
+  Crown,
+  ImageIcon
 } from 'lucide-react';
 
 interface SettingsModalProps {
@@ -62,6 +64,7 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
   const { toast } = useToast();
   const { user, signOut, userProfile, subscriptionStatus, checkSubscription } = useAuth();
   const isMobile = useIsMobile();
+  const { usageLimits, loading: limitsLoading } = useUsageLimits();
 
   const handleSetTheme = (newTheme: typeof theme) => {
     setTheme(newTheme);
@@ -664,6 +667,61 @@ export default function SettingsModal({ open, onOpenChange }: SettingsModalProps
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Usage Limits - Only show for paid plans */}
+              {subscriptionStatus.subscribed && !limitsLoading && (
+                <Card className="shadow-sm border-border/40">
+                  <CardContent className="p-4 md:p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <ImageIcon className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-sm md:text-base">Usage Limits</h3>
+                          <p className="text-xs md:text-sm text-muted-foreground">Your monthly usage allocation</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        {/* Image Generations */}
+                        <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg">
+                          <div>
+                            <p className="font-medium text-sm">Image Generations</p>
+                            <p className="text-xs text-muted-foreground">
+                              Resets on {usageLimits.resetDate ? new Date(usageLimits.resetDate).toLocaleDateString() : 'N/A'}
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-lg font-bold text-primary">
+                              {usageLimits.remaining} / {usageLimits.limit}
+                            </p>
+                            <p className="text-xs text-muted-foreground">remaining</p>
+                          </div>
+                        </div>
+                        
+                        {/* Upgrade suggestion for Pro users */}
+                        {subscriptionStatus.product_id === 'prod_TDSeCiQ2JEFnWB' && usageLimits.remaining < 100 && (
+                          <div className="p-3 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-primary/20 rounded-lg">
+                            <p className="text-sm font-medium text-foreground mb-1">Running low on generations?</p>
+                            <p className="text-xs text-muted-foreground mb-2">Upgrade to Ultra Pro for 2,000 generations/month (4× more!)</p>
+                            <Button 
+                              size="sm" 
+                              className="w-full"
+                              onClick={() => {
+                                onOpenChange(false);
+                                window.location.href = '/pricing';
+                              }}
+                            >
+                              Upgrade to Ultra Pro
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Manage Subscription */}
               {subscriptionStatus.subscribed && (

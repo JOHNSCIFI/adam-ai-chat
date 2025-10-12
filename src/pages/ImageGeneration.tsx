@@ -2,20 +2,23 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, ImageIcon } from 'lucide-react';
+import { Sparkles, ImageIcon, AlertCircle } from 'lucide-react';
 import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useSidebar } from '@/components/ui/sidebar';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
+import { useUsageLimits } from '@/hooks/useUsageLimits';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export default function ImageGeneration() {
-  const { user } = useAuth();
+  const { user, subscriptionStatus } = useAuth();
   const { actualTheme } = useTheme();
   const { state: sidebarState } = useSidebar();
   const navigate = useNavigate();
   const collapsed = sidebarState === 'collapsed';
+  const { usageLimits, loading: limitsLoading, incrementUsage } = useUsageLimits();
 
   const [newPrompt, setNewPrompt] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -76,11 +79,32 @@ export default function ImageGeneration() {
   const handleGenerate = async () => {
     if (!newPrompt.trim() || isGenerating) return;
 
+    // Check if user has permission to generate images
+    if (!subscriptionStatus.subscribed) {
+      toast.error('Image generation requires a Pro or Ultra Pro subscription');
+      return;
+    }
+
+    // Check usage limits
+    if (!usageLimits.canGenerate) {
+      toast.error(`You've reached your monthly limit of ${usageLimits.limit} image generations. Upgrade to Ultra Pro for more!`);
+      return;
+    }
+
     const promptText = newPrompt.trim();
     setNewPrompt('');
     setIsGenerating(true);
 
     try {
+      // Increment usage counter
+      const incremented = await incrementUsage();
+      if (!incremented) {
+        toast.error('Unable to track usage. Please try again.');
+        setIsGenerating(false);
+        setNewPrompt(promptText);
+        return;
+      }
+
       // Create new chat with the prompt
       const { data: newChat, error } = await supabase
         .from('chats')
@@ -189,11 +213,30 @@ export default function ImageGeneration() {
               <div className="p-2 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500">
                 <ImageIcon className="h-5 w-5 text-white" />
               </div>
-              <div>
+              <div className="flex-1">
                 <h1 className="text-lg font-semibold text-foreground">{sessionTitle}</h1>
                 <p className="text-sm text-muted-foreground">AI Image Generation</p>
               </div>
+              {subscriptionStatus.subscribed && !limitsLoading && (
+                <div className="text-right">
+                  <p className="text-xs text-muted-foreground">Remaining</p>
+                  <p className="text-sm font-semibold text-foreground">{usageLimits.remaining} / {usageLimits.limit}</p>
+                </div>
+              )}
             </div>
+            
+            {/* Usage limit warning */}
+            {subscriptionStatus.subscribed && !limitsLoading && usageLimits.remaining < 50 && (
+              <Alert className="mt-4">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>
+                  You have {usageLimits.remaining} image generations remaining this month.
+                  {subscriptionStatus.product_id === 'prod_TDSeCiQ2JEFnWB' && (
+                    <span> Upgrade to Ultra Pro for 2,000 generations/month!</span>
+                  )}
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
           {/* Always show the empty state since we removed the generations table */}
           <div className="flex items-center justify-center h-full min-h-[70vh]">

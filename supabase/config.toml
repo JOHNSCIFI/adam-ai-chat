@@ -35,3 +35,8 @@ verify_jwt = false
 # User-facing TTS function requires authentication
 [functions.text-to-speech-voice-mode]
 verify_jwt = true
+
+# Usage limit checking requires authentication
+[functions.check-image-limit]
+verify_jwt = true
+

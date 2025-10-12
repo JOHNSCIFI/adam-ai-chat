@@ -200,6 +200,24 @@ export type Database = {
           },
         ]
       }
+      n8n_chat_histories: {
+        Row: {
+          id: number
+          message: Json
+          session_id: string
+        }
+        Insert: {
+          id?: number
+          message: Json
+          session_id: string
+        }
+        Update: {
+          id?: number
+          message?: Json
+          session_id?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -301,6 +319,39 @@ export type Database = {
           },
         ]
       }
+      usage_limits: {
+        Row: {
+          created_at: string
+          id: string
+          image_generations_limit: number
+          image_generations_used: number
+          period_end: string
+          period_start: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_generations_limit?: number
+          image_generations_used?: number
+          period_end: string
+          period_start?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_generations_limit?: number
+          image_generations_used?: number
+          period_end?: string
+          period_start?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -373,6 +424,15 @@ export type Database = {
         Args: { "": string } | { "": unknown }
         Returns: unknown
       }
+      check_and_reset_usage_limits: {
+        Args: { p_user_id: string }
+        Returns: {
+          can_generate: boolean
+          limit_value: number
+          remaining: number
+          reset_date: string
+        }[]
+      }
       delete_user_account: {
         Args: Record<PropertyKey, never>
         Returns: undefined
@@ -423,6 +483,10 @@ export type Database = {
       hnswhandler: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      increment_image_generation: {
+        Args: { p_user_id: string }
+        Returns: boolean
       }
       ivfflat_bit_support: {
         Args: { "": unknown }
