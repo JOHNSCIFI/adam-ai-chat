@@ -19,8 +19,8 @@ const Pricing = () => {
 
   // Product ID to plan name mapping
   const productToPlanMap: { [key: string]: string } = {
-    'prod_RrCXJVxkfxu4Bq': 'Pro', // Pro plan product ID
-    'prod_RrCXvFp6H5sSUv': 'Ultra Pro', // Ultra Pro plan product ID
+    'prod_TDSeCiQ2JEFnWB': 'Pro', // Pro plan product ID
+    'prod_TDSfAtaWP5KbhM': 'Ultra Pro', // Ultra Pro plan product ID
   };
 
   // Check subscription status after successful payment

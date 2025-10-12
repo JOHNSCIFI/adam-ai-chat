@@ -309,16 +309,16 @@ export default function Admin() {
 
   // Product ID to plan name mapping
   const productToPlanMap: { [key: string]: string } = {
-    'prod_RrCXJVxkfxu4Bq': 'Pro',
-    'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+    'prod_TDSeCiQ2JEFnWB': 'Pro',
+    'prod_TDSfAtaWP5KbhM': 'Ultra Pro',
   };
 
   // Get subscription plan for a user
   const getUserPlan = (usage: UserTokenUsage): 'free' | 'pro' | 'ultra' => {
     if (!usage.subscription_status?.subscribed) return 'free';
     const productId = usage.subscription_status.product_id;
-    if (productId === 'prod_RrCXJVxkfxu4Bq') return 'pro';
-    if (productId === 'prod_RrCXvFp6H5sSUv') return 'ultra';
+    if (productId === 'prod_TDSeCiQ2JEFnWB') return 'pro';
+    if (productId === 'prod_TDSfAtaWP5KbhM') return 'ultra';
     return 'free';
   };
 

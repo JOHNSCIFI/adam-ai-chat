@@ -77,8 +77,8 @@ export default function ChatSidebar({
   
   // Product ID to plan name mapping
   const productToPlanMap: { [key: string]: string } = {
-    'prod_RrCXJVxkfxu4Bq': 'Pro',
-    'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+    'prod_TDSeCiQ2JEFnWB': 'Pro',
+    'prod_TDSfAtaWP5KbhM': 'Ultra Pro',
   };
   
   // Get current plan name

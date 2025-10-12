@@ -14,8 +14,8 @@ const logStep = (step: string, details?: any) => {
 
 // Product ID to plan name mapping - must match frontend
 const productToPlanMap: { [key: string]: string } = {
-  'prod_RrCXJVxkfxu4Bq': 'Pro',
-  'prod_RrCXvFp6H5sSUv': 'Ultra Pro',
+  'prod_TDSeCiQ2JEFnWB': 'Pro',
+  'prod_TDSfAtaWP5KbhM': 'Ultra Pro',
 };
 
 serve(async (req) => {
@@ -96,9 +96,9 @@ serve(async (req) => {
         
         // Determine plan tier based on product
         let planTier = 'free';
-        if (productId === 'prod_RrCXJVxkfxu4Bq') {
+        if (productId === 'prod_TDSeCiQ2JEFnWB') {
           planTier = 'pro';
-        } else if (productId === 'prod_RrCXvFp6H5sSUv') {
+        } else if (productId === 'prod_TDSfAtaWP5KbhM') {
           planTier = 'ultra_pro';
         } else if (productId) {
           // Any other product ID means they have a paid subscription
