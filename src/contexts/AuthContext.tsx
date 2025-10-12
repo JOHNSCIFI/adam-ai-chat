@@ -220,10 +220,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Page Visibility API: Refresh subscription when user returns to tab
   useEffect(() => {
+    let debounceTimeout: NodeJS.Timeout | null = null;
+    
     const handleVisibilityChange = () => {
       if (!document.hidden && user) {
         console.log('👁️ Page became visible, checking subscription status...');
-        checkSubscription();
+        
+        // Debounce to prevent multiple rapid checks
+        if (debounceTimeout) {
+          clearTimeout(debounceTimeout);
+        }
+        
+        debounceTimeout = setTimeout(() => {
+          checkSubscription();
+        }, 300);
       }
     };
 
@@ -231,6 +241,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      if (debounceTimeout) {
+        clearTimeout(debounceTimeout);
+      }
     };
   }, [user]);
 

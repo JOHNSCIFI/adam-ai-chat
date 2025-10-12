@@ -163,7 +163,7 @@ import { ImageEditModal } from '@/components/ImageEditModal';
 export default function Chat() {
   const { chatId } = useParams();
   const location = useLocation();
-  const { user, userProfile, subscriptionStatus } = useAuth();
+  const { user, userProfile, subscriptionStatus, loadingSubscription } = useAuth();
   const { actualTheme } = useTheme();
   // Remove toast hook since we're not using toasts
   const { state: sidebarState, isMobile } = useSidebar();
@@ -732,13 +732,44 @@ export default function Chat() {
 
   // Auto-send when data is ready after being set from navigation
   useEffect(() => {
-    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && chatId) {
+    if (shouldAutoSend.current && (input || selectedFiles.length > 0) && !loading && !loadingSubscription && chatId) {
       console.log('[CHAT-INITIAL] Auto-sending message:', {
         hasInput: !!input,
         filesCount: selectedFiles.length,
         chatId,
+        isSubscribed: subscriptionStatus.subscribed,
         files: selectedFiles.map(f => ({ name: f.name, type: f.type, size: f.size }))
       });
+      
+      // CRITICAL: Check if user is authenticated
+      if (!user) {
+        console.log('[CHAT-INITIAL] User not authenticated, showing auth modal');
+        setShowAuthModal(true);
+        shouldAutoSend.current = false;
+        return;
+      }
+      
+      // CRITICAL: Check subscription status for pro models
+      const selectedModelInfo = models.find(m => m.id === selectedModel);
+      const isProModel = selectedModelInfo?.type === 'pro';
+      
+      if (isProModel && !subscriptionStatus.subscribed) {
+        console.log('[CHAT-INITIAL] Pro model requires subscription');
+        toast.error('This model requires a Pro or Ultra Pro subscription', {
+          description: 'Upgrade to access all premium AI models',
+          action: {
+            label: 'Upgrade Now',
+            onClick: () => window.location.href = '/pricing'
+          },
+          duration: 5000,
+        });
+        
+        // Clear input and files
+        setInput('');
+        setSelectedFiles([]);
+        shouldAutoSend.current = false;
+        return;
+      }
       
       // Create temp ID
       const tempId = `temp-init-${Date.now()}`;
@@ -782,7 +813,7 @@ export default function Chat() {
         sendMessage();
       }, 500);
     }
-  }, [input, selectedFiles, loading, chatId]); // Removed 'messages' to prevent re-runs
+  }, [input, selectedFiles, loading, loadingSubscription, chatId, user, subscriptionStatus.subscribed]); // Added loadingSubscription
 
   const regenerateResponse = async (messageId: string) => {
     // Immediate synchronous check to prevent race conditions
@@ -4082,10 +4113,16 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
         isOpen={showAuthModal} 
         onClose={() => setShowAuthModal(false)} 
         onSuccess={() => {
-          // Focus back to textarea after successful login
-          setTimeout(() => {
-            textareaRef.current?.focus();
-          }, 100);
+          // Force subscription check immediately after login
+          if (user) {
+            console.log('[AUTH] User logged in, checking subscription...');
+            // Wait a bit for auth state to settle
+            setTimeout(() => {
+              // The AuthContext will automatically check subscription on auth state change
+              // Just focus back to textarea
+              textareaRef.current?.focus();
+            }, 100);
+          }
         }} 
       />
     </div>
