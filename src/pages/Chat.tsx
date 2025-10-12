@@ -3453,7 +3453,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                               style={getIconFilterStyle(modelData?.icon || 'openai')}
                             />
                           </div>
-                          {isPro && !subscriptionStatus.subscribed && (
+                          {isPro && !subscriptionStatus.product_id && (
                             <span className="absolute -top-1 -right-1 text-[8px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-1 py-0.5 rounded-full font-bold shadow-md">
                               PRO
                             </span>
@@ -4086,7 +4086,7 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
                                        ) : (
                                          <Bot className="h-5 w-5" />
                                        )}
-                                       {isPro && !subscriptionStatus.subscribed && (
+                                       {isPro && !subscriptionStatus.product_id && (
                                          <span className="absolute -top-1 -right-1 text-[7px] leading-none bg-gradient-to-r from-blue-500 to-purple-500 text-white px-0.5 py-0.5 rounded-full font-bold shadow-sm">
                                            PRO
                                          </span>
