@@ -1894,7 +1894,13 @@ export default function Chat() {
         if (!webhookResponse.ok) {
           const errorText = await webhookResponse.text();
           console.error('[IMAGE-GEN] Webhook error response:', errorText);
-          throw new Error(`Webhook request failed: ${webhookResponse.status}`);
+          
+          // Provide user-friendly error message for image generation failures
+          if (webhookResponse.status === 500 || webhookResponse.status === 400) {
+            throw new Error('Please enter a more detailed and descriptive prompt for image generation. Try describing what you want to see in more detail.');
+          }
+          
+          throw new Error(`Image generation failed. Please try again with a different prompt.`);
         }
         
         const webhookData = await webhookResponse.json();
