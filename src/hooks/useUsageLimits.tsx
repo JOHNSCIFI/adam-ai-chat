@@ -78,6 +78,20 @@ export function useUsageLimits() {
     checkLimits();
   }, [user?.id, subscriptionStatus.subscribed]);
 
+  // Listen for custom event to refresh limits after image generation
+  useEffect(() => {
+    const handleRefreshLimits = () => {
+      console.log('Refreshing usage limits after image generation');
+      checkLimits();
+    };
+
+    window.addEventListener('refresh-usage-limits', handleRefreshLimits);
+    
+    return () => {
+      window.removeEventListener('refresh-usage-limits', handleRefreshLimits);
+    };
+  }, [user?.id]);
+
   return {
     usageLimits,
     loading,

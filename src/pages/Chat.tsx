@@ -1445,6 +1445,12 @@ export default function Chat() {
           file_attachments: fileAttachments as any
         }).select().single();
         
+        // If an image was generated, refresh usage limits
+        if (aiResponse.image_url) {
+          console.log('[AI-RESPONSE] Dispatching event to refresh usage limits');
+          window.dispatchEvent(new CustomEvent('refresh-usage-limits'));
+        }
+        
         // Update chat's updated_at timestamp to move it to top of sidebar
         await supabase
           .from('chats')
