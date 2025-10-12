@@ -90,43 +90,108 @@ serve(async (req) => {
           break;
         }
 
-        // Extract product ID and plan name
-        const productId = subscription.items.data[0].price.product as string;
+        // Check if user has multiple active subscriptions (upgrade scenario)
+        const allSubscriptions = await stripe.subscriptions.list({
+          customer: subscription.customer as string,
+          status: "active",
+          limit: 10,
+        });
+        
+        logStep("Found active subscriptions for customer", { count: allSubscriptions.data.length });
+        
+        // If user has multiple active subscriptions, find the highest tier
+        let highestTierSub = subscription;
+        let highestTier = 'free';
+        
+        const tierPriority: { [key: string]: number } = {
+          'free': 0,
+          'pro': 1,
+          'ultra_pro': 2
+        };
+        
+        for (const sub of allSubscriptions.data) {
+          const subProductId = sub.items.data[0].price.product as string;
+          
+          let subTier = 'free';
+          if (subProductId === 'prod_TDSeCiQ2JEFnWB') {
+            subTier = 'pro';
+          } else if (subProductId === 'prod_TDSfAtaWP5KbhM') {
+            subTier = 'ultra_pro';
+          } else if (subProductId) {
+            subTier = 'pro';
+          }
+          
+          if (tierPriority[subTier] > tierPriority[highestTier]) {
+            highestTier = subTier;
+            highestTierSub = sub;
+          }
+        }
+        
+        // If there are multiple active subscriptions and this isn't the highest tier,
+        // cancel the lower tier subscriptions automatically
+        if (allSubscriptions.data.length > 1) {
+          logStep("Multiple active subscriptions detected, will keep highest tier only", {
+            highestTierSubId: highestTierSub.id,
+            totalSubs: allSubscriptions.data.length
+          });
+          
+          for (const sub of allSubscriptions.data) {
+            if (sub.id !== highestTierSub.id) {
+              try {
+                await stripe.subscriptions.cancel(sub.id);
+                logStep("Cancelled lower-tier subscription", { subscriptionId: sub.id });
+              } catch (cancelError) {
+                logStep("ERROR cancelling subscription", { 
+                  subscriptionId: sub.id, 
+                  error: cancelError.message 
+                });
+              }
+            }
+          }
+        }
+        
+        // Use the highest tier subscription for database update
+        const finalSubscription = highestTierSub;
+        const productId = finalSubscription.items.data[0].price.product as string;
         const planName = productToPlanMap[productId] || 'Unknown';
         
         // Determine plan tier based on product and subscription status
         let planTier = 'free';
         
         // If subscription is not active, user should be on free plan
-        if (subscription.status === 'active') {
+        if (finalSubscription.status === 'active') {
           if (productId === 'prod_TDSeCiQ2JEFnWB') {
             planTier = 'pro';
           } else if (productId === 'prod_TDSfAtaWP5KbhM') {
             planTier = 'ultra_pro';
           } else if (productId) {
-            // Any other product ID means they have a paid subscription
-            planTier = 'pro'; // Default to pro for unmapped products
+            planTier = 'pro';
           }
         }
-        // If status is canceled, expired, past_due, etc., planTier stays 'free'
         
-        const subscriptionEnd = subscription.current_period_end 
-          ? new Date(subscription.current_period_end * 1000).toISOString()
+        const subscriptionEnd = finalSubscription.current_period_end 
+          ? new Date(finalSubscription.current_period_end * 1000).toISOString()
           : null;
 
-        logStep("Determined subscription tier", { productId, planName, planTier, status: subscription.status });
+        logStep("Determined final subscription tier", { 
+          productId, 
+          planName, 
+          planTier, 
+          status: finalSubscription.status,
+          subscriptionId: finalSubscription.id
+        });
 
         // Upsert subscription data
         const { error: upsertError } = await supabaseClient
           .from('user_subscriptions')
           .upsert({
             user_id: user.id,
-            stripe_customer_id: subscription.customer as string,
-            stripe_subscription_id: subscription.id,
+            stripe_customer_id: finalSubscription.customer as string,
+            stripe_subscription_id: finalSubscription.id,
             product_id: productId,
             plan_name: planName,
             plan: planTier,
-            status: subscription.status,
+            status: finalSubscription.status,
             current_period_end: subscriptionEnd,
             updated_at: new Date().toISOString()
           }, {

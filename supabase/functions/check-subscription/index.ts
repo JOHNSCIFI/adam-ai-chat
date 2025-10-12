@@ -74,26 +74,70 @@ serve(async (req) => {
     const customerId = customers.data[0].id;
     logStep("Found Stripe customer", { customerId });
 
+    // Fetch ALL active subscriptions to handle upgrade scenarios
     const subscriptions = await stripe.subscriptions.list({
       customer: customerId,
       status: "active",
-      limit: 1,
+      limit: 10, // Get multiple subscriptions in case user upgraded
     });
+    
+    logStep("Found active subscriptions", { count: subscriptions.data.length });
+    
     const hasActiveSub = subscriptions.data.length > 0;
     let productId = null;
     let subscriptionEnd = null;
     let subscriptionId = null;
+    let highestTier = 'free';
 
     if (hasActiveSub) {
-      const subscription = subscriptions.data[0];
+      // If multiple subscriptions exist (e.g., during upgrade), pick the highest tier
+      let selectedSubscription = subscriptions.data[0];
+      
+      // Define tier hierarchy: ultra_pro > pro > free
+      const tierPriority: { [key: string]: number } = {
+        'free': 0,
+        'pro': 1,
+        'ultra_pro': 2
+      };
+      
+      for (const sub of subscriptions.data) {
+        const subProductId = sub.items.data[0].price.product as string;
+        
+        // Determine tier for this subscription
+        let subTier = 'free';
+        if (subProductId === 'prod_TDSeCiQ2JEFnWB') {
+          subTier = 'pro';
+        } else if (subProductId === 'prod_TDSfAtaWP5KbhM') {
+          subTier = 'ultra_pro';
+        } else if (subProductId) {
+          subTier = 'pro'; // Default to pro for unmapped products
+        }
+        
+        logStep("Evaluating subscription", { 
+          subscriptionId: sub.id, 
+          productId: subProductId, 
+          tier: subTier,
+          status: sub.status 
+        });
+        
+        // Pick the subscription with the highest tier
+        if (tierPriority[subTier] > tierPriority[highestTier]) {
+          highestTier = subTier;
+          selectedSubscription = sub;
+        }
+      }
+      
+      // Use the selected subscription (highest tier)
+      const subscription = selectedSubscription;
       subscriptionId = subscription.id;
       
       // Safely handle the date conversion
       try {
         if (subscription.current_period_end) {
           subscriptionEnd = new Date(subscription.current_period_end * 1000).toISOString();
-          logStep("Active subscription found", { 
+          logStep("Selected highest-tier subscription", { 
             subscriptionId: subscription.id, 
+            tier: highestTier,
             endDate: subscriptionEnd,
             currentPeriodEnd: subscription.current_period_end 
           });
@@ -111,18 +155,7 @@ serve(async (req) => {
       productId = subscription.items.data[0].price.product as string;
       const planName = productToPlanMap[productId] || 'Unknown';
       
-      // Determine plan tier based on product
-      let planTier = 'free';
-      if (productId === 'prod_TDSeCiQ2JEFnWB') {
-        planTier = 'pro';
-      } else if (productId === 'prod_TDSfAtaWP5KbhM') {
-        planTier = 'ultra_pro';
-      } else if (productId) {
-        // Any other product ID means they have a paid subscription
-        planTier = 'pro'; // Default to pro for unmapped products
-      }
-      
-      logStep("Determined subscription tier", { productId, planName, planTier });
+      logStep("Final subscription details", { productId, planName, planTier: highestTier });
       
       // Save/update subscription in database
       try {
@@ -134,7 +167,7 @@ serve(async (req) => {
             stripe_subscription_id: subscriptionId,
             product_id: productId,
             plan_name: planName,
-            plan: planTier,
+            plan: highestTier, // Use the highest tier determined from evaluation
             status: 'active',
             current_period_end: subscriptionEnd
           }, {
