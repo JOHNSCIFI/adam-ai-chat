@@ -25,6 +25,7 @@ interface UserTokenUsage {
   subscription_status?: {
     subscribed: boolean;
     product_id: string | null;
+    plan: string | null;
     subscription_end: string | null;
   };
 }
@@ -242,8 +243,9 @@ export default function Admin() {
       const {
         data: subscriptionsData,
         error: subscriptionsError
-      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, current_period_end').in('user_id', userIds).eq('status', 'active');
+      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, plan, current_period_end').in('user_id', userIds).eq('status', 'active');
       if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
+      console.log('Subscriptions data:', subscriptionsData);
 
       // Create a map of user_id to profile and subscription
       const profilesMap = new Map(profilesData?.map(profile => [profile.user_id, profile]) || []);
@@ -271,6 +273,7 @@ export default function Admin() {
             subscription_status: subscription ? {
               subscribed: subscription.status === 'active',
               product_id: (subscription as any).product_id || null,
+              plan: (subscription as any).plan || null,
               subscription_end: (subscription as any).current_period_end || null
             } : undefined
           });
@@ -282,6 +285,7 @@ export default function Admin() {
           userUsage.subscription_status = {
             subscribed: subscription.status === 'active',
             product_id: subscription.product_id || null,
+            plan: (subscription as any).plan || null,
             subscription_end: subscription.current_period_end || null
           };
         }
@@ -326,19 +330,23 @@ export default function Admin() {
   // Get subscription plan for a user
   const getUserPlan = (usage: UserTokenUsage): 'free' | 'pro' | 'ultra' => {
     // Check if user has an active subscription
-    if (!usage.subscription_status?.subscribed || !usage.subscription_status?.product_id) {
+    if (!usage.subscription_status?.subscribed) {
       return 'free';
     }
     
-    const productId = usage.subscription_status.product_id;
+    // Use the plan directly from the subscription data
+    const plan = (usage.subscription_status as any).plan;
+    console.log('User plan from subscription:', plan, 'for user:', usage.user_id);
     
-    // Match against known product IDs
+    if (plan === 'pro') return 'pro';
+    if (plan === 'ultra_pro') return 'ultra';
+    
+    // Fallback to product_id matching if plan is not set
+    const productId = usage.subscription_status.product_id;
     if (productId === 'prod_TDSeCiQ2JEFnWB') return 'pro';
     if (productId === 'prod_TDSfAtaWP5KbhM') return 'ultra';
     
-    // If product_id doesn't match known IDs but subscription is active, default to free
-    // This handles edge cases where product_id might be different
-    console.log('Unknown product_id:', productId);
+    console.log('Unknown plan/product_id:', plan, productId);
     return 'free';
   };
 
