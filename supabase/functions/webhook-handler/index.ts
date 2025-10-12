@@ -208,11 +208,14 @@ serve(async (req) => {
     console.log('[WEBHOOK-HANDLER] ===== SAVING TO DATABASE =====');
 
     // Save the assistant message to the database
+    // If only image without text, provide default message
+    const messageContent = responseContent || (imageUrl ? '' : '');
+    
     const { data, error } = await supabaseClient
       .from('messages')
       .insert({
         chat_id: chat_id,
-        content: responseContent || '',
+        content: messageContent,
         role: 'assistant',
         file_attachments: fileAttachments,
         model: model,
