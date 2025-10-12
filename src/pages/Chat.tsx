@@ -1654,14 +1654,10 @@ export default function Chat() {
     const selectedModelInfo = models.find(m => m.id === modelId);
     const isProModel = selectedModelInfo?.type === 'pro';
     
-    // If it's a pro model and user doesn't have a subscription, show upgrade prompt
+    // If it's a pro model and user doesn't have a subscription, show notification
     if (isProModel && !subscriptionStatus.subscribed) {
       toast.error('This model requires a Pro or Ultra Pro subscription', {
-        description: 'Upgrade to access all premium AI models',
-        action: {
-          label: 'Upgrade Now',
-          onClick: () => window.location.href = '/pricing'
-        },
+        description: 'Please upgrade your plan to use this premium AI model',
         duration: 5000,
       });
       return;
