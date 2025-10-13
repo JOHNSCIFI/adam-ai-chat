@@ -21,6 +21,7 @@ import { useUsageLimits } from '@/hooks/useUsageLimits';
 
 import AuthModal from '@/components/AuthModal';
 import { GoProButton } from '@/components/GoProButton';
+import { PricingModal } from '@/components/PricingModal';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
 import claudeLogo from '@/assets/claude-logo.png';
@@ -241,6 +242,7 @@ export default function Chat() {
   const [showImageEditModal, setShowImageEditModal] = useState(false);
   const [imageToEdit, setImageToEdit] = useState<File | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [messageRatings, setMessageRatings] = useState<{[key: string]: 'like' | 'dislike'}>({});
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
@@ -1652,12 +1654,9 @@ export default function Chat() {
     const selectedModelInfo = models.find(m => m.id === modelId);
     const isProModel = selectedModelInfo?.type === 'pro';
     
-    // If it's a pro model and user doesn't have a subscription, show notification
+    // If it's a pro model and user doesn't have a subscription, show pricing modal
     if (isProModel && !subscriptionStatus.subscribed) {
-      toast.error('This model requires a Pro or Ultra Pro subscription', {
-        description: 'Please upgrade your plan to use this premium AI model',
-        duration: 5000,
-      });
+      setShowPricingModal(true);
       return;
     }
     
@@ -4280,6 +4279,12 @@ Error: ${error instanceof Error ? error.message : 'PDF processing failed'}`;
             }, 100);
           }
         }} 
+      />
+
+      {/* Pricing Modal */}
+      <PricingModal 
+        open={showPricingModal} 
+        onOpenChange={setShowPricingModal} 
       />
     </div>
   );

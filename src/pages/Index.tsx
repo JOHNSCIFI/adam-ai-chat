@@ -15,6 +15,7 @@ import { SendHorizontalIcon } from '@/components/ui/send-horizontal-icon';
 import GoogleOneTab from '@/components/GoogleOneTab';
 import AuthModal from '@/components/AuthModal';
 import { GoProButton } from '@/components/GoProButton';
+import { PricingModal } from '@/components/PricingModal';
 import { toast } from 'sonner';
 import chatgptLogo from '@/assets/chatgpt-logo.png';
 import chatgptLogoLight from '@/assets/chatgpt-logo-light.png';
@@ -259,6 +260,7 @@ export default function Index() {
   const [recordingDuration, setRecordingDuration] = useState(0);
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showPricingModal, setShowPricingModal] = useState(false);
   const [pendingMessage, setPendingMessage] = useState('');
   const [selectedModel, setSelectedModel] = useState(() => {
     // Use model from navigation state if available, otherwise default to gpt-4o-mini
@@ -695,12 +697,9 @@ export default function Index() {
         setShowAuthModal(true);
         return;
       }
-      // If not subscribed, show notification
+      // If not subscribed, show pricing modal
       if (!subscriptionStatus.subscribed) {
-        toast.error('This model requires a Pro or Ultra Pro subscription', {
-          description: 'Please upgrade your plan to use this premium AI model',
-          duration: 5000,
-        });
+        setShowPricingModal(true);
         return;
       }
     }
@@ -1343,6 +1342,12 @@ export default function Index() {
           }, 100);
         }
       }} />
+
+      {/* Pricing Modal */}
+      <PricingModal 
+        open={showPricingModal} 
+        onOpenChange={setShowPricingModal} 
+      />
       </div>
     </div>;
 }
