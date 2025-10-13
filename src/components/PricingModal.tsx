@@ -97,24 +97,13 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-7xl w-[95vw] h-[92vh] p-0 bg-gradient-to-br from-white via-zinc-50/50 to-white dark:from-zinc-950 dark:via-zinc-900/30 dark:to-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 overflow-hidden flex flex-col shadow-2xl">
+        <DialogContent className="max-w-5xl w-[90vw] h-[85vh] p-0 bg-gradient-to-br from-white via-zinc-50/50 to-white dark:from-zinc-950 dark:via-zinc-900/30 dark:to-zinc-950 border-2 border-zinc-300 dark:border-zinc-700 overflow-hidden flex flex-col shadow-2xl">
           <div className="flex flex-col md:flex-row h-full">
             {/* Left Panel - Features Comparison */}
             <div className="w-full md:w-7/12 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900 dark:from-zinc-950 dark:via-zinc-900 dark:to-zinc-950 p-6 md:p-8 border-r-2 border-zinc-700 dark:border-zinc-800 flex flex-col relative">
               {/* Decorative gradient overlay */}
               <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-transparent to-purple-600/10 pointer-events-none"></div>
               
-              <div className="mb-6 flex-shrink-0 relative z-10">
-                <div className="inline-flex items-center gap-2 mb-3">
-                  <div className="w-1 h-8 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
-                  <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">
-                    What's Included
-                  </h3>
-                </div>
-                <p className="text-sm md:text-base text-zinc-300">
-                  Compare features across all plans
-                </p>
-              </div>
               
               {/* Comparison Table */}
               <div className="flex-1 flex flex-col min-h-0 relative z-10">
@@ -174,9 +163,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
             {/* Right Panel - Pricing */}
             <div className="w-full md:w-5/12 p-6 md:p-8 flex flex-col bg-gradient-to-br from-white to-zinc-50/50 dark:from-zinc-950 dark:to-zinc-900/30">
               <div className="mb-6 flex-shrink-0">
-                <Badge className="mb-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 px-4 py-1.5 text-sm font-bold shadow-lg">
-                  {selectedPlan === 'pro' ? '⭐ Most Popular' : '👑 For Power Users'}
-                </Badge>
                 <h2 className="text-3xl md:text-4xl font-bold mb-3 bg-gradient-to-r from-zinc-900 to-zinc-700 dark:from-white dark:to-zinc-300 bg-clip-text text-transparent">
                   Choose Your Plan
                 </h2>
