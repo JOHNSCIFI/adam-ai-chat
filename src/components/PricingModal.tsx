@@ -22,14 +22,14 @@ interface Feature {
 }
 
 const allFeatures: Feature[] = [
-  { name: 'AI Models Access', free: 'GPT-4o Mini only', pro: 'All models (GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok)', ultra: 'All models (GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok)' },
-  { name: 'Chats & Messages', free: 'Limited', pro: 'Unlimited', ultra: 'Unlimited' },
-  { name: 'Model Switching', free: false, pro: true, ultra: true },
-  { name: 'Voice Mode (TTS)', free: false, pro: true, ultra: true },
-  { name: 'File Uploads', free: false, pro: 'Up to 100MB', ultra: 'Up to 100MB + Extended' },
-  { name: 'Chat with PDFs', free: false, pro: 'Full access', ultra: 'Full access' },
-  { name: 'Image Generation', free: false, pro: '500/month', ultra: '2,000/month' },
-  { name: 'Support', free: 'Community', pro: 'Priority', ultra: 'Premium 24/7' },
+  { name: 'All AI Models', free: false, pro: true, ultra: true },
+  { name: 'Unlimited Chats', free: false, pro: true, ultra: true },
+  { name: 'Voice Mode', free: false, pro: true, ultra: true },
+  { name: 'File Uploads (100MB)', free: false, pro: true, ultra: true },
+  { name: 'Image Generation (500/month)', free: false, pro: true, ultra: false },
+  { name: 'Image Generation (2,000/month)', free: false, pro: false, ultra: true },
+  { name: 'Priority Support', free: false, pro: true, ultra: false },
+  { name: 'Premium 24/7 Support', free: false, pro: false, ultra: true },
   { name: 'Team Collaboration', free: false, pro: false, ultra: true },
   { name: 'Early Access to Models', free: false, pro: false, ultra: true },
 ];
