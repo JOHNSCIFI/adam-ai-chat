@@ -237,16 +237,10 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
             {/* Badge and Rating */}
             <div className="text-center mb-5">
               <div className="inline-flex items-center gap-2 mb-2">
-                <svg className="w-8 h-8 text-muted-foreground/30" viewBox="0 0 100 150" fill="currentColor">
-                  <path d="M10 50 Q10 10 50 10 Q90 10 90 50 L90 80 Q90 120 50 120 Q10 120 10 80 Z M25 30 L35 50 L20 50 Z M65 50 L75 30 L80 50 Z"/>
-                </svg>
                 <div>
                   <div className="text-xs font-semibold text-muted-foreground">#1</div>
-                  <div className="text-base font-bold">AI Chatbot</div>
+                  <div className="text-base font-bold">ChatL</div>
                 </div>
-                <svg className="w-8 h-8 text-muted-foreground/30 scale-x-[-1]" viewBox="0 0 100 150" fill="currentColor">
-                  <path d="M10 50 Q10 10 50 10 Q90 10 90 50 L90 80 Q90 120 50 120 Q10 120 10 80 Z M25 30 L35 50 L20 50 Z M65 50 L75 30 L80 50 Z"/>
-                </svg>
               </div>
               
               <div className="flex gap-1 justify-center mb-1">
@@ -414,7 +408,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                       </>
                     ) : (
                       <>
-                        <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24" fill="currentColor">
+                        <svg className="w-6 h-6 mr-3" viewBox="0 0 24 24" fill="currentColor">
                           <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
                         </svg>
                         Continue with Apple
