@@ -157,13 +157,20 @@ const Pricing = () => {
     }
     
     try {
-      // Map plan to price ID (TEST MODE - verified)
+      // Map plan to price ID based on billing period
       const priceIds = {
-        'Pro': 'price_1SH1jRL8Zm4LqDn4M49yf60W',
-        'Ultra Pro': 'price_1SH1jpL8Zm4LqDn4zN9CGBpC'
+        'Pro': {
+          monthly: 'price_1QiS3eJUJwxjDZUkFUrmfHke',
+          yearly: 'price_1SHinzL8Zm4LqDn4jE1jGyKi'
+        },
+        'Ultra Pro': {
+          monthly: 'price_1QiS6JJUJwxjDZUkmQWZQEKl',
+          yearly: 'price_1SHioTL8Zm4LqDn41Pd00GWM'
+        }
       };
       
-      const priceId = priceIds[plan.name as keyof typeof priceIds];
+      const planPrices = priceIds[plan.name as keyof typeof priceIds];
+      const priceId = planPrices ? (isYearly ? planPrices.yearly : planPrices.monthly) : null;
       
       if (!priceId) {
         toast.error('Invalid plan selected');

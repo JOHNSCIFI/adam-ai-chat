@@ -161,13 +161,21 @@ export default function PricingPlans() {
     }
     
     try {
-      // TEST MODE price IDs
+      // Price IDs based on billing period (only monthly and yearly available)
       const priceIds = {
-        'pro': 'price_1SH1jRL8Zm4LqDn4M49yf60W',
-        'ultra_pro': 'price_1SH1jpL8Zm4LqDn4zN9CGBpC'
+        'pro': {
+          monthly: 'price_1QiS3eJUJwxjDZUkFUrmfHke',
+          yearly: 'price_1SHinzL8Zm4LqDn4jE1jGyKi'
+        },
+        'ultra_pro': {
+          monthly: 'price_1QiS6JJUJwxjDZUkmQWZQEKl',
+          yearly: 'price_1SHioTL8Zm4LqDn41Pd00GWM'
+        }
       };
       
-      const priceId = priceIds[plan];
+      // Use monthly for quarterly billing period since we only have monthly and yearly
+      const period = billingPeriod === 'yearly' ? 'yearly' : 'monthly';
+      const priceId = priceIds[plan][period];
       
       toast.loading('Redirecting to checkout...');
       
