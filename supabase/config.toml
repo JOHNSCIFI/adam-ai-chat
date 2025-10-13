@@ -40,3 +40,7 @@ verify_jwt = true
 [functions.check-image-limit]
 verify_jwt = true
 
+# Admin function to delete specific users
+[functions.delete-specific-user]
+verify_jwt = true
+
