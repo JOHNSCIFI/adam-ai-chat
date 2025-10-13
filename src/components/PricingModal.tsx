@@ -99,7 +99,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-6xl p-0 overflow-hidden bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800">
           <div className="flex flex-col md:flex-row min-h-[700px]">
             {/* Left Panel - Features Comparison */}
             <div className="w-full md:w-5/12 bg-zinc-50 dark:bg-zinc-900 p-10 border-r border-zinc-200 dark:border-zinc-800">
@@ -273,16 +273,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
 
               {/* Footer */}
               <div className="mt-8 space-y-4">
-                {/* Payment Methods */}
-                <div className="flex items-center justify-center gap-3 py-3 px-4 bg-zinc-50 dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800">
-                  <Shield className="w-4 h-4 text-zinc-600 dark:text-zinc-400" />
-                  <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400">Secure payment via</span>
-                  <svg className="h-5" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <rect width="60" height="25" rx="4" fill="#635BFF"/>
-                    <path d="M13.3 11.5c0-.9-.5-1.5-1.6-1.5h-1v3h1c1.1 0 1.6-.6 1.6-1.5zm-1.6 2.5h-2V7h2c1.8 0 2.8 1 2.8 2.5s-1 2.5-2.8 2.5zm6.6.2c-1.4 0-2.3-.9-2.3-2.2s.9-2.2 2.3-2.2 2.3.9 2.3 2.2-.9 2.2-2.3 2.2zm0-5.4c-1.8 0-3.1 1.3-3.1 3.2s1.3 3.2 3.1 3.2 3.1-1.3 3.1-3.2-1.3-3.2-3.1-3.2zm8.4 3.2c0 1.3-.7 2-1.7 2-.6 0-1-.3-1.2-.8v.7h-.9V7h.9v3c.2-.5.6-.8 1.2-.8 1 0 1.7.7 1.7 2zm-.9 0c0-.9-.4-1.4-1.2-1.4s-1.2.5-1.2 1.4.4 1.4 1.2 1.4 1.2-.5 1.2-1.4zm2.8 2h-.9V9.3h.9v4.7zm-.9-5.5h.9v.8h-.9v-.8zm3.6 5.5h-.9V9.3h.9v.7c.2-.5.6-.8 1.2-.8v.9h-.2c-.7 0-1 .4-1 1.2v2.7zm4.3.2c-1.3 0-2.2-.9-2.2-2.5s.9-2.5 2.3-2.5c1.3 0 2.1.9 2.1 2.4v.3h-3.5c.1.8.6 1.3 1.4 1.3.5 0 1-.2 1.2-.6l.6.5c-.4.5-1 .8-1.9.8zm-1.3-3h2.6c0-.7-.5-1.2-1.3-1.2s-1.2.5-1.3 1.2zm6.8 3c-1.3 0-2.2-.9-2.2-2.5s.9-2.5 2.3-2.5c1.3 0 2.1.9 2.1 2.4v.3h-3.5c.1.8.6 1.3 1.4 1.3.5 0 1-.2 1.2-.6l.6.5c-.4.5-1 .8-1.9.8zm-1.3-3h2.6c0-.7-.5-1.2-1.3-1.2s-1.2.5-1.3 1.2z" fill="white"/>
-                  </svg>
-                </div>
-                
                 {/* Payment Cards */}
                 <div className="flex items-center justify-center gap-4 py-2">
                   {/* Visa */}
