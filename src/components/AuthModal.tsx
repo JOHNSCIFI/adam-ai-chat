@@ -6,11 +6,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import chromeLogo from "@/assets/chrome-icon.png";
-import firefoxLogo from "@/assets/firefox-icon.png";
-import edgeLogo from "@/assets/edge-icon.png";
-import safariLogo from "@/assets/safari-logo-new.png";
-import whatsappLogo from "@/assets/whatsapp-icon.png";
+import chromeLogo from "@/assets/chrome-icon-clean.png";
+import firefoxLogo from "@/assets/firefox-icon-clean.png";
+import edgeLogo from "@/assets/edge-icon-clean.png";
+import safariLogo from "@/assets/safari-icon-clean.png";
+import whatsappLogo from "@/assets/whatsapp-icon-clean.png";
 import chatgptLogo from "@/assets/chatgpt-logo.png";
 import anthropicLogo from "@/assets/anthropic-logo-new.png";
 import geminiLogo from "@/assets/gemini-logo.png";
