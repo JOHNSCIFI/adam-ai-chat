@@ -284,7 +284,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   <img src="/firefox-icon.svg" alt="Firefox" className="w-6 h-6" />
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
-                  <img src="/edge-icon.svg" alt="Edge" className="w-6 h-6" />
+                  <img src="/edge-icon-new.svg" alt="Edge" className="w-6 h-6" />
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
                   <img src="/safari-icon.svg" alt="Safari" className="w-6 h-6" />
