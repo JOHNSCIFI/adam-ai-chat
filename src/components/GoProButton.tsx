@@ -20,8 +20,8 @@ export const GoProButton = () => {
         variant="premium"
         className="font-semibold text-lg px-6 py-5 rounded-[28px]"
       >
-        <Rocket className="w-6 h-6 mr-2 fill-gold text-gold" />
-        <span className="text-gold">Upgrade Now</span>
+        <Rocket className="w-6 h-6 mr-2 text-gold fill-gold" />
+        Upgrade Now
       </Button>
       
       <PricingModal 
