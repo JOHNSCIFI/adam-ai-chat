@@ -220,15 +220,21 @@ export default function Admin() {
     try {
       setLoading(true);
 
-      // Fetch ALL active subscriptions first
+      // Fetch ALL profiles (which represents ALL auth.users via trigger)
+      const {
+        data: allProfilesData,
+        error: allProfilesError
+      } = await supabase.from('profiles').select('user_id, email, display_name, signup_method');
+      if (allProfilesError) throw allProfilesError;
+      console.log('Total profiles (auth.users):', allProfilesData?.length);
+
+      // Fetch ALL subscriptions (active and inactive)
       const {
         data: subscriptionsData,
         error: subscriptionsError
-      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, plan, plan_name, current_period_end').eq('status', 'active');
+      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, plan, plan_name, current_period_end');
       if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
-
-      // Get all user IDs from subscriptions
-      const subscribedUserIds = subscriptionsData?.map(sub => sub.user_id) || [];
+      console.log('Subscriptions data:', subscriptionsData);
 
       // Fetch all token usage data
       const {
@@ -239,89 +245,60 @@ export default function Admin() {
       });
       if (tokenError) throw tokenError;
 
-      // Get unique user IDs from token usage
-      const tokenUserIds = [...new Set(tokenData?.map(usage => usage.user_id) || [])];
-      
-      // Combine all user IDs
-      const allUserIds = [...new Set([...subscribedUserIds, ...tokenUserIds])];
-
-      // Fetch all profiles for these users
-      const {
-        data: profilesData,
-        error: profilesError
-      } = await supabase.from('profiles').select('user_id, email, display_name').in('user_id', allUserIds);
-      if (profilesError) throw profilesError;
-      if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
-      console.log('Subscriptions data:', subscriptionsData);
-
-      // Create a map of user_id to profile and subscription
-      const profilesMap = new Map(profilesData?.map(profile => [profile.user_id, profile]) || []);
+      // Create maps for quick lookup
+      const profilesMap = new Map(allProfilesData?.map(profile => [profile.user_id, profile]) || []);
       const subscriptionsMap = new Map(subscriptionsData?.map(sub => [sub.user_id, sub]) || []);
 
-      // First, add all subscribed users (even if they have no token usage)
+      // Initialize userMap with ALL users from profiles
       const userMap = new Map<string, UserTokenUsage>();
-      subscriptionsData?.forEach((sub: any) => {
-        const profile = profilesMap.get(sub.user_id);
-        if (!userMap.has(sub.user_id)) {
-          userMap.set(sub.user_id, {
-            user_id: sub.user_id,
-            email: profile?.email || 'Unknown',
-            display_name: profile?.display_name || 'Unknown User',
-            model_usages: [],
-            subscription_status: {
-              subscribed: true,
-              product_id: sub.product_id,
-              plan: sub.plan,
-              subscription_end: sub.current_period_end
-            }
-          });
-        }
+      allProfilesData?.forEach((profile: any) => {
+        const subscription = subscriptionsMap.get(profile.user_id);
+        userMap.set(profile.user_id, {
+          user_id: profile.user_id,
+          email: profile.email || 'Unknown',
+          display_name: profile.display_name || profile.email?.split('@')[0] || 'Unknown User',
+          model_usages: [],
+          subscription_status: subscription && subscription.status === 'active' ? {
+            subscribed: true,
+            product_id: subscription.product_id,
+            plan: subscription.plan,
+            subscription_end: subscription.current_period_end
+          } : {
+            subscribed: false,
+            product_id: null,
+            plan: null,
+            subscription_end: null
+          }
+        });
       });
 
-      // Then aggregate token usage by user and model
+      // Then add token usage data to the users
+      let totalInputTokens = 0;
+      let totalOutputTokens = 0;
+      let totalCost = 0;
       const modelMap = new Map<string, TokenUsageByModel>();
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
-        const profile = profilesMap.get(userId);
-        const subscription = subscriptionsMap.get(userId);
         const inputTokens = usage.input_tokens || 0;
         const outputTokens = usage.output_tokens || 0;
         const model = usage.model;
         const cost = calculateCost(model, inputTokens, outputTokens);
 
-        // Aggregate by user with model breakdown
-        if (!userMap.has(userId)) {
-          userMap.set(userId, {
-            user_id: userId,
-            email: profile?.email || 'Unknown',
-            display_name: profile?.display_name || 'Unknown User',
-            model_usages: [],
-            subscription_status: subscription ? {
-              subscribed: subscription.status === 'active',
-              product_id: (subscription as any).product_id || null,
-              plan: (subscription as any).plan || null,
-              subscription_end: (subscription as any).current_period_end || null
-            } : undefined
+        // Add to totals
+        totalInputTokens += inputTokens;
+        totalOutputTokens += outputTokens;
+        totalCost += cost;
+
+        // Get user from map (all users already initialized)
+        const userUsage = userMap.get(userId);
+        if (userUsage) {
+          userUsage.model_usages.push({
+            model,
+            input_tokens: inputTokens,
+            output_tokens: outputTokens,
+            cost
           });
         }
-        const userUsage = userMap.get(userId)!;
-        
-        // Update subscription status if we haven't set it yet and subscription exists
-        if (!userUsage.subscription_status && subscription) {
-          userUsage.subscription_status = {
-            subscribed: subscription.status === 'active',
-            product_id: subscription.product_id || null,
-            plan: (subscription as any).plan || null,
-            subscription_end: subscription.current_period_end || null
-          };
-        }
-        
-        userUsage.model_usages.push({
-          model,
-          input_tokens: inputTokens,
-          output_tokens: outputTokens,
-          cost
-        });
 
         // Aggregate by model
         if (!modelMap.has(model)) {
@@ -337,6 +314,11 @@ export default function Admin() {
         modelUsage.output_tokens += outputTokens;
         modelUsage.total_cost += cost;
       });
+      
+      console.log('Total users loaded:', userMap.size);
+      console.log('Active subscriptions:', subscriptionsData?.filter(s => s.status === 'active').length);
+      console.log('Total usage - Input tokens:', totalInputTokens, 'Output tokens:', totalOutputTokens, 'Cost: $', totalCost.toFixed(2));
+      
       setUserUsages(Array.from(userMap.values()));
       setModelUsages(Array.from(modelMap.values()).sort((a, b) => b.total_cost - a.total_cost));
     } catch (error) {
@@ -431,8 +413,8 @@ export default function Admin() {
         {/* Header Section */}
         
 
-        {/* Stats Card */}
-        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Stats Cards */}
+        <div className="grid gap-3 sm:gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
           <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
               <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Users</CardTitle>
@@ -440,7 +422,7 @@ export default function Admin() {
             </CardHeader>
             <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
               <div className="text-2xl sm:text-3xl font-bold text-foreground">{userUsages.length}</div>
-              <p className="text-xs text-muted-foreground mt-1">With token usage</p>
+              <p className="text-xs text-muted-foreground mt-1">Registered users</p>
             </CardContent>
           </Card>
 
@@ -484,6 +466,21 @@ export default function Admin() {
                 {userUsages.filter(u => getUserPlan(u) === 'ultra').length}
               </div>
               <p className="text-xs text-muted-foreground mt-1">Ultra Pro subscribers</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-border/50 hover:border-primary/30 transition-all duration-300 hover:shadow-lg">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-3 sm:p-4 md:p-6">
+              <CardTitle className="text-xs sm:text-sm font-medium text-muted-foreground">Total Usage</CardTitle>
+              <Badge className="bg-green-500/10 text-green-600 border-green-500/30">Cost</Badge>
+            </CardHeader>
+            <CardContent className="p-3 pt-0 sm:p-4 sm:pt-0 md:p-6 md:pt-0">
+              <div className="text-2xl sm:text-3xl font-bold text-foreground">
+                ${modelUsages.reduce((sum, m) => sum + m.total_cost, 0).toFixed(2)}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {(modelUsages.reduce((sum, m) => sum + m.input_tokens + m.output_tokens, 0) / 1000000).toFixed(2)}M tokens
+              </p>
             </CardContent>
           </Card>
         </div>
