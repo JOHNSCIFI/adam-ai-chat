@@ -97,7 +97,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800">
+        <DialogContent className="max-w-4xl p-0 overflow-hidden bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 my-8 mx-4 max-h-[85vh]">
           <div className="flex flex-col md:flex-row min-h-[700px]">
             {/* Left Panel - Features Comparison */}
             <div className="w-full md:w-5/12 bg-zinc-50 dark:bg-zinc-900 p-10 border-r border-zinc-200 dark:border-zinc-800">
