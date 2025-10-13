@@ -112,85 +112,104 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-5xl p-0 overflow-hidden">
-          <div className="flex flex-col md:flex-row min-h-[650px]">
+        <DialogContent className="max-w-6xl p-0 overflow-hidden bg-background border-2">
+          <div className="flex flex-col md:flex-row min-h-[700px]">
             {/* Left Panel - Features */}
-            <div className="w-full md:w-2/5 bg-gradient-to-br from-primary/5 via-background to-primary/5 p-8 border-r">
-              <div className="mb-8">
-                <div className="flex items-center gap-2 mb-4">
-                  {selectedPlan === 'pro' ? (
-                    <>
-                      <Sparkles className="w-5 h-5 text-primary" />
-                      <h3 className="text-xl font-bold">Pro Features</h3>
-                    </>
-                  ) : (
-                    <>
-                      <Crown className="w-5 h-5 text-primary" />
-                      <h3 className="text-xl font-bold">Ultra Pro Features</h3>
-                    </>
-                  )}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {selectedPlan === 'pro' 
-                    ? 'Everything you need for professional AI work' 
-                    : 'Maximum power for teams and power users'}
-                </p>
-              </div>
+            <div className="w-full md:w-5/12 bg-gradient-to-br from-muted/30 via-background to-muted/20 p-10 border-r relative overflow-hidden">
+              {/* Decorative background elements */}
+              <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
               
-              <div className="space-y-4">
-                {features.map((feature, index) => {
-                  const Icon = feature.icon;
-                  const isIncluded = selectedPlan === 'pro' ? feature.pro : feature.ultra;
-                  
-                  return (
-                    <div key={index} className="flex items-start gap-3 group">
-                      <div className={`w-5 h-5 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5 transition-colors ${
-                        isIncluded 
-                          ? 'bg-primary/10 group-hover:bg-primary/20' 
-                          : 'bg-muted'
-                      }`}>
-                        {isIncluded ? (
-                          <Check className="w-3 h-3 text-primary" />
-                        ) : (
-                          <X className="w-3 h-3 text-muted-foreground" />
-                        )}
+              <div className="relative z-10">
+                <div className="mb-10">
+                  <div className="flex items-center gap-3 mb-4">
+                    {selectedPlan === 'pro' ? (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Sparkles className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold">Pro Plan</h3>
+                          <p className="text-sm text-muted-foreground">Professional Features</p>
+                        </div>
+                      </>
+                    ) : (
+                      <>
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                          <Crown className="w-6 h-6 text-primary" />
+                        </div>
+                        <div>
+                          <h3 className="text-2xl font-bold">Ultra Pro Plan</h3>
+                          <p className="text-sm text-muted-foreground">Maximum Power</p>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="space-y-4">
+                  {features.map((feature, index) => {
+                    const Icon = feature.icon;
+                    const isIncluded = selectedPlan === 'pro' ? feature.pro : feature.ultra;
+                    
+                    return (
+                      <div key={index} className="flex items-start gap-3 group animate-fade-in" style={{ animationDelay: `${index * 0.05}s` }}>
+                        <div className={`w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 transition-all duration-200 ${
+                          isIncluded 
+                            ? 'bg-primary/10 group-hover:bg-primary/15 group-hover:scale-110' 
+                            : 'bg-muted/50'
+                        }`}>
+                          {isIncluded ? (
+                            <Check className="w-4 h-4 text-primary" />
+                          ) : (
+                            <X className="w-4 h-4 text-muted-foreground" />
+                          )}
+                        </div>
+                        <span className={`text-sm leading-relaxed transition-colors ${
+                          isIncluded 
+                            ? 'text-foreground font-medium' 
+                            : 'text-muted-foreground/60 line-through'
+                        }`}>
+                          {feature.name}
+                        </span>
                       </div>
-                      <span className={`text-sm leading-relaxed ${
-                        isIncluded 
-                          ? 'text-foreground font-medium' 
-                          : 'text-muted-foreground line-through'
-                      }`}>
-                        {feature.name}
-                      </span>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </div>
             </div>
 
             {/* Right Panel - Pricing */}
-            <div className="w-full md:w-3/5 p-8 flex flex-col">
-              <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none">
-                <X className="h-4 w-4" />
+            <div className="w-full md:w-7/12 p-10 flex flex-col bg-gradient-to-br from-background to-muted/10">
+              <DialogClose className="absolute right-6 top-6 rounded-full p-2 hover:bg-muted/50 transition-colors">
+                <X className="h-5 w-5" />
                 <span className="sr-only">Close</span>
               </DialogClose>
 
-              <div className="mb-8">
-                <Badge className="mb-3 bg-primary/10 text-primary border-primary/20">
-                  {selectedPlan === 'pro' ? '⭐ Most Popular' : '🚀 Power Users'}
+              <div className="mb-10">
+                <Badge className="mb-4 bg-primary/10 text-primary border-primary/20 px-4 py-1.5 text-sm font-medium">
+                  {selectedPlan === 'pro' ? '⭐ Most Popular' : '🚀 For Power Users'}
                 </Badge>
-                <h2 className="text-3xl font-bold mb-2">Choose Your Plan</h2>
-                <p className="text-muted-foreground">Unlock unlimited access to all AI models</p>
+                <h2 className="text-4xl font-bold mb-3 bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text">
+                  Choose Your Plan
+                </h2>
+                <p className="text-muted-foreground text-lg">Unlock unlimited access to all AI models</p>
               </div>
 
               {/* Plan Tabs */}
               <Tabs value={selectedPlan} onValueChange={(v) => setSelectedPlan(v as 'pro' | 'ultra')} className="mb-8">
-                <TabsList className="grid w-full grid-cols-2 h-12">
-                  <TabsTrigger value="pro" className="text-base font-semibold">
+                <TabsList className="grid w-full grid-cols-2 h-14 bg-muted/30 p-1.5">
+                  <TabsTrigger 
+                    value="pro" 
+                    className="text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  >
                     <Sparkles className="w-4 h-4 mr-2" />
                     Pro
                   </TabsTrigger>
-                  <TabsTrigger value="ultra" className="text-base font-semibold">
+                  <TabsTrigger 
+                    value="ultra" 
+                    className="text-base font-semibold data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                  >
                     <Crown className="w-4 h-4 mr-2" />
                     Ultra Pro
                   </TabsTrigger>
@@ -198,52 +217,52 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
               </Tabs>
 
               {/* Billing Period Options */}
-              <div className="space-y-4 mb-8 flex-1">
+              <div className="space-y-4 mb-10 flex-1">
                 <button
                   onClick={() => setSelectedPeriod('monthly')}
-                  className={`w-full p-5 rounded-xl border-2 transition-all text-left hover:shadow-md ${
+                  className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 text-left group ${
                     selectedPeriod === 'monthly'
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                      : 'border-border hover:border-primary/40 hover:shadow-md bg-background'
                   }`}
                 >
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="font-bold text-lg mb-1">Monthly</div>
+                      <div className="font-bold text-xl mb-1.5">Monthly</div>
                       <div className="text-sm text-muted-foreground">
-                        Billed monthly
+                        Billed monthly • Flexible
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-2xl">€{currentPrice.price}</div>
-                      <div className="text-xs text-muted-foreground">per month</div>
+                      <div className="font-bold text-3xl">€{currentPrice.price}</div>
+                      <div className="text-sm text-muted-foreground mt-1">per month</div>
                     </div>
                   </div>
                 </button>
 
                 <button
                   onClick={() => setSelectedPeriod('yearly')}
-                  className={`w-full p-5 rounded-xl border-2 transition-all text-left relative hover:shadow-md ${
+                  className={`w-full p-6 rounded-2xl border-2 transition-all duration-200 text-left relative group ${
                     selectedPeriod === 'yearly'
-                      ? 'border-primary bg-primary/5 shadow-sm'
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-primary bg-primary/5 shadow-lg shadow-primary/10'
+                      : 'border-border hover:border-primary/40 hover:shadow-md bg-background'
                   }`}
                 >
                   {savings > 0 && (
-                    <Badge className="absolute -top-3 right-4 bg-green-500 hover:bg-green-600 shadow-md">
+                    <Badge className="absolute -top-3 right-6 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg px-4 py-1.5 text-sm font-bold">
                       Save {savings}%
                     </Badge>
                   )}
                   <div className="flex justify-between items-center">
                     <div>
-                      <div className="font-bold text-lg mb-1">Yearly</div>
+                      <div className="font-bold text-xl mb-1.5">Yearly</div>
                       <div className="text-sm text-muted-foreground">
                         Billed annually • Best value
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className="font-bold text-2xl">€{currentPrice.price}</div>
-                      <div className="text-xs text-muted-foreground">per month</div>
+                      <div className="font-bold text-3xl">€{currentPrice.price}</div>
+                      <div className="text-sm text-muted-foreground mt-1">per month</div>
                     </div>
                   </div>
                 </button>
@@ -253,7 +272,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
               <Button 
                 onClick={handleSubscribe}
                 disabled={isLoading}
-                className="w-full h-14 bg-gradient-to-r from-primary to-purple-600 hover:from-primary/90 hover:to-purple-600/90 text-white font-bold text-lg shadow-lg hover:shadow-xl transition-all"
+                className="w-full h-16 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all rounded-xl"
               >
                 {isLoading ? (
                   <>
@@ -261,21 +280,24 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
                     Processing...
                   </>
                 ) : (
-                  `Subscribe to ${selectedPlan === 'pro' ? 'Pro' : 'Ultra Pro'} →`
+                  <>
+                    Subscribe to {selectedPlan === 'pro' ? 'Pro' : 'Ultra Pro'} Plan
+                    <Zap className="w-5 h-5 ml-2" />
+                  </>
                 )}
               </Button>
 
               {/* Footer */}
-              <div className="mt-6 text-center space-y-3">
-                <div className="flex items-center justify-center gap-2 text-sm text-green-600 dark:text-green-500">
+              <div className="mt-8 text-center space-y-4">
+                <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-950/30 rounded-lg py-2.5 px-4">
                   <Check className="w-4 h-4" />
-                  <span className="font-medium">Secure payment with Stripe</span>
+                  <span>Secure payment powered by Stripe</span>
                 </div>
-                <p className="text-xs text-muted-foreground leading-relaxed">
+                <p className="text-xs text-muted-foreground leading-relaxed max-w-md mx-auto">
                   By subscribing, you agree to our{' '}
-                  <a href="/terms" className="underline hover:text-foreground transition-colors">Terms</a>,{' '}
-                  <a href="/privacy" className="underline hover:text-foreground transition-colors">Privacy Policy</a>, and{' '}
-                  <a href="/refund-policy" className="underline hover:text-foreground transition-colors">Refund Policy</a>
+                  <a href="/terms" className="underline hover:text-foreground transition-colors font-medium">Terms</a>,{' '}
+                  <a href="/privacy" className="underline hover:text-foreground transition-colors font-medium">Privacy Policy</a>, and{' '}
+                  <a href="/refund-policy" className="underline hover:text-foreground transition-colors font-medium">Refund Policy</a>
                 </p>
               </div>
             </div>
