@@ -310,17 +310,11 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               <div className="text-xs text-muted-foreground text-right mb-3">Powered By</div>
               <div className="flex gap-4 justify-end items-center">
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
-                    <circle cx="12" cy="12" r="10" fill="#10A37F"/>
-                    <path d="M12 6 L16 10 L12 14 L8 10 Z" fill="white"/>
-                  </svg>
+                  <img src="/chatgpt-logo.png" alt="ChatGPT" className="w-5 h-5" />
                   <span className="text-sm font-medium">OpenAI</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <svg className="w-5 h-5" viewBox="0 0 24 24">
-                    <rect width="24" height="24" rx="4" fill="#D4A574"/>
-                    <text x="12" y="16" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">A</text>
-                  </svg>
+                  <img src="/anthropic-icon.svg" alt="Anthropic" className="w-5 h-5" />
                   <span className="text-sm font-medium">Anthropic</span>
                 </div>
                 <div className="flex items-center gap-2">
