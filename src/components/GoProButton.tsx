@@ -16,14 +16,14 @@ export const GoProButton = () => {
       <button
         onClick={() => setShowPricingModal(true)}
         aria-label="Upgrade Now"
-        className="flex items-center gap-4 px-8 py-4 rounded-[36px] border-[2px] border-[#f2ede9] bg-white hover:-translate-y-1 transition-transform duration-150 shadow-[0_4px_8px_rgba(0,0,0,0.03)]"
+        className="flex items-center gap-2 px-4 py-2 rounded-[20px] border-[1.5px] border-[#f2ede9] bg-white hover:-translate-y-0.5 transition-transform duration-150 shadow-[0_2px_6px_rgba(0,0,0,0.03)]"
       >
         {/* Custom Rocket Icon with gold gradient */}
         <svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 512 512"
-          width="42"
-          height="42"
+          width="20"
+          height="20"
           fill="url(#goldGrad)"
         >
           <defs>
@@ -39,12 +39,12 @@ export const GoProButton = () => {
         <span
           className="font-semibold leading-tight"
           style={{
-            fontSize: 36,
+            fontSize: 18,
             background: "linear-gradient(90deg,#b0851e,#d4aa3a)",
             WebkitBackgroundClip: "text",
             backgroundClip: "text",
             color: "transparent",
-            letterSpacing: "0.4px",
+            letterSpacing: "0.3px",
           }}
         >
           Upgrade Now
