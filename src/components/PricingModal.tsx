@@ -100,22 +100,22 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
         <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col">
           <div className="flex flex-col md:flex-row h-full overflow-hidden">
             {/* Left Panel - Features Comparison */}
-            <div className="w-full md:w-7/12 bg-zinc-50 dark:bg-zinc-900 p-4 md:p-6 lg:p-8 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
-              <div className="mb-4 md:mb-6 flex-shrink-0">
-                <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-zinc-900 dark:text-white mb-1 md:mb-2">Plan Comparison</h3>
-                <p className="text-xs md:text-sm text-zinc-600 dark:text-zinc-400">
+            <div className="w-full md:w-7/12 bg-gradient-to-br from-zinc-50 to-zinc-100/50 dark:from-zinc-900 dark:to-zinc-900/50 p-6 md:p-8 lg:p-10 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
+              <div className="mb-6 md:mb-8 flex-shrink-0">
+                <h3 className="text-2xl md:text-3xl lg:text-4xl font-bold text-zinc-900 dark:text-white mb-2 md:mb-3">Plan Comparison</h3>
+                <p className="text-sm md:text-base lg:text-lg text-zinc-600 dark:text-zinc-400">
                   See what's included in each plan
                 </p>
               </div>
               
               {/* Comparison Table */}
-              <div className="space-y-0.5 md:space-y-1 flex-1 overflow-y-auto">
+              <div className="space-y-1 md:space-y-2 flex-1 overflow-y-auto">
                 {/* Header Row */}
-                <div className="grid grid-cols-3 gap-1 md:gap-2 pb-2 md:pb-3 border-b border-zinc-200 dark:border-zinc-800 sticky top-0 bg-zinc-50 dark:bg-zinc-900">
-                  <div className="text-[10px] md:text-xs font-semibold text-zinc-600 dark:text-zinc-400">Feature</div>
-                  <div className="text-[10px] md:text-xs font-semibold text-center text-zinc-600 dark:text-zinc-400">Free</div>
-                  <div className="text-[10px] md:text-xs font-semibold text-center text-zinc-900 dark:text-white">
-                    {selectedPlan === 'pro' ? 'Pro' : 'Ultra Pro'}
+                <div className="grid grid-cols-3 gap-3 md:gap-4 pb-3 md:pb-4 border-b-2 border-zinc-300 dark:border-zinc-700 sticky top-0 bg-gradient-to-br from-zinc-50 to-zinc-100/50 dark:from-zinc-900 dark:to-zinc-900/50">
+                  <div className="text-sm md:text-base lg:text-lg font-bold text-zinc-700 dark:text-zinc-300">Feature</div>
+                  <div className="text-sm md:text-base lg:text-lg font-bold text-center text-zinc-700 dark:text-zinc-300">Free</div>
+                  <div className="text-sm md:text-base lg:text-lg font-bold text-center text-zinc-900 dark:text-white">
+                    {selectedPlan === 'pro' ? '⭐ Pro' : '👑 Ultra Pro'}
                   </div>
                 </div>
                 
@@ -129,22 +129,22 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
                     const selectedValue = selectedPlan === 'pro' ? feature.pro : feature.ultra;
                     
                     return (
-                      <div key={index} className="grid grid-cols-3 gap-1 md:gap-2 py-2 md:py-3 border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
-                        <div className="text-[10px] md:text-xs font-medium text-zinc-900 dark:text-white">
+                      <div key={index} className="grid grid-cols-3 gap-3 md:gap-4 py-3 md:py-4 border-b border-zinc-200 dark:border-zinc-800 hover:bg-white/60 dark:hover:bg-zinc-800/40 transition-all duration-200 rounded-lg px-2">
+                        <div className="text-sm md:text-base lg:text-lg font-medium text-zinc-900 dark:text-white flex items-center">
                           {feature.name}
                         </div>
                         <div className="flex justify-center items-center">
                           {feature.free === false ? (
-                            <X className="w-3 h-3 md:w-4 md:h-4 text-zinc-400 dark:text-zinc-600" />
+                            <X className="w-5 h-5 md:w-6 md:h-6 text-zinc-400 dark:text-zinc-600" />
                           ) : (
-                            <Check className="w-3 h-3 md:w-4 md:h-4 text-green-600 dark:text-green-500" />
+                            <Check className="w-5 h-5 md:w-6 md:h-6 text-green-600 dark:text-green-500" />
                           )}
                         </div>
                         <div className="flex justify-center items-center">
                           {selectedValue === false ? (
-                            <X className="w-3 h-3 md:w-4 md:h-4 text-zinc-400 dark:text-zinc-600" />
+                            <X className="w-5 h-5 md:w-6 md:h-6 text-zinc-400 dark:text-zinc-600" />
                           ) : (
-                            <Check className="w-3 h-3 md:w-4 md:h-4 text-zinc-900 dark:text-white" />
+                            <Check className="w-5 h-5 md:w-6 md:h-6 text-zinc-900 dark:text-white" />
                           )}
                         </div>
                       </div>
