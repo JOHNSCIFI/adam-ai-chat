@@ -120,43 +120,37 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
                 </div>
                 
                 {/* Feature Rows */}
-                {allFeatures.map((feature, index) => {
-                  const selectedValue = selectedPlan === 'pro' ? feature.pro : feature.ultra;
-                  
-                  return (
-                    <div key={index} className="grid grid-cols-3 gap-2 py-3 border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
-                      <div className="text-xs font-medium text-zinc-900 dark:text-white">
-                        {feature.name}
-                      </div>
-                      <div className="flex justify-center items-center">
-                        {typeof feature.free === 'boolean' ? (
-                          feature.free ? (
+                {allFeatures
+                  .filter((feature) => {
+                    const selectedValue = selectedPlan === 'pro' ? feature.pro : feature.ultra;
+                    // Hide features where the selected plan doesn't have access
+                    return selectedValue !== false;
+                  })
+                  .map((feature, index) => {
+                    const selectedValue = selectedPlan === 'pro' ? feature.pro : feature.ultra;
+                    
+                    return (
+                      <div key={index} className="grid grid-cols-3 gap-2 py-3 border-b border-zinc-100 dark:border-zinc-800/50 hover:bg-zinc-100/50 dark:hover:bg-zinc-800/30 transition-colors">
+                        <div className="text-xs font-medium text-zinc-900 dark:text-white">
+                          {feature.name}
+                        </div>
+                        <div className="flex justify-center items-center">
+                          {feature.free === false ? (
+                            <X className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
+                          ) : (
                             <Check className="w-4 h-4 text-green-600 dark:text-green-500" />
-                          ) : (
+                          )}
+                        </div>
+                        <div className="flex justify-center items-center">
+                          {selectedValue === false ? (
                             <X className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
-                          )
-                        ) : (
-                          <span className="text-xs text-center text-zinc-600 dark:text-zinc-400">
-                            {feature.free}
-                          </span>
-                        )}
-                      </div>
-                      <div className="flex justify-center items-center">
-                        {typeof selectedValue === 'boolean' ? (
-                          selectedValue ? (
+                          ) : (
                             <Check className="w-4 h-4 text-zinc-900 dark:text-white" />
-                          ) : (
-                            <X className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
-                          )
-                        ) : (
-                          <span className="text-xs text-center font-medium text-zinc-900 dark:text-white">
-                            {selectedValue}
-                          </span>
-                        )}
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
 
