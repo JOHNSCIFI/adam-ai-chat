@@ -1979,6 +1979,8 @@ export default function Chat() {
               clearInterval(pollInterval);
               await fetchMessages();
               setLoading(false);
+              // Trigger usage limits refresh
+              window.dispatchEvent(new Event('refresh-usage-limits'));
             }
           }
         }, 2000); // Poll every 2 seconds

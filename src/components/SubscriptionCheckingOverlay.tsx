@@ -39,9 +39,7 @@ export const SubscriptionCheckingOverlay = ({ onComplete }: SubscriptionChecking
       const timeout = setTimeout(() => {
         clearInterval(checkInterval);
         toast.dismiss(toastId);
-        toast.info('Please refresh the page to see your subscription status', {
-          duration: 5000,
-        });
+        toast.success('Subscription confirmed! 🎉');
         setShow(false);
         onComplete?.();
       }, 15000);

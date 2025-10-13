@@ -220,6 +220,16 @@ export default function Admin() {
     try {
       setLoading(true);
 
+      // Fetch ALL active subscriptions first
+      const {
+        data: subscriptionsData,
+        error: subscriptionsError
+      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, plan, plan_name, current_period_end').eq('status', 'active');
+      if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
+
+      // Get all user IDs from subscriptions
+      const subscribedUserIds = subscriptionsData?.map(sub => sub.user_id) || [];
+
       // Fetch all token usage data
       const {
         data: tokenData,
@@ -229,21 +239,18 @@ export default function Admin() {
       });
       if (tokenError) throw tokenError;
 
-      // Get unique user IDs
-      const userIds = [...new Set(tokenData?.map(usage => usage.user_id) || [])];
+      // Get unique user IDs from token usage
+      const tokenUserIds = [...new Set(tokenData?.map(usage => usage.user_id) || [])];
+      
+      // Combine all user IDs
+      const allUserIds = [...new Set([...subscribedUserIds, ...tokenUserIds])];
 
       // Fetch all profiles for these users
       const {
         data: profilesData,
         error: profilesError
-      } = await supabase.from('profiles').select('user_id, email, display_name').in('user_id', userIds);
+      } = await supabase.from('profiles').select('user_id, email, display_name').in('user_id', allUserIds);
       if (profilesError) throw profilesError;
-
-      // Fetch subscription data for these users
-      const {
-        data: subscriptionsData,
-        error: subscriptionsError
-      } = await supabase.from('user_subscriptions').select('user_id, status, product_id, plan, current_period_end').in('user_id', userIds).eq('status', 'active');
       if (subscriptionsError) console.error('Error fetching subscriptions:', subscriptionsError);
       console.log('Subscriptions data:', subscriptionsData);
 
@@ -251,8 +258,27 @@ export default function Admin() {
       const profilesMap = new Map(profilesData?.map(profile => [profile.user_id, profile]) || []);
       const subscriptionsMap = new Map(subscriptionsData?.map(sub => [sub.user_id, sub]) || []);
 
-      // Aggregate by user and model
+      // First, add all subscribed users (even if they have no token usage)
       const userMap = new Map<string, UserTokenUsage>();
+      subscriptionsData?.forEach((sub: any) => {
+        const profile = profilesMap.get(sub.user_id);
+        if (!userMap.has(sub.user_id)) {
+          userMap.set(sub.user_id, {
+            user_id: sub.user_id,
+            email: profile?.email || 'Unknown',
+            display_name: profile?.display_name || 'Unknown User',
+            model_usages: [],
+            subscription_status: {
+              subscribed: true,
+              product_id: sub.product_id,
+              plan: sub.plan,
+              subscription_end: sub.current_period_end
+            }
+          });
+        }
+      });
+
+      // Then aggregate token usage by user and model
       const modelMap = new Map<string, TokenUsageByModel>();
       tokenData?.forEach((usage: any) => {
         const userId = usage.user_id;
