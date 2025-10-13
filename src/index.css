@@ -47,6 +47,10 @@ All colors MUST be HSL.
     --accent-orange: 25 95% 53%;
     --accent-red: 0 84% 60%;
     --user-message-bg: 217 100% 94%; /* Default light blue for user messages */
+    
+    /* Premium upgrade button colors */
+    --gold: 43 74% 49%; /* Warm gold for premium features */
+    --gold-foreground: 0 0% 100%;
   }
 
   .dark {
@@ -87,6 +91,10 @@ All colors MUST be HSL.
     --chat-input-bg: 0 0% 12%; /* Input field */
     --chat-hover: 0 0% 15%; /* Hover states */
     --user-message-bg: 0 0% 19%; /* #303030 - Consistent dark user message bg */
+    
+    /* Premium upgrade button colors for dark mode */
+    --gold: 43 74% 49%; /* Warm gold for premium features */
+    --gold-foreground: 0 0% 100%;
   }
 
   /* Dark theme user message background override for all accent colors */

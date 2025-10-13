@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Crown } from 'lucide-react';
+import { Rocket } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { PricingModal } from './PricingModal';
 
@@ -17,11 +17,11 @@ export const GoProButton = () => {
     <>
       <Button
         onClick={() => setShowPricingModal(true)}
-        className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
-        size="sm"
+        variant="premium"
+        className="font-semibold text-lg px-6 py-5 rounded-[28px]"
       >
-        <Crown className="w-4 h-4 mr-2" />
-        Go Pro
+        <Rocket className="w-6 h-6 mr-2 fill-gold text-gold" />
+        <span className="text-gold">Upgrade Now</span>
       </Button>
       
       <PricingModal 
