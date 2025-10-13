@@ -22,6 +22,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
   const [appleLoading, setAppleLoading] = useState(false);
   const [lastSignupAttempt, setLastSignupAttempt] = useState<number>(0);
   const [signupCooldown, setSignupCooldown] = useState<number>(0);
+  const [error, setError] = useState<string>('');
   
   const { user, signIn, signUp, signInWithGoogle, signInWithApple, resetPassword } = useAuth();
   const { toast } = useToast();
@@ -52,6 +53,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
       setPassword('');
       setMode('signin');
       setSignupCooldown(0);
+      setError('');
     }
   }, [isOpen]);
 
@@ -60,23 +62,16 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
     if (!email || !password) return;
     
     setLoading(true);
+    setError('');
     try {
-      const { error } = await signIn(email, password);
+      const { error: signInError } = await signIn(email, password);
       
-      if (error) {
-        toast({
-          title: "Sign in failed",
-          description: "Email or password is incorrect",
-          variant: "destructive",
-        });
+      if (signInError) {
+        setError("Email or password is incorrect");
       }
       // If sign in succeeds, the useEffect will handle closing the modal and redirecting
     } catch (error) {
-      toast({
-        title: "An error occurred",
-        description: "Please try again later.",
-        variant: "destructive",
-      });
+      setError("An error occurred. Please try again later.");
     } finally {
       setLoading(false);
     }
@@ -420,29 +415,40 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                     </div>
                   </div>
 
-                  <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-2">
-                    <Input
-                      type="email"
-                      placeholder="Enter your email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="h-10"
-                    />
-                    <Input
-                      type="password"
-                      placeholder={mode === 'signup' ? 'Password (min 6 characters)' : 'Password'}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                      className="h-10"
-                    />
-                    <Button
-                      type="submit"
-                      disabled={loading || !email || !password || (mode === 'signup' && signupCooldown > 0)}
-                      className="w-full h-10"
-                    >
+                   <form onSubmit={mode === 'signin' ? handleSignIn : handleSignUp} className="space-y-2">
+                     <Input
+                       type="email"
+                       placeholder="Enter your email"
+                       value={email}
+                       onChange={(e) => {
+                         setEmail(e.target.value);
+                         setError('');
+                       }}
+                       required
+                       className="h-10"
+                     />
+                     <Input
+                       type="password"
+                       placeholder={mode === 'signup' ? 'Password (min 6 characters)' : 'Password'}
+                       value={password}
+                       onChange={(e) => {
+                         setPassword(e.target.value);
+                         setError('');
+                       }}
+                       required
+                       minLength={6}
+                       className="h-10"
+                     />
+                     {error && (
+                       <div className="text-sm text-destructive bg-destructive/10 px-3 py-2 rounded-md">
+                         {error}
+                       </div>
+                     )}
+                     <Button
+                       type="submit"
+                       disabled={loading || !email || !password || (mode === 'signup' && signupCooldown > 0)}
+                       className="w-full h-10"
+                     >
                       {loading ? (
                         <>
                           <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
