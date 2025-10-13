@@ -50,7 +50,7 @@ serve(async (req) => {
     }
 
     // Get origin from request for dynamic redirect URLs (works in test and production)
-    const origin = req.headers.get("origin") || "https://chatl.ai";
+    const origin = req.headers.get("origin") || "https://www.chatl.ai";
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
