@@ -48,11 +48,11 @@ const pricingOptions = {
 // Stripe price IDs
 const priceIds = {
   pro: {
-    monthly: 'price_1QiS3eJUJwxjDZUkFUrmfHke',
+    monthly: 'price_1SH1jRL8Zm4LqDn4M49yf60W',
     yearly: 'price_1SHinzL8Zm4LqDn4jE1jGyKi'
   },
   ultra: {
-    monthly: 'price_1QiS6JJUJwxjDZUkmQWZQEKl',
+    monthly: 'price_1SH1jpL8Zm4LqDn4zN9CGBpC',
     yearly: 'price_1SHioTL8Zm4LqDn41Pd00GWM'
   }
 };
