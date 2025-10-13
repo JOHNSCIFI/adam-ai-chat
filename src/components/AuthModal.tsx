@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
-import chromeLogo from "@/assets/chrome-new.png";
+import chromeLogo from "@/assets/chrome-icon-v2.png";
 import firefoxLogo from "@/assets/firefox-icon-clean.png";
 import edgeLogo from "@/assets/edge-icon-clean.png";
 import safariLogo from "@/assets/safari-icon-clean.png";
