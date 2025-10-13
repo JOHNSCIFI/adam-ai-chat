@@ -100,7 +100,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
         <DialogContent className="max-w-6xl w-[95vw] h-[90vh] p-0 bg-white dark:bg-zinc-950 border-2 border-zinc-200 dark:border-zinc-800 overflow-hidden flex flex-col">
           <div className="flex flex-col md:flex-row h-full overflow-hidden">
             {/* Left Panel - Features Comparison */}
-            <div className="w-full md:w-5/12 bg-zinc-50 dark:bg-zinc-900 p-4 md:p-6 lg:p-8 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
+            <div className="w-full md:w-7/12 bg-zinc-50 dark:bg-zinc-900 p-4 md:p-6 lg:p-8 border-r border-zinc-200 dark:border-zinc-800 overflow-y-auto flex flex-col">
               <div className="mb-4 md:mb-6 flex-shrink-0">
                 <h3 className="text-lg md:text-xl lg:text-2xl font-bold text-zinc-900 dark:text-white mb-1 md:mb-2">Plan Comparison</h3>
                 <p className="text-xs md:text-sm text-zinc-600 dark:text-zinc-400">
@@ -154,7 +154,7 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
             </div>
 
             {/* Right Panel - Pricing */}
-            <div className="w-full md:w-7/12 p-4 md:p-6 lg:p-8 flex flex-col bg-white dark:bg-zinc-950 overflow-y-auto">
+            <div className="w-full md:w-5/12 p-4 md:p-6 lg:p-8 flex flex-col bg-white dark:bg-zinc-950 overflow-y-auto">
               <div className="mb-4 md:mb-6 lg:mb-8 flex-shrink-0">
                 <Badge className="mb-2 md:mb-3 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-0 px-3 md:px-4 py-1 md:py-1.5 text-xs md:text-sm font-bold">
                   {selectedPlan === 'pro' ? '⭐ Most Popular' : '👑 For Power Users'}
