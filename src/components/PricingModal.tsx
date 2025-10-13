@@ -134,16 +134,20 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
                         <div className="text-xs font-medium text-zinc-900 dark:text-white">
                           {feature.name}
                         </div>
-                        <div className="flex justify-center items-center">
+                        <div className="flex justify-center items-center text-center">
                           {feature.free === false ? (
                             <X className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
+                          ) : typeof feature.free === 'string' ? (
+                            <span className="text-[10px] text-zinc-600 dark:text-zinc-400">{feature.free}</span>
                           ) : (
                             <Check className="w-4 h-4 text-green-600 dark:text-green-500" />
                           )}
                         </div>
-                        <div className="flex justify-center items-center">
+                        <div className="flex justify-center items-center text-center">
                           {selectedValue === false ? (
                             <X className="w-4 h-4 text-zinc-400 dark:text-zinc-600" />
+                          ) : typeof selectedValue === 'string' ? (
+                            <span className="text-[10px] font-medium text-zinc-900 dark:text-white">{selectedValue}</span>
                           ) : (
                             <Check className="w-4 h-4 text-zinc-900 dark:text-white" />
                           )}
