@@ -239,7 +239,7 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
               <div className="inline-flex items-center gap-2 mb-2">
                 <div>
                   <div className="text-xs font-semibold text-muted-foreground">#1</div>
-                  <div className="text-base font-bold">ChatL</div>
+                  <div className="text-base font-bold">ChatLearn</div>
                 </div>
               </div>
               
