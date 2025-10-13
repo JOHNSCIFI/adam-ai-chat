@@ -162,11 +162,6 @@ export const PricingModal: React.FC<PricingModalProps> = ({ open, onOpenChange }
 
             {/* Right Panel - Pricing */}
             <div className="w-full md:w-7/12 p-10 flex flex-col bg-white dark:bg-zinc-950">
-              <DialogClose className="absolute right-6 top-6 rounded-full p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors">
-                <X className="h-5 w-5 text-zinc-900 dark:text-white" />
-                <span className="sr-only">Close</span>
-              </DialogClose>
-
               <div className="mb-10">
                 <Badge className="mb-4 bg-zinc-900 dark:bg-white text-white dark:text-zinc-900 border-0 px-4 py-1.5 text-sm font-bold">
                   {selectedPlan === 'pro' ? '⭐ Most Popular' : '👑 For Power Users'}
