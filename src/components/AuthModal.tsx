@@ -278,24 +278,16 @@ export default function AuthModal({ isOpen, onClose, onSuccess }: AuthModalProps
                   </svg>
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="#FF6F3D"/>
-                    <circle cx="12" cy="12" r="5" fill="white"/>
-                    <path d="M12 7 L12 12 L16 12" fill="#FF6F3D"/>
-                  </svg>
+                  <img src="/chrome-icon.png" alt="Chrome" className="w-6 h-6" />
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="#0078D4"/>
-                    <path d="M6 8 L12 8 L12 14 L6 14 Z" fill="white"/>
-                    <path d="M13 8 L19 8 L19 14 L13 14 Z" fill="white" opacity="0.7"/>
-                  </svg>
+                  <img src="/firefox-icon.png" alt="Firefox" className="w-6 h-6" />
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" fill="#006CFF"/>
-                    <path d="M8 12 L12 8 L16 12 L12 16 Z" fill="white"/>
-                  </svg>
+                  <img src="/edge-icon.png" alt="Edge" className="w-6 h-6" />
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
+                  <img src="/safari-icon.png" alt="Safari" className="w-6 h-6" />
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center">
                   <svg className="w-6 h-6 text-green-500" viewBox="0 0 24 24" fill="currentColor">
