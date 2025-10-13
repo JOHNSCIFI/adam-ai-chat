@@ -22,16 +22,24 @@ interface Feature {
 }
 
 const allFeatures: Feature[] = [
-  { name: 'AI Models Access', free: 'GPT-4o Mini only', pro: 'All models (GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok)', ultra: 'All models (GPT-4, GPT-5, Claude, Gemini, DeepSeek, Grok)' },
-  { name: 'Chats & Messages', free: 'Limited', pro: 'Unlimited', ultra: 'Unlimited' },
-  { name: 'Model Switching', free: false, pro: true, ultra: true },
-  { name: 'Voice Mode (TTS)', free: false, pro: true, ultra: true },
-  { name: 'File Uploads', free: false, pro: 'Up to 100MB', ultra: 'Up to 100MB + Extended' },
-  { name: 'Chat with PDFs', free: false, pro: 'Full access', ultra: 'Full access' },
-  { name: 'Image Generation', free: false, pro: '500/month', ultra: '2,000/month' },
-  { name: 'Support', free: 'Community', pro: 'Priority', ultra: 'Premium 24/7' },
-  { name: 'Team Collaboration', free: false, pro: false, ultra: true },
-  { name: 'Early Access to Models', free: false, pro: false, ultra: true },
+  { name: 'AI Models Access', free: 'GPT-4o Mini only', pro: 'All models: GPT-4, GPT-5, Claude 3.5, Gemini 2.5, DeepSeek V3, Grok 2', ultra: 'All models: GPT-4, GPT-5, Claude 3.5, Gemini 2.5, DeepSeek V3, Grok 2' },
+  { name: 'Messages per Day', free: '10 messages/day', pro: 'Unlimited messages', ultra: 'Unlimited messages' },
+  { name: 'Chat History', free: '7 days', pro: 'Unlimited history', ultra: 'Unlimited history' },
+  { name: 'Switch Models Mid-Chat', free: false, pro: true, ultra: true },
+  { name: 'Voice Mode (Text-to-Speech)', free: false, pro: 'Unlimited voice messages', ultra: 'Unlimited voice messages' },
+  { name: 'Speech-to-Text', free: false, pro: 'Unlimited audio transcription', ultra: 'Unlimited audio transcription' },
+  { name: 'File Upload Size', free: false, pro: 'Up to 100MB per file', ultra: 'Up to 100MB per file' },
+  { name: 'Files per Message', free: false, pro: 'Up to 10 files', ultra: 'Up to 10 files' },
+  { name: 'PDF Analysis', free: false, pro: 'Full document analysis', ultra: 'Full document analysis + OCR' },
+  { name: 'Image Generation', free: false, pro: '500 images/month', ultra: '2,000 images/month' },
+  { name: 'Image Editing', free: false, pro: 'Unlimited edits', ultra: 'Unlimited edits + Advanced tools' },
+  { name: 'Project Organization', free: '1 project', pro: 'Unlimited projects', ultra: 'Unlimited projects + Templates' },
+  { name: 'Response Time', free: 'Standard', pro: 'Priority queue', ultra: 'Highest priority' },
+  { name: 'Support', free: 'Community forums', pro: 'Email support (24h)', ultra: 'Premium 24/7 live chat' },
+  { name: 'Team Collaboration', free: false, pro: false, ultra: 'Up to 10 team members' },
+  { name: 'Custom Branding', free: false, pro: false, ultra: true },
+  { name: 'API Access', free: false, pro: false, ultra: true },
+  { name: 'Early Access to New Models', free: false, pro: false, ultra: true },
 ];
 
 const pricingOptions = {
